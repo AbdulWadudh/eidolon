@@ -1,0 +1,20 @@
+{
+  "name": "@eidolon/conductor",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@eidolon/protocol": "workspace:*",
+    "@eidolon/tokens": "workspace:*",
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@eidolon/tsconfig": "workspace:*",
+    "@types/bun": "latest",
+    "typescript": "^5.7.3"
+  }
+}

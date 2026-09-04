@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production / Build outputs
+dist/
+build/
+.expo/
+*.local
+
+# Environment & Secrets
+.env
+.env*.local
+
+# Turborepo & Cache
+.turbo/
+.cache/
+
+# Local databases and persistence
+data/
+.lancedb/
+
+# Native builds
+android/
+ios/
+
+# Testing & Coverage
+coverage/
+*.lcov
+
+# OS and logs
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-debug.log*
+bun.lockb

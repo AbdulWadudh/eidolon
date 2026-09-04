@@ -1,0 +1,31 @@
+{
+  "name": "@eidolon/canvas",
+  "version": "0.0.1",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "expo start",
+    "dev:go": "expo start --go",
+    "android": "expo start --android",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@eidolon/protocol": "workspace:*",
+    "@eidolon/tokens": "workspace:*",
+    "expo": "57.0.20",
+    "expo-asset": "~57.0.16",
+    "expo-constants": "~57.0.17",
+    "expo-linking": "~57.0.9",
+    "expo-router": "~57.0.19",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0"
+  },
+  "devDependencies": {
+    "@eidolon/tsconfig": "workspace:*",
+    "@types/react": "~19.2.4",
+    "typescript": "~6.0.3"
+  }
+}

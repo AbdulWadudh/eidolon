@@ -1,0 +1,7 @@
+{
+  "extends": "@eidolon/tsconfig/base.json",
+  "compilerOptions": {
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"]
+}

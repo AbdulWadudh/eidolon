@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Eidolon",
+    "slug": "eidolon",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "../../public/logo_512x512.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "../../public/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0D0E11"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.eidolon.canvas"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "../../public/logo_512x512.png",
+        "backgroundColor": "#0D0E11"
+      },
+      "package": "com.eidolon.canvas"
+    },
+    "web": {
+      "favicon": "../../public/logo_192x192.png"
+    },
+    "plugins": ["expo-router", "expo-asset"]
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "extends": "@eidolon/tsconfig/server.json",
+  "compilerOptions": {
+    "rootDir": "./",
+    "types": ["bun"]
+  },
+  "include": ["src/**/*", "tests/**/*"]
+}
