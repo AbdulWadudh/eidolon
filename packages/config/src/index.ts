@@ -27,7 +27,6 @@ export {
   DATA_FILES,
   EASING,
   EASING_BEZIER,
-  IMAGE,
   MEMORY,
   MOCK,
   PAIRING,
@@ -44,6 +43,7 @@ export {
   TTS,
   UI_MS,
 } from "./defaults";
+export { IMAGE } from "./image";
 export {
   defaultPrompt,
   PROMPT_DEFAULTS,

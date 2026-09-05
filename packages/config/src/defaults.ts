@@ -45,33 +45,6 @@ export const CHAT = {
   sendButtonPx: 42,
 } as const;
 
-export const IMAGE = {
-  checkpoint: "RealVisXL_V5.0_Lightning_fp16.safetensors",
-  pulidModel: "ip-adapter_pulid_sdxl_fp16.safetensors",
-  insightFaceProvider: "CUDA",
-  widthPx: 832,
-  heightPx: 1216,
-  steps: 6,
-  cfg: 2,
-  sampler: "dpmpp_sde",
-  scheduler: "karras",
-  pulidMethod: "fidelity",
-  pulidWeight: 0.85,
-  pulidStartAt: 0,
-  pulidEndAt: 1,
-  qualitySuffix: "photorealistic, natural skin texture, sharp focus, 85mm, shot on phone",
-  negativePrompt:
-    "blurry, low quality, distorted, bad anatomy, extra fingers, watermark, text, cgi, plastic skin",
-  appearanceFallback:
-    "a woman in her late twenties, shoulder length dark hair, warm brown eyes, casual everyday clothes",
-  promptMaxTokens: 220,
-  promptMaxChars: 900,
-  appearanceTemperature: 0.4,
-  sceneTemperature: 0.7,
-  pollIntervalMs: 750,
-  maxPollMs: 180000,
-} as const;
-
 export const CHAT_MS = {
   tokenFade: 90,
   beadPulse: 900,

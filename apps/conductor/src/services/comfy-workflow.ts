@@ -1,9 +1,22 @@
 import { IMAGE } from "@eidolon/config";
 
+export type Orientation = "portrait" | "landscape" | "square";
+
 export interface WorkflowRequest {
   prompt: string;
   seed: number;
   faceImageName: string | null;
+  orientation: Orientation;
+}
+
+export function dimensionsFor(orientation: Orientation): { width: number; height: number } {
+  if (orientation === "landscape") {
+    return { width: IMAGE.landscapeWidthPx, height: IMAGE.landscapeHeightPx };
+  }
+  if (orientation === "square") {
+    return { width: IMAGE.squarePx, height: IMAGE.squarePx };
+  }
+  return { width: IMAGE.widthPx, height: IMAGE.heightPx };
 }
 
 type Node = { inputs: Record<string, unknown>; class_type: string };
@@ -23,6 +36,7 @@ const FACE_IMAGE = "11";
 const APPLY_PULID = "12";
 
 export function buildImageWorkflow(request: WorkflowRequest): Graph {
+  const size = dimensionsFor(request.orientation);
   const graph: Graph = {
     [CHECKPOINT]: {
       inputs: { ckpt_name: IMAGE.checkpoint },
@@ -40,7 +54,7 @@ export function buildImageWorkflow(request: WorkflowRequest): Graph {
       class_type: "CLIPTextEncode",
     },
     [LATENT]: {
-      inputs: { width: IMAGE.widthPx, height: IMAGE.heightPx, batch_size: 1 },
+      inputs: { width: size.width, height: size.height, batch_size: 1 },
       class_type: "EmptyLatentImage",
     },
     [SAMPLER]: {

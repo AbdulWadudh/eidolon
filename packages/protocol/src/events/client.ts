@@ -17,6 +17,12 @@ export const RequestImageSchema = z.object({
   type: z.literal("request_image"),
   character_id: z.string().min(1, "character_id cannot be empty"),
   prompt_override: z.string().optional(),
+  orientation: z.enum(["portrait", "landscape", "square"]).optional(),
+});
+
+export const RequestPhotoIdeasSchema = z.object({
+  type: z.literal("request_photo_ideas"),
+  character_id: z.string().min(1, "character_id cannot be empty"),
 });
 
 export const RegenerateSuggestionsSchema = z.object({
@@ -34,6 +40,7 @@ export const ClientMessageSchema = z.discriminatedUnion("type", [
   ChatTurnSchema,
   InterruptSchema,
   RequestImageSchema,
+  RequestPhotoIdeasSchema,
   RegenerateSuggestionsSchema,
   PingSchema,
 ]);
@@ -41,6 +48,7 @@ export const ClientMessageSchema = z.discriminatedUnion("type", [
 export type ChatTurnEvent = z.infer<typeof ChatTurnSchema>;
 export type InterruptEvent = z.infer<typeof InterruptSchema>;
 export type RequestImageEvent = z.infer<typeof RequestImageSchema>;
+export type RequestPhotoIdeasEvent = z.infer<typeof RequestPhotoIdeasSchema>;
 export type RegenerateSuggestionsEvent = z.infer<typeof RegenerateSuggestionsSchema>;
 export type PingEvent = z.infer<typeof PingSchema>;
 export type ClientMessage = z.infer<typeof ClientMessageSchema>;

@@ -5,10 +5,14 @@ import { Hono } from "hono";
 import { generatePairingPayload, getLocalIp, PAIRING_SECRET, validateToken } from "@/auth";
 import {
   checkDatabaseHealth,
+  deleteMessage,
   forgetCharacter,
   getCharacterCard,
+  getCharacterLook,
   getCharacterMind,
   getTranscript,
+  setCharacterAvatar,
+  setCharacterBackground,
 } from "@/db";
 import { renderPairingPage } from "@/pairing/page";
 import { describePrompt, listPrompts, resetPrompt, setPrompt } from "@/prompts/store";
@@ -16,6 +20,7 @@ import { checkCacheHealth } from "@/services/cache";
 import { checkComfyHealth } from "@/services/comfyui";
 import { checkLanceDbHealth } from "@/services/lancedb";
 import { checkLlmHealth } from "@/services/llm";
+import { forgetFace } from "@/services/selfie";
 import { getStorageConfig, isStorageConnected } from "@/services/storage";
 import { checkTtsHealth } from "@/services/tts";
 import { getConnectedDeviceCount, setupWebSocketRoutes } from "@/ws";
@@ -132,9 +137,32 @@ v1.get(`${API_ROUTES.characters}/:id/messages`, (c) => {
   const mind = getCharacterMind(characterId);
 
   return c.json({
-    character: { id: characterId, name: card.name, ...mind },
+    character: { id: characterId, name: card.name, ...mind, ...getCharacterLook(characterId) },
     messages: getTranscript(characterId, TRANSCRIPT.pageSize),
   });
+});
+
+v1.delete(`${API_ROUTES.characters}/:id/messages/:messageId`, (c) => {
+  deleteMessage(c.req.param("messageId"));
+  return c.json({ ok: true });
+});
+
+v1.patch(`${API_ROUTES.characters}/:id/look`, async (c) => {
+  const characterId = c.req.param("id");
+  const body = (await c.req.json().catch(() => ({}))) as {
+    avatarUrl?: string | null;
+    backgroundUrl?: string | null;
+  };
+
+  if (typeof body.avatarUrl === "string" && body.avatarUrl.length > 0) {
+    setCharacterAvatar(characterId, body.avatarUrl);
+    forgetFace(characterId);
+  }
+  if (body.backgroundUrl !== undefined) {
+    setCharacterBackground(characterId, body.backgroundUrl || null);
+  }
+
+  return c.json({ character: { id: characterId, ...getCharacterLook(characterId) } });
 });
 
 v1.delete(`${API_ROUTES.characters}/:id/memory`, (c) => {

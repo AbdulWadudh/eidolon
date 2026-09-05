@@ -1,7 +1,7 @@
 import { IMAGE, TIMEOUTS_MS } from "@eidolon/config";
 import { getServicesConfig } from "@eidolon/config/server";
 import { delay } from "es-toolkit";
-import { buildImageWorkflow } from "@/services/comfy-workflow";
+import { buildImageWorkflow, type Orientation } from "@/services/comfy-workflow";
 
 export const COMFYUI_URL = getServicesConfig().comfyUiUrl;
 
@@ -103,6 +103,7 @@ async function fetchImage(image: { filename: string; subfolder: string; type: st
 export async function generateImage(
   prompt: string,
   faceImageName: string | null,
+  orientation: Orientation = "portrait",
   onProgress?: (promptId: string) => void,
   signal?: AbortSignal,
 ): Promise<GeneratedImage> {
@@ -111,7 +112,9 @@ export async function generateImage(
   }
 
   const seed = Math.floor(Math.random() * 1_000_000_000);
-  const promptId = await queuePrompt(buildImageWorkflow({ prompt, seed, faceImageName }));
+  const promptId = await queuePrompt(
+    buildImageWorkflow({ prompt, seed, faceImageName, orientation }),
+  );
   onProgress?.(promptId);
 
   const deadline = Date.now() + IMAGE.maxPollMs;

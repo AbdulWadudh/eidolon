@@ -1,7 +1,7 @@
 import { type ClientMessage, parseClientMessage } from "@eidolon/protocol";
 import type { WSMessageReceive } from "hono/ws";
 import { handleChatTurn, handleRegenerateSuggestions } from "@/ws/chat-turn";
-import { handleImageRequest } from "@/ws/image-turn";
+import { handleImageRequest, handlePhotoIdeas } from "@/ws/image-turn";
 import { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
 /**
  * Manages per-connection streaming tasks and abort handles.
@@ -102,8 +102,14 @@ export async function handleClientMessage(
         ws,
         clientMsg.character_id,
         clientMsg.prompt_override,
+        clientMsg.orientation,
         sessionManager.getAbortSignal(ws),
       );
+      break;
+    }
+
+    case "request_photo_ideas": {
+      await handlePhotoIdeas(ws, clientMsg.character_id, sessionManager.getAbortSignal(ws));
       break;
     }
   }

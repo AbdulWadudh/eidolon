@@ -58,6 +58,7 @@ function addColumnIfMissing(table: string, column: string, definition: string): 
 addColumnIfMissing("messages", "audio_duration", "REAL");
 addColumnIfMissing("messages", "image_url", "TEXT");
 addColumnIfMissing("characters", "appearance", "TEXT");
+addColumnIfMissing("characters", "background_url", "TEXT");
 
 /**
  * Health check helper for the SQLite database.
@@ -162,6 +163,10 @@ export function appendMessage(
   return id;
 }
 
+export function deleteMessage(messageId: string): void {
+  db.query("DELETE FROM messages WHERE id = ?").run(messageId);
+}
+
 export function setMessageImage(messageId: string, imageUrl: string): void {
   db.query("UPDATE messages SET image_url = ?1 WHERE id = ?2").run(imageUrl, messageId);
 }
@@ -179,6 +184,25 @@ export function getCharacterAppearance(characterId: string): string | null {
     | { appearance: string | null }
     | undefined;
   return row?.appearance ?? null;
+}
+
+export interface CharacterLook {
+  avatarUrl: string | null;
+  backgroundUrl: string | null;
+}
+
+export function getCharacterLook(characterId: string): CharacterLook {
+  const row = db
+    .query("SELECT avatar_url, background_url FROM characters WHERE id = ?")
+    .get(characterId) as { avatar_url: string | null; background_url: string | null } | undefined;
+  return { avatarUrl: row?.avatar_url ?? null, backgroundUrl: row?.background_url ?? null };
+}
+
+export function setCharacterBackground(characterId: string, backgroundUrl: string | null): void {
+  db.query("UPDATE characters SET background_url = ?1 WHERE id = ?2").run(
+    backgroundUrl,
+    characterId,
+  );
 }
 
 export function getCharacterAvatar(characterId: string): string | null {

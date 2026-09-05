@@ -1,7 +1,8 @@
-import { CHAT_TURN } from "@eidolon/config";
+import { IMAGE } from "@eidolon/config";
 import { appendMessage, getCharacterCard, getRecentMessages, setMessageImage } from "@/db";
 import { ComfyUnavailableError } from "@/services/comfyui";
-import { paintSelfie, SELFIE_ASPECT } from "@/services/selfie";
+import { generatePhotoIdeas } from "@/services/photo-ideas";
+import { ASPECT_FOR, paintSelfie } from "@/services/selfie";
 import { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
 
 const DEFAULT_REQUEST = "a photo of yourself, right now, wherever you are";
@@ -9,7 +10,7 @@ const SENT_A_PHOTO = "*sends a photo*";
 
 function formatScene(turns: { role: string; content: string }[], name: string): string {
   return turns
-    .slice(-CHAT_TURN.historyTurns)
+    .slice(-IMAGE.sceneTurns)
     .map((turn) => `${turn.role === "user" ? "PLAYER" : name}: ${turn.content}`)
     .join("\n");
 }
@@ -18,10 +19,26 @@ function speak(ws: WebSocketSender, status: "painting" | "idle", detail?: string
   sendServerMessage(ws, { type: "status_update", payload: { status, detail } });
 }
 
+export async function handlePhotoIdeas(
+  ws: WebSocketSender,
+  characterId: string,
+  signal: AbortSignal,
+): Promise<void> {
+  const card = getCharacterCard(characterId);
+  const ideas = await generatePhotoIdeas(
+    card.name,
+    formatScene(getRecentMessages(characterId), card.name),
+    signal,
+  );
+  if (signal.aborted) return;
+  sendServerMessage(ws, { type: "photo_ideas", payload: { ideas } });
+}
+
 export async function handleImageRequest(
   ws: WebSocketSender,
   characterId: string,
   promptOverride: string | undefined,
+  orientation: "portrait" | "landscape" | "square" | undefined,
   signal: AbortSignal,
 ): Promise<void> {
   const card = getCharacterCard(characterId);
@@ -35,6 +52,7 @@ export async function handleImageRequest(
         personality: card.personality,
         scene: formatScene(getRecentMessages(characterId), card.name),
         request: promptOverride?.trim() || DEFAULT_REQUEST,
+        orientation,
       },
       () => speak(ws, "painting", "Taking the photo"),
       signal,
@@ -49,7 +67,7 @@ export async function handleImageRequest(
       type: "image_ready",
       payload: {
         image_url: selfie.imageUrl,
-        aspect_ratio: SELFIE_ASPECT,
+        aspect_ratio: ASPECT_FOR[selfie.orientation],
         prompt_used: selfie.promptUsed,
       },
     });

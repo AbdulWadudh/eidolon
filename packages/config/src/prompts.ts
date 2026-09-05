@@ -100,29 +100,52 @@ Never mention this direction, never acknowledge it, never reply to it. They did 
   {
     key: "image.appearance",
     description:
-      "Turns a character's written persona into a fixed physical description, used once to seed the face every later photo is matched against.",
+      "Turns a character's written persona into a fixed description of their face and body, used once to seed the face every later photo is matched against.",
     variables: ["name", "personality"],
-    value: `Read this description of a person called {{name}} and write what they look like, as a prompt for an image model.
+    value: `Read this description of a person called {{name}} and fill in what they look like, for an image model.
 
 {{personality}}
 
-Return one line of comma separated visual details and nothing else. Cover apparent age, face shape, eye colour, hair colour and length, build, and the kind of clothes they would wear on an ordinary day. Describe only what a camera would see. Do not mention personality, mood, feelings, the setting, the lighting, or the camera. Do not write a sentence.`,
+Each field is a short phrase, two or three words, never a sentence. Never write their name, never write "she is" or "her hair is", just the detail itself. Describe only the parts of a person that do not change from one day to the next — no clothes, no glasses, no jewellery, no expression, no setting.`,
   },
   {
     key: "image.scene",
     description:
-      "Turns the last few messages and the reader's request into an image prompt for the photo the character is about to send.",
-    variables: ["name", "appearance", "scene", "request"],
-    value: `{{name}} is about to send the person they are texting a photo of themselves. Write the prompt for it.
+      "Plans the photo the character is about to send as a structured shot, so framing, wardrobe and light are chosen together rather than tacked on.",
+    variables: ["name", "scene", "request", "framings"],
+    value: `{{name}} is about to send the person they are texting a photo. Plan the shot.
 
-What they look like: {{appearance}}
+Recently they were saying:
+{{scene}}
+
+Fill in each field. Do not describe their face, hair or build anywhere; that is fixed already. setting: where this is, concrete and ordinary. A specific room, street or place, with the details that make it that place and not a stock photo.
+outfit: what they are wearing today. Vary it with the setting and the weather. Not the same clothes as last time.
+others: who or what else is in the frame, if anyone. A friend, a sibling, family on a trip, a pet, a plate of food. Empty for a photo of just them, and used often enough that not every photo is of a person alone.
+action: what they are doing in the instant the shutter went. Not posing. Mid laugh, looking away, reaching for something, squinting into the sun, half turned.
+light: the real light in that place at that hour.
+framing: how the photo is taken. Choose one that fits and do not default to the same one: {{framings}}
+orientation: "landscape" if the place, the view or the group is the subject, "portrait" if the person is.
+look_change: only if the request asks for something different about their body or hair — dyed hair, a haircut, wet hair, a tan. Two or three words, empty otherwise.
+
+Every field is a short phrase of visual detail, not a sentence, and never mentions phones, texting or the person receiving it. Leave a field as an empty string when it does not apply — never write "none" or "nothing".
+
+What was asked for is: {{request}}
+
+That is the subject of this photo. If it names a place, that is where this photo happens, and the conversation above does not override it. If it names another person, a pet or a thing, they are in the frame. Only fall back on the conversation for what was not specified.`,
+  },
+  {
+    key: "image.ideas",
+    description:
+      "Photo ideas offered when the reader asks for a picture, drawn from the character and where the conversation has got to.",
+    variables: ["name", "scene", "count", "maxChars"],
+    value: `{{name}} is texting someone. Suggest {{count}} different photos they could send right now.
 
 The conversation so far:
 {{scene}}
 
-What was asked for: {{request}}
+Return a JSON array of {{count}} strings and nothing else. Each one names what the photo would be of, under {{maxChars}} characters. Write the subject of the photo, not a message. "Me and the dog on the sofa" or "the view from the top", never "Hey, just got home!".
 
-Return one line of comma separated visual details and nothing else. Do not describe their face, hair or build; that is already handled. Describe only where they are, what they are wearing, what they are doing, the light, and the framing. It is a photo taken on a phone, so keep it plausible: one person, ordinary places, ordinary light. Do not write a sentence. Do not mention texting, phones as a subject, chat, or the person receiving it.`,
+Make them different from each other. Vary who and what is in frame and how far away the camera is. Across the set include at least one that is not a photo of themselves — somewhere they are, something they are eating, a pet, a view. Some can have other people in them: a friend, a sibling, family on a trip. Keep them ordinary and specific to this conversation rather than glamorous.`,
   },
 ];
 

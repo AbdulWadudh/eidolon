@@ -4,7 +4,7 @@ export const ServerStatusEnum = z.enum(["thinking", "searching", "painting", "sp
 
 export const AudioFormatEnum = z.enum(["mp3", "pcm_16000"]);
 
-export const ImageAspectRatioEnum = z.enum(["9:16", "1:1"]);
+export const ImageAspectRatioEnum = z.enum(["9:16", "1:1", "16:9"]);
 
 export const StatusUpdateSchema = z.object({
   type: z.literal("status_update"),
@@ -92,6 +92,12 @@ export const ImageReadySchema = z.object({
     .optional(),
 });
 
+export const PhotoIdeasSchema = z.object({
+  type: z.literal("photo_ideas"),
+  ideas: z.array(z.string()),
+  payload: z.object({ ideas: z.array(z.string()) }).optional(),
+});
+
 export const MindUpdateSchema = z.object({
   type: z.literal("mind_update"),
   affinity_delta: z.number(),
@@ -149,6 +155,7 @@ export const ServerMessageSchema = z.discriminatedUnion("type", [
   StageShiftSchema,
   ImagePreviewSchema,
   ImageReadySchema,
+  PhotoIdeasSchema,
   MindUpdateSchema,
   ReplySuggestionsSchema,
   ErrorSchema,
@@ -164,6 +171,7 @@ export type AudioChunkEvent = z.infer<typeof AudioChunkSchema>;
 export type StageShiftEvent = z.infer<typeof StageShiftSchema>;
 export type ImagePreviewEvent = z.infer<typeof ImagePreviewSchema>;
 export type ImageReadyEvent = z.infer<typeof ImageReadySchema>;
+export type PhotoIdeasEvent = z.infer<typeof PhotoIdeasSchema>;
 export type MindUpdateEvent = z.infer<typeof MindUpdateSchema>;
 export type ReplySuggestionsEvent = z.infer<typeof ReplySuggestionsSchema>;
 export type ErrorEvent = z.infer<typeof ErrorSchema>;
