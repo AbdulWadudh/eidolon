@@ -1,5 +1,5 @@
 import { networkInterfaces } from "node:os";
-import { SERVER_DEFAULTS, STORAGE } from "../defaults";
+import { CACHE, SERVER_DEFAULTS, STORAGE } from "../defaults";
 
 export interface ServerConfig {
   port: number;
@@ -21,6 +21,7 @@ export interface ServicesConfig {
   llmModel: string;
   comfyUiUrl: string;
   searxngUrl: string;
+  ttsApiUrl: string;
 }
 
 export function getServerConfig(): ServerConfig {
@@ -59,6 +60,10 @@ export function getTrustedOrigins(): string[] {
   return [`http://localhost:${port}`, `http://127.0.0.1:${port}`, `http://${getLocalIp()}:${port}`];
 }
 
+export function getCacheUrl(): string {
+  return process.env.REDIS_URL || CACHE.defaultUrl;
+}
+
 export function getStorageConfig(): StorageConfig {
   const endpoint = process.env.S3_ENDPOINT ?? "";
   const bucket = process.env.S3_BUCKET ?? "";
@@ -85,6 +90,7 @@ export function getServicesConfig(): ServicesConfig {
     llmModel: process.env.LLM_MODEL ?? "",
     comfyUiUrl: process.env.COMFYUI_URL ?? "",
     searxngUrl: process.env.SEARXNG_URL ?? "",
+    ttsApiUrl: process.env.TTS_API_URL ?? "",
   };
 }
 

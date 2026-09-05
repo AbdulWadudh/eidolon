@@ -26,6 +26,10 @@ Everything is Bun + TypeScript. Biome is the only linter and formatter.
   Google Fonts browser with lazy previews, `fontScale` text scaling.
 - Pairing: QR or manual, token verified before storage, live WebSocket with
   backoff reconnect, honest status pill.
+- Chat: streaming roleplay screen on a FlashList feed, editable reply
+  suggestions with reroll, solid input dock, voice-note chip. One socket for the
+  whole app, owned by `apps/canvas/services/websocket.ts`; `store/connection.ts`
+  only configures it and mirrors its status.
 - Android release build at ~43 MB.
 - `bun run doctor`, `bun run release`.
 
@@ -38,7 +42,11 @@ Everything is Bun + TypeScript. Biome is the only linter and formatter.
 | `betterAuth()` in `apps/conductor/src/auth/index.ts` | instantiated, **never used** — nothing imports it, no routes mount it. Build on it or delete it |
 | `origin` remote | none, so `bun run release` cannot publish yet |
 | CI | no workflow; releases are local |
-| Chat / LLM surface | conductor handles `chat_turn` streaming; the client has no chat UI yet |
+| Voice notes | wired end to end: Kokoro synthesises each reply, `audio_chunk` carries base64 mp3, the client auto-plays it once. Unverified on a handset |
+| Web search | the SearXNG instance has no working engines (brave/google suspended, ddg/startpage CAPTCHA), so `searchWeb` correctly returns nothing |
+| Voice call route | the call button in the chat top bar has nowhere to go yet |
+| Chat tool bar | mood, selfie, mic, lorebook, action and plus buttons render and are labelled, but `onAction` is a no-op |
+| `.gitattributes` | absent. `core.autocrlf=true` rewrites endings on checkout and Biome wants LF, so `bun run lint` fails on a fresh clone until someone re-runs `bun run format`. `* text=auto eol=lf` would end it |
 
 ## Traps already paid for
 
@@ -79,12 +87,106 @@ Each of these cost real time. Do not rediscover them.
 
 9. **`EXPO_PUBLIC_*` is inlined into the bundle** and readable from the APK.
 
+10. **There is no `turn_complete` event.** A turn ends on
+    `status_update: idle` — but `ping` is *also* answered with
+    `status_update: idle`, carrying `detail: "pong"`. Commit on idle without
+    checking the detail and a heartbeat landing mid-stream truncates the reply.
+
+11. **`expo-av` is not available on SDK 57.** `bundledNativeModules.json` ships
+    `expo-audio ~57.0.4` and omits `expo-av` entirely; the newest `expo-av`
+    targets SDK 53's `expo-modules-core` and adds another CMake/C++ module,
+    which is what trap 5 is about. Use `expo-audio`.
+
+12. **FlashList v2 removed `estimatedItemSize`.** Sizing is automatic. For chat,
+    `maintainVisibleContentPosition` is the prop that matters.
+
+13. **Android edge-to-edge means the window never resizes for the keyboard.**
+    SDK 57 forces edge-to-edge, so RN's `KeyboardAvoidingView` has nothing to
+    react to and `softwareKeyboardLayoutMode: "resize"` does not help. Use
+    `react-native-keyboard-controller` (pinned by the SDK at 1.21.9);
+    Reanimated's `useAnimatedKeyboard` is deprecated and points there too.
+
+14. **`jsonrepair` will turn prose into an array.** Given a sentence with a
+    comma it produces `["half", "the other half"]` rather than failing, so LLM
+    output must be checked for a real bracketed array *before* being handed to
+    `safeJsonParse` — otherwise mock/offline prose silently becomes structured
+    data. Cost: the character's own line appearing as a player reply option.
+
+15. **Arbitrary Tailwind sizes bypass `fontScale`.** `theme-css-vars.ts`
+    publishes the scale as `--text-xs` … `--text-2xl`, so only the named steps
+    move with the Text Size control. `text-[11px]` and fixed `leading-N` are
+    frozen, and a fixed line box clips its own glyphs above ~130%. Use the named
+    steps and `leading-normal`.
+
+16. **MMKV namespaces its web keys.** In `localStorage` they appear as
+    `eidolon-canvas-store\<key>`, not the bare key. Writing the bare key from a
+    console does nothing and reads as a broken theme engine.
+
+17. **The llama.cpp Windows CUDA zip does not include the CUDA runtime.**
+    `ggml-cuda.dll` ships, `cudart64_*.dll` and `cublas64_*.dll` do not. The
+    backend then fails to load *silently* — `--list-devices` says `(none)` and
+    you get CPU speed. Extract the matching `cudart-llama-bin-win-cuda-*.zip`
+    into the same folder. Pick CUDA **13.3** for a 50-series card; `sm_120`
+    does not exist before CUDA 12.8.
+
+18. **Windows reserves TCP 4903-5002** for Hyper-V/WSL, so nothing can bind
+    :5000 and `netstat` still shows it free. Check with
+    `netsh interface ipv4 show excludedportrange protocol=tcp`.
+
+19. **`platform_machine == 'x86_64'` never matches on Windows** — it is
+    `AMD64`. Any dependency gated on that marker is skipped, which is how
+    Kokoro-FastAPI silently installs CPU torch even with the right extra.
+
+20. **Constrained decoding is the one structured trick an 8B does well.**
+    `response_format: json_schema` on llama.cpp returned valid JSON on every
+    probe, where free-form "reply with JSON" never did. Use it for anything
+    structured — but do not put a regex `pattern` in the schema, or the model
+    satisfies the pattern instead of the intent (it wrapped prose in asterisks
+    to match an action rule).
+
+21. **A roleplay finetune cannot follow meta-instructions in a transcript.**
+    Asking an 8B for "3 options as JSON" yields prose, and `jsonrepair` will
+    happily mangle that prose into an array. Generate one option per call with
+    the assistant turn prefilled, and never use `PLAYER:` as a stop sequence —
+    the model emits it first, so the completion comes back empty.
+
+22. **Dragonfly sizes its memory requirement from the io thread count.** Eight
+    threads demand 2 GB regardless of `--maxmemory`, so it crash-loops against a
+    smaller cap. Pin `--proactor_threads=2` for a dev cache.
+
+23. **Any concrete example line in a prompt will be copied verbatim.** Style
+    samples came back as literal replies when the model was unsure — a grocery
+    question answered with "I made you breakfast". Describe the shape of a reply
+    with placeholders instead of giving lines that can be reached for.
+
+24. **`audio_chunk` arrives before the assistant message is committed.** The
+    client commits on `status_update: idle`, so attaching audio on arrival
+    targets the *previous* message. Hold it and apply it at commit.
+
+25. **Few-shot examples passed as real chat turns become false memories.** The
+    model started referencing toast and coffee from the style samples as though
+    they had happened. Put style examples inside the system prompt, labelled as
+    samples, not in the message array.
+
+26. **Android blocks cleartext HTTP in a release build.** Since API 28 an
+    installed APK refuses `http://` and `ws://` with no useful error, which
+    looks exactly like the conductor being unreachable. `usesCleartextTraffic`
+    in `app.json` is what makes LAN pairing work outside a dev build.
+
+27. **A player inside a FlashList cell dies on recycle.** `expo-audio` releases
+    the native player when the cell unmounts, so scrolling stopped playback.
+    Own the player above the list and keep the rows presentational.
+
+28. **Metro caches module resolution across a new native install.** Adding a
+    package while the dev server is running fails with `Unable to resolve` on
+    paths that plainly exist. Restart with `--clear` before believing the error.
+
 ## Verifying
 
 ```bash
 bun run doctor      # toolchain
 bun run typecheck   # workspace + scripts
-bun run test        # canvas 24, conductor 26
+bun run test        # canvas 54, conductor 62
 bun run lint
 ```
 

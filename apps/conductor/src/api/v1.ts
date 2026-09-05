@@ -1,24 +1,35 @@
-import { API_ROUTES, API_VERSION } from "@eidolon/config";
+import { API_ROUTES, API_VERSION, TRANSCRIPT } from "@eidolon/config";
 import { getServerConfig, SQLITE_DB_PATH } from "@eidolon/config/server";
 import { COLORS } from "@eidolon/tokens";
 import { Hono } from "hono";
 import { generatePairingPayload, getLocalIp, PAIRING_SECRET, validateToken } from "@/auth";
-import { checkDatabaseHealth } from "@/db";
+import {
+  checkDatabaseHealth,
+  forgetCharacter,
+  getCharacterCard,
+  getCharacterMind,
+  getTranscript,
+} from "@/db";
 import { renderPairingPage } from "@/pairing/page";
+import { describePrompt, listPrompts, resetPrompt, setPrompt } from "@/prompts/store";
+import { checkCacheHealth } from "@/services/cache";
 import { checkComfyHealth } from "@/services/comfyui";
 import { checkLanceDbHealth } from "@/services/lancedb";
 import { checkLlmHealth } from "@/services/llm";
 import { getStorageConfig, isStorageConnected } from "@/services/storage";
+import { checkTtsHealth } from "@/services/tts";
 import { getConnectedDeviceCount, setupWebSocketRoutes } from "@/ws";
 
 export const v1 = new Hono();
 
 export async function buildHealthReport() {
-  const [sqliteOk, lancedbOk, llmOk, comfyOk] = await Promise.all([
+  const [sqliteOk, lancedbOk, llmOk, comfyOk, cacheOk, ttsOk] = await Promise.all([
     Promise.resolve(checkDatabaseHealth()),
     checkLanceDbHealth(),
     checkLlmHealth(),
     checkComfyHealth(),
+    checkCacheHealth(),
+    checkTtsHealth(),
   ]);
 
   const storage = getStorageConfig();
@@ -34,6 +45,8 @@ export async function buildHealthReport() {
       lancedb: lancedbOk ? "healthy" : "unhealthy",
       llm: llmOk ? "healthy" : "offline",
       comfyui: comfyOk ? "healthy" : "offline",
+      cache: cacheOk ? "healthy" : "offline",
+      tts: ttsOk ? "healthy" : "offline",
     },
     storage: {
       type: "s3",
@@ -83,3 +96,51 @@ v1.get(API_ROUTES.pairingQr, (c) => {
 v1.get(API_ROUTES.pairingStatus, (c) => c.json({ devices: getConnectedDeviceCount() }));
 
 setupWebSocketRoutes(v1);
+
+v1.get(API_ROUTES.prompts, (c) => c.json({ prompts: listPrompts() }));
+
+v1.get(`${API_ROUTES.prompts}/:key`, (c) => {
+  const record = describePrompt(c.req.param("key"));
+  if (record.description.length === 0) return c.json({ error: "Unknown prompt key." }, 404);
+  return c.json(record);
+});
+
+v1.put(`${API_ROUTES.prompts}/:key`, async (c) => {
+  const body = (await c.req.json().catch(() => null)) as { value?: unknown } | null;
+  if (typeof body?.value !== "string") {
+    return c.json({ error: "Body must be { value: string }." }, 400);
+  }
+
+  try {
+    return c.json(await setPrompt(c.req.param("key"), body.value));
+  } catch (error) {
+    return c.json({ error: error instanceof Error ? error.message : "Invalid prompt." }, 400);
+  }
+});
+
+v1.delete(`${API_ROUTES.prompts}/:key`, async (c) => {
+  try {
+    return c.json(await resetPrompt(c.req.param("key")));
+  } catch (error) {
+    return c.json({ error: error instanceof Error ? error.message : "Invalid prompt." }, 400);
+  }
+});
+
+v1.get(`${API_ROUTES.characters}/:id/messages`, (c) => {
+  const characterId = c.req.param("id");
+  const card = getCharacterCard(characterId);
+  const mind = getCharacterMind(characterId);
+
+  return c.json({
+    character: { id: characterId, name: card.name, ...mind },
+    messages: getTranscript(characterId, TRANSCRIPT.pageSize),
+  });
+});
+
+v1.delete(`${API_ROUTES.characters}/:id/memory`, (c) => {
+  const characterId = c.req.param("id");
+  forgetCharacter(characterId);
+  const mind = getCharacterMind(characterId);
+
+  return c.json({ character: { id: characterId, ...mind }, messages: [] });
+});

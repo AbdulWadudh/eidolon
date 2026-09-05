@@ -146,7 +146,8 @@ Useful seams, in rough order of preference:
 ### Existing debt
 
 Six files were already over the limit when this rule landed, and are recorded in
-`KNOWN_DEBT` in `scripts/check-file-size.ts` at their size on 2026-09-05:
+`KNOWN_DEBT` in `scripts/check-file-size.ts` at their size on 2026-09-05.
+`apps/canvas/store/connection.ts` has since been split and removed from the list:
 
 | File | Lines |
 |---|---|
@@ -154,7 +155,6 @@ Six files were already over the limit when this rule landed, and are recorded in
 | `apps/canvas/components/theme/ThemeStudioSheet.tsx` | 865 |
 | `apps/canvas/store/theme-store.ts` | 420 |
 | `apps/canvas/components/ui/font-picker-modal.tsx` | 345 |
-| `apps/canvas/store/connection.ts` | 336 |
 | `apps/canvas/services/font-registry.ts` | 308 |
 
 They do not fail the check, but **they may not grow**: exceeding the recorded

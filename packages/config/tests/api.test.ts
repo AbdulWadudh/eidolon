@@ -6,6 +6,8 @@ import {
   apiPath,
   apiUrl,
   HEALTH_ALIAS_PATH,
+  healthUrl,
+  isSecureHost,
   socketUrl,
   stripAuthority,
 } from "../src";
@@ -60,6 +62,39 @@ describe("URL builders", () => {
     expect(stripAuthority("https://host:3000/")).toBe("host:3000");
     expect(stripAuthority("http://host:3000")).toBe("host:3000");
     expect(stripAuthority("host:3000")).toBe("host:3000");
-    expect(apiUrl("https://host:3000/", "health")).toBe("http://host:3000/api/v1/health");
+    expect(apiUrl("host:3000/", "health")).toBe("http://host:3000/api/v1/health");
+    expect(apiUrl("https://host:3000/", "health")).toBe("https://host:3000/api/v1/health");
+  });
+});
+
+describe("scheme derived from the host", () => {
+  it("keeps a LAN address on plain http and ws", () => {
+    expect(apiUrl("192.168.1.39:3000", "pairVerify")).toBe(
+      "http://192.168.1.39:3000/api/v1/pair/verify",
+    );
+    expect(socketUrl("192.168.1.39:3000", "t")).toBe("ws://192.168.1.39:3000/api/v1/ws?token=t");
+  });
+
+  it("upgrades a TLS origin to https and wss", () => {
+    expect(apiUrl("https://3000.k79.quest", "pairVerify")).toBe(
+      "https://3000.k79.quest/api/v1/pair/verify",
+    );
+    expect(socketUrl("https://3000.k79.quest", "t")).toBe("wss://3000.k79.quest/api/v1/ws?token=t");
+  });
+
+  it("treats an explicit http scheme as insecure", () => {
+    expect(isSecureHost("http://127.0.0.1:3000")).toBe(false);
+    expect(socketUrl("http://127.0.0.1:3000", "t")).toBe("ws://127.0.0.1:3000/api/v1/ws?token=t");
+  });
+
+  it("points the health check at the same scheme", () => {
+    expect(healthUrl("https://3000.k79.quest")).toBe("https://3000.k79.quest/health");
+    expect(healthUrl("192.168.1.39:3000")).toBe("http://192.168.1.39:3000/health");
+  });
+
+  it("still lets a caller force a scheme", () => {
+    expect(apiUrl("3000.k79.quest", "pairVerify", "https")).toBe(
+      "https://3000.k79.quest/api/v1/pair/verify",
+    );
   });
 });

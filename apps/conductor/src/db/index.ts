@@ -1,5 +1,8 @@
 import { Database } from "bun:sqlite";
+import { AFFINITY, CHAT_TURN } from "@eidolon/config";
 import { SQLITE_DB_PATH } from "@eidolon/config/server";
+import { capitalize } from "es-toolkit";
+import { startingTier } from "@/services/affinity-ladder";
 
 console.log(`[Database] SQLite: ${SQLITE_DB_PATH}`);
 
@@ -57,4 +60,137 @@ export function checkDatabaseHealth(): boolean {
     console.error("[Database] Health check failed:", error);
     return false;
   }
+}
+
+export function getCharacterName(characterId: string): string {
+  const row = db.query("SELECT name FROM characters WHERE id = ?").get(characterId) as {
+    name?: string;
+  } | null;
+  const name = row?.name?.trim();
+  return name && name.length > 0 ? name : capitalize(characterId);
+}
+
+export interface StoredMind {
+  score: number;
+  tier: string;
+  mood: string;
+}
+
+export function getCharacterMind(characterId: string): StoredMind {
+  const row = db
+    .query("SELECT affinity_score, affinity_tier, current_mood FROM characters WHERE id = ?")
+    .get(characterId) as {
+    affinity_score?: number;
+    affinity_tier?: string;
+    current_mood?: string;
+  } | null;
+
+  return {
+    score: Number.isFinite(row?.affinity_score) ? Number(row?.affinity_score) : AFFINITY.start,
+    tier: row?.affinity_tier ?? startingTier(),
+    mood: row?.current_mood ?? AFFINITY.defaultMood,
+  };
+}
+
+export function saveCharacterMind(characterId: string, mind: StoredMind): void {
+  db.query(
+    `INSERT INTO characters (id, name, affinity_score, affinity_tier, current_mood, created_at)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+     ON CONFLICT(id) DO UPDATE SET
+       affinity_score = ?3,
+       affinity_tier = ?4,
+       current_mood = ?5`,
+  ).run(characterId, capitalize(characterId), mind.score, mind.tier, mind.mood, Date.now());
+}
+
+export interface StoredCharacter {
+  name: string;
+  personality: string;
+  systemPrompt: string;
+  mood: string;
+  tier: string;
+}
+
+export function getCharacterCard(characterId: string): StoredCharacter {
+  const row = db
+    .query(
+      "SELECT name, personality, system_prompt, current_mood, affinity_tier FROM characters WHERE id = ?",
+    )
+    .get(characterId) as {
+    name?: string;
+    personality?: string;
+    system_prompt?: string;
+    current_mood?: string;
+    affinity_tier?: string;
+  } | null;
+
+  return {
+    name: row?.name?.trim() || capitalize(characterId),
+    personality: row?.personality ?? "",
+    systemPrompt: row?.system_prompt ?? "",
+    mood: row?.current_mood ?? AFFINITY.defaultMood,
+    tier: row?.affinity_tier ?? startingTier(),
+  };
+}
+
+export function ensureCharacter(characterId: string): void {
+  db.query(
+    "INSERT INTO characters (id, name, created_at) VALUES (?1, ?2, ?3) ON CONFLICT(id) DO NOTHING",
+  ).run(characterId, capitalize(characterId), Date.now());
+}
+
+export function appendMessage(
+  characterId: string,
+  role: "user" | "assistant",
+  content: string,
+): void {
+  ensureCharacter(characterId);
+  db.query(
+    "INSERT INTO messages (id, character_id, role, content, created_at) VALUES (?1, ?2, ?3, ?4, ?5)",
+  ).run(crypto.randomUUID(), characterId, role, content, Date.now());
+}
+
+export function getRecentMessages(characterId: string): { role: string; content: string }[] {
+  const rows = db
+    .query(
+      "SELECT role, content FROM messages WHERE character_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ?",
+    )
+    .all(characterId, CHAT_TURN.historyTurns) as { role: string; content: string }[];
+  return rows.reverse();
+}
+
+export interface StoredMessage {
+  id: string;
+  role: string;
+  content: string;
+  createdAt: number;
+}
+
+export function getTranscript(characterId: string, limit: number): StoredMessage[] {
+  const rows = db
+    .query(
+      "SELECT id, role, content, created_at FROM messages WHERE character_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ?",
+    )
+    .all(characterId, limit) as {
+    id: string;
+    role: string;
+    content: string;
+    created_at: number;
+  }[];
+
+  return rows
+    .map((row) => ({
+      id: row.id,
+      role: row.role,
+      content: row.content,
+      createdAt: row.created_at,
+    }))
+    .reverse();
+}
+
+export function forgetCharacter(characterId: string): void {
+  db.query("DELETE FROM messages WHERE character_id = ?").run(characterId);
+  db.query(
+    "UPDATE characters SET affinity_score = ?2, affinity_tier = ?3, current_mood = ?4 WHERE id = ?1",
+  ).run(characterId, AFFINITY.start, startingTier(), AFFINITY.defaultMood);
 }

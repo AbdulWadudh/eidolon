@@ -76,20 +76,31 @@ export async function searchWeb(query: string): Promise<SearchResultItem[]> {
         content?: string;
         url?: string;
       }>;
+      unresponsive_engines?: Array<[string, string]>;
     };
 
     const rawResults = data.results || [];
+    const blocked = data.unresponsive_engines ?? [];
+
+    if (rawResults.length === 0 && blocked.length > 0) {
+      console.warn(
+        `[SearXNG Client] No results for "${query}" because every engine refused: ` +
+          `${blocked.map(([engine, reason]) => `${engine} (${reason})`).join(", ")}. ` +
+          "This is the SearXNG instance, not the conductor. Enable engines that do not rate-limit.",
+      );
+    }
     const topResults: SearchResultItem[] = rawResults.slice(0, SEARCH.resultLimit).map((item) => ({
       title: item.title ?? "Untitled",
       content: item.content ?? "",
       url: item.url ?? "",
     }));
 
-    // Cache the successful results for 1 hour
-    searchCache.set(normalizedQuery, {
-      results: topResults,
-      expiresAt: now + CACHE_TTL_MS,
-    });
+    if (topResults.length > 0) {
+      searchCache.set(normalizedQuery, {
+        results: topResults,
+        expiresAt: now + CACHE_TTL_MS,
+      });
+    }
 
     return topResults;
   } catch (error) {

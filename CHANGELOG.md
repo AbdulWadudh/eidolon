@@ -40,6 +40,45 @@ and publishes it as the GitHub release notes.
   the databases at that volume.
 - Local development storage: `bun run storage:up` brings up an S3-compatible
   server and prints the settings to paste into `apps/conductor/.env`.
+- **Roleplay chat.** The chat screen streams a reply token by token behind a
+  trailing amber quill bead, renders dialogue and `*stage directions*` in
+  distinct faces, and virtualises the transcript so long threads stay smooth.
+- **Reply suggestions in character.** Three options per turn, written as short
+  first-person lines that open with a `*stage direction*` and stay inside two
+  sentences. Tap one to send it, long-press to drop it into the input and edit
+  the words first, or reroll for a fresh set.
+- **Hide the reply options.** An `✕` on the card puts them away for good; a
+  compact "Show 3 replies" chip brings them back whenever you want them. The
+  choice is remembered.
+- **Voice note tabs.** A `▶ 4"` chip riding above any message that carries
+  audio, merged into the bubble, swapping the play arrow for a moving waveform
+  while it plays.
+- **Scroll that follows the reader.** A new turn settles near the top with the
+  previous message still peeking above it, streaming only follows the live edge
+  while you are already there, and a "Jump to latest" pill brings you back.
+- **Input dock.** Stage-direction placeholder, amber caret, a send button that
+  becomes a stop button mid-reply, and a tool bar for mood, selfies, voice,
+  lorebook and quick actions.
+
+- **Conversations survive a reload.** Reopening a chat restores the transcript
+  and the character's mood and affinity from the conductor.
+- **Reset a character.** A "More actions" sheet behind the `+` button wipes the
+  conversation and puts the relationship back to the start.
+- **Nudge her mid-message.** `<be more shy>` in a message steers how she behaves
+  without being something you said out loud. She never answers it directly and
+  may take her time about it.
+- **Voice notes play as they arrive** and keep playing while you scroll, one at
+  a time.
+
+### Fixed
+
+- A release build can reach a conductor on your own network again.
+- The keyboard no longer covers the message box while you type.
+- Replies stay short instead of turning into a short story.
+- The transcript follows a reply as it is written, and leaves you alone if you
+  have scrolled up to read something earlier.
+- Reply options are no longer three fixed lines of filler.
+- The offline reply fallback no longer doubles every space.
 
 ## [1.0.1] - 2026-09-05
 

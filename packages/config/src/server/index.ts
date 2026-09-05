@@ -1,5 +1,6 @@
 export {
   getAuthBaseUrl,
+  getCacheUrl,
   getLocalIp,
   getMockBackdropUrl,
   getPairingSecret,

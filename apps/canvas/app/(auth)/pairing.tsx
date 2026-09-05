@@ -20,6 +20,10 @@ import { ArrowDown01Icon, ArrowUp01Icon, QrCodeIcon } from "@/lib/icons";
 import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme } from "@/store/theme-store";
 
+/** Baked in at build time so a release APK opens ready to connect. Empty is a
+ * supported configuration: the field simply starts blank. */
+const DEFAULT_HOST = process.env.EXPO_PUBLIC_CONDUCTOR_HOST ?? "";
+
 export default function PairingScreen() {
   const router = useRouter();
   const { pairFromUri, setManualConnection } = useConnectionStore();
@@ -27,7 +31,7 @@ export default function PairingScreen() {
   const [permission, requestPermission] = useCameraPermissions();
 
   const [isManualOpen, setIsManualOpen] = React.useState(false);
-  const [hostInput, setHostInput] = React.useState("");
+  const [hostInput, setHostInput] = React.useState(DEFAULT_HOST);
   const [tokenInput, setTokenInput] = React.useState("");
   const [isConnecting, setIsConnecting] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
@@ -177,7 +181,7 @@ export default function PairingScreen() {
                 <View>
                   <Text className="mb-1 font-ui text-xs text-text-muted">Server Host & Port</Text>
                   <Input
-                    placeholder="192.168.1.39:3000"
+                    placeholder={DEFAULT_HOST || "192.168.1.39:3000"}
                     value={hostInput}
                     onChangeText={setHostInput}
                     autoCapitalize="none"

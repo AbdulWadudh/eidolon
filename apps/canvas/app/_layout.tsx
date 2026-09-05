@@ -6,6 +6,7 @@ import * as React from "react";
 import { AppState, View } from "react-native";
 import { VariableContextProvider } from "react-native-css";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { initializeFonts } from "@/services/font-registry";
 import { useConnectionStore } from "@/store/connection";
@@ -57,14 +58,16 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <StatusBar style={resolvedTheme.mode === "light" ? "dark" : "light"} />
-        <VariableContextProvider value={dynamicVars}>
-          <View style={rootStyle} className="flex-1 bg-canvas">
-            <Stack screenOptions={stackScreenOptions} />
-          </View>
-        </VariableContextProvider>
-      </SafeAreaProvider>
+      <KeyboardProvider>
+        <SafeAreaProvider>
+          <StatusBar style={resolvedTheme.mode === "light" ? "dark" : "light"} />
+          <VariableContextProvider value={dynamicVars}>
+            <View style={rootStyle} className="flex-1 bg-canvas">
+              <Stack screenOptions={stackScreenOptions} />
+            </View>
+          </VariableContextProvider>
+        </SafeAreaProvider>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }

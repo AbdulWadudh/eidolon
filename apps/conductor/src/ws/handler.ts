@@ -1,15 +1,10 @@
 import { MOCK } from "@eidolon/config";
 import { getMockBackdropUrl } from "@eidolon/config/server";
-import { type ClientMessage, parseClientMessage, parseServerMessage } from "@eidolon/protocol";
+import { type ClientMessage, parseClientMessage } from "@eidolon/protocol";
 import type { WSMessageReceive } from "hono/ws";
 import { queueImageGeneration } from "@/services/comfyui";
-import { streamChatCompletion } from "@/services/llm";
-import { formatSearchResults, searchWeb } from "@/services/searxng";
-
-export interface WebSocketSender {
-  send: (data: string) => void;
-}
-
+import { handleChatTurn, handleRegenerateSuggestions } from "@/ws/chat-turn";
+import { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
 /**
  * Manages per-connection streaming tasks and abort handles.
  */
@@ -38,35 +33,7 @@ export class ClientSessionManager {
 
 export const sessionManager = new ClientSessionManager();
 
-/**
- * Sends a server message through the WebSocket after strictly validating through @eidolon/protocol.
- */
-export function sendServerMessage(ws: WebSocketSender, message: unknown): void {
-  const validated = parseServerMessage(message);
-  ws.send(JSON.stringify(validated));
-}
-
-/**
- * Determines whether the user text contains an inquiry or explicit search intent.
- */
-function shouldSearch(text: string): boolean {
-  const lower = text.toLowerCase();
-  const searchTriggers = [
-    "who is",
-    "what is",
-    "where is",
-    "when did",
-    "why did",
-    "how to",
-    "search",
-    "look up",
-    "lookup",
-    "tell me about",
-    "weather",
-    "news",
-  ];
-  return text.includes("?") || searchTriggers.some((trigger) => lower.includes(trigger));
-}
+export { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
 
 /**
  * Dispatches parsed client events and handles streaming lifecycles.
@@ -119,111 +86,16 @@ export async function handleClientMessage(
     }
 
     case "chat_turn": {
-      const signal = sessionManager.getAbortSignal(ws);
-      const userText = clientMsg.text;
-      let injectedContext = "";
-
-      // 1. Web Search Check
-      if (clientMsg.allow_search && shouldSearch(userText)) {
-        sendServerMessage(ws, {
-          type: "status_update",
-          payload: {
-            status: "searching",
-            detail: `Searching for: ${userText.slice(0, 30)}...`,
-          },
-        });
-
-        const searchResults = await searchWeb(userText);
-        injectedContext = formatSearchResults(searchResults);
-      }
-
-      if (signal.aborted) return;
-
-      // 2. Stream LLM Tokens
-      sendServerMessage(ws, {
-        type: "status_update",
-        payload: {
-          status: "thinking",
-        },
-      });
-
-      const messages = [
-        {
-          role: "system",
-          content: injectedContext
-            ? `You are an AI companion. Use this fresh factual search context if relevant:\n${injectedContext}`
-            : "You are an AI companion.",
-        },
-        {
-          role: "user",
-          content: userText,
-        },
-      ];
-
-      let inAsteriskNarration = false;
-      for await (const token of streamChatCompletion(messages, signal)) {
-        if (signal.aborted) break;
-
-        // Track narration mode: asterisks denote roleplay actions/narration
-        if (token.includes("*")) {
-          inAsteriskNarration = !inAsteriskNarration;
-        }
-
-        sendServerMessage(ws, {
-          type: "text_delta",
-          payload: {
-            token,
-            is_narration: inAsteriskNarration,
-          },
-        });
-      }
-
-      if (signal.aborted) return;
-
-      // 3. Response Suggestions
-      sendServerMessage(ws, {
-        type: "reply_suggestions",
-        payload: {
-          suggestions: [
-            "Tell me more about that.",
-            "What should we do next?",
-            "I understand, go on.",
-          ],
-        },
-      });
-
-      // 4. Mind Update
-      sendServerMessage(ws, {
-        type: "mind_update",
-        payload: {
-          affinity_delta: 2,
-          current_affinity: 76,
-          affinity_tier: "Trusted Confidant",
-          current_mood: "Playful",
-        },
-      });
-
-      // Reset to idle
-      sendServerMessage(ws, {
-        type: "status_update",
-        payload: {
-          status: "idle",
-        },
-      });
+      await handleChatTurn(ws, clientMsg, sessionManager.getAbortSignal(ws));
       break;
     }
 
     case "regenerate_suggestions": {
-      sendServerMessage(ws, {
-        type: "reply_suggestions",
-        payload: {
-          suggestions: [
-            "Could you explain further?",
-            "Let's change the topic.",
-            "Tell me what you think.",
-          ],
-        },
-      });
+      await handleRegenerateSuggestions(
+        ws,
+        clientMsg.character_id,
+        sessionManager.getAbortSignal(ws),
+      );
       break;
     }
 

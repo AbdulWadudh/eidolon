@@ -12,6 +12,7 @@ import { logger } from "hono/logger";
 import { buildHealthReport, v1 } from "@/api/v1";
 import { generatePairingPayload, getLocalIp, PAIRING_SECRET } from "@/auth";
 import { buildQrMatrix, qrTerminalColumns, renderQrTerminal } from "@/pairing/qr";
+import { loadPrompts } from "@/prompts/store";
 import { initStorage } from "@/services/storage";
 import { websocket } from "@/ws";
 
@@ -84,6 +85,8 @@ if (!isTestEnv()) {
   }
   console.log("");
 }
+
+await loadPrompts();
 
 export default {
   port,

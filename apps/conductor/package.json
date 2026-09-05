@@ -15,6 +15,7 @@
     "@lancedb/lancedb": "latest",
     "better-auth": "latest",
     "es-toolkit": "latest",
+    "eventsource-parser": "^4.1.0",
     "hono": "^4.6.0",
     "jsonrepair": "latest",
     "qrcode-terminal": "latest"

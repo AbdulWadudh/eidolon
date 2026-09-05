@@ -1,21 +1,53 @@
 import { capitalize, isString } from "es-toolkit";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as React from "react";
-import { Pressable, Text, View } from "react-native";
+import type { TextInput } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppIcon } from "@/components/common/icon";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft01Icon, Call02Icon } from "@/lib/icons";
+import { ActionsSheet, type ChatAction } from "@/components/chat/ActionsSheet";
+import { ChatFeed } from "@/components/chat/ChatFeed";
+import { ChatTopBar } from "@/components/chat/ChatTopBar";
+import { InputDock } from "@/components/chat/InputDock";
+import { ShowSuggestionsChip } from "@/components/chat/ShowSuggestionsChip";
+import { SuggestionTray } from "@/components/chat/SuggestionTray";
+import { useChatSocket } from "@/hooks/use-chat-socket";
+import { VoiceNotesProvider } from "@/hooks/use-voice-notes";
+import { forgetCharacter, loadHistory } from "@/store/chat-history";
+import { isShowSuggestionsChipVisible, isSuggestionTrayVisible } from "@/store/chat-selectors";
+import { useChatStore } from "@/store/chat-store";
+import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme, useThemeStore } from "@/store/theme-store";
 
-export default function ChatShellScreen() {
+const CONNECTION_LABEL = {
+  connected: "Active now",
+  connecting: "Connecting…",
+  reconnecting: "Reconnecting…",
+  disconnected: "Offline",
+} as const;
+
+const STATUS_LABEL: Record<string, string> = {
+  thinking: "Composing",
+  searching: "Searching",
+  painting: "Painting",
+  speaking: "Speaking",
+};
+
+export default function ChatScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const setActiveCharacter = useThemeStore((state) => state.setActiveCharacter);
 
   const characterId = isString(id) ? id : "default";
+  const characterName = capitalize(characterId);
   const theme = useResolvedTheme(characterId);
+  const inputRef = React.useRef<TextInput>(null);
+
+  const socket = useChatSocket(characterId);
+  const chat = useChatStore();
+  const serverHost = useConnectionStore((state) => state.serverHost);
+  const [actionsOpen, setActionsOpen] = React.useState(false);
+  const trayVisible = isSuggestionTrayVisible(chat);
+  const chipVisible = isShowSuggestionsChipVisible(chat);
 
   React.useEffect(() => {
     setActiveCharacter(characterId);
@@ -24,68 +56,140 @@ export default function ChatShellScreen() {
     };
   }, [characterId, setActiveCharacter]);
 
-  const characterName = capitalize(characterId);
+  React.useEffect(() => {
+    loadHistory(serverHost, characterId);
+  }, [serverHost, characterId]);
+
+  const statusColor = socket.isConnected
+    ? chat.activeStatus === "idle"
+      ? theme.success
+      : theme.primary
+    : theme.textMuted;
+
+  const statusLabel = socket.isConnected
+    ? `${CONNECTION_LABEL.connected} • ${STATUS_LABEL[chat.activeStatus] ?? chat.mind?.mood ?? "Ready"}`
+    : CONNECTION_LABEL[socket.status];
+
+  const autoPlay = React.useMemo(() => {
+    const target = chat.messages.find((entry) => entry.id === chat.autoPlayMessageId);
+    return target?.audioUrl ? { id: target.id, url: target.audioUrl } : null;
+  }, [chat.autoPlayMessageId, chat.messages]);
+
+  const handleSend = React.useCallback(() => {
+    chat.sendUserMessage(chat.inputText, characterId);
+  }, [chat.sendUserMessage, chat.inputText, characterId]);
+
+  const handleEditSuggestion = React.useCallback(
+    (text: string) => {
+      chat.selectSuggestion(text);
+      inputRef.current?.focus();
+    },
+    [chat.selectSuggestion],
+  );
+
+  const handleSendSuggestion = React.useCallback(
+    (text: string) => {
+      chat.sendUserMessage(text, characterId);
+    },
+    [chat.sendUserMessage, characterId],
+  );
+
+  const handleReroll = React.useCallback(() => {
+    chat.rerollSuggestions(characterId);
+  }, [chat.rerollSuggestions, characterId]);
+
+  const handleHideSuggestions = React.useCallback(() => {
+    chat.dismissSuggestions();
+  }, [chat.dismissSuggestions]);
+
+  const handleShowSuggestions = React.useCallback(() => {
+    chat.revealSuggestions();
+  }, [chat.revealSuggestions]);
+
+  const handleTurnOffSuggestions = React.useCallback(() => {
+    chat.setSuggestionsHidden(true);
+  }, [chat.setSuggestionsHidden]);
+
+  const handleAction = React.useCallback(
+    (action: ChatAction) => {
+      setActionsOpen(false);
+      if (action === "reset") forgetCharacter(serverHost, characterId);
+      if (action === "replies") chat.setSuggestionsHidden(!chat.areSuggestionsHidden);
+    },
+    [chat.setSuggestionsHidden, chat.areSuggestionsHidden, serverHost, characterId],
+  );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.canvas }} className="flex-1 bg-canvas">
-      {/* Top Bar */}
-      <View className="flex-row items-center justify-between border-b border-border px-4 py-3">
-        {/* Back Chevron */}
-        <Pressable
-          className="h-10 w-10 items-center justify-center rounded-button border border-border bg-card active:bg-border"
-          onPress={() => router.back()}
-        >
-          <AppIcon icon={ArrowLeft01Icon} size={20} color={theme.textPrimary} />
-        </Pressable>
+    <SafeAreaView
+      edges={["top", "bottom"]}
+      style={{ flex: 1, backgroundColor: theme.canvas }}
+      className="flex-1 bg-canvas"
+    >
+      <ChatTopBar
+        characterName={characterName}
+        characterId={characterId}
+        statusLabel={statusLabel}
+        statusColor={statusColor}
+        mind={chat.mind}
+        onBack={() => router.back()}
+        onCall={() => router.push(`/chat/${characterId}`)}
+        onOverflow={() => router.push("/demo")}
+      />
 
-        {/* Character Title Center */}
-        <View className="flex-row items-center gap-2.5">
-          <Avatar size={34} className="border border-primary">
-            <AvatarFallback textClassName="font-main-bold text-xs text-primary">
-              {characterName.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <View>
-            <Text className="font-main-bold text-base text-text-primary">{characterName}</Text>
-            <View className="flex-row items-center gap-1.5">
-              <View className="h-1.5 w-1.5 rounded-full bg-success" />
-              <Text className="font-ui text-[11px] text-text-muted">Ready for Stage</Text>
-            </View>
-          </View>
-        </View>
+      <KeyboardAvoidingView behavior="padding" automaticOffset style={{ flex: 1 }}>
+        <VoiceNotesProvider autoPlay={autoPlay}>
+          <ChatFeed
+            messages={chat.messages}
+            isStreaming={chat.isStreaming}
+            streamingText={chat.streamingText}
+            activeStatus={chat.activeStatus}
+            statusDetail={chat.statusDetail}
+            characterId={characterId}
+            characterName={characterName}
+            isSynthesizingAudio={chat.isSynthesizingAudio}
+          />
 
-        {/* Phone Call Button */}
-        <Pressable
-          className="h-10 w-10 items-center justify-center rounded-button border border-border bg-card active:bg-border"
-          onPress={() => {
-            // Audio call trigger placeholder
-          }}
-        >
-          <AppIcon icon={Call02Icon} size={20} color={theme.primary} />
-        </Pressable>
-      </View>
+          {trayVisible ? (
+            <SuggestionTray
+              suggestions={chat.suggestions}
+              isLoading={chat.isSuggestionsLoading}
+              characterId={characterId}
+              onSend={handleSendSuggestion}
+              onEdit={handleEditSuggestion}
+              onReroll={handleReroll}
+              onHide={handleHideSuggestions}
+            />
+          ) : null}
 
-      {/* Placeholder Body */}
-      <View className="flex-1 items-center justify-center p-6">
-        <View className="items-center rounded-card border border-border bg-card p-6 max-w-sm w-full">
-          <Avatar size={64} className="mb-4 border-2 border-primary">
-            <AvatarFallback textClassName="font-main-bold text-xl text-primary">
-              {characterName.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          {chipVisible ? (
+            <ShowSuggestionsChip
+              count={chat.suggestions.length}
+              characterId={characterId}
+              onPress={handleShowSuggestions}
+              onTurnOff={handleTurnOffSuggestions}
+            />
+          ) : null}
 
-          <Text className="font-main-bold text-xl text-text-primary">
-            {characterName} Stage Shell
-          </Text>
-          <Text className="mt-2 text-center font-ui text-xs text-text-muted leading-4">
-            Route resolved successfully: /chat/{id}
-          </Text>
+          <InputDock
+            value={chat.inputText}
+            isStreaming={chat.isStreaming}
+            characterId={characterId}
+            inputRef={inputRef}
+            onChangeText={chat.setInputText}
+            onSend={handleSend}
+            onInterrupt={() => chat.interrupt(characterId)}
+            onAction={(action) => action === "more" && setActionsOpen(true)}
+          />
+        </VoiceNotesProvider>
+      </KeyboardAvoidingView>
 
-          <View className="mt-4">
-            <Badge variant="warning">Dialogue & Audio Ready</Badge>
-          </View>
-        </View>
-      </View>
+      <ActionsSheet
+        isOpen={actionsOpen}
+        characterId={characterId}
+        repliesHidden={chat.areSuggestionsHidden}
+        onClose={() => setActionsOpen(false)}
+        onAction={handleAction}
+      />
     </SafeAreaView>
   );
 }

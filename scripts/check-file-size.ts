@@ -25,7 +25,6 @@ const KNOWN_DEBT: Record<string, number> = {
   "apps/canvas/components/theme/ThemeStudioSheet.tsx": 736,
   "apps/canvas/store/theme-store.ts": 317,
   "apps/canvas/components/ui/font-picker-modal.tsx": 345,
-  "apps/canvas/store/connection.ts": 336,
   "apps/canvas/services/font-registry.ts": 308,
 };
 

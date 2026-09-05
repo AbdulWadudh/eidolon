@@ -1,4 +1,4 @@
-import { apiUrl, HEALTH_ALIAS_PATH, stripAuthority, TIMEOUTS_MS } from "@eidolon/config";
+import { apiUrl, healthUrl, stripAuthority, TIMEOUTS_MS } from "@eidolon/config";
 
 /**
  * Confirms the token is actually accepted by this conductor.
@@ -48,7 +48,7 @@ export async function pingHealth(host: string, token?: string): Promise<boolean>
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetch(`http://${cleanHost}${HEALTH_ALIAS_PATH}`, {
+    const response = await fetch(healthUrl(cleanHost), {
       method: "GET",
       headers,
       signal: controller.signal,

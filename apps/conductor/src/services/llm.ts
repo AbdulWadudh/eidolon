@@ -1,12 +1,23 @@
 import { TIMEOUTS_MS } from "@eidolon/config";
 import { getServicesConfig } from "@eidolon/config/server";
 import { delay } from "es-toolkit";
+import { EventSourceParserStream } from "eventsource-parser/stream";
 import { safeJsonParse } from "@/utils/json";
 
 export interface ChatMessage {
   role: string;
   content: string;
 }
+
+export interface CompletionOptions {
+  temperature?: number;
+  maxTokens?: number;
+  stop?: string[];
+  allowMockFallback?: boolean;
+  responseSchema?: { name: string; schema: unknown };
+}
+
+export class LlmUnavailableError extends Error {}
 
 export const LLM_API_URL = getServicesConfig().llmApiUrl;
 export const LLM_MODEL = getServicesConfig().llmModel;
@@ -37,6 +48,7 @@ const MOCK_FALLBACK_TOKENS = [
 export async function* streamChatCompletion(
   messages: ChatMessage[],
   signal?: AbortSignal,
+  options?: CompletionOptions,
 ): AsyncGenerator<string> {
   try {
     const response = await fetch(`${LLM_API_URL}/chat/completions`, {
@@ -48,6 +60,20 @@ export async function* streamChatCompletion(
         model: LLM_MODEL,
         messages,
         stream: true,
+        ...(options?.temperature === undefined ? {} : { temperature: options.temperature }),
+        ...(options?.maxTokens === undefined ? {} : { max_tokens: options.maxTokens }),
+        ...(options?.stop === undefined ? {} : { stop: options.stop }),
+        ...(options?.responseSchema === undefined
+          ? {}
+          : {
+              response_format: {
+                type: "json_schema",
+                json_schema: {
+                  name: options.responseSchema.name,
+                  schema: options.responseSchema.schema,
+                },
+              },
+            }),
       }),
       signal,
     });
@@ -56,43 +82,20 @@ export async function* streamChatCompletion(
       throw new Error(`LLM endpoint returned status ${response.status}`);
     }
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-    let buffer = "";
+    const events = response.body
+      .pipeThrough(new TextDecoderStream())
+      .pipeThrough(new EventSourceParserStream());
 
-    while (true) {
-      if (signal?.aborted) {
-        break;
-      }
+    for await (const event of events) {
+      if (signal?.aborted) break;
+      if (event.data === "[DONE]") return;
 
-      const { done, value } = await reader.read();
-      if (done) break;
+      const parsed = safeJsonParse<{
+        choices?: Array<{ delta?: { content?: string } }>;
+      } | null>(event.data, null);
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? "";
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed?.startsWith("data:")) continue;
-
-        const dataStr = trimmed.slice(5).trim();
-        if (dataStr === "[DONE]") {
-          return;
-        }
-
-        try {
-          const parsed = JSON.parse(dataStr) as {
-            choices?: Array<{ delta?: { content?: string } }>;
-          };
-          const token = parsed.choices?.[0]?.delta?.content;
-          if (token) {
-            yield token;
-          }
-        } catch {
-          // Ignore malformed chunk lines
-        }
-      }
+      const token = parsed?.choices?.[0]?.delta?.content;
+      if (token) yield token;
     }
   } catch (error) {
     if (signal?.aborted) {
@@ -104,10 +107,16 @@ export async function* streamChatCompletion(
       }. Entering fallback mock mode.`,
     );
 
+    if (options?.allowMockFallback === false) {
+      throw new LlmUnavailableError(
+        error instanceof Error ? error.message : "LLM endpoint unavailable",
+      );
+    }
+
     for (const token of MOCK_FALLBACK_TOKENS) {
       if (signal?.aborted) break;
       await delay(25);
-      yield `${token} `;
+      yield token;
     }
   }
 }

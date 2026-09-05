@@ -1,5 +1,14 @@
-import { PAIRING, RECONNECT_DELAYS_MS, socketUrl, stripAuthority } from "@eidolon/config";
+import { isSecureHost, PAIRING, SOCKET, stripAuthority } from "@eidolon/config";
 import { create } from "zustand";
+import {
+  closeSocket,
+  configureSocket,
+  onSocketRetry,
+  onSocketStatus,
+  openSocket,
+  resetSocketBackoff,
+  type SocketStatus,
+} from "@/services/websocket";
 import { pingHealth, verifyPairing } from "./connection-api";
 import { appStorage } from "./storage";
 
@@ -7,16 +16,12 @@ export { pingHealth, verifyPairing };
 
 export type ConnectionState = "disconnected" | "connecting" | "connected" | "error";
 
-/** Failures before asking the server over HTTP whether the token is still valid. */
-const RE_VERIFY_AFTER_ATTEMPTS = 2;
-
 export interface ConnectionStore {
   serverHost: string;
   pairingToken: string;
   isPaired: boolean;
   connectionState: ConnectionState;
   lastError: string | null;
-  /** True only while the socket is actually open. */
   isSocketOpen: boolean;
   initializeConnection: () => void;
   pairFromUri: (uri: string) => Promise<boolean>;
@@ -32,13 +37,18 @@ const STORAGE_KEYS = {
   IS_PAIRED: "eidolon.is_paired",
 } as const;
 
+/** Keeps a TLS scheme so the socket knows to use wss, drops anything else. */
+export function normalizeHost(host: string): string {
+  const trimmed = host.trim().replace(/\/+$/, "");
+  return isSecureHost(trimmed) ? `https://${stripAuthority(trimmed)}` : stripAuthority(trimmed);
+}
+
 export function parsePairingUri(uri: string): { server: string; token: string } {
   const cleanUri = uri.trim();
   if (!cleanUri.startsWith(PAIRING.uriScheme)) {
     throw new Error(`Invalid pairing URI protocol. Expected ${PAIRING.uriScheme}?...`);
   }
 
-  // Handle URL parsing across native and node/bun
   const queryPart = cleanUri.includes("?") ? cleanUri.split("?")[1] : "";
   const params = new URLSearchParams(queryPart);
 
@@ -49,39 +59,20 @@ export function parsePairingUri(uri: string): { server: string; token: string } 
     throw new Error("Invalid pairing URI. Missing required 'server' or 'token' parameters.");
   }
 
-  // Strip http:// or https:// if provided in server parameter
-  const cleanHost = stripAuthority(server);
-
-  return { server: cleanHost, token };
+  return { server: normalizeHost(server), token };
 }
 
-let socket: WebSocket | null = null;
-let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-let reconnectAttempt = 0;
-/** Set when the user unpairs, so a pending close does not schedule a retry. */
-let intentionalClose = false;
-
-function clearReconnectTimer(): void {
-  if (reconnectTimer) {
-    clearTimeout(reconnectTimer);
-    reconnectTimer = null;
-  }
-}
-
-function closeSocket(): void {
-  intentionalClose = true;
-  clearReconnectTimer();
-  if (socket) {
-    socket.close();
-    socket = null;
-  }
-}
+const SOCKET_STATE_MAP: Record<SocketStatus, ConnectionState> = {
+  connected: "connected",
+  connecting: "connecting",
+  reconnecting: "error",
+  disconnected: "disconnected",
+};
 
 export const useConnectionStore = create<ConnectionStore>((set, get) => ({
   serverHost: appStorage.getString(STORAGE_KEYS.HOST) ?? "",
   pairingToken: appStorage.getString(STORAGE_KEYS.TOKEN) ?? "",
   isPaired: appStorage.getBoolean(STORAGE_KEYS.IS_PAIRED) ?? false,
-  // Being paired only means credentials are stored; the socket decides "connected".
   connectionState: "disconnected",
   lastError: null,
   isSocketOpen: false,
@@ -108,73 +99,9 @@ export const useConnectionStore = create<ConnectionStore>((set, get) => ({
   connect: () => {
     const { serverHost, pairingToken, isPaired } = get();
     if (!isPaired || !serverHost || !pairingToken) return;
-    if (socket && (socket.readyState === 0 || socket.readyState === 1)) return;
-
-    if (typeof WebSocket === "undefined") {
-      set({ connectionState: "error", lastError: "WebSocket is unavailable in this environment." });
-      return;
-    }
-
-    intentionalClose = false;
-    clearReconnectTimer();
-    set({ connectionState: "connecting" });
-
-    const url = socketUrl(serverHost, pairingToken);
-    let ws: WebSocket;
-    try {
-      ws = new WebSocket(url);
-    } catch (err) {
-      set({
-        connectionState: "error",
-        isSocketOpen: false,
-        lastError: err instanceof Error ? err.message : "Could not open a socket.",
-      });
-      return;
-    }
-    socket = ws;
-
-    ws.onopen = () => {
-      reconnectAttempt = 0;
-      set({ connectionState: "connected", isSocketOpen: true, lastError: null });
-    };
-
-    ws.onerror = () => {
-      // The close handler owns retrying; onerror carries no useful detail here.
-      set({ connectionState: "error", isSocketOpen: false });
-    };
-
-    ws.onclose = () => {
-      if (socket === ws) socket = null;
-      set({ isSocketOpen: false });
-
-      if (intentionalClose) {
-        set({ connectionState: "disconnected" });
-        return;
-      }
-
-      const attempt = reconnectAttempt;
-      reconnectAttempt += 1;
-
-      // The gateway rejects a bad token with HTTP 401 before the upgrade, so the
-      // socket only ever reports a generic abnormal close - indistinguishable
-      // from the server being down. After a couple of failures, ask over HTTP
-      // which it is, so a revoked token stops an endless retry loop.
-      if (attempt === RE_VERIFY_AFTER_ATTEMPTS) {
-        const { serverHost: host, pairingToken: currentToken } = get();
-        verifyPairing(host, currentToken).catch((err: unknown) => {
-          const message = err instanceof Error ? err.message : String(err);
-          if (message.includes("rejected")) {
-            closeSocket();
-            set({ connectionState: "error", lastError: message });
-          }
-        });
-      }
-
-      const delay = RECONNECT_DELAYS_MS[Math.min(attempt, RECONNECT_DELAYS_MS.length - 1)];
-      set({ connectionState: "error", lastError: "Connection lost. Reconnecting…" });
-      clearReconnectTimer();
-      reconnectTimer = setTimeout(() => get().connect(), delay);
-    };
+    configureSocket({ host: serverHost, token: pairingToken });
+    set({ connectionState: "connecting", lastError: null });
+    openSocket();
   },
 
   disconnect: () => {
@@ -212,10 +139,7 @@ export const useConnectionStore = create<ConnectionStore>((set, get) => ({
   setManualConnection: async (host: string, token: string): Promise<boolean> => {
     set({ connectionState: "connecting", lastError: null });
     try {
-      const cleanHost = host
-        .replace(/^https?:\/\//i, "")
-        .replace(/\/+$/, "")
-        .trim();
+      const cleanHost = normalizeHost(host);
       const cleanToken = token.trim();
 
       if (!cleanHost || !cleanToken) {
@@ -247,7 +171,8 @@ export const useConnectionStore = create<ConnectionStore>((set, get) => ({
 
   unpair: () => {
     closeSocket();
-    reconnectAttempt = 0;
+    configureSocket(null);
+    resetSocketBackoff();
     appStorage.delete(STORAGE_KEYS.HOST);
     appStorage.delete(STORAGE_KEYS.TOKEN);
     appStorage.delete(STORAGE_KEYS.IS_PAIRED);
@@ -262,3 +187,25 @@ export const useConnectionStore = create<ConnectionStore>((set, get) => ({
     });
   },
 }));
+
+onSocketStatus((status) => {
+  const { isPaired } = useConnectionStore.getState();
+  if (!isPaired && status !== "disconnected") return;
+  useConnectionStore.setState({
+    connectionState: SOCKET_STATE_MAP[status],
+    isSocketOpen: status === "connected",
+    lastError: status === "reconnecting" ? "Connection lost. Reconnecting…" : null,
+  });
+});
+
+onSocketRetry((attempt) => {
+  if (attempt !== SOCKET.reVerifyAfterAttempts) return;
+  const { serverHost, pairingToken } = useConnectionStore.getState();
+  if (!serverHost || !pairingToken) return;
+  verifyPairing(serverHost, pairingToken).catch((err: unknown) => {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("rejected")) return;
+    closeSocket();
+    useConnectionStore.setState({ connectionState: "error", lastError: message });
+  });
+});

@@ -4,6 +4,7 @@ import { type ServerMessage, ServerMessageSchema } from "./events/server";
 export * from "./character";
 export * from "./events/client";
 export * from "./events/server";
+export * from "./roleplay";
 
 function normalizeServerMessage(raw: unknown): unknown {
   if (

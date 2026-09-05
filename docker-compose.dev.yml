@@ -21,7 +21,31 @@ services:
       retries: 10
       start_period: 5s
 
+  cache:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
+    container_name: eidolon-cache
+    restart: unless-stopped
+    ulimits:
+      memlock: -1
+    ports:
+      - "6379:6379"
+    command:
+      - "--logtostderr"
+      - "--cache_mode=true"
+      - "--proactor_threads=2"
+      - "--maxmemory=512mb"
+    volumes:
+      - cache-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 3s
+
 volumes:
+  cache-data:
+    name: eidolon-cache-data
   s3-data:
     name: eidolon-s3-data
   s3-logs:
