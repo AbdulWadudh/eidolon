@@ -7,16 +7,7 @@ export function hasSuggestions(state: ChatStore): boolean {
 export function isSuggestionTrayVisible(state: ChatStore): boolean {
   return (
     !state.areSuggestionsHidden &&
-    !state.isTrayDismissed &&
-    state.inputText.length === 0 &&
-    hasSuggestions(state)
-  );
-}
-
-export function isShowSuggestionsChipVisible(state: ChatStore): boolean {
-  return (
-    !state.areSuggestionsHidden &&
-    state.isTrayDismissed &&
+    state.isTrayOpen &&
     state.inputText.length === 0 &&
     hasSuggestions(state)
   );

@@ -168,9 +168,14 @@ export async function handleChatTurn(
   const sceneTurns: ChatMessage[] = [...history, ...turn];
 
   sendServerMessage(ws, { type: "status_update", payload: { status: "speaking" } });
+
+  // Reply options cost three model calls, and most turns are answered by typing.
+  // They are generated when the reader asks for them, not on every turn.
   const [audio, suggestions] = await Promise.all([
     synthesizeSpeech(reply, TTS.voice, signal),
-    generateReplySuggestions(sceneTurns, { characterName: card.name, tier: card.tier }, signal),
+    SUGGESTIONS.autoGenerate
+      ? generateReplySuggestions(sceneTurns, { characterName: card.name, tier: card.tier }, signal)
+      : Promise.resolve(null),
   ]);
 
   if (audio) {
@@ -180,7 +185,9 @@ export async function handleChatTurn(
     });
   }
 
-  sendServerMessage(ws, { type: "reply_suggestions", payload: { suggestions } });
+  if (suggestions) {
+    sendServerMessage(ws, { type: "reply_suggestions", payload: { suggestions } });
+  }
 
   if (signal.aborted) return;
 

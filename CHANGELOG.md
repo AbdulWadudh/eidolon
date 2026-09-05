@@ -43,13 +43,14 @@ and publishes it as the GitHub release notes.
 - **Roleplay chat.** The chat screen streams a reply token by token behind a
   trailing amber quill bead, renders dialogue and `*stage directions*` in
   distinct faces, and virtualises the transcript so long threads stay smooth.
-- **Reply suggestions in character.** Three options per turn, written as short
-  first-person lines that open with a `*stage direction*` and stay inside two
-  sentences. Tap one to send it, long-press to drop it into the input and edit
-  the words first, or reroll for a fresh set.
-- **Hide the reply options.** An `✕` on the card puts them away for good; a
-  compact "Show 3 replies" chip brings them back whenever you want them. The
-  choice is remembered.
+- **Reply suggestions in character.** Three options written as short
+  first-person lines that stay inside two sentences. Tap one to send it,
+  long-press to drop it into the input and edit the words first, or reroll for a
+  fresh set.
+- **The ⚡ button asks for them.** Suggestions are generated when you tap the
+  lightning icon in the tool bar, not on every reply. The icon fills while the
+  options are showing and tapping it again puts them away, so a turn you meant
+  to type costs no extra model calls.
 - **Voice note tabs.** A `▶ 4"` chip riding above any message that carries
   audio, merged into the bubble, swapping the play arrow for a moving waveform
   while it plays.

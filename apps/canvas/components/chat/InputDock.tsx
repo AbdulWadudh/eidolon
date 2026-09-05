@@ -13,6 +13,7 @@ export interface InputDockProps {
   value: string;
   isStreaming: boolean;
   characterId: string;
+  suggestionsOpen?: boolean;
   inputRef?: React.RefObject<TextInput | null>;
   onChangeText: (text: string) => void;
   onSend: () => void;
@@ -24,6 +25,7 @@ export function InputDock({
   value,
   isStreaming,
   characterId,
+  suggestionsOpen,
   inputRef,
   onChangeText,
   onSend,
@@ -82,7 +84,11 @@ export function InputDock({
         </PressableScale>
       </View>
 
-      <InputToolbar characterId={characterId} onAction={onAction} />
+      <InputToolbar
+        characterId={characterId}
+        suggestionsOpen={suggestionsOpen}
+        onAction={onAction}
+      />
     </View>
   );
 }

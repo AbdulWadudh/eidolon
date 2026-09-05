@@ -8,12 +8,11 @@ import { ActionsSheet, type ChatAction } from "@/components/chat/ActionsSheet";
 import { ChatFeed } from "@/components/chat/ChatFeed";
 import { ChatTopBar } from "@/components/chat/ChatTopBar";
 import { InputDock } from "@/components/chat/InputDock";
-import { ShowSuggestionsChip } from "@/components/chat/ShowSuggestionsChip";
 import { SuggestionTray } from "@/components/chat/SuggestionTray";
 import { useChatSocket } from "@/hooks/use-chat-socket";
 import { VoiceNotesProvider } from "@/hooks/use-voice-notes";
 import { forgetCharacter, loadHistory } from "@/store/chat-history";
-import { isShowSuggestionsChipVisible, isSuggestionTrayVisible } from "@/store/chat-selectors";
+import { isSuggestionTrayVisible } from "@/store/chat-selectors";
 import { useChatStore } from "@/store/chat-store";
 import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme, useThemeStore } from "@/store/theme-store";
@@ -47,7 +46,6 @@ export default function ChatScreen() {
   const serverHost = useConnectionStore((state) => state.serverHost);
   const [actionsOpen, setActionsOpen] = React.useState(false);
   const trayVisible = isSuggestionTrayVisible(chat);
-  const chipVisible = isShowSuggestionsChipVisible(chat);
 
   React.useEffect(() => {
     setActiveCharacter(characterId);
@@ -102,13 +100,24 @@ export default function ChatScreen() {
     chat.dismissSuggestions();
   }, [chat.dismissSuggestions]);
 
-  const handleShowSuggestions = React.useCallback(() => {
+  const toggleSuggestions = React.useCallback(() => {
+    if (chat.isTrayOpen) {
+      chat.dismissSuggestions();
+      return;
+    }
     chat.revealSuggestions();
-  }, [chat.revealSuggestions]);
-
-  const handleTurnOffSuggestions = React.useCallback(() => {
-    chat.setSuggestionsHidden(true);
-  }, [chat.setSuggestionsHidden]);
+    if (chat.suggestions.length === 0 && !chat.isSuggestionsLoading) {
+      chat.rerollSuggestions(characterId);
+    }
+  }, [
+    chat.isTrayOpen,
+    chat.dismissSuggestions,
+    chat.revealSuggestions,
+    chat.rerollSuggestions,
+    chat.suggestions.length,
+    chat.isSuggestionsLoading,
+    characterId,
+  ]);
 
   const handleAction = React.useCallback(
     (action: ChatAction) => {
@@ -161,15 +170,6 @@ export default function ChatScreen() {
             />
           ) : null}
 
-          {chipVisible ? (
-            <ShowSuggestionsChip
-              count={chat.suggestions.length}
-              characterId={characterId}
-              onPress={handleShowSuggestions}
-              onTurnOff={handleTurnOffSuggestions}
-            />
-          ) : null}
-
           <InputDock
             value={chat.inputText}
             isStreaming={chat.isStreaming}
@@ -178,7 +178,11 @@ export default function ChatScreen() {
             onChangeText={chat.setInputText}
             onSend={handleSend}
             onInterrupt={() => chat.interrupt(characterId)}
-            onAction={(action) => action === "more" && setActionsOpen(true)}
+            suggestionsOpen={trayVisible}
+            onAction={(action) => {
+              if (action === "more") setActionsOpen(true);
+              if (action === "suggestions") toggleSuggestions();
+            }}
           />
         </VoiceNotesProvider>
       </KeyboardAvoidingView>

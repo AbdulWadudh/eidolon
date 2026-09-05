@@ -52,6 +52,7 @@ export const CHAT_MS = {
 
 export const SUGGESTIONS = {
   count: 3,
+  autoGenerate: false,
   sceneTurns: 8,
   maxSentences: 2,
   maxChars: 140,

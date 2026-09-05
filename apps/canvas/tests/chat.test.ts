@@ -19,9 +19,7 @@ mock.module("@/services/websocket", () => ({
 }));
 
 const { useChatStore } = await import("../store/chat-store");
-const { isShowSuggestionsChipVisible, isSuggestionTrayVisible } = await import(
-  "../store/chat-selectors"
-);
+const { isSuggestionTrayVisible } = await import("../store/chat-selectors");
 
 function feed(...messages: ServerMessage[]): void {
   for (const message of messages) {
@@ -126,7 +124,7 @@ describe("chat-store actions", () => {
   it("selectSuggestion is the long-press path: it fills the dock instead of sending", () => {
     useChatStore.setState({
       suggestions: ["*She leans in.* Tell me more."],
-      isTrayDismissed: false,
+      isTrayOpen: true,
     });
     expect(isSuggestionTrayVisible(useChatStore.getState())).toBe(true);
 
@@ -134,7 +132,7 @@ describe("chat-store actions", () => {
 
     const state = useChatStore.getState();
     expect(state.inputText).toBe("*She leans in.* Tell me more.");
-    expect(state.isTrayDismissed).toBe(true);
+    expect(state.isTrayOpen).toBe(false);
     expect(isSuggestionTrayVisible(state)).toBe(false);
     expect(state.messages).toHaveLength(0);
     expect(sent).toHaveLength(0);
@@ -154,33 +152,18 @@ describe("chat-store actions", () => {
     });
   });
 
-  it("keeps new reply options collapsed behind the chip until asked for", () => {
+  it("keeps new reply options folded away until asked for", () => {
     feed({
       type: "reply_suggestions",
       suggestions: ["*nods* One.", "*waits* Two.", "*grins* Three."],
     });
-
     expect(isSuggestionTrayVisible(useChatStore.getState())).toBe(false);
-    expect(isShowSuggestionsChipVisible(useChatStore.getState())).toBe(true);
 
     useChatStore.getState().revealSuggestions();
-
     expect(isSuggestionTrayVisible(useChatStore.getState())).toBe(true);
-    expect(isShowSuggestionsChipVisible(useChatStore.getState())).toBe(false);
   });
 
-  it("keeps the tray open through a reroll the reader asked for", () => {
-    feed({ type: "reply_suggestions", suggestions: ["*a* One.", "*b* Two.", "*c* Three."] });
-    useChatStore.getState().revealSuggestions();
-    useChatStore.setState({ messages: [], isSuggestionsLoading: true, isTrayDismissed: false });
-
-    feed({ type: "reply_suggestions", suggestions: ["*d* Four.", "*e* Five.", "*f* Six."] });
-
-    expect(isSuggestionTrayVisible(useChatStore.getState())).toBe(true);
-    expect(useChatStore.getState().suggestions[0]).toBe("*d* Four.");
-  });
-
-  it("collapses back to the chip rather than losing the options", () => {
+  it("folds away again rather than losing the options", () => {
     feed({
       type: "reply_suggestions",
       suggestions: ["*nods* One.", "*waits* Two.", "*grins* Three."],
@@ -189,43 +172,49 @@ describe("chat-store actions", () => {
     useChatStore.getState().dismissSuggestions();
 
     expect(isSuggestionTrayVisible(useChatStore.getState())).toBe(false);
-    expect(isShowSuggestionsChipVisible(useChatStore.getState())).toBe(true);
+    expect(useChatStore.getState().suggestions).toHaveLength(3);
   });
 
-  it("turning them off for good removes the chip too", () => {
-    feed({
-      type: "reply_suggestions",
-      suggestions: ["*nods* One.", "*waits* Two.", "*grins* Three."],
-    });
-    useChatStore.getState().setSuggestionsHidden(true);
-
-    expect(isSuggestionTrayVisible(useChatStore.getState())).toBe(false);
-    expect(isShowSuggestionsChipVisible(useChatStore.getState())).toBe(false);
-  });
-
-  it("keeps reply options off across the next turn until they are asked back", () => {
-    useChatStore.getState().setSuggestionsHidden(true);
+  it("keeps the tray open through a reroll the reader asked for", () => {
     feed({ type: "reply_suggestions", suggestions: ["*a* One.", "*b* Two.", "*c* Three."] });
+    useChatStore.getState().revealSuggestions();
+    useChatStore.getState().rerollSuggestions("emma");
+
+    feed({ type: "reply_suggestions", suggestions: ["*d* Four.", "*e* Five.", "*f* Six."] });
+
+    expect(isSuggestionTrayVisible(useChatStore.getState())).toBe(true);
+    expect(useChatStore.getState().suggestions[0]).toBe("*d* Four.");
+  });
+
+  it("will not open once reply options are turned off", () => {
+    feed({ type: "reply_suggestions", suggestions: ["*a* One.", "*b* Two.", "*c* Three."] });
+    useChatStore.getState().setSuggestionsHidden(true);
+    useChatStore.setState({ isTrayOpen: true });
 
     expect(isSuggestionTrayVisible(useChatStore.getState())).toBe(false);
-    expect(isShowSuggestionsChipVisible(useChatStore.getState())).toBe(false);
+  });
 
+  it("hides the tray while a draft is being typed", () => {
+    feed({ type: "reply_suggestions", suggestions: ["*a* One.", "*b* Two.", "*c* Three."] });
     useChatStore.getState().revealSuggestions();
     expect(isSuggestionTrayVisible(useChatStore.getState())).toBe(true);
+
+    useChatStore.getState().setInputText("half a thought");
+    expect(isSuggestionTrayVisible(useChatStore.getState())).toBe(false);
+  });
+
+  it("does not generate options on its own after a turn", () => {
+    useChatStore.getState().sendUserMessage("hi", "emma");
+    feed(delta("hello."), IDLE);
+
+    expect(useChatStore.getState().suggestions).toEqual([]);
+    expect(isSuggestionTrayVisible(useChatStore.getState())).toBe(false);
   });
 
   it("survives a chat reset with the hide preference intact", () => {
     useChatStore.getState().setSuggestionsHidden(true);
     useChatStore.getState().resetChat();
     expect(useChatStore.getState().areSuggestionsHidden).toBe(true);
-  });
-
-  it("offers no chip while the draft has text", () => {
-    feed({ type: "reply_suggestions", suggestions: ["*a* One.", "*b* Two.", "*c* Three."] });
-    expect(isShowSuggestionsChipVisible(useChatStore.getState())).toBe(true);
-
-    useChatStore.getState().setInputText("half a thought");
-    expect(isShowSuggestionsChipVisible(useChatStore.getState())).toBe(false);
   });
 
   it("sendUserMessage appends the turn, clears the draft and emits chat_turn", () => {
@@ -269,9 +258,13 @@ describe("chat-store actions", () => {
     });
   });
 
-  it("does not emit a reroll before there is anything to reroll from", () => {
+  it("can ask for options in a chat with no messages yet", () => {
     useChatStore.getState().rerollSuggestions("emma");
-    expect(useChatStore.getState().isSuggestionsLoading).toBe(false);
-    expect(sent).toHaveLength(0);
+
+    expect(useChatStore.getState().isSuggestionsLoading).toBe(true);
+    expect(sent.at(-1)).toMatchObject({
+      type: "regenerate_suggestions",
+      character_id: "emma",
+    });
   });
 });

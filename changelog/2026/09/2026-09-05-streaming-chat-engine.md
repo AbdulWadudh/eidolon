@@ -218,3 +218,66 @@ silently ignored, which looked exactly like a broken theme engine for a while.
   content change on all 17, and git stores LF in the index regardless. This will
   come back on a fresh clone until the repo gains a `.gitattributes`
   (`* text=auto eol=lf`). That one-line policy change is still worth making.
+
+## Suggestions move behind the lightning button, 2026-09-06
+
+The reply tray had two entry points and neither was cheap. It appeared on its
+own after every turn, and once dismissed it left a `Show 3 replies` chip
+floating above the dock. That chip is gone; the ⚡ in the input tool bar is the
+control now.
+
+**Tap once to ask, tap again to put away.** `ShowSuggestionsChip.tsx` was
+deleted along with the `isShowSuggestionsChipVisible` selector. `InputToolbar`
+gained a `suggestionsOpen` prop and its `ToolButton` an `active` state — a
+`primary` tint at `22` alpha behind the glyph, the primary colour on the stroke,
+and `strokeWidth` 2.4 against 1.8 — so the filled/off reading comes from the
+theme rather than a second icon. `accessibilityState.selected` carries the same
+fact to a screen reader.
+
+**Nothing is generated until it is asked for.** `SUGGESTIONS.autoGenerate` is
+`false`, and `ws/chat-turn.ts` only emits `reply_suggestions` when it is on:
+
+```ts
+const [audio, suggestions] = await Promise.all([
+  synthesizeSpeech(reply, TTS.voice, signal),
+  SUGGESTIONS.autoGenerate
+    ? generateReplySuggestions(sceneTurns, { characterName: card.name, tier: card.tier }, signal)
+    : Promise.resolve(null),
+]);
+```
+
+That matters more than it looks. A suggestion set is three constrained
+completions, and most turns are answered by typing — so the old behaviour paid
+for three model calls on every reply that nobody read. Measured against the
+local llama.cpp server, a turn now completes in **1143ms**; the suggestion set,
+when requested, takes a further **1120ms** of its own. Roughly half the
+end-to-end latency of a turn was being spent on options the reader never opened.
+
+**`isTrayDismissed` became `isTrayOpen`.** The old flag was negative and the
+default was "not dismissed", which made "closed by default" impossible to
+express without a second flag. Reading positively, `revealSuggestions` sets
+`isTrayOpen: true` and clears `areSuggestionsHidden`, `dismissSuggestions` sets
+it false, and the reroll branch in `handleServerMessage` keeps the tray open
+only when the reader is the one who asked:
+
+```ts
+isTrayOpen: state.isSuggestionsLoading ? state.isTrayOpen : false,
+```
+
+The screen generates on first open only — `toggleSuggestions` calls
+`rerollSuggestions` when the list is empty and nothing is already in flight, so
+re-opening the tray shows the set you last saw instead of burning three more
+completions.
+
+## Evidence
+
+- Live run against the local conductor: turn done in 1143ms with
+  `suggestions.length === 0` and the tray closed; tapping ⚡ set
+  `isSuggestionsLoading` and `isTrayOpen` together and produced three distinct
+  in-character options in 1120ms; tapping again hid the tray while keeping all
+  three cached.
+- `bun run lint` — 164 files, clean. `bun run typecheck` — 5 packages, clean.
+- `bun run test` — 261 pass / 0 fail (protocol 25, config 33, canvas 68,
+  conductor 135). `ws.test.ts` now asserts a plain turn emits **no**
+  `reply_suggestions`, and that `regenerate_suggestions` does.
+- `bun run check:size` — no new file over 300 lines.

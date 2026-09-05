@@ -69,7 +69,7 @@ describe("Conductor WebSocket Router", () => {
     ws.close();
   });
 
-  it("handles chat_turn streaming, reply_suggestions, and mind_update", async () => {
+  it("streams a turn and appraises it, without spending calls on reply options", async () => {
     const ws = new WebSocket(`${wsUrl}?token=${PAIRING_SECRET}`);
 
     const receivedMessages: ServerMessage[] = [];
@@ -121,14 +121,47 @@ describe("Conductor WebSocket Router", () => {
     const messageTypes = receivedMessages.map((m) => m.type);
     expect(messageTypes).toContain("status_update");
     expect(messageTypes).toContain("text_delta");
-    expect(messageTypes).toContain("reply_suggestions");
     expect(messageTypes).toContain("mind_update");
 
-    // Verify reply suggestions payload
-    const suggestionsMsg = receivedMessages.find((m) => m.type === "reply_suggestions");
-    expect(suggestionsMsg).toBeDefined();
-    if (suggestionsMsg?.type === "reply_suggestions") {
-      expect(suggestionsMsg.suggestions.length).toBe(3);
+    // Reply options cost three model calls and most turns are answered by
+    // typing, so they are only produced when the reader asks for them.
+    expect(messageTypes).not.toContain("reply_suggestions");
+
+    ws.close();
+  });
+
+  it("produces reply options when they are actually asked for", async () => {
+    const ws = new WebSocket(`${wsUrl}?token=${PAIRING_SECRET}`);
+
+    const suggestions = new Promise<ServerMessage>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error("Timeout waiting for suggestions")), 20000);
+      ws.onmessage = (event) => {
+        const parsed = parseServerMessage(String(event.data));
+        if (parsed.type !== "reply_suggestions") return;
+        clearTimeout(timer);
+        resolve(parsed);
+      };
+      ws.onerror = (err) => {
+        clearTimeout(timer);
+        reject(err);
+      };
+    });
+
+    await new Promise<void>((resolve) => {
+      ws.onopen = () => resolve();
+    });
+
+    ws.send(
+      JSON.stringify({
+        type: "regenerate_suggestions",
+        character_id: "char-123",
+        last_message_id: "new-chat",
+      }),
+    );
+
+    const message = await suggestions;
+    if (message.type === "reply_suggestions") {
+      expect(message.suggestions).toHaveLength(3);
     }
 
     ws.close();

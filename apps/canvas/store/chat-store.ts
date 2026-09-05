@@ -21,6 +21,8 @@ const HEARTBEAT_DETAIL = "pong";
 
 const SUGGESTIONS_HIDDEN_KEY = "eidolon.chat.suggestions_hidden";
 
+const NEW_CHAT_ANCHOR = "new-chat";
+
 export interface ChatStore {
   activeCharacterId: string;
   messages: ChatMessage[];
@@ -31,7 +33,7 @@ export interface ChatStore {
   statusDetail: string | null;
   suggestions: string[];
   isSuggestionsLoading: boolean;
-  isTrayDismissed: boolean;
+  isTrayOpen: boolean;
   areSuggestionsHidden: boolean;
   inputText: string;
   mind: MindState | null;
@@ -64,7 +66,7 @@ export const INITIAL_CHAT = {
   statusDetail: null as string | null,
   suggestions: [] as string[],
   isSuggestionsLoading: false,
-  isTrayDismissed: false,
+  isTrayOpen: false,
   inputText: "",
   mind: null as MindState | null,
   pendingAudio: null as AudioAttachment | null,
@@ -81,13 +83,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   setActiveCharacter: (characterId) => set({ activeCharacterId: characterId }),
 
-  dismissSuggestions: () => set({ isTrayDismissed: true }),
+  dismissSuggestions: () => set({ isTrayOpen: false }),
 
-  revealSuggestions: () => set({ isTrayDismissed: false, areSuggestionsHidden: false }),
+  revealSuggestions: () => set({ isTrayOpen: true, areSuggestionsHidden: false }),
 
   setSuggestionsHidden: (hidden) => {
     appStorage.set(SUGGESTIONS_HIDDEN_KEY, hidden);
-    set({ areSuggestionsHidden: hidden, isTrayDismissed: hidden });
+    set({ areSuggestionsHidden: hidden, isTrayOpen: false });
   },
 
   setInputText: (text) => set({ inputText: text }),
@@ -103,7 +105,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       inputText: "",
       suggestions: [],
       isSuggestionsLoading: false,
-      isTrayDismissed: false,
+      isTrayOpen: false,
       isStreaming: true,
       streamingText: "",
       streamingIsNarration: false,
@@ -139,8 +141,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           suggestions: msg.payload?.suggestions ?? msg.suggestions,
           isSuggestionsLoading: false,
           // A reroll the reader asked for keeps the tray open under them.
-          // A fresh turn's options arrive collapsed behind the chip.
-          isTrayDismissed: state.isSuggestionsLoading ? state.isTrayDismissed : true,
+          // Anything else arrives folded away behind the chip.
+          isTrayOpen: state.isSuggestionsLoading ? state.isTrayOpen : false,
         }));
         break;
       }
@@ -205,10 +207,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   rerollSuggestions: (characterId) => {
-    const lastMessageId = findLastAssistantId(get().messages) ?? last(get().messages)?.id ?? null;
-    if (!lastMessageId) return;
+    // A fresh chat has nothing to anchor to; the conductor reads its own history
+    // anyway, so this only has to satisfy the schema.
+    const lastMessageId =
+      findLastAssistantId(get().messages) ?? last(get().messages)?.id ?? NEW_CHAT_ANCHOR;
 
-    set({ isSuggestionsLoading: true, isTrayDismissed: false });
+    set({ isSuggestionsLoading: true, isTrayOpen: true });
     sendMessage({
       type: "regenerate_suggestions",
       character_id: characterId,
@@ -216,7 +220,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     });
   },
 
-  selectSuggestion: (suggestion) => set({ inputText: suggestion, isTrayDismissed: true }),
+  selectSuggestion: (suggestion) => set({ inputText: suggestion, isTrayOpen: false }),
 
   interrupt: (characterId) => {
     sendMessage({ type: "interrupt", character_id: characterId });
