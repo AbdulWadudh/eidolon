@@ -59,6 +59,28 @@ wrong-libc prebuilt binaries, took the amd64 image from 1.13 GB to 702 MB. The
 container test that inserts a memory and vector-searches it back is what says
 this is safe.
 
+## Coolify
+
+Deployed as an **application** (not a service) with the `dockercompose` build
+pack, from the public repo on `main`, into project `Apps` / environment
+`eidolon`. Compose file `/docker-compose.yaml`, base directory `/`.
+
+The server is `aarch64` and the proxy is Caddy, which is why the image was
+checked on arm64 before anything was pushed.
+
+Setting the domain took three attempts and the notes are worth keeping:
+
+- `PATCH /applications/{uuid}` with `domains` — rejected.
+- `docker_compose_domains` as the JSON-string map Coolify *stores* internally —
+  rejected. Both fail with a bare "Validation failed".
+- The API takes an **array**: `[{"name": "conductor", "domain": "https://.../:3000"}]`.
+  That is a different shape from the stored value, and the error says nothing
+  about it.
+
+Setting `SERVICE_FQDN_CONDUCTOR_3000` as an env var and redeploying does not
+work either: once `docker_compose_domains` holds a generated subdomain, it is
+authoritative.
+
 ## Follow-ups
 
 - `bun run lint` still reports 17 formatter errors, all in `apps/canvas` `.tsx`
