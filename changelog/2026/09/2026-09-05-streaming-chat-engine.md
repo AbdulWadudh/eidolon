@@ -302,11 +302,20 @@ const TOOL_SLOP = (CHAT.minTouchTargetPx - CHAT.toolButtonPx) / 2;
 const TOOL_GAP = CHAT.minTouchTargetPx - CHAT.toolButtonPx;
 ```
 
-With `toolButtonPx: 32` against a 48px target that is an 8px halo and a 16px
-gap, so each button owns exactly one 48px band and adjacent bands meet without
-crossing: `-8 → 40`, `40 → 88`, `88 → 136`. The buttons look the same; only the
-spacing widened. Both groups plus the dock's `mx-4` and `p-2.5` come to 308px,
-so the row still fits a 320px screen.
+With `toolButtonPx: 32` against a 44px target that is a 6px halo and a 12px gap,
+so each button owns exactly one 44px band and adjacent bands meet without
+crossing: `-6 → 38`, `38 → 82`, `82 → 126`.
+
+That first landed at 48px and read as too airy. The floor in `RULES.md` is 44pt,
+not 48, so the band came down to the rule's actual minimum. Density then runs
+into arithmetic: the gap between two glyphs is `band - icon`, which is invariant
+under how the 44px is split between button box and gap — shrinking the box just
+moves the space around. The only lever left is the glyph, so `toolIconPx` is 20
+rather than 18. Together that is 24px between icons, down from 30px, with the
+touch target intact. Going tighter means breaking the 44pt rule.
+
+Both groups plus the dock's `mx-4` and `p-2.5` come to 292px, so the row fits a
+320px screen.
 
 Worth generalising: `hitSlop` large enough to reach a 48px target is only safe
 when the gap is at least as large as the slop on both sides. A slop bigger than

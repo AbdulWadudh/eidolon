@@ -72,7 +72,7 @@ function ToolButton({
     >
       <AppIcon
         icon={spec.icon}
-        size={18}
+        size={CHAT.toolIconPx}
         color={active ? (activeColor ?? color) : color}
         strokeWidth={active ? 2.4 : 1.8}
       />
