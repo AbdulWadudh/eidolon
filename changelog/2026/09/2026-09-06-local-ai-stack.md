@@ -405,6 +405,23 @@ so `http://192.168.x.x:3000` and `ws://` are refused in a release build with no
 useful error. `android.usesCleartextTraffic` is now set, which is what makes
 local pairing work from an installed build.
 
+### Pairing was never actually persisted outside a native build
+
+Rescanning the QR on every launch was not a missing feature; the credentials
+were being written to nothing. `initStorage` falls back when `react-native-mmkv`
+is unavailable — Expo Go, the web bundle, tests — and that fallback persisted
+only through `window.localStorage`, which does not exist in React Native. On a
+device it was pure memory, so host, token and `isPaired` died with the process.
+
+It writes a JSON file through the synchronous `expo-file-system/next` API now,
+which keeps the `KeyValueStorage` contract synchronous and needs no new
+dependency. A corrupt file starts empty rather than failing the launch, and no
+file at all still works, which is the web case.
+
+The class takes its file by injection so the tests can run two "launches"
+against one fake file and prove hydration, rather than fighting the module
+cache with a second import.
+
 ## Evidence
 
 - `llama-server --list-devices` → `CUDA0: NVIDIA GeForce RTX 5070 Ti`.
@@ -413,7 +430,7 @@ local pairing work from an installed build.
 - Same run against character id `rowan` — no `EMMA` leakage.
 - SDXL render checked visually; PuLID's five nodes present in `/object_info`.
 - `bun run lint` clean, `bun run typecheck` 5 packages / 0 errors,
-  `bun run test` 253 pass / 0 fail (conductor 134, canvas 61, config 33,
+  `bun run test` 260 pass / 0 fail (conductor 134, canvas 68, config 33,
   protocol 25).
 - History, live: a turn, a simulated reload, and the transcript came back with
   affinity intact and the character still recalling a detail from before it.

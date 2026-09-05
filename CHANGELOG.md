@@ -73,6 +73,8 @@ and publishes it as the GitHub release notes.
 ### Fixed
 
 - A release build can reach a conductor on your own network again.
+- Pairing is remembered between launches instead of asking for the QR code
+  every time.
 - The keyboard no longer covers the message box while you type.
 - Replies stay short instead of turning into a short story.
 - The transcript follows a reply as it is written, and leaves you alone if you

@@ -173,11 +173,17 @@ Each of these cost real time. Do not rediscover them.
     looks exactly like the conductor being unreachable. `usesCleartextTraffic`
     in `app.json` is what makes LAN pairing work outside a dev build.
 
-27. **A player inside a FlashList cell dies on recycle.** `expo-audio` releases
+27. **The storage fallback used to persist nothing on a device.** When MMKV is
+    unavailable (Expo Go, web, tests) `appStorage` falls back, and that fallback
+    wrote only to `window.localStorage` — which React Native does not have. It
+    uses `expo-file-system/next` now; if you see pairing lost on every launch,
+    check which branch of `initStorage` is live.
+
+28. **A player inside a FlashList cell dies on recycle.** `expo-audio` releases
     the native player when the cell unmounts, so scrolling stopped playback.
     Own the player above the list and keep the rows presentational.
 
-28. **Metro caches module resolution across a new native install.** Adding a
+29. **Metro caches module resolution across a new native install.** Adding a
     package while the dev server is running fails with `Unable to resolve` on
     paths that plainly exist. Restart with `--clear` before believing the error.
 
