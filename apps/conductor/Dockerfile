@@ -4,6 +4,7 @@ WORKDIR /app
 COPY package.json bun.lock ./
 COPY apps/conductor/package.json apps/conductor/
 COPY apps/canvas/package.json apps/canvas/
+COPY packages/config/package.json packages/config/
 COPY packages/protocol/package.json packages/protocol/
 COPY packages/tokens/package.json packages/tokens/
 COPY packages/tsconfig/package.json packages/tsconfig/
