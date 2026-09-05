@@ -1,0 +1,135 @@
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { parseServerMessage, type ServerMessage } from "@eidolon/protocol";
+import { app } from "../src";
+import { PAIRING_SECRET } from "../src/auth";
+import { websocket } from "../src/ws";
+
+describe("Conductor WebSocket Router", () => {
+  let server: ReturnType<typeof Bun.serve>;
+  let wsUrl: string;
+
+  beforeAll(() => {
+    // Start ephemeral server for WebSocket integration tests
+    server = Bun.serve({
+      port: 0,
+      fetch: app.fetch,
+      websocket,
+    });
+    wsUrl = `ws://localhost:${server.port}/ws`;
+  });
+
+  afterAll(() => {
+    server.stop(true);
+  });
+
+  it("rejects unauthorized HTTP upgrade without token", async () => {
+    const res = await app.request("/ws");
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects unauthorized HTTP upgrade with invalid token", async () => {
+    const res = await app.request("/ws?token=invalid_secret");
+    expect(res.status).toBe(401);
+  });
+
+  it("accepts authorized connection and handles ping", async () => {
+    const ws = new WebSocket(`${wsUrl}?token=${PAIRING_SECRET}`);
+
+    const messagePromise = new Promise<ServerMessage>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error("Timeout waiting for pong")), 4000);
+      ws.onmessage = (event) => {
+        clearTimeout(timer);
+        try {
+          const parsed = parseServerMessage(String(event.data));
+          resolve(parsed);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      ws.onerror = (err) => {
+        clearTimeout(timer);
+        reject(err);
+      };
+    });
+
+    await new Promise<void>((resolve) => {
+      ws.onopen = () => resolve();
+    });
+
+    ws.send(JSON.stringify({ type: "ping" }));
+    const reply = await messagePromise;
+
+    expect(reply.type).toBe("status_update");
+    if (reply.type === "status_update") {
+      expect(reply.status).toBe("idle");
+      expect(reply.detail).toBe("pong");
+    }
+
+    ws.close();
+  });
+
+  it("handles chat_turn streaming, reply_suggestions, and mind_update", async () => {
+    const ws = new WebSocket(`${wsUrl}?token=${PAIRING_SECRET}`);
+
+    const receivedMessages: ServerMessage[] = [];
+
+    const completionPromise = new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(
+        () => reject(new Error("Timeout waiting for chat completion")),
+        6000,
+      );
+
+      ws.onmessage = (event) => {
+        try {
+          const parsed = parseServerMessage(String(event.data));
+          receivedMessages.push(parsed);
+
+          // Once mind_update is received, the chat turn is complete
+          if (parsed.type === "mind_update") {
+            clearTimeout(timer);
+            resolve();
+          }
+        } catch (err) {
+          clearTimeout(timer);
+          reject(err);
+        }
+      };
+
+      ws.onerror = (err) => {
+        clearTimeout(timer);
+        reject(err);
+      };
+    });
+
+    await new Promise<void>((resolve) => {
+      ws.onopen = () => resolve();
+    });
+
+    // Dispatch chat turn
+    ws.send(
+      JSON.stringify({
+        type: "chat_turn",
+        character_id: "char-123",
+        text: "Hello Eidolon, how are you today?",
+        allow_search: false,
+      }),
+    );
+
+    await completionPromise;
+
+    const messageTypes = receivedMessages.map((m) => m.type);
+    expect(messageTypes).toContain("status_update");
+    expect(messageTypes).toContain("text_delta");
+    expect(messageTypes).toContain("reply_suggestions");
+    expect(messageTypes).toContain("mind_update");
+
+    // Verify reply suggestions payload
+    const suggestionsMsg = receivedMessages.find((m) => m.type === "reply_suggestions");
+    expect(suggestionsMsg).toBeDefined();
+    if (suggestionsMsg?.type === "reply_suggestions") {
+      expect(suggestionsMsg.suggestions.length).toBe(3);
+    }
+
+    ws.close();
+  });
+});

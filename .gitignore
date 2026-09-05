@@ -18,7 +18,8 @@ build/
 .cache/
 
 # Local databases and persistence
-data/
+**/data/*
+!**/data/.gitignore
 .lancedb/
 
 # Native builds

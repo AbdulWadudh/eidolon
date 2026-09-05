@@ -10,11 +10,17 @@
   "dependencies": {
     "@eidolon/protocol": "workspace:*",
     "@eidolon/tokens": "workspace:*",
-    "hono": "^4.6.0"
+    "@lancedb/lancedb": "latest",
+    "better-auth": "latest",
+    "es-toolkit": "latest",
+    "hono": "^4.6.0",
+    "jsonrepair": "latest",
+    "qrcode-terminal": "latest"
   },
   "devDependencies": {
     "@eidolon/tsconfig": "workspace:*",
     "@types/bun": "latest",
+    "@types/qrcode-terminal": "latest",
     "typescript": "^5.7.3"
   }
 }

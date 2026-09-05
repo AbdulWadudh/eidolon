@@ -10,12 +10,24 @@ export const StatusUpdateSchema = z.object({
   type: z.literal("status_update"),
   status: ServerStatusEnum,
   detail: z.string().optional(),
+  payload: z
+    .object({
+      status: ServerStatusEnum,
+      detail: z.string().optional(),
+    })
+    .optional(),
 });
 
 export const TextDeltaSchema = z.object({
   type: z.literal("text_delta"),
   token: z.string(),
   is_narration: z.boolean(),
+  payload: z
+    .object({
+      token: z.string(),
+      is_narration: z.boolean(),
+    })
+    .optional(),
 });
 
 export const AudioChunkSchema = z.object({
@@ -23,6 +35,13 @@ export const AudioChunkSchema = z.object({
   format: AudioFormatEnum,
   data: z.string(), // base64 encoded audio
   sentence_index: z.number().int().nonnegative(),
+  payload: z
+    .object({
+      format: AudioFormatEnum,
+      data: z.string(),
+      sentence_index: z.number().int().nonnegative(),
+    })
+    .optional(),
 });
 
 export const StageShiftSchema = z.object({
@@ -31,6 +50,14 @@ export const StageShiftSchema = z.object({
   backdrop_url: z.string().url(),
   lighting_tint: z.string(),
   soundscape_stems: z.array(z.string()),
+  payload: z
+    .object({
+      location_name: z.string(),
+      backdrop_url: z.string().url(),
+      lighting_tint: z.string(),
+      soundscape_stems: z.array(z.string()),
+    })
+    .optional(),
 });
 
 export const ImagePreviewSchema = z.object({
@@ -38,6 +65,13 @@ export const ImagePreviewSchema = z.object({
   step: z.number().int().nonnegative(),
   total_steps: z.number().int().positive(),
   preview_base64: z.string(),
+  payload: z
+    .object({
+      step: z.number().int().nonnegative(),
+      total_steps: z.number().int().positive(),
+      preview_base64: z.string(),
+    })
+    .optional(),
 });
 
 export const ImageReadySchema = z.object({
@@ -45,6 +79,13 @@ export const ImageReadySchema = z.object({
   image_url: z.string().url(),
   aspect_ratio: ImageAspectRatioEnum,
   prompt_used: z.string(),
+  payload: z
+    .object({
+      image_url: z.string().url(),
+      aspect_ratio: ImageAspectRatioEnum,
+      prompt_used: z.string(),
+    })
+    .optional(),
 });
 
 export const MindUpdateSchema = z.object({
@@ -54,22 +95,47 @@ export const MindUpdateSchema = z.object({
   affinity_tier: z.string(),
   current_mood: z.string(),
   new_memory_logged: z.string().optional(),
+  payload: z
+    .object({
+      affinity_delta: z.number(),
+      current_affinity: z.number(),
+      affinity_tier: z.string(),
+      current_mood: z.string(),
+      new_memory_logged: z.string().optional(),
+    })
+    .optional(),
 });
 
 export const ReplySuggestionsSchema = z.object({
   type: z.literal("reply_suggestions"),
   suggestions: z.array(z.string()).length(3),
+  payload: z
+    .object({
+      suggestions: z.array(z.string()).length(3),
+    })
+    .optional(),
 });
 
 export const ErrorSchema = z.object({
   type: z.literal("error"),
   code: z.string(),
   message: z.string(),
+  payload: z
+    .object({
+      code: z.string(),
+      message: z.string(),
+    })
+    .optional(),
 });
 
 export const PongSchema = z.object({
   type: z.literal("pong"),
   timestamp: z.number().optional(),
+  payload: z
+    .object({
+      timestamp: z.number().optional(),
+    })
+    .optional(),
 });
 
 export const ServerMessageSchema = z.discriminatedUnion("type", [

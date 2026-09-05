@@ -174,4 +174,36 @@ describe("Protocol - Server Messages", () => {
     const result = safeParseServerMessage(raw);
     expect(result.success).toBe(false);
   });
+
+  it("should parse payload-enveloped status_update and text_delta", () => {
+    const rawStatus = {
+      type: "status_update",
+      payload: {
+        status: "idle",
+        detail: "pong",
+      },
+    };
+    const parsedStatus = parseServerMessage(rawStatus);
+    expect(parsedStatus.type).toBe("status_update");
+    if (parsedStatus.type === "status_update") {
+      expect(parsedStatus.status).toBe("idle");
+      expect(parsedStatus.detail).toBe("pong");
+      expect(parsedStatus.payload?.status).toBe("idle");
+    }
+
+    const rawDelta = {
+      type: "text_delta",
+      payload: {
+        token: "Greetings",
+        is_narration: false,
+      },
+    };
+    const parsedDelta = parseServerMessage(rawDelta);
+    expect(parsedDelta.type).toBe("text_delta");
+    if (parsedDelta.type === "text_delta") {
+      expect(parsedDelta.token).toBe("Greetings");
+      expect(parsedDelta.is_narration).toBe(false);
+      expect(parsedDelta.payload?.token).toBe("Greetings");
+    }
+  });
 });

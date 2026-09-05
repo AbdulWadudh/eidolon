@@ -5,6 +5,21 @@ export * from "./character";
 export * from "./events/client";
 export * from "./events/server";
 
+function normalizeServerMessage(raw: unknown): unknown {
+  if (
+    raw &&
+    typeof raw === "object" &&
+    "payload" in raw &&
+    typeof (raw as { payload: unknown }).payload === "object" &&
+    (raw as { payload: unknown }).payload !== null
+  ) {
+    const obj = raw as Record<string, unknown>;
+    const payload = obj.payload as Record<string, unknown>;
+    return { ...payload, ...obj, payload };
+  }
+  return raw;
+}
+
 /**
  * Validates and parses an unknown incoming client message against the ClientMessageSchema.
  * Throws a ZodError if validation fails.
@@ -20,7 +35,8 @@ export function parseClientMessage(raw: unknown): ClientMessage {
  */
 export function parseServerMessage(raw: unknown): ServerMessage {
   const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-  return ServerMessageSchema.parse(parsed);
+  const normalized = normalizeServerMessage(parsed);
+  return ServerMessageSchema.parse(normalized);
 }
 
 /**
@@ -44,7 +60,8 @@ export function safeParseClientMessage(raw: unknown) {
 export function safeParseServerMessage(raw: unknown) {
   try {
     const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-    return ServerMessageSchema.safeParse(parsed);
+    const normalized = normalizeServerMessage(parsed);
+    return ServerMessageSchema.safeParse(normalized);
   } catch (err) {
     return {
       success: false as const,
