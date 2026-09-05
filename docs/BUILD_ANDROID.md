@@ -115,12 +115,14 @@ It refuses to publish when the working tree is dirty, when the tag already
 exists, when `gh` is not authenticated, or when there is no `origin` remote. Each
 case prints the specific command that fixes it.
 
-> This repository currently has **no `origin` remote**, so releases cannot be
-> published yet. Create one first:
-> `gh repo create --source=. --private --remote=origin`
+Releases publish to <https://github.com/AbdulWadudh/eidolon/releases>.
 
-To cut a release: bump `expo.version`, add a `## [<version>]` section to
-`CHANGELOG.md`, commit, then run `bun run release`.
+`expo.version` and `android.versionCode` are bumped automatically — patch by
+default, or `--minor` / `--major` / `--version 2.3.0`. Release notes are
+generated from the commits since the previous tag, grouped by conventional-commit
+type; writing them by hand is optional and only needed if you want something
+other than the commit subjects, in which case put it under `## [Unreleased]` in
+`CHANGELOG.md` and that wins.
 
 ## Signing
 
