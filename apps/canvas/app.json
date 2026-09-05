@@ -2,6 +2,7 @@
   "expo": {
     "name": "Eidolon",
     "slug": "eidolon",
+    "scheme": "eidolon",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "../../public/logo_512x512.png",
@@ -25,6 +26,6 @@
     "web": {
       "favicon": "../../public/logo_192x192.png"
     },
-    "plugins": ["expo-router", "expo-asset"]
+    "plugins": ["expo-router", "expo-asset", "expo-font"]
   }
 }

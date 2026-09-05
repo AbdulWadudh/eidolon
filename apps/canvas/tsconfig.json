@@ -3,14 +3,10 @@
   "compilerOptions": {
     "noEmit": true,
     "rootDir": "./",
+    "types": ["bun"],
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
-  ]
+  "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts", "global.d.ts"]
 }

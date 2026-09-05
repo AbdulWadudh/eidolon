@@ -10,7 +10,9 @@
   "scripts": {
     "dev": "turbo run dev",
     "dev:conductor": "bun --cwd apps/conductor dev",
-    "dev:canvas": "bun --cwd apps/canvas dev:go",
+    "dev:canvas": "bun --cwd apps/canvas dev",
+    "dev:canvas:web": "bun --cwd apps/canvas dev:web",
+    "dev:canvas:go": "bun --cwd apps/canvas dev:go",
     "build": "turbo run build",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
@@ -21,5 +23,13 @@
     "@biomejs/biome": "latest",
     "turbo": "latest",
     "typescript": "^5.7.3"
+  },
+  "resolutions": {
+    "lightningcss": "1.29.2",
+    "react-native-worklets": "0.10.1"
+  },
+  "overrides": {
+    "lightningcss": "1.29.2",
+    "react-native-worklets": "0.10.1"
   }
 }

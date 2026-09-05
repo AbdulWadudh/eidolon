@@ -1,0 +1,88 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+
+@import "nativewind/theme";
+
+@theme {
+  --color-canvas: var(--canvas, #0d0e11);
+  --color-card: var(--card, #18191e);
+  --color-border: var(--card-border, #2a2c37);
+  --color-card-border: var(--card-border, #2a2c37);
+  --color-input: var(--input-surface, #18191e);
+  --color-input-surface: var(--input-surface, #18191e);
+  --color-audio-pill: var(--audio-pill-bg, #111215);
+  --color-audio-pill-bg: var(--audio-pill-bg, #111215);
+  --color-primary: var(--primary, #f59e0b);
+  --color-primary-foreground: var(--primary-foreground, #000000);
+  --color-secondary: var(--secondary, #242630);
+  --color-secondary-foreground: var(--secondary-foreground, #ffffff);
+  --color-success: var(--success, #10b981);
+  --color-warning: var(--warning, #f59e0b);
+  --color-danger: var(--danger, #ef4444);
+  --color-text-primary: var(--text-primary, #ffffff);
+  --color-text-muted: var(--text-muted, #8e95a5);
+
+  --radius-card: var(--radius, 10px);
+  --radius-button: var(--radius, 10px);
+  --radius-input: var(--radius, 10px);
+
+  --border-width-hairline: var(--border-width, 1px);
+
+  --font-main: var(--font-main, NunitoSans-Regular);
+  --font-main-bold: var(--font-main-bold, NunitoSans-Bold);
+  --font-main-italic: var(--font-main-italic, NunitoSans-Italic);
+  --font-ui: var(--font-ui, PublicSans-Regular);
+  --font-ui-medium: var(--font-ui-medium, PublicSans-Medium);
+  --font-ui-bold: var(--font-ui-bold, PublicSans-Bold);
+}
+
+:root {
+  --canvas: #0d0e11;
+  --color-canvas: #0d0e11;
+  --card: #18191e;
+  --color-card: #18191e;
+  --card-border: #2a2c37;
+  --color-card-border: #2a2c37;
+  --border: #2a2c37;
+  --color-border: #2a2c37;
+  --input-surface: #18191e;
+  --color-input-surface: #18191e;
+  --input: #18191e;
+  --color-input: #18191e;
+  --audio-pill-bg: #111215;
+  --color-audio-pill-bg: #111215;
+  --audio-pill: #111215;
+  --color-audio-pill: #111215;
+  --text-primary: #ffffff;
+  --color-text-primary: #ffffff;
+  --text-muted: #8e95a5;
+  --color-text-muted: #8e95a5;
+  --primary: #f59e0b;
+  --color-primary: #f59e0b;
+  --primary-foreground: #000000;
+  --color-primary-foreground: #000000;
+  --secondary: #242630;
+  --color-secondary: #242630;
+  --secondary-foreground: #ffffff;
+  --color-secondary-foreground: #ffffff;
+  --success: #10b981;
+  --color-success: #10b981;
+  --warning: #f59e0b;
+  --color-warning: #f59e0b;
+  --danger: #ef4444;
+  --color-danger: #ef4444;
+
+  --radius: 10px;
+  --radius-card: 10px;
+  --radius-button: 10px;
+  --radius-input: 10px;
+  --border-width: 1px;
+
+  --font-main: NunitoSans-Regular;
+  --font-main-bold: NunitoSans-Bold;
+  --font-main-italic: NunitoSans-Italic;
+  --font-ui: PublicSans-Regular;
+  --font-ui-medium: PublicSans-Medium;
+  --font-ui-bold: PublicSans-Bold;
+}
