@@ -15,6 +15,7 @@ import { hasSaidEnough } from "@/services/reply-length";
 import { formatSearchResults, searchWeb } from "@/services/searxng";
 import { fallbackSuggestions, formatScene, generateReplySuggestions } from "@/services/suggestions";
 import { synthesizeSpeech } from "@/services/tts";
+import { storeVoiceNote } from "@/services/voice-notes";
 import type { WebSocketSender } from "@/ws/protocol";
 import { sendServerMessage } from "@/ws/protocol";
 
@@ -159,7 +160,8 @@ export async function handleChatTurn(
   if (signal.aborted) return;
 
   appendMessage(characterId, "user", userText);
-  if (reply.trim().length > 0) appendMessage(characterId, "assistant", reply.trim());
+  const assistantId =
+    reply.trim().length > 0 ? appendMessage(characterId, "assistant", reply.trim()) : null;
 
   const turn: ChatMessage[] = [
     { role: "user", content: spoken },
@@ -179,9 +181,10 @@ export async function handleChatTurn(
   ]);
 
   if (audio) {
+    const url = assistantId ? await storeVoiceNote(characterId, assistantId, audio) : null;
     sendServerMessage(ws, {
       type: "audio_chunk",
-      payload: { format: "mp3", data: audio, sentence_index: 0 },
+      payload: { format: "mp3", data: url ? "" : audio, url: url ?? undefined, sentence_index: 0 },
     });
   }
 

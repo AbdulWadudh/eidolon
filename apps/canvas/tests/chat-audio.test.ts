@@ -71,4 +71,33 @@ describe("voice note playback", () => {
     expect(useChatStore.getState().autoPlayMessageId).toBe(first);
     expect(useChatStore.getState().messages).toHaveLength(1);
   });
+
+  it("prefers a hosted url over an inline base64 payload", () => {
+    feed(delta("Hosted."));
+    feed({
+      type: "audio_chunk",
+      format: "mp3",
+      data: "",
+      url: "https://media.example/voice/1.mp3",
+      sentence_index: 0,
+    });
+    feed(IDLE);
+
+    expect(useChatStore.getState().messages.at(-1)?.audioUrl).toBe(
+      "https://media.example/voice/1.mp3",
+    );
+  });
+
+  it("clears the autoplay token once it has been consumed", () => {
+    feed(delta("Speak."));
+    feed({ type: "audio_chunk", format: "mp3", data: "QUJD", sentence_index: 0 });
+    feed(IDLE);
+    const played = useChatStore.getState().autoPlayMessageId;
+    expect(played).not.toBeNull();
+
+    useChatStore.getState().clearAutoPlay();
+
+    expect(useChatStore.getState().autoPlayMessageId).toBeNull();
+    expect(useChatStore.getState().messages.at(-1)?.audioUrl).toBe("data:audio/mpeg;base64,QUJD");
+  });
 });

@@ -6,6 +6,7 @@ interface TranscriptRow {
   id: string;
   role: string;
   content: string;
+  audioUrl?: string | null;
   createdAt: number;
 }
 
@@ -26,7 +27,7 @@ function toMessage(row: TranscriptRow, characterId: string): ChatMessage {
     role: row.role === "user" ? "user" : "assistant",
     text: row.content,
     isNarration: false,
-    audioUrl: null,
+    audioUrl: row.audioUrl ?? null,
     audioDuration: null,
     timestamp: formatClockTime(new Date(row.createdAt)),
   };

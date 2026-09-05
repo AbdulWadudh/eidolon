@@ -39,6 +39,7 @@ export const CHAT = {
   minTouchTargetPx: 44,
   toolButtonPx: 32,
   toolIconPx: 20,
+  toolGapPx: 4,
   sendButtonPx: 42,
 } as const;
 

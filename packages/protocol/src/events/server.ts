@@ -34,11 +34,13 @@ export const AudioChunkSchema = z.object({
   type: z.literal("audio_chunk"),
   format: AudioFormatEnum,
   data: z.string(), // base64 encoded audio
+  url: z.string().optional(),
   sentence_index: z.number().int().nonnegative(),
   payload: z
     .object({
       format: AudioFormatEnum,
       data: z.string(),
+      url: z.string().optional(),
       sentence_index: z.number().int().nonnegative(),
     })
     .optional(),

@@ -33,9 +33,15 @@ const RIGHT_TOOLS: ToolSpec[] = [
   { action: "more", icon: AddCircleIcon, label: "More actions" },
 ];
 
-const TOOL_SLOP = (CHAT.minTouchTargetPx - CHAT.toolButtonPx) / 2;
-const TOOL_GAP = CHAT.minTouchTargetPx - CHAT.toolButtonPx;
-const TOOL_HIT_SLOP = { top: TOOL_SLOP, bottom: TOOL_SLOP, left: TOOL_SLOP, right: TOOL_SLOP };
+const TOOL_GAP = CHAT.toolGapPx;
+const SIDE_SLOP = TOOL_GAP / 2;
+const VERTICAL_SLOP = (CHAT.minTouchTargetPx - CHAT.toolButtonPx) / 2;
+const TOOL_HIT_SLOP = {
+  top: VERTICAL_SLOP,
+  bottom: VERTICAL_SLOP,
+  left: SIDE_SLOP,
+  right: SIDE_SLOP,
+};
 
 export interface InputToolbarProps {
   characterId?: string;

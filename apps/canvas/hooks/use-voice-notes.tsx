@@ -21,9 +21,11 @@ const VoiceNotesContext = React.createContext<VoiceNotes | null>(null);
  */
 export function VoiceNotesProvider({
   autoPlay,
+  onAutoPlayed,
   children,
 }: {
   autoPlay?: { id: string; url: string } | null;
+  onAutoPlayed?: () => void;
   children: React.ReactNode;
 }) {
   const player = useAudioPlayer(null);
@@ -63,7 +65,8 @@ export function VoiceNotesProvider({
     if (!autoPlay || autoPlayed.current === autoPlay.id) return;
     autoPlayed.current = autoPlay.id;
     play(autoPlay.id, autoPlay.url);
-  }, [autoPlay, play]);
+    onAutoPlayed?.();
+  }, [autoPlay, play, onAutoPlayed]);
 
   const value = React.useMemo<VoiceNotes>(
     () => ({

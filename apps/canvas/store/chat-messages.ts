@@ -66,6 +66,8 @@ const BASE64_BYTES_PER_CHAR = 3 / 4;
 export function audioChunkToAttachment(event: AudioChunkEvent): AudioAttachment | null {
   const data = event.payload?.data ?? event.data;
   const format = event.payload?.format ?? event.format;
+  const url = event.payload?.url ?? event.url;
+  if (url) return { audioUrl: url, audioDuration: null };
   if (!data) return null;
 
   if (format === "mp3") {

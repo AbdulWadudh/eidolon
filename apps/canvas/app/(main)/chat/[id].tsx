@@ -146,7 +146,7 @@ export default function ChatScreen() {
       />
 
       <KeyboardAvoidingView behavior="padding" automaticOffset style={{ flex: 1 }}>
-        <VoiceNotesProvider autoPlay={autoPlay}>
+        <VoiceNotesProvider autoPlay={autoPlay} onAutoPlayed={chat.clearAutoPlay}>
           <ChatFeed
             messages={chat.messages}
             isStreaming={chat.isStreaming}

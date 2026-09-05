@@ -321,3 +321,68 @@ Worth generalising: `hitSlop` large enough to reach a 48px target is only safe
 when the gap is at least as large as the slop on both sides. A slop bigger than
 the gap silently hands taps to whichever sibling renders last, and it looks
 exactly like a miswired handler.
+
+## Voice notes survive a reopen, and stop replaying on entry
+
+Two complaints, one cause. Reopening a chat played the last voice note again,
+and no pill was visible on any message.
+
+`GET /api/v1/characters/:id/messages` never carried audio, so `toMessage` in
+`chat-api.ts` hardcoded `audioUrl: null` — every message rehydrated from the
+server was mute, and the pill is gated on `message.audioUrl`. The audio existed
+only as base64 inside a live `audio_chunk`, which is gone the moment the store is
+rebuilt.
+
+The autoplay was the same fact from the other side. `autoPlayMessageId` is set
+when a reply commits with audio and **`clearAutoPlay` was never called by
+anyone** — dead since it was written. Re-entering the screen remounts
+`VoiceNotesProvider`, which resets its `autoPlayed` ref, sees a still-set token
+and plays. `loadHistory` then replaced the messages with the mute server copies,
+which is why the audio played with no pill anywhere on screen to pause it.
+
+**The voice note is now a stored object.** `messages.audio_url` had been in the
+schema since the first migration with nothing writing it, and `uploadAudio` /
+`audioKey` were already sitting in `services/storage.ts`. `services/voice-notes.ts`
+joins them: the mp3 goes to S3 under `audio/<character>/<messageId>.mp3`, the URL
+lands on the row, and `getTranscript` returns it. `appendMessage` returns the new
+row id so the upload has something to attach to.
+
+`audio_chunk` gained an optional `url`, and the client prefers it over `data`.
+When storage is up the base64 payload is not sent at all — **64KB of JSON over
+the socket became 0** — and playback streams from RustFS instead. With no storage
+configured the old base64 path still works, so a local run without S3 is
+unaffected.
+
+`VoiceNotesProvider` now takes `onAutoPlayed` and the screen passes
+`chat.clearAutoPlay`, so the token is consumed by the play that uses it. A
+remount finds nothing to autoplay. Live replies still speak on arrival, because
+that path sets a fresh token each time.
+
+## Toolbar spacing, second pass
+
+44pt bands were still too airy. The gap is explicit now — `toolGapPx: 4` — with
+the horizontal slop derived as half of it, which is what keeps neighbouring hit
+rects from overlapping and is the whole content of the earlier misfire bug. The
+44pt target is kept on the vertical axis, where there is no neighbour to collide
+with: the buttons are 36×44 touch, 32×32 visual, 16px between glyphs, and the row
+is 260px.
+
+## Evidence
+
+- Live turn against the local conductor and RustFS: `audio_chunk` arrived with
+  `url=http://…/eidolon-media/audio/emma/<id>.mp3` and `base64Bytes=0`; the live
+  message rendered a pill and set the autoplay token.
+- Refetching the transcript — what reopening the chat does — returned the newest
+  message *with* its `audioUrl`, and an anonymous `HEAD` on that URL returned
+  `200 audio/mpeg 72620`.
+- `bun run test` — 263 pass / 0 fail. Two new canvas tests cover preferring the
+  hosted URL over inline base64, and clearing the autoplay token.
+- Lint 165 files clean, typecheck clean, size gate clean.
+
+## Still open
+
+- Only messages generated after this change have audio. Older rows have a null
+  `audio_url` and stay mute; nothing backfills them.
+- `audioDuration` is still null for hosted notes, so the pill reads `0"` until
+  playback starts and `expo-audio` reports the real duration. The TTS response
+  does not carry a duration and it is not computed from the mp3.

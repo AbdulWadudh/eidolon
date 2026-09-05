@@ -143,11 +143,17 @@ export function appendMessage(
   characterId: string,
   role: "user" | "assistant",
   content: string,
-): void {
+): string {
   ensureCharacter(characterId);
+  const id = crypto.randomUUID();
   db.query(
     "INSERT INTO messages (id, character_id, role, content, created_at) VALUES (?1, ?2, ?3, ?4, ?5)",
-  ).run(crypto.randomUUID(), characterId, role, content, Date.now());
+  ).run(id, characterId, role, content, Date.now());
+  return id;
+}
+
+export function setMessageAudio(messageId: string, audioUrl: string): void {
+  db.query("UPDATE messages SET audio_url = ?1 WHERE id = ?2").run(audioUrl, messageId);
 }
 
 export function getRecentMessages(characterId: string): { role: string; content: string }[] {
@@ -163,18 +169,20 @@ export interface StoredMessage {
   id: string;
   role: string;
   content: string;
+  audioUrl: string | null;
   createdAt: number;
 }
 
 export function getTranscript(characterId: string, limit: number): StoredMessage[] {
   const rows = db
     .query(
-      "SELECT id, role, content, created_at FROM messages WHERE character_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ?",
+      "SELECT id, role, content, audio_url, created_at FROM messages WHERE character_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ?",
     )
     .all(characterId, limit) as {
     id: string;
     role: string;
     content: string;
+    audio_url: string | null;
     created_at: number;
   }[];
 
@@ -183,6 +191,7 @@ export function getTranscript(characterId: string, limit: number): StoredMessage
       id: row.id,
       role: row.role,
       content: row.content,
+      audioUrl: row.audio_url,
       createdAt: row.created_at,
     }))
     .reverse();
