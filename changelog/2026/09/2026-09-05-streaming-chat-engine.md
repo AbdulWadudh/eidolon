@@ -386,3 +386,77 @@ is 260px.
 - `audioDuration` is still null for hosted notes, so the pill reads `0"` until
   playback starts and `expo-audio` reports the real duration. The TTS response
   does not carry a duration and it is not computed from the mp3.
+
+## Pairing still did not survive a reload
+
+The earlier fix moved the fallback store off `window.localStorage` and onto a
+JSON file, which was the right idea and did not work. Two faults in one small
+function, both silent:
+
+`require("expo-file-system/next")` never resolved. The package publishes an
+`exports` map with exactly two subpaths, `.` and `./legacy`; `next.ts` exists at
+the package root but is not exported, and Metro honours `exports`. So
+`openFallbackFile` threw, returned `null`, and the store fell through to the
+`localStorage` branch — which does not exist in React Native. The fallback was
+pure memory, exactly what the fix was meant to end.
+
+And `File.text()` returns a **promise** on SDK 57. The synchronous reader is
+`textSync()`. Had the import resolved, `JSON.parse(Promise)` would have thrown
+into the same swallow-everything catch and hydration would still have started
+empty. `write()` also needs the file to exist, so `flush()` calls `create()` when
+it does not.
+
+The test did not catch any of this because its fake file implemented the shape
+the code *asked* for — `text(): string` — rather than the shape
+`expo-file-system` actually publishes. It now mirrors the real contract:
+`textSync()`, and a `write()` that throws when the file was never created.
+
+Worth remembering: a `try/catch` around a `require` turns a resolution failure
+into a silent capability downgrade. Both faults here were invisible at runtime
+and invisible in CI.
+
+## Auto-scroll during streaming, again
+
+Two independent causes, which is why it kept coming back.
+
+**`autoscrollToBottomThreshold: 0`.** FlashList v2 documents `0.2` for chat.
+The threshold is how close to the bottom the reader must be for the list to keep
+itself pinned as content grows; `0` means *exactly* at the bottom, so the built-in
+follow was off in every practical case.
+
+**Growth was being read as scrolling up.** `handleScroll` derived the live edge
+from the distance to the bottom alone. While a reply streams, content grows
+faster than a scroll can land, so that distance spikes — and the feed concluded
+the reader had scrolled away and stopped following for the rest of the turn. That
+is the behaviour being reported: it follows for a moment, then gives up and the
+tail runs under the dock.
+
+Leaving the live edge now requires a real gesture. `onScrollBeginDrag` sets a
+flag, `onMomentumScrollEnd` clears it, and the decision moved into
+`lib/feed-scroll.ts` so it is testable:
+
+```ts
+export function nextLiveEdge(frame: ScrollFrame, isDragging: boolean, current: boolean): boolean {
+  if (isWithinLiveEdge(frame)) return true;
+  return isDragging ? false : current;
+}
+```
+
+Coming *back* to the edge needs no gesture, so a scroll that catches up rejoins
+the follow on its own.
+
+Third: the reply is drawn by `ListFooterComponent`, not a data row, and a growing
+footer does not reliably raise `onContentSizeChange`. An effect on
+`streamingText` follows the tail directly, deferred one frame so the footer has
+been laid out at its new height. That is the only signal guaranteed to arrive on
+every token.
+
+## Evidence
+
+- `bun run test` — 268 pass / 0 fail. `tests/feed-scroll.test.ts` pins all four
+  cases: growth alone keeps the follow, a drag ends it, catching up rejoins it,
+  and a reader who scrolled up is left alone while the reply streams.
+- `tests/storage.test.ts` passes against a fake that mirrors the real
+  `expo-file-system` contract, including a `write()` that rejects an uncreated
+  file.
+- Lint 167 files clean, typecheck clean, size gate clean.

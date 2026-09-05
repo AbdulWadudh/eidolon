@@ -12,10 +12,14 @@ function fakeFile(): FallbackFile & { contents: string | null } {
     get exists() {
       return this.contents !== null;
     },
-    text() {
+    textSync() {
       return this.contents ?? "";
     },
+    create() {
+      if (this.contents === null) this.contents = "";
+    },
     write(value: string) {
+      if (this.contents === null) throw new Error("write to a file that does not exist");
       this.contents = value;
     },
   };
@@ -68,6 +72,7 @@ describe("credentials survive a reload", () => {
   });
 
   it("starts empty rather than failing a launch on a corrupt file", () => {
+    file.create();
     file.write("{ not json");
     expect(() => new FallbackStorage(file)).not.toThrow();
     expect(new FallbackStorage(file).getString("eidolon.server_host")).toBeUndefined();

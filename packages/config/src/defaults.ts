@@ -26,6 +26,7 @@ export const CHAT = {
   waveformBars: 4,
   drawDistancePx: 480,
   liveEdgeThresholdPx: 96,
+  autoscrollBottomThreshold: 0.2,
   scrollPreviousItemPeekPx: 56,
   audioPillWaveformHeightPx: 13,
   audioTabOverlapPx: 10,

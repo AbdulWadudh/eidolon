@@ -2,6 +2,7 @@ import { CHAT } from "@eidolon/config";
 import { FlashList, type FlashListRef } from "@shopify/flash-list";
 import * as React from "react";
 import { type NativeScrollEvent, type NativeSyntheticEvent, Text, View } from "react-native";
+import { nextLiveEdge } from "@/lib/feed-scroll";
 import type { ChatMessage } from "@/store/chat-messages";
 import { JumpToLatest } from "./JumpToLatest";
 import { MessageCard } from "./MessageCard";
@@ -59,6 +60,7 @@ export function ChatFeed({
 }: ChatFeedProps) {
   const listRef = React.useRef<FlashListRef<ChatMessage>>(null);
   const liveEdgeRef = React.useRef(true);
+  const draggingRef = React.useRef(false);
   const [isAtLiveEdge, setIsAtLiveEdge] = React.useState(true);
 
   const followTail = React.useCallback((animated: boolean) => {
@@ -75,6 +77,19 @@ export function ChatFeed({
     followTail(false);
   }, [followTail]);
 
+  // The reply is rendered by ListFooterComponent, not by a data row, and a
+  // growing footer does not reliably raise onContentSizeChange. Following the
+  // text itself is the only signal that is guaranteed to arrive on every token.
+  // Deferred a frame so the footer has been laid out at its new height.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: streamingText is the trigger
+  React.useEffect(() => {
+    if (!isStreaming || !liveEdgeRef.current) return;
+    const frame = requestAnimationFrame(() => {
+      if (liveEdgeRef.current) followTail(false);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [streamingText, isStreaming, followTail]);
+
   // The keyboard shrinks the viewport without changing the content, so
   // onContentSizeChange never fires and the last message ends up hidden behind
   // the dock. Layout is the event that does fire, on every resize. Deferred a
@@ -86,16 +101,34 @@ export function ChatFeed({
     });
   }, [followTail]);
 
+  // Only a real gesture takes the reader off the live edge. A reply that grows
+  // faster than the list can scroll also reports a large distance from the
+  // bottom, and reading that as "scrolled up" is what silently ended the follow
+  // partway through a long reply.
   const handleScroll = React.useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
-    const distance = contentSize.height - layoutMeasurement.height - contentOffset.y;
-    const next = distance <= CHAT.liveEdgeThresholdPx;
+    const frame = {
+      contentHeight: contentSize.height,
+      viewportHeight: layoutMeasurement.height,
+      offsetY: contentOffset.y,
+    };
+    const next = nextLiveEdge(frame, draggingRef.current, liveEdgeRef.current);
+    if (next) draggingRef.current = false;
     if (next === liveEdgeRef.current) return;
     liveEdgeRef.current = next;
     setIsAtLiveEdge(next);
   }, []);
 
+  const handleScrollBeginDrag = React.useCallback(() => {
+    draggingRef.current = true;
+  }, []);
+
+  const handleMomentumScrollEnd = React.useCallback(() => {
+    draggingRef.current = false;
+  }, []);
+
   const jumpToLatest = React.useCallback(() => {
+    draggingRef.current = false;
     liveEdgeRef.current = true;
     setIsAtLiveEdge(true);
     followTail(true);
@@ -138,11 +171,13 @@ export function ChatFeed({
         keyboardDismissMode="interactive"
         keyboardShouldPersistTaps="handled"
         maintainVisibleContentPosition={{
-          autoscrollToBottomThreshold: 0,
+          autoscrollToBottomThreshold: CHAT.autoscrollBottomThreshold,
           startRenderingFromBottom: true,
         }}
         onContentSizeChange={handleContentSizeChange}
         onScroll={handleScroll}
+        onScrollBeginDrag={handleScrollBeginDrag}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
         scrollEventThrottle={32}
         showsVerticalScrollIndicator={false}
       />
