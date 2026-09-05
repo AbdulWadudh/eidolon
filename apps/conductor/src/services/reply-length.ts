@@ -38,3 +38,17 @@ export function hasSaidEnough(reply: string): boolean {
     trimmed.length >= CHAT_TURN.maxReplyChars
   );
 }
+
+export function spokenWords(reply: string): string {
+  return reply
+    .replace(/\*[^*]*\*?/g, " ")
+    .replace(/\([^)]*\)?/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+export function isActionOnly(reply: string): boolean {
+  const trimmed = reply.trim();
+  if (trimmed.length === 0) return false;
+  return !/[a-z]/i.test(spokenWords(trimmed));
+}

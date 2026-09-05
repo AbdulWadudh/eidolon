@@ -21,6 +21,8 @@ export interface Selfie {
   imageUrl: string;
   promptUsed: string;
   orientation: Orientation;
+  caption: string;
+  message: string;
 }
 
 interface Shot {
@@ -32,6 +34,7 @@ interface Shot {
   framing: string;
   orientation: "portrait" | "landscape";
   look_change: string;
+  message: string;
 }
 
 const SHOT_SCHEMA = {
@@ -47,6 +50,7 @@ const SHOT_SCHEMA = {
       framing: { type: "string" },
       orientation: { type: "string", enum: ["portrait", "landscape"] },
       look_change: { type: "string" },
+      message: { type: "string" },
     },
     required: [
       "setting",
@@ -57,6 +61,7 @@ const SHOT_SCHEMA = {
       "framing",
       "orientation",
       "look_change",
+      "message",
     ],
   },
 } as const;
@@ -108,12 +113,13 @@ async function composeShot(request: SelfieRequest, signal?: AbortSignal): Promis
     framing: oneLine(parsed.framing ?? "") || sample(IMAGE.framings),
     orientation: parsed.orientation === "landscape" ? "landscape" : "portrait",
     look_change: oneLine(parsed.look_change ?? ""),
+    message: (parsed.message ?? "").replace(/\s+/g, " ").trim(),
   };
 }
 
 export async function paintSelfie(
   request: SelfieRequest,
-  onQueued?: (promptId: string) => void,
+  onProgress?: (progress: { value: number; max: number }) => void,
   signal?: AbortSignal,
 ): Promise<Selfie> {
   const look = await describeAppearance(request, signal);
@@ -149,20 +155,39 @@ export async function paintSelfie(
     .map(oneLine)
     .filter((part) => part.length > 0)
     .join(", ");
-  const image = await generateImage(promptUsed, faceName, orientation, onQueued, signal);
+  const image = await generateImage(promptUsed, faceName, {
+    orientation,
+    onProgress,
+    signal,
+  });
   const imageUrl = await uploadImage(
     request.characterId,
     `${crypto.randomUUID()}.png`,
     image.bytes,
   );
 
-  return { imageUrl, promptUsed, orientation };
+  return {
+    imageUrl,
+    promptUsed,
+    orientation,
+    caption: captionFor(shot, request.request),
+    message: shot?.message ?? "",
+  };
 }
 
 const WIDE_WORDS = new RegExp(`\\b(${IMAGE.wideWords.join("|")})\\b`, "i");
 
 export function inferOrientation(text: string): Orientation {
   return WIDE_WORDS.test(text) ? "landscape" : "portrait";
+}
+
+function captionFor(shot: Shot | null, request: string): string {
+  if (!shot) return oneLine(request);
+
+  const withWhom = shot.others.length > 0 ? ` with ${shot.others}` : "";
+  const doing = shot.action.length > 0 ? `, ${shot.action}` : "";
+  const place = shot.setting.length > 0 ? ` at ${shot.setting}` : "";
+  return oneLine(`${withWhom}${place}${doing}`.replace(/^,\s*/, "")) || oneLine(request);
 }
 
 export function forgetFace(characterId: string): void {

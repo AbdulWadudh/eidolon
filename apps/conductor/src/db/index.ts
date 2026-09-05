@@ -57,6 +57,7 @@ function addColumnIfMissing(table: string, column: string, definition: string): 
 
 addColumnIfMissing("messages", "audio_duration", "REAL");
 addColumnIfMissing("messages", "image_url", "TEXT");
+addColumnIfMissing("messages", "image_caption", "TEXT");
 addColumnIfMissing("characters", "appearance", "TEXT");
 addColumnIfMissing("characters", "background_url", "TEXT");
 
@@ -167,8 +168,12 @@ export function deleteMessage(messageId: string): void {
   db.query("DELETE FROM messages WHERE id = ?").run(messageId);
 }
 
-export function setMessageImage(messageId: string, imageUrl: string): void {
-  db.query("UPDATE messages SET image_url = ?1 WHERE id = ?2").run(imageUrl, messageId);
+export function setMessageImage(messageId: string, imageUrl: string, caption: string | null): void {
+  db.query("UPDATE messages SET image_url = ?1, image_caption = ?2 WHERE id = ?3").run(
+    imageUrl,
+    caption,
+    messageId,
+  );
 }
 
 export function setCharacterAvatar(characterId: string, avatarUrl: string): void {
@@ -224,13 +229,25 @@ export function setMessageAudio(
   );
 }
 
-export function getRecentMessages(characterId: string): { role: string; content: string }[] {
+export function getRecentMessages(
+  characterId: string,
+): { role: string; content: string; imageCaption: string | null }[] {
   const rows = db
     .query(
-      "SELECT role, content FROM messages WHERE character_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ?",
+      "SELECT role, content, image_caption FROM messages WHERE character_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ?",
     )
-    .all(characterId, CHAT_TURN.historyTurns) as { role: string; content: string }[];
-  return rows.reverse();
+    .all(characterId, CHAT_TURN.historyTurns) as {
+    role: string;
+    content: string;
+    image_caption: string | null;
+  }[];
+  return rows
+    .map((row) => ({
+      role: row.role,
+      content: row.content,
+      imageCaption: row.image_caption,
+    }))
+    .reverse();
 }
 
 export interface StoredMessage {

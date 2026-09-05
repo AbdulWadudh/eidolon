@@ -82,6 +82,13 @@ curious, asking one short question
 playfully deflecting or teasing`,
   },
   {
+    key: "persona.mustSpeak",
+    description:
+      "Sent back when a reply came out as a stage direction with nothing said out loud, which a run of photos tends to cause.",
+    variables: [],
+    value: `That was only a stage direction. Say something out loud this time. Reply again with actual words, the way you would type them to someone.`,
+  },
+  {
     key: "persona.influence",
     description:
       "How a <player nudge> is handed to the character. It steers behaviour and is never answered directly.",
@@ -125,6 +132,7 @@ action: what they are doing in the instant the shutter went. Not posing. Mid lau
 light: the real light in that place at that hour.
 framing: how the photo is taken. Choose one that fits and do not default to the same one: {{framings}}
 orientation: "landscape" if the place, the view or the group is the subject, "portrait" if the person is.
+message: what they type alongside the photo. One short line in their own voice, the way someone captions a picture they just sent. Not a description of the photo.
 look_change: only if the request asks for something different about their body or hair — dyed hair, a haircut, wet hair, a tan. Two or three words, empty otherwise.
 
 Every field is a short phrase of visual detail, not a sentence, and never mentions phones, texting or the person receiving it. Leave a field as an empty string when it does not apply — never write "none" or "nothing".

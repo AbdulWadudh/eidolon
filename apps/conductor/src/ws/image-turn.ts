@@ -2,11 +2,11 @@ import { IMAGE } from "@eidolon/config";
 import { appendMessage, getCharacterCard, getRecentMessages, setMessageImage } from "@/db";
 import { ComfyUnavailableError } from "@/services/comfyui";
 import { generatePhotoIdeas } from "@/services/photo-ideas";
+import { photoLine } from "@/services/photo-line";
 import { ASPECT_FOR, paintSelfie } from "@/services/selfie";
 import { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
 
 const DEFAULT_REQUEST = "a photo of yourself, right now, wherever you are";
-const SENT_A_PHOTO = "*sends a photo*";
 
 function formatScene(turns: { role: string; content: string }[], name: string): string {
   return turns
@@ -54,14 +54,24 @@ export async function handleImageRequest(
         request: promptOverride?.trim() || DEFAULT_REQUEST,
         orientation,
       },
-      () => speak(ws, "painting", "Taking the photo"),
+      (progress) => {
+        sendServerMessage(ws, {
+          type: "image_preview",
+          payload: { step: progress.value, total_steps: progress.max },
+        });
+      },
       signal,
     );
 
     if (signal.aborted) return;
 
-    const messageId = appendMessage(characterId, "assistant", SENT_A_PHOTO);
-    setMessageImage(messageId, selfie.imageUrl);
+    const spoken = selfie.message.trim();
+    const messageId = appendMessage(
+      characterId,
+      "assistant",
+      spoken.length > 0 ? spoken : photoLine(selfie.caption),
+    );
+    setMessageImage(messageId, selfie.imageUrl, selfie.caption || null);
 
     sendServerMessage(ws, {
       type: "image_ready",
@@ -69,12 +79,19 @@ export async function handleImageRequest(
         image_url: selfie.imageUrl,
         aspect_ratio: ASPECT_FOR[selfie.orientation],
         prompt_used: selfie.promptUsed,
+        caption: selfie.message.trim() || photoLine(selfie.caption),
       },
     });
   } catch (error) {
     const offline = error instanceof ComfyUnavailableError;
     console.error("[image-turn]", error);
-    speak(ws, "idle", offline ? "No camera on this side" : "That photo did not come out");
+    sendServerMessage(ws, {
+      type: "image_failed",
+      payload: {
+        reason: offline ? "No camera on this side" : "That photo did not come out",
+      },
+    });
+    speak(ws, "idle");
     return;
   }
 

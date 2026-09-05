@@ -2,23 +2,23 @@ import type { ServerMessage } from "@eidolon/protocol";
 import { last } from "es-toolkit";
 import { create } from "zustand";
 import { sendMessage } from "@/services/websocket";
+import { reduceServerMessage } from "./chat-events";
 import {
   type ActiveStatus,
   type AudioAttachment,
-  attachAudioToLastAssistant,
-  audioChunkToAttachment,
   type ChatMessage,
   createMessage,
   findLastAssistantId,
   type MindState,
   resolveUserTimezone,
 } from "./chat-messages";
+import type { CharacterLook, PhotoOrientation } from "./chat-photos";
 import { appStorage } from "./storage";
 
 export type { ActiveStatus, ChatMessage, MindState } from "./chat-messages";
 
-const SENT_A_PHOTO = "*sends a photo*";
-const HEARTBEAT_DETAIL = "pong";
+export const SENT_A_PHOTO = "*sends a photo*";
+export const HEARTBEAT_DETAIL = "pong";
 
 const SUGGESTIONS_HIDDEN_KEY = "eidolon.chat.suggestions_hidden";
 
@@ -48,8 +48,14 @@ export interface ChatStore {
   setSuggestionsHidden: (hidden: boolean) => void;
   setInputText: (text: string) => void;
   sendUserMessage: (text: string, characterId: string) => void;
-  requestImage: (characterId: string, prompt?: string) => void;
+  requestImage: (characterId: string, prompt?: string, orientation?: PhotoOrientation) => void;
+  requestPhotoIdeas: (characterId: string) => void;
   isPainting: boolean;
+  paintingStep: number;
+  paintingTotal: number;
+  photoIdeas: string[];
+  areIdeasLoading: boolean;
+  characterLook: CharacterLook;
   handleServerMessage: (msg: ServerMessage) => void;
   rerollSuggestions: (characterId: string) => void;
   selectSuggestion: (suggestion: string) => void;
@@ -75,6 +81,11 @@ export const INITIAL_CHAT = {
   pendingAudio: null as AudioAttachment | null,
   isSynthesizingAudio: false,
   isPainting: false,
+  paintingStep: 0,
+  paintingTotal: 0,
+  photoIdeas: [] as string[],
+  areIdeasLoading: false,
+  characterLook: { avatarUrl: null, backgroundUrl: null } as CharacterLook,
   autoPlayMessageId: null as string | null,
   isLoadingHistory: false,
   lastError: null as string | null,
@@ -127,10 +138,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     });
   },
 
-  requestImage: (characterId, prompt) => {
+  requestImage: (characterId, prompt, orientation) => {
     set({
       activeCharacterId: characterId,
       isPainting: true,
+      paintingStep: 0,
+      paintingTotal: 0,
       activeStatus: "painting",
       statusDetail: null,
       lastError: null,
@@ -139,108 +152,16 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       type: "request_image",
       character_id: characterId,
       prompt_override: prompt?.trim() || undefined,
+      orientation,
     });
   },
 
-  handleServerMessage: (msg) => {
-    switch (msg.type) {
-      case "text_delta": {
-        const token = msg.payload?.token ?? msg.token;
-        const isNarration = msg.payload?.is_narration ?? msg.is_narration;
-        set((state) => ({
-          isStreaming: true,
-          streamingText: state.streamingText + token,
-          streamingIsNarration: isNarration,
-        }));
-        break;
-      }
-
-      case "reply_suggestions": {
-        set((state) => ({
-          suggestions: msg.payload?.suggestions ?? msg.suggestions,
-          isSuggestionsLoading: false,
-          // A reroll the reader asked for keeps the tray open under them.
-          // Anything else arrives folded away behind the chip.
-          isTrayOpen: state.isSuggestionsLoading ? state.isTrayOpen : false,
-        }));
-        break;
-      }
-
-      case "image_ready": {
-        const source = msg.payload ?? msg;
-        set((state) => ({
-          isPainting: false,
-          messages: [
-            ...state.messages,
-            createMessage({
-              characterId: state.activeCharacterId,
-              role: "assistant",
-              text: SENT_A_PHOTO,
-              imageUrl: source.image_url,
-            }),
-          ],
-        }));
-        break;
-      }
-
-      case "mind_update": {
-        const source = msg.payload ?? msg;
-        set({
-          mind: {
-            affinity: source.current_affinity,
-            affinityDelta: source.affinity_delta,
-            tier: source.affinity_tier,
-            mood: source.current_mood,
-            lastMemory: source.new_memory_logged ?? null,
-          },
-        });
-        break;
-      }
-
-      case "audio_chunk": {
-        const attachment = audioChunkToAttachment(msg);
-        if (!attachment) break;
-        set((state) =>
-          state.isStreaming
-            ? { pendingAudio: attachment, isSynthesizingAudio: false }
-            : {
-                messages: attachAudioToLastAssistant(state.messages, attachment),
-                isSynthesizingAudio: false,
-              },
-        );
-        break;
-      }
-
-      case "status_update": {
-        const status = msg.payload?.status ?? msg.status;
-        const detail = msg.payload?.detail ?? msg.detail ?? null;
-        if (detail === HEARTBEAT_DETAIL) break;
-        set((state) => ({
-          activeStatus: status,
-          statusDetail: detail,
-          isSynthesizingAudio:
-            status === "speaking" ? true : status === "idle" ? false : state.isSynthesizingAudio,
-        }));
-        if (status === "idle") commitStreamingTurn();
-        break;
-      }
-
-      case "error": {
-        const source = msg.payload ?? msg;
-        set({
-          isStreaming: false,
-          activeStatus: "idle",
-          statusDetail: null,
-          isSuggestionsLoading: false,
-          lastError: source.message,
-        });
-        break;
-      }
-
-      default:
-        break;
-    }
+  requestPhotoIdeas: (characterId) => {
+    set({ areIdeasLoading: true, photoIdeas: [] });
+    sendMessage({ type: "request_photo_ideas", character_id: characterId });
   },
+
+  handleServerMessage: (msg) => reduceServerMessage(msg, set),
 
   rerollSuggestions: (characterId) => {
     // A fresh chat has nothing to anchor to; the conductor reads its own history

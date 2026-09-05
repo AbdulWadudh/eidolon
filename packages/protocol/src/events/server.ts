@@ -66,16 +66,22 @@ export const StageShiftSchema = z.object({
 
 export const ImagePreviewSchema = z.object({
   type: z.literal("image_preview"),
-  step: z.number().int().nonnegative(),
-  total_steps: z.number().int().positive(),
-  preview_base64: z.string(),
+  step: z.number().int().nonnegative().optional(),
+  total_steps: z.number().int().positive().optional(),
+  preview_base64: z.string().optional(),
   payload: z
     .object({
       step: z.number().int().nonnegative(),
       total_steps: z.number().int().positive(),
-      preview_base64: z.string(),
+      preview_base64: z.string().optional(),
     })
     .optional(),
+});
+
+export const ImageFailedSchema = z.object({
+  type: z.literal("image_failed"),
+  reason: z.string(),
+  payload: z.object({ reason: z.string() }).optional(),
 });
 
 export const ImageReadySchema = z.object({
@@ -83,11 +89,13 @@ export const ImageReadySchema = z.object({
   image_url: z.string().url(),
   aspect_ratio: ImageAspectRatioEnum,
   prompt_used: z.string(),
+  caption: z.string().optional(),
   payload: z
     .object({
       image_url: z.string().url(),
       aspect_ratio: ImageAspectRatioEnum,
       prompt_used: z.string(),
+      caption: z.string().optional(),
     })
     .optional(),
 });
@@ -155,6 +163,7 @@ export const ServerMessageSchema = z.discriminatedUnion("type", [
   StageShiftSchema,
   ImagePreviewSchema,
   ImageReadySchema,
+  ImageFailedSchema,
   PhotoIdeasSchema,
   MindUpdateSchema,
   ReplySuggestionsSchema,
@@ -172,6 +181,7 @@ export type StageShiftEvent = z.infer<typeof StageShiftSchema>;
 export type ImagePreviewEvent = z.infer<typeof ImagePreviewSchema>;
 export type ImageReadyEvent = z.infer<typeof ImageReadySchema>;
 export type PhotoIdeasEvent = z.infer<typeof PhotoIdeasSchema>;
+export type ImageFailedEvent = z.infer<typeof ImageFailedSchema>;
 export type MindUpdateEvent = z.infer<typeof MindUpdateSchema>;
 export type ReplySuggestionsEvent = z.infer<typeof ReplySuggestionsSchema>;
 export type ErrorEvent = z.infer<typeof ErrorSchema>;

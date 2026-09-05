@@ -62,6 +62,14 @@ export function characterMessagesPath(characterId: string): string {
   return `${apiPath("characters")}/${encodeURIComponent(characterId)}/messages`;
 }
 
+export function characterLookUrl(host: string, characterId: string): string {
+  return `${httpScheme(host)}${stripAuthority(host)}${API_PREFIX}${API_ROUTES.characters}/${characterId}/look`;
+}
+
+export function characterMessageUrl(host: string, characterId: string, messageId: string): string {
+  return `${httpScheme(host)}${stripAuthority(host)}${API_PREFIX}${API_ROUTES.characters}/${characterId}/messages/${messageId}`;
+}
+
 export function characterMessagesUrl(
   host: string,
   characterId: string,

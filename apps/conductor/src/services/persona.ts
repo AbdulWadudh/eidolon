@@ -12,6 +12,10 @@ export interface CharacterCard {
   tier: string;
 }
 
+export function mustSpeakReminder(): ChatMessage {
+  return { role: "system", content: getPrompt("persona.mustSpeak") };
+}
+
 export function hardenedReminder(): ChatMessage {
   return { role: "system", content: getPrompt("persona.hardenedReminder") };
 }

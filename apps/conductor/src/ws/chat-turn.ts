@@ -9,9 +9,10 @@ import {
 } from "@/db";
 import { appraiseTurn, nextMindState } from "@/services/affinity";
 import { type ChatMessage, streamChatCompletion } from "@/services/llm";
-import { buildChatMessages, hardenedReminder } from "@/services/persona";
+import { buildChatMessages, hardenedReminder, mustSpeakReminder } from "@/services/persona";
 import { createPersonaFilter, deflection } from "@/services/persona-guard";
-import { hasSaidEnough } from "@/services/reply-length";
+import { forHistory } from "@/services/photo-line";
+import { hasSaidEnough, isActionOnly } from "@/services/reply-length";
 import { formatSearchResults, searchWeb } from "@/services/searxng";
 import { fallbackSuggestions, formatScene, generateReplySuggestions } from "@/services/suggestions";
 import { synthesizeSpeech } from "@/services/tts";
@@ -127,6 +128,13 @@ async function streamReply(
     return line;
   }
 
+  // A run of photos fills the history with bare stage directions, and the model
+  // starts answering in kind: "smiles", "blushes", nothing said out loud.
+  if (isActionOnly(result.reply) && result.emitted === 0 && !signal.aborted) {
+    const retried = await streamOnce(ws, [...messages, mustSpeakReminder()], signal);
+    if (!isActionOnly(retried.reply)) return retried.reply;
+  }
+
   return result.reply;
 }
 
@@ -148,7 +156,10 @@ export async function handleChatTurn(
   const card = getCharacterCard(characterId);
   const history = getRecentMessages(characterId).map((entry) => ({
     role: entry.role,
-    content: entry.role === "user" ? stripInfluence(entry.content) : entry.content,
+    content:
+      entry.role === "user"
+        ? stripInfluence(entry.content)
+        : forHistory(entry.role, entry.content, entry.imageCaption),
   }));
 
   const reply = await streamReply(
@@ -231,7 +242,12 @@ export async function handleRegenerateSuggestions(
   signal: AbortSignal,
 ): Promise<void> {
   const card = getCharacterCard(characterId);
-  const recent = getRecentMessages(characterId).slice(-SUGGESTIONS.sceneTurns);
+  const recent = getRecentMessages(characterId)
+    .slice(-SUGGESTIONS.sceneTurns)
+    .map((entry) => ({
+      role: entry.role,
+      content: forHistory(entry.role, entry.content, entry.imageCaption),
+    }));
 
   const suggestions =
     recent.length > 0

@@ -1,6 +1,12 @@
 import { IMAGE, TIMEOUTS_MS } from "@eidolon/config";
 import { getServicesConfig } from "@eidolon/config/server";
 import { delay } from "es-toolkit";
+import {
+  COMFY_CLIENT_ID,
+  connectComfyEvents,
+  type PromptProgress,
+  watchPrompt,
+} from "@/services/comfy-events";
 import { buildImageWorkflow, type Orientation } from "@/services/comfy-workflow";
 
 export const COMFYUI_URL = getServicesConfig().comfyUiUrl;
@@ -61,7 +67,7 @@ async function queuePrompt(graph: Record<string, unknown>): Promise<string> {
   const res = await fetch(`${COMFYUI_URL}/prompt`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt: graph }),
+    body: JSON.stringify({ prompt: graph, client_id: COMFY_CLIENT_ID }),
   });
 
   if (!res.ok) {
@@ -100,37 +106,60 @@ async function fetchImage(image: { filename: string; subfolder: string; type: st
   return new Uint8Array(await res.arrayBuffer());
 }
 
+export interface GenerateOptions {
+  orientation?: Orientation;
+  onProgress?: (progress: PromptProgress) => void;
+  signal?: AbortSignal;
+}
+
 export async function generateImage(
   prompt: string,
   faceImageName: string | null,
-  orientation: Orientation = "portrait",
-  onProgress?: (promptId: string) => void,
-  signal?: AbortSignal,
+  options: GenerateOptions = {},
 ): Promise<GeneratedImage> {
   if (!(await checkComfyHealth())) {
     throw new ComfyUnavailableError(`ComfyUI is not reachable at ${COMFYUI_URL}`);
   }
 
+  await connectComfyEvents();
+
   const seed = Math.floor(Math.random() * 1_000_000_000);
   const promptId = await queuePrompt(
-    buildImageWorkflow({ prompt, seed, faceImageName, orientation }),
+    buildImageWorkflow({
+      prompt,
+      seed,
+      faceImageName,
+      orientation: options.orientation ?? "portrait",
+    }),
   );
-  onProgress?.(promptId);
 
-  const deadline = Date.now() + IMAGE.maxPollMs;
-  while (Date.now() < deadline) {
-    if (signal?.aborted) throw new ComfyGenerationError("generation was cancelled");
+  let failure: string | null = null;
+  const unwatch = watchPrompt(promptId, {
+    onProgress: options.onProgress,
+    onFailed: (reason) => {
+      failure = reason;
+    },
+  });
 
-    const entry = await readHistory(promptId);
-    if (entry?.status?.completed) {
-      const image = firstImage(entry);
-      return { bytes: await fetchImage(image), filename: image.filename, seed };
+  try {
+    const deadline = Date.now() + IMAGE.maxPollMs;
+    while (Date.now() < deadline) {
+      if (options.signal?.aborted) throw new ComfyGenerationError("generation was cancelled");
+      if (failure) throw new ComfyGenerationError(failure);
+
+      const entry = await readHistory(promptId);
+      if (entry?.status?.completed) {
+        const image = firstImage(entry);
+        return { bytes: await fetchImage(image), filename: image.filename, seed };
+      }
+      if (entry?.status?.status_str === "error") {
+        throw new ComfyGenerationError("ComfyUI reported an execution error");
+      }
+
+      await delay(IMAGE.pollIntervalMs);
     }
-    if (entry?.status?.status_str === "error") {
-      throw new ComfyGenerationError("ComfyUI reported an execution error");
-    }
-
-    await delay(IMAGE.pollIntervalMs);
+  } finally {
+    unwatch();
   }
 
   throw new ComfyGenerationError("timed out waiting for the image");
