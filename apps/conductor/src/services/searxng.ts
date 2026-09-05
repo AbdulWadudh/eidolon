@@ -1,9 +1,7 @@
-/**
- * Search backend, supplied by the environment. No host is baked in: the
- * instance is deployment-specific, so an empty value simply disables search
- * rather than sending queries somewhere the operator never chose.
- */
-export const SEARXNG_URL = process.env.SEARXNG_URL ?? "";
+import { SEARCH, TIMEOUTS_MS } from "@eidolon/config";
+import { getServicesConfig } from "@eidolon/config/server";
+
+export const SEARXNG_URL = getServicesConfig().searxngUrl;
 
 export interface SearchResultItem {
   title: string;
@@ -16,7 +14,7 @@ interface CacheEntry {
   expiresAt: number;
 }
 
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+const CACHE_TTL_MS = SEARCH.cacheTtlMs;
 const searchCache = new Map<string, CacheEntry>();
 
 /**
@@ -43,8 +41,6 @@ export async function searchWeb(query: string): Promise<SearchResultItem[]> {
     return [];
   }
 
-  // Unset means "no search backend for this deployment", which is a supported
-  // configuration - not an error worth a warning on every turn.
   if (!SEARXNG_URL) {
     return [];
   }
@@ -58,7 +54,7 @@ export async function searchWeb(query: string): Promise<SearchResultItem[]> {
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4000);
+    const timeout = setTimeout(() => controller.abort(), TIMEOUTS_MS.search);
 
     const url = `${SEARXNG_URL}/search?q=${encodeURIComponent(normalizedQuery)}&format=json`;
     const res = await fetch(url, {
@@ -83,7 +79,7 @@ export async function searchWeb(query: string): Promise<SearchResultItem[]> {
     };
 
     const rawResults = data.results || [];
-    const topResults: SearchResultItem[] = rawResults.slice(0, 3).map((item) => ({
+    const topResults: SearchResultItem[] = rawResults.slice(0, SEARCH.resultLimit).map((item) => ({
       title: item.title ?? "Untitled",
       content: item.content ?? "",
       url: item.url ?? "",

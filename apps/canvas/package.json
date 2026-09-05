@@ -15,6 +15,7 @@
     "build:aab": "expo prebuild --platform android --no-install && cd android && ./gradlew.bat app:bundleRelease -x lint -x test"
   },
   "dependencies": {
+    "@eidolon/config": "workspace:*",
     "@eidolon/protocol": "workspace:*",
     "@eidolon/tokens": "workspace:*",
     "@hugeicons/core-free-icons": "^4.3.0",

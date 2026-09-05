@@ -1,3 +1,5 @@
+import { TIMEOUTS_MS } from "@eidolon/config";
+import { getServicesConfig } from "@eidolon/config/server";
 import { delay } from "es-toolkit";
 import { safeJsonParse } from "@/utils/json";
 
@@ -6,8 +8,8 @@ export interface ChatMessage {
   content: string;
 }
 
-export const LLM_API_URL = process.env.LLM_API_URL || "http://127.0.0.1:5000/v1";
-export const LLM_MODEL = process.env.LLM_MODEL || "Sao10K/L3-8B-Stheno-v3.2";
+export const LLM_API_URL = getServicesConfig().llmApiUrl;
+export const LLM_MODEL = getServicesConfig().llmModel;
 
 const MOCK_FALLBACK_TOKENS = [
   "*looks",
@@ -123,7 +125,7 @@ export function extractStructuredOutput<T>(raw: string, fallback: T): T {
 export async function checkLlmHealth(): Promise<boolean> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2000);
+    const timeout = setTimeout(() => controller.abort(), TIMEOUTS_MS.serviceHealth);
 
     const res = await fetch(`${LLM_API_URL}/models`, {
       method: "GET",

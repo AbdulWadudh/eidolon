@@ -56,46 +56,12 @@ export function renderQrSvg(matrix: boolean[][], moduleSize = 10, quietModules =
   ].join("");
 }
 
-function escapeHtml(value: string): string {
+export function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
-}
-
-export function renderPairingPage(payload: string, server: string, token: string): string {
-  const svg = renderQrSvg(buildQrMatrix(payload));
-  return `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Eidolon pairing</title>
-<style>
-  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
-         background:#0D0E11; color:#fff; font-family:system-ui,sans-serif; }
-  .card { background:#18191E; border:1px solid #2A2C37; border-radius:14px; padding:28px; text-align:center; }
-  .qr { background:#fff; border-radius:10px; padding:8px; display:inline-block; line-height:0; }
-  h1 { font-size:18px; margin:0 0 4px; }
-  p  { color:#8E95A5; font-size:13px; margin:0 0 20px; }
-  dl { display:grid; grid-template-columns:auto 1fr; gap:6px 12px; margin:22px 0 0; text-align:left; font-size:13px; }
-  dt { color:#8E95A5; }
-  dd { margin:0; font-family:ui-monospace,monospace; word-break:break-all; }
-</style>
-</head>
-<body>
-  <div class="card">
-    <h1>Scan to pair</h1>
-    <p>Open Eidolon on your phone and scan this code.</p>
-    <div class="qr">${svg}</div>
-    <dl>
-      <dt>Server</dt><dd>${escapeHtml(server)}</dd>
-      <dt>Token</dt><dd>${escapeHtml(token)}</dd>
-    </dl>
-  </div>
-</body>
-</html>`;
 }
 
 const CELL_LIGHT = "\u001b[47m  \u001b[0m";

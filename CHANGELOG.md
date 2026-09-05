@@ -12,6 +12,12 @@ and publishes it as the GitHub release notes.
 
 ### Changed
 
+- **Breaking:** every API route now lives under `/api/v1/`. The unversioned
+  paths are gone. `GET /health` is additionally served unversioned for container
+  health checks and uptime monitors.
+- **Breaking:** `PAIRING_SECRET` has no default. Unset or blank means the
+  conductor refuses every token and every socket upgrade.
+
 - Conductor databases now live outside the repository, under
   `%LOCALAPPDATA%\eidolon\data` on Windows and `~/.eidolon/data` elsewhere, so a
   reclone or `git clean` no longer destroys characters, messages and memories.
@@ -19,6 +25,10 @@ and publishes it as the GitHub release notes.
 
 ### Added
 
+- `@eidolon/config`, the single source for every configurable value — ports,
+  hosts, route paths, timeouts, limits, TTLs and storage prefixes. Isomorphic
+  entry point for shared values, `@eidolon/config/server` for anything reading
+  the environment or the filesystem.
 - S3-compatible object storage for character images and voice notes, served for
   anonymous read so the mobile app streams media directly. The bucket and its
   public read policy are ensured on boot, and `GET /health` reports storage

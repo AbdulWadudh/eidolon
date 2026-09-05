@@ -1,37 +1,17 @@
-# Deployment stack, built and run by Coolify (Docker Compose build pack).
-#
-# Local development does NOT use this file - see docker-compose.dev.yml, which
-# brings up object storage only.
-#
-# Object storage is deliberately absent here. It is a separate, long-lived
-# resource with its own lifecycle: redeploying the gateway must never risk the
-# bucket, and the two scale for different reasons. The conductor reaches it over
-# the S3_* variables like any other client.
-
 services:
   conductor:
     build:
-      # Root context: the conductor imports @eidolon/protocol and
-      # @eidolon/tokens through the workspace.
       context: .
       dockerfile: apps/conductor/Dockerfile
     restart: unless-stopped
     environment:
-      # Coolify generates the domain and points the proxy at port 3000. Leave
-      # this valueless - supplying one makes the parser read it as a URL path.
       - SERVICE_FQDN_CONDUCTOR_3000
       - PORT=3000
       - HOST=0.0.0.0
-      # State lives on the mounted volume below, not in a home directory that
-      # disappears with the container.
       - EIDOLON_DATA_DIR=/data/eidolon
 
-      # The only thing gating the WebSocket. Coolify generates it once and keeps
-      # it, so it survives redeploys without ever being committed.
       - PAIRING_SECRET=${SERVICE_PASSWORD_PAIRING}
 
-      # Object storage. Set these in Coolify's environment tab; the bucket and
-      # its public-read policy are ensured on boot.
       - S3_ENDPOINT=${S3_ENDPOINT}
       - S3_REGION=${S3_REGION:-us-east-1}
       - S3_BUCKET=${S3_BUCKET:-eidolon-media}
@@ -40,19 +20,13 @@ services:
       - S3_PUBLIC_URL=${S3_PUBLIC_URL}
       - S3_FORCE_PATH_STYLE=${S3_FORCE_PATH_STYLE:-true}
 
-      # Optional backends. Unset is a supported configuration for each: search
-      # returns nothing, generation and inference report offline on /health.
       - SEARXNG_URL=${SEARXNG_URL:-}
       - LLM_API_URL=${LLM_API_URL:-}
       - LLM_MODEL=${LLM_MODEL:-}
       - COMFYUI_URL=${COMFYUI_URL:-}
     volumes:
-      # SQLite and LanceDB, together on one volume. Named, so a redeploy
-      # replaces the container and keeps every character, message and memory.
       - eidolon-data:/data/eidolon
     healthcheck:
-      # Compose resources are excluded from Coolify's UI health check, so the
-      # rolling deploy depends on this one being here.
       test:
         [
           "CMD",

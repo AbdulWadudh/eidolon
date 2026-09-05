@@ -1,10 +1,18 @@
-import { networkInterfaces } from "node:os";
+import { PAIRING } from "@eidolon/config";
+import {
+  getAuthBaseUrl,
+  getLocalIp,
+  getPairingSecret,
+  getServerConfig,
+  getTrustedOrigins,
+  hasPairingSecret,
+} from "@eidolon/config/server";
 import { betterAuth } from "better-auth";
 import { db } from "@/db";
 
-export const PAIRING_SECRET = process.env.PAIRING_SECRET || "eidolon_dev_secret_key_change_in_prod";
+export { getLocalIp };
 
-const PORT = Number(process.env.PORT) || 3000;
+export const PAIRING_SECRET = getPairingSecret();
 
 /**
  * The conductor is reached on two different origins by design: localhost from
@@ -13,51 +21,29 @@ const PORT = Number(process.env.PORT) || 3000;
  * and both origins are trusted. Override with BETTER_AUTH_URL when the service
  * sits behind a tunnel or reverse proxy.
  */
-export const AUTH_BASE_URL = process.env.BETTER_AUTH_URL || `http://${getLocalIp()}:${PORT}`;
+export const AUTH_BASE_URL = getAuthBaseUrl();
 
 export const auth = betterAuth({
   database: db,
   secret: PAIRING_SECRET,
   baseURL: AUTH_BASE_URL,
-  trustedOrigins: [
-    `http://localhost:${PORT}`,
-    `http://127.0.0.1:${PORT}`,
-    `http://${getLocalIp()}:${PORT}`,
-  ],
+  trustedOrigins: getTrustedOrigins(),
 });
-
-/**
- * Discovers the local primary IPv4 address for pairing.
- */
-export function getLocalIp(): string {
-  const nets = networkInterfaces();
-  for (const name of Object.keys(nets)) {
-    const netList = nets[name];
-    if (!netList) continue;
-    for (const net of netList) {
-      // Skip over non-IPv4 and internal (e.g. 127.0.0.1) addresses
-      if (net.family === "IPv4" && !net.internal) {
-        return net.address;
-      }
-    }
-  }
-  return "127.0.0.1";
-}
 
 /**
  * Generates the deep-link pairing payload for mobile client onboarding.
  * Format: eidolon://pair?server=<local-ip>:<port>&token=<PAIRING_SECRET>
  */
-export function generatePairingPayload(port = Number(process.env.PORT) || 3000): string {
+export function generatePairingPayload(port = getServerConfig().port): string {
   const host = getLocalIp();
-  return `eidolon://pair?server=${host}:${port}&token=${PAIRING_SECRET}`;
+  return `${PAIRING.uriScheme}?server=${host}:${port}&token=${PAIRING_SECRET}`;
 }
 
 /**
  * Validates incoming Bearer token or WebSocket token query parameter.
  */
 export function validateToken(token: string | null | undefined): boolean {
-  if (!token) {
+  if (!hasPairingSecret() || !token) {
     return false;
   }
   // Trim Bearer prefix if provided

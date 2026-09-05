@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "latest",
+    "@eidolon/config": "workspace:*",
     "@eidolon/protocol": "workspace:*",
     "@eidolon/tokens": "workspace:*",
     "@lancedb/lancedb": "latest",

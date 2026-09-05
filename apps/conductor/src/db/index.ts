@@ -1,9 +1,6 @@
 import { Database } from "bun:sqlite";
-import { SQLITE_DB_PATH } from "@/utils/paths";
+import { SQLITE_DB_PATH } from "@eidolon/config/server";
 
-// The path is external to the repository on purpose - see src/utils/paths.ts.
-// It is printed because a database whose location depends on the OS is a
-// database nobody can find when they need to inspect or back it up.
 console.log(`[Database] SQLite: ${SQLITE_DB_PATH}`);
 
 export const db = new Database(SQLITE_DB_PATH, { create: true });

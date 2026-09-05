@@ -29,3 +29,39 @@ describe("Authentication & Pairing", () => {
     expect(payload).toContain(PAIRING_SECRET);
   });
 });
+
+describe("Pairing secret is required", () => {
+  it("refuses every token when PAIRING_SECRET is unset", () => {
+    const previous = process.env.PAIRING_SECRET;
+    delete process.env.PAIRING_SECRET;
+
+    try {
+      expect(validateToken(PAIRING_SECRET)).toBe(false);
+      expect(validateToken("")).toBe(false);
+      expect(validateToken("anything")).toBe(false);
+      expect(validateToken("Bearer anything")).toBe(false);
+    } finally {
+      if (previous === undefined) {
+        delete process.env.PAIRING_SECRET;
+      } else {
+        process.env.PAIRING_SECRET = previous;
+      }
+    }
+  });
+
+  it("refuses every token when PAIRING_SECRET is blank", () => {
+    const previous = process.env.PAIRING_SECRET;
+    process.env.PAIRING_SECRET = "   ";
+
+    try {
+      expect(validateToken("   ")).toBe(false);
+      expect(validateToken("anything")).toBe(false);
+    } finally {
+      if (previous === undefined) {
+        delete process.env.PAIRING_SECRET;
+      } else {
+        process.env.PAIRING_SECRET = previous;
+      }
+    }
+  });
+});

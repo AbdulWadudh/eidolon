@@ -1,10 +1,12 @@
+import { PAIRING, RECONNECT_DELAYS_MS, socketUrl, stripAuthority } from "@eidolon/config";
 import { create } from "zustand";
+import { pingHealth, verifyPairing } from "./connection-api";
 import { appStorage } from "./storage";
+
+export { pingHealth, verifyPairing };
 
 export type ConnectionState = "disconnected" | "connecting" | "connected" | "error";
 
-/** Backoff schedule for socket reconnects, in milliseconds. */
-const RECONNECT_DELAYS_MS = [1000, 2000, 5000, 10000, 30000];
 /** Failures before asking the server over HTTP whether the token is still valid. */
 const RE_VERIFY_AFTER_ATTEMPTS = 2;
 
@@ -32,8 +34,8 @@ const STORAGE_KEYS = {
 
 export function parsePairingUri(uri: string): { server: string; token: string } {
   const cleanUri = uri.trim();
-  if (!cleanUri.startsWith("eidolon://pair")) {
-    throw new Error("Invalid pairing URI protocol. Expected eidolon://pair?...");
+  if (!cleanUri.startsWith(PAIRING.uriScheme)) {
+    throw new Error(`Invalid pairing URI protocol. Expected ${PAIRING.uriScheme}?...`);
   }
 
   // Handle URL parsing across native and node/bun
@@ -48,85 +50,11 @@ export function parsePairingUri(uri: string): { server: string; token: string } 
   }
 
   // Strip http:// or https:// if provided in server parameter
-  const cleanHost = server.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+  const cleanHost = stripAuthority(server);
 
   return { server: cleanHost, token };
 }
 
-/**
- * Confirms the token is actually accepted by this conductor.
- *
- * /health is unauthenticated, so pinging it only proved the host was reachable:
- * a stale QR code or a mistyped token paired "successfully" and then failed at
- * the WebSocket upgrade with nothing to explain why.
- */
-export async function verifyPairing(host: string, token: string): Promise<void> {
-  const cleanHost = host.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 6000);
-
-  let response: Response;
-  try {
-    response = await fetch(`http://${cleanHost}/api/pair/verify`, {
-      method: "GET",
-      headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
-      signal: controller.signal,
-    });
-  } catch (err) {
-    throw new Error(
-      `Conductor host '${cleanHost}' unreachable: ${err instanceof Error ? err.message : err}`,
-    );
-  } finally {
-    clearTimeout(timeoutId);
-  }
-
-  if (response.status === 401) {
-    throw new Error("This pairing code was rejected. Generate a fresh one on the server.");
-  }
-  if (!response.ok) {
-    throw new Error(`Conductor returned HTTP ${response.status}.`);
-  }
-}
-
-export async function pingHealth(host: string, token?: string): Promise<boolean> {
-  const cleanHost = host.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 6000);
-
-  try {
-    const headers: Record<string, string> = {
-      Accept: "application/json",
-    };
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-
-    const response = await fetch(`http://${cleanHost}/health`, {
-      method: "GET",
-      headers,
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`Server returned HTTP ${response.status}`);
-    }
-
-    return true;
-  } catch (err) {
-    clearTimeout(timeoutId);
-    if (err instanceof Error) {
-      throw new Error(`Conductor host '${cleanHost}' unreachable: ${err.message}`);
-    }
-    throw new Error(`Conductor host '${cleanHost}' unreachable.`);
-  }
-}
-
-/**
- * Socket lifecycle lives outside the store: it is imperative, must survive
- * re-renders, and must never be duplicated by a second subscriber.
- */
 let socket: WebSocket | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let reconnectAttempt = 0;
@@ -191,7 +119,7 @@ export const useConnectionStore = create<ConnectionStore>((set, get) => ({
     clearReconnectTimer();
     set({ connectionState: "connecting" });
 
-    const url = `ws://${serverHost}/ws?token=${encodeURIComponent(pairingToken)}`;
+    const url = socketUrl(serverHost, pairingToken);
     let ws: WebSocket;
     try {
       ws = new WebSocket(url);

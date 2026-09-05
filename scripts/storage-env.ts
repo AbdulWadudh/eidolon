@@ -1,18 +1,9 @@
 #!/usr/bin/env bun
-/**
- * Prints the storage settings for the local S3 container.
- *
- * The values are not constant: `S3_PUBLIC_URL` has to be the machine's LAN
- * address, because the phone resolves it, and a handset pointed at 127.0.0.1 is
- * looking at itself. That address changes with the network, so it is derived
- * here rather than written down once and quietly going stale.
- */
 import { networkInterfaces } from "node:os";
 
 const S3_PORT = 9000;
 const CONSOLE_PORT = 9001;
 
-/** First non-internal IPv4 address, i.e. the one a phone on the LAN can reach. */
 function getLocalIp(): string {
   for (const addresses of Object.values(networkInterfaces())) {
     for (const address of addresses ?? []) {

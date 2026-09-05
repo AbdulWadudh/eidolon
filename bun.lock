@@ -14,6 +14,7 @@
       "name": "@eidolon/canvas",
       "version": "0.0.1",
       "dependencies": {
+        "@eidolon/config": "workspace:*",
         "@eidolon/protocol": "workspace:*",
         "@eidolon/tokens": "workspace:*",
         "@hugeicons/core-free-icons": "^4.3.0",
@@ -69,6 +70,7 @@
       "version": "0.0.1",
       "dependencies": {
         "@aws-sdk/client-s3": "latest",
+        "@eidolon/config": "workspace:*",
         "@eidolon/protocol": "workspace:*",
         "@eidolon/tokens": "workspace:*",
         "@lancedb/lancedb": "latest",
@@ -82,6 +84,15 @@
         "@eidolon/tsconfig": "workspace:*",
         "@types/bun": "latest",
         "@types/qrcode-terminal": "latest",
+        "typescript": "^5.7.3",
+      },
+    },
+    "packages/config": {
+      "name": "@eidolon/config",
+      "version": "0.0.1",
+      "devDependencies": {
+        "@eidolon/tsconfig": "workspace:*",
+        "@types/bun": "latest",
         "typescript": "^5.7.3",
       },
     },
@@ -338,6 +349,8 @@
     "@eidolon/canvas": ["@eidolon/canvas@workspace:apps/canvas"],
 
     "@eidolon/conductor": ["@eidolon/conductor@workspace:apps/conductor"],
+
+    "@eidolon/config": ["@eidolon/config@workspace:packages/config"],
 
     "@eidolon/protocol": ["@eidolon/protocol@workspace:packages/protocol"],
 

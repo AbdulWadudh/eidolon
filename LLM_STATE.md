@@ -70,12 +70,12 @@ Each of these cost real time. Do not rediscover them.
    `-Medium` are derived from the base family; bundled families do not ship all
    of them. Add to `BUNDLED_FONT_ALIASES` or text silently falls back.
 
-7. **`/ws` returns HTTP 401 before the upgrade**, so a rejected token is
+7. **`/api/v1/ws` returns HTTP 401 before the upgrade**, so a rejected token is
    indistinguishable from a downed server at the socket layer. The client
    re-checks over HTTP after two failures.
 
 8. **Terminal QR cannot carry a correct quiet zone** for this payload at 80
-   columns. Use `/api/pairing/qr`.
+   columns. Use `/api/v1/pairing/qr`.
 
 9. **`EXPO_PUBLIC_*` is inlined into the bundle** and readable from the APK.
 

@@ -1,9 +1,9 @@
 import { mkdirSync } from "node:fs";
+import { MEMORY } from "@eidolon/config";
+import { LANCEDB_DIR_PATH } from "@eidolon/config/server";
 import * as lancedb from "@lancedb/lancedb";
 import { safeJsonParse } from "@/utils/json";
-import { LANCEDB_DIR_PATH } from "@/utils/paths";
 
-// External to the repository, alongside the SQLite file - see src/utils/paths.ts.
 mkdirSync(LANCEDB_DIR_PATH, { recursive: true });
 
 export interface MemoryRecord {
@@ -27,7 +27,7 @@ export interface MemorySearchResult {
 let dbInstance: lancedb.Connection | null = null;
 let tableInstance: lancedb.Table | null = null;
 
-const TABLE_NAME = "character_memories";
+const TABLE_NAME = MEMORY.tableName;
 
 /**
  * Initializes and retrieves the LanceDB connection and character_memories table.
@@ -48,7 +48,7 @@ export async function getLanceDb(): Promise<{ db: lancedb.Connection; table: lan
       id: "schema_init_bootstrap",
       character_id: "__system__",
       text: "bootstrap init",
-      vector: new Array(384).fill(0),
+      vector: new Array<number>(MEMORY.embeddingDimensions).fill(0),
       timestamp: 0,
       metadata: "{}",
     };
@@ -65,7 +65,7 @@ export async function getLanceDb(): Promise<{ db: lancedb.Connection; table: lan
  * Used for dev/testing when external embedding models are offline.
  */
 export function generateMockEmbedding(text: string): number[] {
-  const dims = 384;
+  const dims = MEMORY.embeddingDimensions;
   const vector = new Array<number>(dims).fill(0);
 
   if (!text || text.length === 0) {
@@ -131,7 +131,7 @@ export async function insertMemory(
 export async function searchMemories(
   characterId: string,
   queryVector: number[],
-  limit = 5,
+  limit: number = MEMORY.searchLimit,
 ): Promise<MemorySearchResult[]> {
   const { table } = await getLanceDb();
 

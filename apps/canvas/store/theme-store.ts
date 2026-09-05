@@ -1,3 +1,4 @@
+import { UI_MS } from "@eidolon/config";
 import type { ThemeTokens } from "@eidolon/tokens";
 import { create } from "zustand";
 import { appStorage } from "./storage";
@@ -30,7 +31,6 @@ const STORAGE_KEYS = {
  * native write plus a full JSON.stringify on the JS thread for every keystroke
  * and every slider frame. Writes are coalesced here instead.
  */
-const PERSIST_DEBOUNCE_MS = 120;
 const pendingWrites = new Map<string, string>();
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -61,7 +61,7 @@ function schedulePersist(key: string, value: unknown): void {
   persistTimer = setTimeout(() => {
     persistTimer = null;
     flushThemePersistence();
-  }, PERSIST_DEBOUNCE_MS);
+  }, UI_MS.themePersistDebounce);
 }
 
 /**

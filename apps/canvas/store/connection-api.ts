@@ -1,0 +1,76 @@
+import { apiUrl, HEALTH_ALIAS_PATH, stripAuthority, TIMEOUTS_MS } from "@eidolon/config";
+
+/**
+ * Confirms the token is actually accepted by this conductor.
+ *
+ * /health is unauthenticated, so pinging it only proved the host was reachable:
+ * a stale QR code or a mistyped token paired "successfully" and then failed at
+ * the WebSocket upgrade with nothing to explain why.
+ */
+export async function verifyPairing(host: string, token: string): Promise<void> {
+  const cleanHost = stripAuthority(host);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUTS_MS.clientRequest);
+
+  let response: Response;
+  try {
+    response = await fetch(apiUrl(cleanHost, "pairVerify"), {
+      method: "GET",
+      headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+      signal: controller.signal,
+    });
+  } catch (err) {
+    throw new Error(
+      `Conductor host '${cleanHost}' unreachable: ${err instanceof Error ? err.message : err}`,
+    );
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  if (response.status === 401) {
+    throw new Error("This pairing code was rejected. Generate a fresh one on the server.");
+  }
+  if (!response.ok) {
+    throw new Error(`Conductor returned HTTP ${response.status}.`);
+  }
+}
+
+export async function pingHealth(host: string, token?: string): Promise<boolean> {
+  const cleanHost = stripAuthority(host);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUTS_MS.clientRequest);
+
+  try {
+    const headers: Record<string, string> = {
+      Accept: "application/json",
+    };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`http://${cleanHost}${HEALTH_ALIAS_PATH}`, {
+      method: "GET",
+      headers,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`Server returned HTTP ${response.status}`);
+    }
+
+    return true;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err instanceof Error) {
+      throw new Error(`Conductor host '${cleanHost}' unreachable: ${err.message}`);
+    }
+    throw new Error(`Conductor host '${cleanHost}' unreachable.`);
+  }
+}
+
+/**
+ * Socket lifecycle lives outside the store: it is imperative, must survive
+ * re-renders, and must never be duplicated by a second subscriber.
+ */

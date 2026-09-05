@@ -1,3 +1,5 @@
+import { MOCK } from "@eidolon/config";
+import { getMockBackdropUrl } from "@eidolon/config/server";
 import { type ClientMessage, parseClientMessage, parseServerMessage } from "@eidolon/protocol";
 import type { WSMessageReceive } from "hono/ws";
 import { queueImageGeneration } from "@/services/comfyui";
@@ -251,9 +253,8 @@ export async function handleClientMessage(
       sendServerMessage(ws, {
         type: "image_ready",
         payload: {
-          image_url:
-            "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=800&q=80",
-          aspect_ratio: "9:16",
+          image_url: getMockBackdropUrl(),
+          aspect_ratio: MOCK.aspectRatio,
           prompt_used: prompt,
         },
       });

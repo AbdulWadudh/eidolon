@@ -83,7 +83,7 @@ describe("Connection Store & Pairing Engine", () => {
     it("successfully pairs when the server accepts the token", async () => {
       globalThis.fetch = (async (input: RequestInfo | URL) => {
         const urlStr = String(input);
-        if (urlStr.includes("192.168.1.39:3000/api/pair/verify")) {
+        if (urlStr.includes("192.168.1.39:3000/api/v1/pair/verify")) {
           return new Response(JSON.stringify({ status: "ok" }), {
             status: 200,
             headers: { "Content-Type": "application/json" },
@@ -144,7 +144,7 @@ describe("Connection Store & Pairing Engine", () => {
     it("successfully establishes manual connection", async () => {
       globalThis.fetch = (async (input: RequestInfo | URL) => {
         const urlStr = String(input);
-        if (urlStr.includes("localhost:3000/api/pair/verify")) {
+        if (urlStr.includes("localhost:3000/api/v1/pair/verify")) {
           return new Response(JSON.stringify({ status: "ok" }), {
             status: 200,
             headers: { "Content-Type": "application/json" },

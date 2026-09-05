@@ -174,5 +174,148 @@ GitHub reads those trailers and credits the named account as a contributor on
 the repository, which misrepresents authorship on a public project.
 
 This overrides any default an agent harness supplies. If tooling adds such a
-trailer automatically, strip it before committing.
 
+---
+
+## 14. Every API route is versioned
+
+The HTTP and WebSocket surface lives under `/api/v1/`. There are no unversioned
+API routes.
+
+The client is an installed app, not a page that reloads with the server, so a
+handset can be running a build from months ago against a conductor deployed this
+morning. The version in the path is what lets the old build keep working.
+
+Routes are declared once, in `@eidolon/config`, and both sides read them from
+there:
+
+```ts
+import { apiPath, apiUrl, socketUrl } from "@eidolon/config";
+
+apiPath("pairVerify");                     // /api/v1/pair/verify
+apiUrl(host, "pairVerify");                // http://<host>/api/v1/pair/verify
+socketUrl(host, token);                    // ws://<host>/api/v1/ws?token=...
+```
+
+Never write a route as a string literal. Bump the version by adding a `v2`
+router beside `v1`, never by editing `v1` in place.
+
+`GET /health` is additionally served unversioned. Container health checks, the
+deployment platform and uptime monitors point at it, and those live outside this
+repository's release cycle.
+
+---
+
+## 15. Configuration lives in `@eidolon/config`
+
+Every configurable value — ports, hosts, URLs, paths, timeouts, retry schedules,
+limits, TTLs, table names, key prefixes — is declared in `packages/config` and
+imported. No literal port, no `setTimeout(fn, 4000)`, no hardcoded endpoint
+anywhere else in the tree.
+
+- `@eidolon/config` is isomorphic and safe in React Native. It imports nothing
+  from Node.
+- `@eidolon/config/server` reads the environment and the filesystem. **The
+  mobile app must never import it.**
+
+No deployment host is baked in. An unset backend is a supported configuration:
+the feature reports itself offline rather than the process quietly talking to
+somewhere the operator never chose.
+
+---
+
+## 16. No comments
+
+Do not add comments — no JSDoc, no inline notes, no section headers, in any file
+type. Name things so the intent is in the identifier.
+
+Reasoning that would have been a comment goes in the change-set note under
+`changelog/<year>/<month>/`, which §10 already requires. That is where it can be
+dated, attributed and read in context, instead of decaying in the margin of a
+file nobody re-reads.
+
+---
+
+## 17. Nothing ships looking plain
+
+Every surface is a designed surface — including the ones that feel too small to
+bother with. A server-rendered utility page, an error state, an empty list: if a
+user can see it, it gets the same care as the main screen.
+
+Before building or changing any interface, run **`/ui-ux-pro-max`**. It is not
+optional and it is not only for new screens.
+
+The floor for anything user-visible:
+
+- The brand mark, on any standalone page.
+- Real components, not bare text: copy affordances on anything a user would
+  otherwise select by hand, live status where state can change, a disclosure for
+  the failure path.
+- Depth built from the design language — layered surfaces, hairline borders,
+  accent framing, a considered background. Never from glassmorphism or bubbly
+  radii, which §5 forbids.
+- Typography with contrast: the serif face for display, the sans for interface,
+  the mono for values a user copies.
+- Every value in the layout from `@eidolon/tokens` and `@eidolon/config`. A
+  screen is not a licence to hardcode.
+
+"It is only an internal page" is not a reason. It is the reason it looks bad.
+
+---
+
+## 18. Motion is designed, gated, and measured
+
+Run **`/find-animation-opportunities`** to decide *what* should move, and then
+**`/animate`** (web) or **`/animate-expo`** (the Expo app) to build it. Both
+build skills carry the exact curves and durations; do not invent values.
+
+**The gate.** Before animating anything, name its frequency tier and its
+purpose. Purpose is one of: feedback, spatial consistency, state indication,
+preventing a jarring change, explanation, or delight. Delight is only allowed on
+rare and first-run surfaces. Anything a user triggers 100+ times a day — tab
+switches, keyboard shortcuts — **does not animate at all**.
+
+**Shared values.** These live in `@eidolon/config`:
+
+```
+--ease-out: cubic-bezier(0.23, 1, 0.32, 1)
+--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1)
+press 100–160ms · dropdown 150–250ms · sheet/modal 200–500ms · stagger 30–80ms
+```
+
+UI motion stays under 300ms. Entrances and exits use `ease-out`; **never
+`ease-in` on UI** — it delays the moment the user is watching.
+
+**Always:**
+
+- Animate `transform` and `opacity` only.
+- Start entrances from `scale(0.95)`, never `scale(0)`.
+- Gate hover behind `@media (hover: hover) and (pointer: fine)`.
+- Ship `prefers-reduced-motion` with the animation. Reduced means *gentler* —
+  keep the opacity fade, drop the movement. It does not mean a 1ms animation.
+- Use transitions, not keyframes, for anything a user can trigger twice quickly.
+
+**In the Expo app specifically:**
+
+- **Reanimated + `react-native-gesture-handler`.** Never core `Animated`, never
+  `PanResponder`.
+- Animations run on the **UI thread**. Never `setState` from a gesture or scroll
+  handler; use a shared value and `useAnimatedStyle`. Never read or write a
+  shared value during render — `.get()`/`.set()` in worklets, handlers, effects.
+- `scheduleOnRN` from `react-native-worklets`, never the deprecated `runOnJS`,
+  and never per frame — only in `onEnd` or at a `useAnimatedReaction` threshold.
+- Springs when a finger was involved (they carry velocity through an
+  interruption), timing otherwise:
+  `{ duration: 400, dampingRatio: 1 }` to settle,
+  `{ duration: 300, dampingRatio: 0.8, velocity }` for sheets.
+- Press feedback is `scale: 0.97` over 100–150ms, on press-**in**. Touch targets
+  are 44pt minimum; grow `hitSlop`, not the visual.
+- Screen transitions come from the native stack. Tabs are peers —
+  `animation: 'none'`, never a slide.
+- Haptics: one per committed action, on the same frame as the visual, and never
+  the only feedback.
+- Never animate `height`, `width`, `margin`, `flex`, Android `elevation`, or
+  `BlurView` intensity.
+
+Feel is judged in a **release build on the slowest device supported** — not in
+Expo Go, not in the simulator. Say so plainly when that check has not been done.

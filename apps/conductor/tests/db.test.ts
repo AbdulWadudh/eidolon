@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { existsSync } from "node:fs";
+import { SQLITE_DB_PATH } from "@eidolon/config/server";
 import { checkDatabaseHealth, db } from "@/db";
-import { SQLITE_DB_PATH } from "@/utils/paths";
 
 describe("SQLite relational store", () => {
   it("opens the database file at the external OS data path", () => {
@@ -48,7 +48,6 @@ describe("SQLite relational store", () => {
         .get(characterId);
 
       expect(stored?.name).toBe("Test Subject");
-      // Default from the schema, not from the insert.
       expect(stored?.affinity_tier).toBe("Neutral");
 
       db.query("DELETE FROM characters WHERE id = ?").run(characterId);

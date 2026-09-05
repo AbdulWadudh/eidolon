@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { existsSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { isAbsolute, join, relative, resolve } from "node:path";
+import { getPersistentDataDir, LANCEDB_DIR_PATH, SQLITE_DB_PATH } from "@eidolon/config/server";
 import {
   audioKey,
   buildPublicReadPolicy,
@@ -10,15 +11,7 @@ import {
   missingStorageConfig,
   publicUrl,
 } from "@/services/storage";
-import { getPersistentDataDir, LANCEDB_DIR_PATH, SQLITE_DB_PATH } from "@/utils/paths";
 
-/**
- * Deliberately not the real deployment's values. The service reads its host,
- * bucket and credentials from the environment and nothing is baked into the
- * source, so the tests supply their own and assert the derivation - which is
- * the actual logic - rather than pinning a hostname that would then live in two
- * places at once.
- */
 const TEST_CONFIG = {
   S3_ENDPOINT: "https://s3.example.com",
   S3_REGION: "eu-west-1",
@@ -46,7 +39,6 @@ beforeAll(() => {
   for (const [name, value] of Object.entries(TEST_CONFIG)) {
     process.env[name] = value;
   }
-  // Left unset so the derived form is what gets exercised.
   delete process.env.S3_PUBLIC_URL;
 });
 
@@ -56,11 +48,6 @@ afterAll(() => {
   }
 });
 
-/**
- * True when `child` is not inside `parent`. On Windows the two can sit on
- * different drives (the checkout on one, the profile on another), and
- * `relative` answers that with an absolute path rather than a `..` prefix.
- */
 function isOutside(parent: string, child: string): boolean {
   const rel = relative(parent, child);
   return rel.length > 0 && (isAbsolute(rel) || rel.startsWith(".."));
@@ -96,7 +83,6 @@ describe("Persistent OS data paths", () => {
 
     try {
       expect(getPersistentDataDir()).toBe(override);
-      // Created on the way out, exactly as the OS-convention path is.
       expect(existsSync(override)).toBe(true);
     } finally {
       setEnv("EIDOLON_DATA_DIR", previous);
@@ -153,7 +139,6 @@ describe("Object storage configuration", () => {
     expect(config.endpoint).toBe(TEST_CONFIG.S3_ENDPOINT);
     expect(config.bucket).toBe(TEST_CONFIG.S3_BUCKET);
     expect(config.region).toBe(TEST_CONFIG.S3_REGION);
-    // Required for any host without per-bucket DNS.
     expect(config.forcePathStyle).toBe(true);
   });
 
@@ -190,7 +175,6 @@ describe("Object storage configuration", () => {
 
     try {
       expect(missingStorageConfig()).toEqual(["S3_ENDPOINT", "S3_ACCESS_KEY"]);
-      // Without an endpoint there is no base to build a URL from.
       expect(getStorageConfig().publicUrl).toBe("");
     } finally {
       setEnv("S3_ENDPOINT", previousEndpoint);

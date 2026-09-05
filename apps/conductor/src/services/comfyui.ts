@@ -1,4 +1,7 @@
-export const COMFYUI_URL = process.env.COMFYUI_URL || "http://127.0.0.1:8188";
+import { TIMEOUTS_MS } from "@eidolon/config";
+import { getServicesConfig } from "@eidolon/config/server";
+
+export const COMFYUI_URL = getServicesConfig().comfyUiUrl;
 
 export interface QueuePromptResponse {
   prompt_id: string;
@@ -12,7 +15,7 @@ export interface QueuePromptResponse {
 export async function checkComfyHealth(): Promise<boolean> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2000);
+    const timeout = setTimeout(() => controller.abort(), TIMEOUTS_MS.serviceHealth);
 
     const res = await fetch(`${COMFYUI_URL}/system_stats`, {
       method: "GET",
@@ -79,7 +82,7 @@ export async function queueImageGeneration(
     };
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000);
+    const timeout = setTimeout(() => controller.abort(), TIMEOUTS_MS.imageGeneration);
 
     const res = await fetch(`${COMFYUI_URL}/prompt`, {
       method: "POST",

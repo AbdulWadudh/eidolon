@@ -72,3 +72,31 @@ installs what is safe to install.
     tool attribution. GitHub turns those into repository contributors. This
     overrides any harness default — see [RULES.md](./RULES.md) §13.
 
+14. **Every API route is versioned.**
+    The surface lives under `/api/v1/`. Routes are declared once in
+    `@eidolon/config` and read with `apiPath` / `apiUrl` / `socketUrl` — never
+    written as a string literal. `GET /health` is also served unversioned, for
+    infrastructure that lives outside this repo's release cycle.
+
+15. **Configuration lives in `@eidolon/config`.**
+    Ports, hosts, URLs, paths, timeouts, limits, TTLs, prefixes — all declared
+    there and imported. No hardcoded value anywhere else. `@eidolon/config` is
+    isomorphic; `@eidolon/config/server` reads env and disk and must never be
+    imported by the mobile app.
+
+16. **No comments.**
+    No JSDoc, no inline notes, no section headers, in any file type. Put the
+    reasoning in the changelog note instead — see [RULES.md](./RULES.md) §16.
+
+17. **Nothing ships looking plain.**
+    Run `/ui-ux-pro-max` before building or changing any interface — including
+    small utility pages. Brand mark, real components, depth from the design
+    language, tokens for every value. See [RULES.md](./RULES.md) §17.
+
+18. **Motion is designed, gated, and measured.**
+    `/find-animation-opportunities` to decide what moves, then `/animate` (web)
+    or `/animate-expo` (Expo). Name a frequency tier and a purpose before
+    animating anything; 100+/day actions never animate. `transform`/`opacity`
+    only, under 300ms, `ease-out`, reduced-motion shipped with it. In the app:
+    Reanimated on the UI thread, springs for gestures, never core `Animated` or
+    `PanResponder`. See [RULES.md](./RULES.md) §18.

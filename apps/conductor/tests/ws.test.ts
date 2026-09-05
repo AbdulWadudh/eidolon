@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { apiPath } from "@eidolon/config";
 import { parseServerMessage, type ServerMessage } from "@eidolon/protocol";
 import { PAIRING_SECRET } from "@/auth";
 import { app } from "@/index";
@@ -15,7 +16,7 @@ describe("Conductor WebSocket Router", () => {
       fetch: app.fetch,
       websocket,
     });
-    wsUrl = `ws://localhost:${server.port}/ws`;
+    wsUrl = `ws://localhost:${server.port}${apiPath("ws")}`;
   });
 
   afterAll(() => {
@@ -23,12 +24,12 @@ describe("Conductor WebSocket Router", () => {
   });
 
   it("rejects unauthorized HTTP upgrade without token", async () => {
-    const res = await app.request("/ws");
+    const res = await app.request(apiPath("ws"));
     expect(res.status).toBe(401);
   });
 
   it("rejects unauthorized HTTP upgrade with invalid token", async () => {
-    const res = await app.request("/ws?token=invalid_secret");
+    const res = await app.request(`${apiPath("ws")}?token=invalid_secret`);
     expect(res.status).toBe(401);
   });
 
