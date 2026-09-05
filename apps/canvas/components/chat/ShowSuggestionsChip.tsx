@@ -27,7 +27,7 @@ export function ShowSuggestionsChip({
     <Animated.View
       entering={reduced ? undefined : FadeInDown.duration(CHAT_MS.trayCollapse)}
       exiting={reduced ? undefined : FadeOutDown.duration(CHAT_MS.trayCollapse)}
-      className="mx-4 mb-2 items-start"
+      className="mx-4 mb-2 items-end"
     >
       <PressableScale
         accessibilityRole="button"

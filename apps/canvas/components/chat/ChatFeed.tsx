@@ -75,6 +75,17 @@ export function ChatFeed({
     followTail(false);
   }, [followTail]);
 
+  // The keyboard shrinks the viewport without changing the content, so
+  // onContentSizeChange never fires and the last message ends up hidden behind
+  // the dock. Layout is the event that does fire, on every resize. Deferred a
+  // frame because the list has not re-measured at the moment layout reports.
+  const handleLayout = React.useCallback(() => {
+    if (!liveEdgeRef.current) return;
+    requestAnimationFrame(() => {
+      if (liveEdgeRef.current) followTail(false);
+    });
+  }, [followTail]);
+
   const handleScroll = React.useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
     const distance = contentSize.height - layoutMeasurement.height - contentOffset.y;
@@ -113,7 +124,7 @@ export function ChatFeed({
   );
 
   return (
-    <View className="flex-1">
+    <View className="flex-1" onLayout={handleLayout}>
       <FlashList
         ref={listRef}
         data={messages}

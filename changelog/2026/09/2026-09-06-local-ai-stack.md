@@ -422,6 +422,21 @@ The class takes its file by injection so the tests can run two "launches"
 against one fake file and prove hydration, rather than fighting the module
 cache with a second import.
 
+### The keyboard hid the last message
+
+`KeyboardAvoidingView` shrinks the column, so the feed's viewport gets shorter
+while its content stays exactly the same size — which means
+`onContentSizeChange` never fires and nothing re-anchors. The newest message
+ended up behind the dock and had to be scrolled to by hand.
+
+`onLayout` is the event that does fire on a resize, so the feed follows the tail
+from there as well, deferred a frame because the list has not re-measured at the
+moment layout reports. Still gated on the live edge, so opening the keyboard
+while scrolled up leaves you where you were.
+
+The reveal chip also moved to the right edge, under the thumb rather than
+across the screen from it.
+
 ## Evidence
 
 - `llama-server --list-devices` → `CUDA0: NVIDIA GeForce RTX 5070 Ti`.
