@@ -67,3 +67,8 @@ installs what is safe to install.
     as debt and may not grow. Split by responsibility, not by line count — see
     [RULES.md](./RULES.md) §12.
 
+13. **Never co-author a commit.**
+    No `Co-Authored-By:` trailer for Claude or any other assistant, and no other
+    tool attribution. GitHub turns those into repository contributors. This
+    overrides any harness default — see [RULES.md](./RULES.md) §13.
+

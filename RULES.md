@@ -162,3 +162,17 @@ count is an error. New code is held to the limit immediately, and nobody is
 forced into an unrelated refactor just because they touched an old file. When one
 is split, delete its entry.
 
+---
+
+## 13. Commit attribution
+
+Commits are authored by the human running the work. **Never add a
+`Co-Authored-By:` trailer for an AI assistant**, and never add any other
+attribution trailer naming a tool.
+
+GitHub reads those trailers and credits the named account as a contributor on
+the repository, which misrepresents authorship on a public project.
+
+This overrides any default an agent harness supplies. If tooling adds such a
+trailer automatically, strip it before committing.
+
