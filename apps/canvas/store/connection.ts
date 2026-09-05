@@ -3,15 +3,24 @@ import { appStorage } from "./storage";
 
 export type ConnectionState = "disconnected" | "connecting" | "connected" | "error";
 
+/** Backoff schedule for socket reconnects, in milliseconds. */
+const RECONNECT_DELAYS_MS = [1000, 2000, 5000, 10000, 30000];
+/** Failures before asking the server over HTTP whether the token is still valid. */
+const RE_VERIFY_AFTER_ATTEMPTS = 2;
+
 export interface ConnectionStore {
   serverHost: string;
   pairingToken: string;
   isPaired: boolean;
   connectionState: ConnectionState;
   lastError: string | null;
+  /** True only while the socket is actually open. */
+  isSocketOpen: boolean;
   initializeConnection: () => void;
   pairFromUri: (uri: string) => Promise<boolean>;
   setManualConnection: (host: string, token: string) => Promise<boolean>;
+  connect: () => void;
+  disconnect: () => void;
   unpair: () => void;
 }
 
@@ -42,6 +51,41 @@ export function parsePairingUri(uri: string): { server: string; token: string } 
   const cleanHost = server.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
 
   return { server: cleanHost, token };
+}
+
+/**
+ * Confirms the token is actually accepted by this conductor.
+ *
+ * /health is unauthenticated, so pinging it only proved the host was reachable:
+ * a stale QR code or a mistyped token paired "successfully" and then failed at
+ * the WebSocket upgrade with nothing to explain why.
+ */
+export async function verifyPairing(host: string, token: string): Promise<void> {
+  const cleanHost = host.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+  let response: Response;
+  try {
+    response = await fetch(`http://${cleanHost}/api/pair/verify`, {
+      method: "GET",
+      headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+      signal: controller.signal,
+    });
+  } catch (err) {
+    throw new Error(
+      `Conductor host '${cleanHost}' unreachable: ${err instanceof Error ? err.message : err}`,
+    );
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  if (response.status === 401) {
+    throw new Error("This pairing code was rejected. Generate a fresh one on the server.");
+  }
+  if (!response.ok) {
+    throw new Error(`Conductor returned HTTP ${response.status}.`);
+  }
 }
 
 export async function pingHealth(host: string, token?: string): Promise<boolean> {
@@ -79,33 +123,142 @@ export async function pingHealth(host: string, token?: string): Promise<boolean>
   }
 }
 
-export const useConnectionStore = create<ConnectionStore>((set) => ({
+/**
+ * Socket lifecycle lives outside the store: it is imperative, must survive
+ * re-renders, and must never be duplicated by a second subscriber.
+ */
+let socket: WebSocket | null = null;
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+let reconnectAttempt = 0;
+/** Set when the user unpairs, so a pending close does not schedule a retry. */
+let intentionalClose = false;
+
+function clearReconnectTimer(): void {
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
+}
+
+function closeSocket(): void {
+  intentionalClose = true;
+  clearReconnectTimer();
+  if (socket) {
+    socket.close();
+    socket = null;
+  }
+}
+
+export const useConnectionStore = create<ConnectionStore>((set, get) => ({
   serverHost: appStorage.getString(STORAGE_KEYS.HOST) ?? "",
   pairingToken: appStorage.getString(STORAGE_KEYS.TOKEN) ?? "",
   isPaired: appStorage.getBoolean(STORAGE_KEYS.IS_PAIRED) ?? false,
-  connectionState:
-    (appStorage.getBoolean(STORAGE_KEYS.IS_PAIRED) ?? false) ? "connected" : "disconnected",
+  // Being paired only means credentials are stored; the socket decides "connected".
+  connectionState: "disconnected",
   lastError: null,
+  isSocketOpen: false,
 
   initializeConnection: () => {
     const host = appStorage.getString(STORAGE_KEYS.HOST) ?? "";
     const token = appStorage.getString(STORAGE_KEYS.TOKEN) ?? "";
     const isPaired = appStorage.getBoolean(STORAGE_KEYS.IS_PAIRED) ?? false;
 
+    const paired = isPaired && Boolean(host) && Boolean(token);
     set({
       serverHost: host,
       pairingToken: token,
-      isPaired: isPaired && Boolean(host) && Boolean(token),
-      connectionState: isPaired && host ? "connected" : "disconnected",
+      isPaired: paired,
+      connectionState: "disconnected",
       lastError: null,
     });
+
+    if (paired) {
+      get().connect();
+    }
+  },
+
+  connect: () => {
+    const { serverHost, pairingToken, isPaired } = get();
+    if (!isPaired || !serverHost || !pairingToken) return;
+    if (socket && (socket.readyState === 0 || socket.readyState === 1)) return;
+
+    if (typeof WebSocket === "undefined") {
+      set({ connectionState: "error", lastError: "WebSocket is unavailable in this environment." });
+      return;
+    }
+
+    intentionalClose = false;
+    clearReconnectTimer();
+    set({ connectionState: "connecting" });
+
+    const url = `ws://${serverHost}/ws?token=${encodeURIComponent(pairingToken)}`;
+    let ws: WebSocket;
+    try {
+      ws = new WebSocket(url);
+    } catch (err) {
+      set({
+        connectionState: "error",
+        isSocketOpen: false,
+        lastError: err instanceof Error ? err.message : "Could not open a socket.",
+      });
+      return;
+    }
+    socket = ws;
+
+    ws.onopen = () => {
+      reconnectAttempt = 0;
+      set({ connectionState: "connected", isSocketOpen: true, lastError: null });
+    };
+
+    ws.onerror = () => {
+      // The close handler owns retrying; onerror carries no useful detail here.
+      set({ connectionState: "error", isSocketOpen: false });
+    };
+
+    ws.onclose = () => {
+      if (socket === ws) socket = null;
+      set({ isSocketOpen: false });
+
+      if (intentionalClose) {
+        set({ connectionState: "disconnected" });
+        return;
+      }
+
+      const attempt = reconnectAttempt;
+      reconnectAttempt += 1;
+
+      // The gateway rejects a bad token with HTTP 401 before the upgrade, so the
+      // socket only ever reports a generic abnormal close - indistinguishable
+      // from the server being down. After a couple of failures, ask over HTTP
+      // which it is, so a revoked token stops an endless retry loop.
+      if (attempt === RE_VERIFY_AFTER_ATTEMPTS) {
+        const { serverHost: host, pairingToken: currentToken } = get();
+        verifyPairing(host, currentToken).catch((err: unknown) => {
+          const message = err instanceof Error ? err.message : String(err);
+          if (message.includes("rejected")) {
+            closeSocket();
+            set({ connectionState: "error", lastError: message });
+          }
+        });
+      }
+
+      const delay = RECONNECT_DELAYS_MS[Math.min(attempt, RECONNECT_DELAYS_MS.length - 1)];
+      set({ connectionState: "error", lastError: "Connection lost. Reconnecting…" });
+      clearReconnectTimer();
+      reconnectTimer = setTimeout(() => get().connect(), delay);
+    };
+  },
+
+  disconnect: () => {
+    closeSocket();
+    set({ connectionState: "disconnected", isSocketOpen: false });
   },
 
   pairFromUri: async (uri: string): Promise<boolean> => {
     set({ connectionState: "connecting", lastError: null });
     try {
       const { server, token } = parsePairingUri(uri);
-      await pingHealth(server, token);
+      await verifyPairing(server, token);
 
       appStorage.set(STORAGE_KEYS.HOST, server);
       appStorage.set(STORAGE_KEYS.TOKEN, token);
@@ -115,10 +268,11 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
         serverHost: server,
         pairingToken: token,
         isPaired: true,
-        connectionState: "connected",
+        connectionState: "connecting",
         lastError: null,
       });
 
+      get().connect();
       return true;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Pairing failed.";
@@ -140,7 +294,7 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
         throw new Error("Both server host and pairing token are required.");
       }
 
-      await pingHealth(cleanHost, cleanToken);
+      await verifyPairing(cleanHost, cleanToken);
 
       appStorage.set(STORAGE_KEYS.HOST, cleanHost);
       appStorage.set(STORAGE_KEYS.TOKEN, cleanToken);
@@ -150,10 +304,11 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
         serverHost: cleanHost,
         pairingToken: cleanToken,
         isPaired: true,
-        connectionState: "connected",
+        connectionState: "connecting",
         lastError: null,
       });
 
+      get().connect();
       return true;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Connection failed.";
@@ -163,6 +318,8 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
   },
 
   unpair: () => {
+    closeSocket();
+    reconnectAttempt = 0;
     appStorage.delete(STORAGE_KEYS.HOST);
     appStorage.delete(STORAGE_KEYS.TOKEN);
     appStorage.delete(STORAGE_KEYS.IS_PAIRED);
@@ -172,6 +329,7 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
       pairingToken: "",
       isPaired: false,
       connectionState: "disconnected",
+      isSocketOpen: false,
       lastError: null,
     });
   },

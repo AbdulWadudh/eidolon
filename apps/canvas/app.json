@@ -26,6 +26,11 @@
     "web": {
       "favicon": "../../public/logo_192x192.png"
     },
-    "plugins": ["expo-router", "expo-asset", "expo-font"]
+    "plugins": [
+      "expo-router",
+      "expo-asset",
+      "expo-font",
+      "./plugins/with-android-build-optimizations"
+    ]
   }
 }

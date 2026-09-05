@@ -4,9 +4,26 @@ import { db } from "../db";
 
 export const PAIRING_SECRET = process.env.PAIRING_SECRET || "eidolon_dev_secret_key_change_in_prod";
 
+const PORT = Number(process.env.PORT) || 3000;
+
+/**
+ * The conductor is reached on two different origins by design: localhost from
+ * the dev machine, and the LAN IP baked into the pairing QR from the phone.
+ * Better Auth cannot infer one correct origin from that, so it is set explicitly
+ * and both origins are trusted. Override with BETTER_AUTH_URL when the service
+ * sits behind a tunnel or reverse proxy.
+ */
+export const AUTH_BASE_URL = process.env.BETTER_AUTH_URL || `http://${getLocalIp()}:${PORT}`;
+
 export const auth = betterAuth({
   database: db,
   secret: PAIRING_SECRET,
+  baseURL: AUTH_BASE_URL,
+  trustedOrigins: [
+    `http://localhost:${PORT}`,
+    `http://127.0.0.1:${PORT}`,
+    `http://${getLocalIp()}:${PORT}`,
+  ],
 });
 
 /**

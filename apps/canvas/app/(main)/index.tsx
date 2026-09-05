@@ -1,9 +1,3 @@
-import {
-  Logout01Icon,
-  PaintBoardIcon,
-  Settings01Icon,
-  SparklesIcon,
-} from "@hugeicons/core-free-icons";
 import { useRouter } from "expo-router";
 import * as React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
@@ -14,36 +8,42 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Logout01Icon, PaintBoardIcon, Settings01Icon, SparklesIcon } from "@/lib/icons";
 import { useConnectionStore } from "@/store/connection";
-import { useThemeStore } from "@/store/theme-store";
+import { useResolvedTheme } from "@/store/theme-store";
 
 export default function MainCharactersScreen() {
   const router = useRouter();
-  const { serverHost, unpair } = useConnectionStore();
-  const { getResolvedTheme, activeCharacterId } = useThemeStore();
-  const theme = getResolvedTheme(activeCharacterId ?? undefined);
+  const { serverHost, unpair, connectionState } = useConnectionStore();
+  const theme = useResolvedTheme();
 
   const [showSettings, setShowSettings] = React.useState(false);
   const [showThemeStudio, setShowThemeStudio] = React.useState(false);
+
+  // The pill used to be hard-coded green, which said "connected" even while the
+  // socket was down. It now reflects the actual connection state.
+  const status = {
+    connected: { color: theme.success, label: serverHost || "connected" },
+    connecting: { color: theme.warning, label: "Connecting…" },
+    error: { color: theme.danger, label: "Disconnected" },
+    disconnected: { color: theme.textMuted, label: "Offline" },
+  }[connectionState];
 
   const handleEnterStage = () => {
     router.push("/chat/emma");
   };
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: theme.canvas }}
-      className="flex-1 bg-canvas will-change-variable"
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.canvas }} className="flex-1 bg-canvas">
       {/* Screen Header */}
       <View className="flex-row items-center justify-between border-b border-border px-5 py-4">
         <Text className="font-main-bold text-2xl text-text-primary tracking-tight">Eidolon</Text>
 
         {/* Connection Status Pill */}
         <View className="flex-row items-center gap-2 rounded-full border border-border bg-audio-pill px-3 py-1.5">
-          <View className="h-2 w-2 rounded-full bg-success" />
+          <View className="h-2 w-2 rounded-full" style={{ backgroundColor: status.color }} />
           <Text className="font-ui text-xs text-text-muted" numberOfLines={1}>
-            {serverHost || "127.0.0.1:3000"}
+            {status.label}
           </Text>
         </View>
 

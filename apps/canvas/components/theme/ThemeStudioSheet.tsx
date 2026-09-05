@@ -1,26 +1,27 @@
 import type { ThemeTokens } from "@eidolon/tokens";
-import {
-  ArrowDown01Icon,
-  ArrowUp01Icon,
-  Cancel01Icon,
-  CheckmarkCircle01Icon,
-  ColorPickerIcon,
-  Moon02Icon,
-  PaintBoardIcon,
-  SparklesIcon,
-  Sun02Icon,
-} from "@hugeicons/core-free-icons";
-import { vars } from "nativewind";
 import * as React from "react";
 import { Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { VariableContextProvider } from "react-native-css";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppIcon } from "@/components/common/icon";
 import { ColorPickerModal } from "@/components/theme/ColorPickerModal";
+import { ColorField } from "@/components/theme/color-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { CollapsibleSection } from "@/components/ui/collapsible-section";
+import { FontFamilyPicker } from "@/components/ui/font-family-picker";
 import { RangeSlider } from "@/components/ui/range-slider";
-import { useThemeStore } from "@/store/theme-store";
+import { ResetTokenButton } from "@/components/ui/reset-token-button";
+import { TextSizeControl } from "@/components/ui/text-size-control";
+import { Cancel01Icon, ColorPickerIcon, PaintBoardIcon, SparklesIcon } from "@/lib/icons";
+import { MODES } from "@/lib/theme-presets";
+import {
+  defaultTokenValue,
+  useResolvedTheme,
+  useThemeCssVars,
+  useThemeStore,
+} from "@/store/theme-store";
 
 export interface ThemeStudioSheetProps {
   isOpen: boolean;
@@ -31,109 +32,23 @@ export interface ThemeStudioSheetProps {
 
 const RADIUS_PRESETS = [0, 8, 10, 14, 22];
 
-const COLOR_SWATCHES = [
-  { name: "Amber", hex: "#F59E0B" },
-  { name: "Ruby", hex: "#E11D48" },
-  { name: "Jade", hex: "#10B981" },
-  { name: "Lapis", hex: "#2563EB" },
-  { name: "Amethyst", hex: "#8B5CF6" },
-  { name: "Slate", hex: "#64748B" },
-  { name: "Black", hex: "#000000" },
+const INSPECTED_TOKENS: [string, keyof ThemeTokens][] = [
+  ["--canvas", "canvas"],
+  ["--card", "card"],
+  ["--card-border", "cardBorder"],
+  ["--primary", "primary"],
+  ["--primary-foreground", "primaryForeground"],
+  ["--secondary", "secondary"],
+  ["--text-primary", "textPrimary"],
+  ["--text-muted", "textMuted"],
+  ["--success", "success"],
+  ["--warning", "warning"],
+  ["--danger", "danger"],
+  ["--radius", "radius"],
+  ["--font-main", "fontMain"],
+  ["--font-ui", "fontUI"],
+  ["--font-scale", "fontScale"],
 ];
-
-interface ColorFieldProps {
-  label: string;
-  tokenKey: keyof ThemeTokens;
-  value: string;
-  onChange: (val: string) => void;
-  onOpenPicker?: () => void;
-  theme: ThemeTokens;
-}
-
-function ColorField({ label, tokenKey, value, onChange, onOpenPicker, theme }: ColorFieldProps) {
-  const [localHex, setLocalHex] = React.useState(value);
-
-  React.useEffect(() => {
-    setLocalHex(value);
-  }, [value]);
-
-  const handleHexChange = (text: string) => {
-    let clean = text.trim();
-    if (!clean.startsWith("#") && clean.length > 0) {
-      clean = `#${clean}`;
-    }
-    setLocalHex(clean);
-    if (/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/.test(clean)) {
-      onChange(clean.toUpperCase());
-    }
-  };
-
-  return (
-    <View className="mb-3 rounded-button border border-border bg-input p-2.5">
-      <View className="mb-2 flex-row items-center justify-between">
-        <View className="flex-row items-center gap-2">
-          <View
-            className="h-4 w-4 rounded-full border border-border"
-            style={{ backgroundColor: value }}
-          />
-          <Text className="font-ui-medium text-xs text-text-primary">{label}</Text>
-        </View>
-        <Text className="font-ui text-[10px] text-text-muted">--{tokenKey}</Text>
-      </View>
-
-      {/* Swatches */}
-      <View className="mb-2 flex-row flex-wrap gap-1.5">
-        {COLOR_SWATCHES.map((swatch) => {
-          const isSelected = value.toLowerCase() === swatch.hex.toLowerCase();
-          return (
-            <Pressable
-              key={swatch.hex}
-              className="h-6 w-6 items-center justify-center rounded-full border"
-              style={{
-                backgroundColor: swatch.hex,
-                borderColor: isSelected ? theme.primary : theme.cardBorder,
-                borderWidth: isSelected ? 2 : 1,
-              }}
-              onPress={() => onChange(swatch.hex)}
-            >
-              {isSelected && (
-                <AppIcon
-                  icon={CheckmarkCircle01Icon}
-                  size={12}
-                  color={swatch.hex === "#000000" ? "#FFFFFF" : "#000000"}
-                />
-              )}
-            </Pressable>
-          );
-        })}
-      </View>
-
-      {/* Direct Hex Input + Color Wheel Trigger */}
-      <View className="flex-row items-center gap-2">
-        <TextInput
-          value={localHex}
-          onChangeText={handleHexChange}
-          placeholder="#HEX"
-          placeholderTextColor={theme.textMuted}
-          className="h-8 flex-1 rounded border border-border bg-card px-2 font-ui text-xs text-text-primary"
-          autoCapitalize="characters"
-          maxLength={9}
-        />
-        <Pressable
-          className="h-8 w-8 items-center justify-center rounded border border-border active:opacity-75"
-          style={{ backgroundColor: value }}
-          onPress={onOpenPicker}
-        >
-          <AppIcon
-            icon={ColorPickerIcon}
-            size={14}
-            color={value.toLowerCase() === "#ffffff" ? "#000000" : "#FFFFFF"}
-          />
-        </Pressable>
-      </View>
-    </View>
-  );
-}
 
 export function ThemeStudioSheet({
   isOpen,
@@ -141,25 +56,24 @@ export function ThemeStudioSheet({
   characterId = "emma",
   characterName = "Emma",
 }: ThemeStudioSheetProps) {
-  const {
-    characterThemes,
-    getResolvedTheme,
-    getDynamicCssVars,
-    updateGlobalToken,
-    updateCharacterToken,
-    resetCharacterTheme,
-    promoteCharacterToGlobal,
-    resetGlobalTheme,
-    setColorMode,
-  } = useThemeStore();
+  const updateGlobalToken = useThemeStore((state) => state.updateGlobalToken);
+  const updateCharacterToken = useThemeStore((state) => state.updateCharacterToken);
+  const resetCharacterTheme = useThemeStore((state) => state.resetCharacterTheme);
+  const promoteCharacterToGlobal = useThemeStore((state) => state.promoteCharacterToGlobal);
+  const resetGlobalTheme = useThemeStore((state) => state.resetGlobalTheme);
+  const setColorMode = useThemeStore((state) => state.setColorMode);
 
   const [scope, setScope] = React.useState<"global" | "character">("global");
-  const [collapsedSections, setCollapsedSections] = React.useState<Record<string, boolean>>({
-    surfaces: false,
-    accents: false,
-    semantics: false,
-  });
+  // Accordion, collapsed by default, so the live preview stays on screen while
+  // editing instead of being pushed off by the full control list.
+  const [expandedSection, setExpandedSection] = React.useState<string | null>(null);
+  const toggleSection = React.useCallback((key: string) => {
+    setExpandedSection((prev) => (prev === key ? null : key));
+  }, []);
 
+  // The target is deliberately kept after closing, so `initialColor` never flips
+  // to a fallback while the modal is still on screen.
+  const [pickerOpen, setPickerOpen] = React.useState(false);
   const [pickerTarget, setPickerTarget] = React.useState<{
     title: string;
     tokenKey: keyof ThemeTokens;
@@ -167,29 +81,102 @@ export function ThemeStudioSheet({
   } | null>(null);
 
   const targetCharacterId = characterId || "emma";
-  const resolvedTheme = getResolvedTheme(scope === "character" ? targetCharacterId : undefined);
-  const characterHasOverrides = Boolean(
-    characterThemes[targetCharacterId] &&
-      Object.keys(characterThemes[targetCharacterId]).length > 0,
+  const scopedCharacterId = scope === "character" ? targetCharacterId : undefined;
+  const resolvedTheme = useResolvedTheme(scopedCharacterId);
+  const previewCssVars = useThemeCssVars(scopedCharacterId);
+
+  // react-native-css 3.0.7 caches computed styles per rule-set hash and only
+  // rebuilds when a rule the element itself declares changes, so a descendant
+  // reading --color-primary could keep a stale value until some unrelated token
+  // (e.g. --card, which the Card itself declares) forced a rebuild. Remounting the
+  // preview on any token change guarantees it always shows the current theme.
+  const previewKey = React.useMemo(
+    () =>
+      [
+        resolvedTheme.canvas,
+        resolvedTheme.card,
+        resolvedTheme.cardBorder,
+        resolvedTheme.inputSurface,
+        resolvedTheme.textPrimary,
+        resolvedTheme.textMuted,
+        resolvedTheme.primary,
+        resolvedTheme.primaryForeground,
+        resolvedTheme.secondary,
+        resolvedTheme.secondaryForeground,
+        resolvedTheme.success,
+        resolvedTheme.warning,
+        resolvedTheme.danger,
+        resolvedTheme.radius,
+        resolvedTheme.fontMain,
+        resolvedTheme.fontUI,
+        resolvedTheme.fontScale,
+      ].join("|"),
+    [resolvedTheme],
   );
 
-  const previewCssVars = getDynamicCssVars(scope === "character" ? targetCharacterId : undefined);
+  const characterOverrides = useThemeStore(
+    (state) => state.characterThemes[targetCharacterId]?.[state.palettes.mode],
+  );
+  const characterOverrideKeys = React.useMemo(
+    () => Object.keys(characterOverrides ?? {}) as (keyof ThemeTokens)[],
+    [characterOverrides],
+  );
+  const characterHasOverrides = characterOverrideKeys.length > 0;
 
+  const sheetStyle = React.useMemo(
+    () => ({ flex: 1, backgroundColor: resolvedTheme.canvas }),
+    [resolvedTheme.canvas],
+  );
+
+  // Mode selects which palette is read, so it is global rather than per-scope.
   const handleSetColorMode = (mode: "dark" | "light") => {
-    setColorMode(mode, scope === "character" ? targetCharacterId : undefined);
+    setColorMode(mode);
   };
 
-  const updateToken = <K extends keyof ThemeTokens>(key: K, value: ThemeTokens[K]) => {
-    if (scope === "global") {
-      updateGlobalToken(key, value);
-    } else {
-      updateCharacterToken(targetCharacterId, key, value);
-    }
-  };
+  const updateToken = React.useCallback(
+    <K extends keyof ThemeTokens>(key: K, value: ThemeTokens[K]) => {
+      if (scope === "global") {
+        updateGlobalToken(key, value);
+      } else {
+        updateCharacterToken(targetCharacterId, key, value);
+      }
+    },
+    [scope, targetCharacterId, updateGlobalToken, updateCharacterToken],
+  );
 
-  const toggleSection = (sec: string) => {
-    setCollapsedSections((prev) => ({ ...prev, [sec]: !prev[sec] }));
-  };
+  // Stable identities, so the memoised ColorFields are not invalidated every render.
+  const handleColorChange = React.useCallback(
+    (tokenKey: keyof ThemeTokens, val: string) => {
+      updateToken(tokenKey, val as ThemeTokens[typeof tokenKey]);
+    },
+    [updateToken],
+  );
+
+  const resetToken = useThemeStore((state) => state.resetToken);
+
+  const handleResetToken = React.useCallback(
+    (tokenKey: keyof ThemeTokens) => {
+      resetToken(tokenKey, scopedCharacterId);
+    },
+    [resetToken, scopedCharacterId],
+  );
+
+  // In character scope a token is "default" when it has no override at all.
+  const isTokenDefault = React.useCallback(
+    (tokenKey: keyof ThemeTokens) =>
+      scope === "character"
+        ? !characterOverrideKeys.includes(tokenKey)
+        : resolvedTheme[tokenKey] === defaultTokenValue(tokenKey, resolvedTheme.mode),
+    [scope, characterOverrideKeys, resolvedTheme],
+  );
+
+  const handleOpenPicker = React.useCallback(
+    (tokenKey: keyof ThemeTokens, title: string, current: string) => {
+      setPickerTarget({ tokenKey, title, initialColor: current });
+      setPickerOpen(true);
+    },
+    [],
+  );
 
   const handleRadiusChange = (text: string) => {
     const parsed = Number.parseInt(text.replace(/[^0-9]/g, ""), 10);
@@ -200,519 +187,542 @@ export function ThemeStudioSheet({
 
   return (
     <Modal visible={isOpen} animationType="slide" transparent={false} onRequestClose={onClose}>
-      <SafeAreaView
-        style={[vars(previewCssVars), { flex: 1, backgroundColor: resolvedTheme.canvas }]}
-        className="flex-1 bg-canvas will-change-variable"
-      >
-        {/* Header Bar */}
-        <View className="flex-row items-center justify-between border-b border-border px-4 py-3">
-          <View className="flex-row items-center gap-2">
-            <AppIcon icon={PaintBoardIcon} size={20} color={resolvedTheme.primary} />
-            <Text className="font-main-bold text-lg text-text-primary">Theme Studio</Text>
-          </View>
-          <Pressable
-            className="h-9 w-9 items-center justify-center rounded-button border border-border bg-card active:bg-border"
-            onPress={onClose}
-          >
-            <AppIcon icon={Cancel01Icon} size={18} color={resolvedTheme.textMuted} />
-          </Pressable>
-        </View>
-
-        <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-          {/* A. Scope Selector */}
-          <View className="rounded-card border border-border bg-card p-3">
-            <Text className="mb-2 font-ui-bold text-xs uppercase tracking-wider text-text-muted">
-              Theme Scope
-            </Text>
-            <View className="flex-row gap-2">
-              <Pressable
-                className={`flex-1 items-center rounded-button border py-2 ${
-                  scope === "global" ? "bg-primary" : "border-border bg-input"
-                }`}
-                onPress={() => setScope("global")}
-              >
-                <Text
-                  className={`font-ui-medium text-xs ${
-                    scope === "global" ? "text-primary-foreground font-bold" : "text-text-muted"
-                  }`}
-                >
-                  Global Master Default
-                </Text>
-              </Pressable>
-
-              <Pressable
-                className={`flex-1 items-center rounded-button border py-2 ${
-                  scope === "character" ? "bg-primary" : "border-border bg-input"
-                }`}
-                onPress={() => setScope("character")}
-              >
-                <Text
-                  className={`font-ui-medium text-xs ${
-                    scope === "character" ? "text-primary-foreground font-bold" : "text-text-muted"
-                  }`}
-                >
-                  {characterName} Override
-                </Text>
-              </Pressable>
+      <VariableContextProvider value={previewCssVars}>
+        <SafeAreaView style={sheetStyle} className="flex-1 bg-canvas">
+          {/* Header Bar */}
+          <View className="flex-row items-center justify-between border-b border-border px-4 py-3">
+            <View className="flex-row items-center gap-2">
+              <AppIcon icon={PaintBoardIcon} size={20} color={resolvedTheme.primary} />
+              <Text className="font-main-bold text-lg text-text-primary">Theme Studio</Text>
             </View>
-
-            {scope === "character" && (
-              <View className="mt-3 flex-row items-center justify-between border-t border-border pt-2">
-                <Text className="font-ui text-xs text-text-muted">Status</Text>
-                <Badge variant={characterHasOverrides ? "warning" : "muted"}>
-                  {characterHasOverrides ? "Custom Overrides Active" : "Inheriting Global Master"}
-                </Badge>
-              </View>
-            )}
+            <Pressable
+              className="h-9 w-9 items-center justify-center rounded-button border border-border bg-card active:bg-border"
+              onPress={onClose}
+            >
+              <AppIcon icon={Cancel01Icon} size={18} color={resolvedTheme.textMuted} />
+            </Pressable>
           </View>
 
-          {/* B. Color Appearance Mode (Dark / Light) */}
-          <View className="rounded-card border border-border bg-card p-3">
-            <View className="mb-2 flex-row items-center justify-between">
+          <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+            {/* A. Scope Selector */}
+            <CollapsibleSection
+              sectionKey="scope"
+              title="Theme Scope"
+              badge={
+                <Text className="font-ui-bold text-[11px] text-text-primary">
+                  {scope === "global" ? "Global" : characterName}
+                </Text>
+              }
+              expanded={expandedSection === "scope"}
+              onToggle={toggleSection}
+              chevronColor={resolvedTheme.textMuted}
+              className="rounded-card border border-border bg-card p-3"
+            >
+              <View className="flex-row gap-2">
+                <Pressable
+                  className={`flex-1 items-center rounded-button border py-2 ${
+                    scope === "global" ? "bg-primary" : "border-border bg-input"
+                  }`}
+                  onPress={() => setScope("global")}
+                >
+                  <Text
+                    className={`font-ui-medium text-xs ${
+                      scope === "global" ? "text-primary-foreground font-bold" : "text-text-muted"
+                    }`}
+                  >
+                    Global Master Default
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  className={`flex-1 items-center rounded-button border py-2 ${
+                    scope === "character" ? "bg-primary" : "border-border bg-input"
+                  }`}
+                  onPress={() => setScope("character")}
+                >
+                  <Text
+                    className={`font-ui-medium text-xs ${
+                      scope === "character"
+                        ? "text-primary-foreground font-bold"
+                        : "text-text-muted"
+                    }`}
+                  >
+                    {characterName} Override
+                  </Text>
+                </Pressable>
+              </View>
+
+              {scope === "character" && (
+                <View className="mt-3 flex-row items-center justify-between border-t border-border pt-2">
+                  <Text className="font-ui text-xs text-text-muted">Status</Text>
+                  <Badge variant={characterHasOverrides ? "warning" : "muted"}>
+                    {characterHasOverrides ? "Custom Overrides Active" : "Inheriting Global Master"}
+                  </Badge>
+                </View>
+              )}
+            </CollapsibleSection>
+
+            {/* B. Color Appearance Mode (Dark / Light) */}
+            {/* Binary choice, so an inline segmented toggle rather than a section. */}
+            <View className="flex-row items-center justify-between rounded-card border border-border bg-card px-3 py-2.5">
               <Text className="font-ui-bold text-xs uppercase tracking-wider text-text-muted">
                 Appearance Mode
               </Text>
-              <Badge variant={resolvedTheme.mode === "light" ? "success" : "muted"}>
-                {resolvedTheme.mode === "light" ? "Light Mode Active" : "Dark Mode Active"}
-              </Badge>
-            </View>
-            <View className="flex-row gap-2">
-              <Pressable
-                className={`flex-1 flex-row items-center justify-center gap-2 rounded-button border py-2.5 ${
-                  resolvedTheme.mode === "dark"
-                    ? "bg-primary border-primary"
-                    : "border-border bg-input active:bg-border"
-                }`}
-                onPress={() => handleSetColorMode("dark")}
-              >
-                <AppIcon
-                  icon={Moon02Icon}
-                  size={16}
-                  color={
-                    resolvedTheme.mode === "dark"
-                      ? resolvedTheme.primaryForeground
-                      : resolvedTheme.textMuted
-                  }
-                />
-                <Text
-                  className={`font-ui-medium text-xs ${
-                    resolvedTheme.mode === "dark"
-                      ? "font-bold text-primary-foreground"
-                      : "text-text-muted"
-                  }`}
-                >
-                  Dark Mode
-                </Text>
-              </Pressable>
-
-              <Pressable
-                className={`flex-1 flex-row items-center justify-center gap-2 rounded-button border py-2.5 ${
-                  resolvedTheme.mode === "light"
-                    ? "bg-primary border-primary"
-                    : "border-border bg-input active:bg-border"
-                }`}
-                onPress={() => handleSetColorMode("light")}
-              >
-                <AppIcon
-                  icon={Sun02Icon}
-                  size={16}
-                  color={
-                    resolvedTheme.mode === "light"
-                      ? resolvedTheme.primaryForeground
-                      : resolvedTheme.textMuted
-                  }
-                />
-                <Text
-                  className={`font-ui-medium text-xs ${
-                    resolvedTheme.mode === "light"
-                      ? "font-bold text-primary-foreground"
-                      : "text-text-muted"
-                  }`}
-                >
-                  Light Mode
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-
-          {/* D. Live Interactive Preview Card */}
-          <View style={vars(previewCssVars)}>
-            <Text className="mb-2 font-ui-bold text-xs uppercase tracking-wider text-text-muted">
-              Live Cascading Preview
-            </Text>
-            <Card className="p-4 shadow-none">
-              <View className="mb-3 flex-row items-center justify-between">
-                <View className="flex-row items-center gap-2.5">
-                  <View className="h-9 w-9 items-center justify-center rounded-full border border-primary bg-input">
-                    <Text className="font-main-bold text-xs text-primary">
-                      {characterName.slice(0, 2).toUpperCase()}
-                    </Text>
-                  </View>
-                  <View>
-                    <Text className="font-main-bold text-sm text-text-primary">
-                      {scope === "character" ? characterName : "Master Persona"}
-                    </Text>
-                    <Text className="font-ui text-[11px] text-text-muted">
-                      Radius: {resolvedTheme.radius}px • Accent: {resolvedTheme.primary}
-                    </Text>
-                  </View>
-                </View>
-                <Badge variant="success">Online</Badge>
-              </View>
-
-              <Text className="font-main text-xs text-text-primary leading-5">
-                "Every balloon, border, surface, and semantic indicator shifts instantaneously via
-                our dynamic CSS variable engine."
-              </Text>
-
-              <View className="mt-3 flex-row items-center gap-2">
-                <Badge variant="success">Stage Active</Badge>
-                <Badge variant="danger">TTS Alert</Badge>
-              </View>
-
-              <View className="mt-3 flex-row gap-2">
-                <Button variant="default" size="sm" className="flex-1">
-                  Primary Action
-                </Button>
-                <Button variant="secondary" size="sm" className="flex-1">
-                  Secondary Action
-                </Button>
-              </View>
-            </Card>
-          </View>
-
-          {/* B. Geometry & Corner Radius */}
-          <View className="rounded-card border border-border bg-card p-3">
-            <View className="mb-2 flex-row items-center justify-between">
-              <Text className="font-ui-bold text-xs uppercase tracking-wider text-text-muted">
-                Corner Radius (--radius)
-              </Text>
-              <Text className="font-ui-bold text-xs text-primary">{resolvedTheme.radius}px</Text>
-            </View>
-
-            {/* Interactive Range Slider */}
-            <View className="mb-3">
-              <RangeSlider
-                value={resolvedTheme.radius}
-                min={0}
-                max={40}
-                step={1}
-                accentColor={resolvedTheme.primary}
-                onChange={(val) => updateToken("radius", val)}
-              />
-            </View>
-
-            {/* Quick Presets */}
-            <View className="mb-3 flex-row gap-1.5">
-              {RADIUS_PRESETS.map((r) => {
-                const isSelected = resolvedTheme.radius === r;
-                return (
-                  <Pressable
-                    key={r}
-                    className={`flex-1 items-center rounded border py-1.5 ${
-                      isSelected ? "border-primary bg-input" : "border-border bg-input"
-                    }`}
-                    onPress={() => updateToken("radius", r)}
-                  >
-                    <Text
-                      className={`font-ui text-xs ${
-                        isSelected ? "font-bold text-primary" : "text-text-muted"
+              <View className="flex-row items-center gap-1 rounded-button border border-border bg-input p-0.5">
+                {MODES.map(({ mode, label, icon }) => {
+                  const isActive = resolvedTheme.mode === mode;
+                  return (
+                    <Pressable
+                      key={mode}
+                      className={`flex-row items-center gap-1.5 rounded-button px-2.5 py-1.5 ${
+                        isActive ? "bg-primary" : ""
                       }`}
+                      onPress={() => handleSetColorMode(mode)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: isActive }}
                     >
-                      {r}px
-                    </Text>
-                  </Pressable>
-                );
-              })}
+                      <AppIcon
+                        icon={icon}
+                        size={14}
+                        color={isActive ? resolvedTheme.primaryForeground : resolvedTheme.textMuted}
+                      />
+                      <Text
+                        className={`font-ui-medium text-[11px] ${
+                          isActive ? "font-bold text-primary-foreground" : "text-text-muted"
+                        }`}
+                      >
+                        {label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
 
-            {/* Direct Numeric Input + Stepper */}
-            <View className="flex-row items-center gap-2">
-              <Pressable
-                className="h-10 w-10 items-center justify-center rounded border border-border bg-input"
-                onPress={() => updateToken("radius", Math.max(0, resolvedTheme.radius - 1))}
-              >
-                <Text className="font-ui-bold text-base text-text-primary">-</Text>
-              </Pressable>
+            {/* D. Live Interactive Preview Card */}
+            <View key={previewKey}>
+              <Text className="mb-2 font-ui-bold text-xs uppercase tracking-wider text-text-muted">
+                Live Cascading Preview
+              </Text>
+              <Card className="p-4 shadow-none">
+                <View className="mb-3 flex-row items-center justify-between">
+                  <View className="flex-row items-center gap-2.5">
+                    <View className="h-9 w-9 items-center justify-center rounded-full border border-primary bg-input">
+                      <Text className="font-main-bold text-xs text-primary">
+                        {characterName.slice(0, 2).toUpperCase()}
+                      </Text>
+                    </View>
+                    <View>
+                      <Text className="font-main-bold text-sm text-text-primary">
+                        {scope === "character" ? characterName : "Master Persona"}
+                      </Text>
+                      <Text className="font-ui text-[11px] text-text-muted">
+                        Radius: {resolvedTheme.radius}px • Accent: {resolvedTheme.primary}
+                      </Text>
+                    </View>
+                  </View>
+                  <Badge variant="success">Online</Badge>
+                </View>
 
-              <View className="flex-1">
-                <TextInput
-                  value={String(resolvedTheme.radius)}
-                  onChangeText={handleRadiusChange}
-                  keyboardType="numeric"
-                  className="h-10 rounded border border-border bg-input px-3 font-ui-bold text-sm text-text-primary"
-                  style={{ textAlign: "center" }}
-                  placeholder="e.g. 22"
-                  placeholderTextColor={resolvedTheme.textMuted}
+                <Text className="font-main text-xs text-text-primary leading-5">
+                  "Every balloon, border, surface, and semantic indicator shifts instantaneously via
+                  our dynamic CSS variable engine."
+                </Text>
+
+                <View className="mt-3 flex-row items-center gap-2">
+                  <Badge variant="success">Stage Active</Badge>
+                  <Badge variant="danger">TTS Alert</Badge>
+                </View>
+
+                <View className="mt-3 flex-row gap-2">
+                  <Button variant="default" size="sm" className="flex-1">
+                    Primary Action
+                  </Button>
+                  <Button variant="secondary" size="sm" className="flex-1">
+                    Secondary Action
+                  </Button>
+                </View>
+              </Card>
+            </View>
+
+            {/* B. Geometry & Corner Radius */}
+            <CollapsibleSection
+              sectionKey="radius"
+              action={
+                <ResetTokenButton
+                  onPress={() => handleResetToken("radius")}
+                  isDefault={isTokenDefault("radius")}
+                  color={resolvedTheme.textMuted}
+                  accessibilityLabel="Reset corner radius to default"
+                />
+              }
+              title="Corner Radius (--radius)"
+              badge={
+                <Text className="font-ui-bold text-xs text-primary">{resolvedTheme.radius}px</Text>
+              }
+              expanded={expandedSection === "radius"}
+              onToggle={toggleSection}
+              chevronColor={resolvedTheme.textMuted}
+              className="rounded-card border border-border bg-card p-3"
+            >
+              {/* Interactive Range Slider */}
+              <View className="mb-3">
+                <RangeSlider
+                  value={resolvedTheme.radius}
+                  min={0}
+                  max={40}
+                  step={1}
+                  accentColor={resolvedTheme.primary}
+                  onChange={(val) => updateToken("radius", val)}
                 />
               </View>
 
-              <Pressable
-                className="h-10 w-10 items-center justify-center rounded border border-border bg-input"
-                onPress={() => updateToken("radius", Math.min(60, resolvedTheme.radius + 1))}
-              >
-                <Text className="font-ui-bold text-base text-text-primary">+</Text>
-              </Pressable>
-            </View>
-          </View>
-
-          {/* C. Color Variables Controls */}
-          {/* 1. Surfaces */}
-          <View className="rounded-card border border-border bg-card p-3">
-            <Pressable
-              className="flex-row items-center justify-between"
-              onPress={() => toggleSection("surfaces")}
-            >
-              <View className="flex-row items-center gap-2">
-                <AppIcon icon={ColorPickerIcon} size={16} color={resolvedTheme.primary} />
-                <Text className="font-ui-bold text-xs uppercase tracking-wider text-text-primary">
-                  1. Surface Colors
-                </Text>
+              {/* Quick Presets */}
+              <View className="mb-3 flex-row gap-1.5">
+                {RADIUS_PRESETS.map((r) => {
+                  const isSelected = resolvedTheme.radius === r;
+                  return (
+                    <Pressable
+                      key={r}
+                      className={`flex-1 items-center rounded border py-1.5 ${
+                        isSelected ? "border-primary bg-input" : "border-border bg-input"
+                      }`}
+                      onPress={() => updateToken("radius", r)}
+                    >
+                      <Text
+                        className={`font-ui text-xs ${
+                          isSelected ? "font-bold text-primary" : "text-text-muted"
+                        }`}
+                      >
+                        {r}px
+                      </Text>
+                    </Pressable>
+                  );
+                })}
               </View>
-              <AppIcon
-                icon={collapsedSections.surfaces ? ArrowDown01Icon : ArrowUp01Icon}
-                size={16}
-                color={resolvedTheme.textMuted}
-              />
-            </Pressable>
 
-            {!collapsedSections.surfaces && (
+              {/* Direct Numeric Input + Stepper */}
+              <View className="flex-row items-center gap-2">
+                <Pressable
+                  className="h-10 w-10 items-center justify-center rounded border border-border bg-input"
+                  onPress={() => updateToken("radius", Math.max(0, resolvedTheme.radius - 1))}
+                >
+                  <Text className="font-ui-bold text-base text-text-primary">-</Text>
+                </Pressable>
+
+                <View className="flex-1">
+                  <TextInput
+                    value={String(resolvedTheme.radius)}
+                    onChangeText={handleRadiusChange}
+                    keyboardType="numeric"
+                    className="h-10 rounded border border-border bg-input px-3 font-ui-bold text-sm text-text-primary"
+                    style={{
+                      textAlign: "center",
+                      paddingVertical: 0,
+                      includeFontPadding: false,
+                      textAlignVertical: "center",
+                    }}
+                    placeholder="e.g. 22"
+                    placeholderTextColor={resolvedTheme.textMuted}
+                  />
+                </View>
+
+                <Pressable
+                  className="h-10 w-10 items-center justify-center rounded border border-border bg-input"
+                  onPress={() => updateToken("radius", Math.min(60, resolvedTheme.radius + 1))}
+                >
+                  <Text className="font-ui-bold text-base text-text-primary">+</Text>
+                </Pressable>
+              </View>
+            </CollapsibleSection>
+
+            {/* C. Color Variables Controls */}
+            {/* 1. Surfaces */}
+            <CollapsibleSection
+              sectionKey="surfaces"
+              icon={ColorPickerIcon}
+              iconColor={resolvedTheme.primary}
+              title="1. Surface Colors"
+              expanded={expandedSection === "surfaces"}
+              onToggle={toggleSection}
+              chevronColor={resolvedTheme.textMuted}
+              className="rounded-card border border-border bg-card p-3"
+            >
               <View className="mt-3">
                 <ColorField
                   label="Canvas Surface"
                   tokenKey="canvas"
+                  pickerTitle="Pick Canvas Surface"
                   value={resolvedTheme.canvas}
-                  onChange={(v) => updateToken("canvas", v)}
-                  onOpenPicker={() =>
-                    setPickerTarget({
-                      title: "Pick Canvas Surface",
-                      tokenKey: "canvas",
-                      initialColor: resolvedTheme.canvas,
-                    })
-                  }
-                  theme={resolvedTheme}
+                  accentColor={resolvedTheme.primary}
+                  borderColor={resolvedTheme.cardBorder}
+                  mutedColor={resolvedTheme.textMuted}
+                  onChange={handleColorChange}
+                  onOpenPicker={handleOpenPicker}
+                  onReset={handleResetToken}
+                  isDefault={isTokenDefault("canvas")}
                 />
                 <ColorField
                   label="Card Background"
                   tokenKey="card"
+                  pickerTitle="Pick Card Background"
                   value={resolvedTheme.card}
-                  onChange={(v) => updateToken("card", v)}
-                  onOpenPicker={() =>
-                    setPickerTarget({
-                      title: "Pick Card Background",
-                      tokenKey: "card",
-                      initialColor: resolvedTheme.card,
-                    })
-                  }
-                  theme={resolvedTheme}
+                  accentColor={resolvedTheme.primary}
+                  borderColor={resolvedTheme.cardBorder}
+                  mutedColor={resolvedTheme.textMuted}
+                  onChange={handleColorChange}
+                  onOpenPicker={handleOpenPicker}
+                  onReset={handleResetToken}
+                  isDefault={isTokenDefault("card")}
                 />
                 <ColorField
                   label="Card Border"
                   tokenKey="cardBorder"
+                  pickerTitle="Pick Card Border"
                   value={resolvedTheme.cardBorder}
-                  onChange={(v) => updateToken("cardBorder", v)}
-                  onOpenPicker={() =>
-                    setPickerTarget({
-                      title: "Pick Card Border",
-                      tokenKey: "cardBorder",
-                      initialColor: resolvedTheme.cardBorder,
-                    })
-                  }
-                  theme={resolvedTheme}
+                  accentColor={resolvedTheme.primary}
+                  borderColor={resolvedTheme.cardBorder}
+                  mutedColor={resolvedTheme.textMuted}
+                  onChange={handleColorChange}
+                  onOpenPicker={handleOpenPicker}
+                  onReset={handleResetToken}
+                  isDefault={isTokenDefault("cardBorder")}
                 />
               </View>
-            )}
-          </View>
+            </CollapsibleSection>
 
-          {/* 2. Accents & Buttons */}
-          <View className="rounded-card border border-border bg-card p-3">
-            <Pressable
-              className="flex-row items-center justify-between"
-              onPress={() => toggleSection("accents")}
+            {/* 2. Accents & Buttons */}
+            <CollapsibleSection
+              sectionKey="accents"
+              icon={SparklesIcon}
+              iconColor={resolvedTheme.primary}
+              title="2. Brand & Button Colors"
+              expanded={expandedSection === "accents"}
+              onToggle={toggleSection}
+              chevronColor={resolvedTheme.textMuted}
+              className="rounded-card border border-border bg-card p-3"
             >
-              <View className="flex-row items-center gap-2">
-                <AppIcon icon={SparklesIcon} size={16} color={resolvedTheme.primary} />
-                <Text className="font-ui-bold text-xs uppercase tracking-wider text-text-primary">
-                  2. Brand & Button Colors
-                </Text>
-              </View>
-              <AppIcon
-                icon={collapsedSections.accents ? ArrowDown01Icon : ArrowUp01Icon}
-                size={16}
-                color={resolvedTheme.textMuted}
-              />
-            </Pressable>
-
-            {!collapsedSections.accents && (
               <View className="mt-3">
                 <ColorField
                   label="Primary Accent (Button)"
                   tokenKey="primary"
+                  pickerTitle="Pick Primary Accent Color"
                   value={resolvedTheme.primary}
-                  onChange={(v) => updateToken("primary", v)}
-                  onOpenPicker={() =>
-                    setPickerTarget({
-                      title: "Pick Primary Accent Color",
-                      tokenKey: "primary",
-                      initialColor: resolvedTheme.primary,
-                    })
-                  }
-                  theme={resolvedTheme}
+                  accentColor={resolvedTheme.primary}
+                  borderColor={resolvedTheme.cardBorder}
+                  mutedColor={resolvedTheme.textMuted}
+                  onChange={handleColorChange}
+                  onOpenPicker={handleOpenPicker}
+                  onReset={handleResetToken}
+                  isDefault={isTokenDefault("primary")}
                 />
                 <ColorField
                   label="Primary Button Text"
                   tokenKey="primaryForeground"
+                  pickerTitle="Pick Primary Button Text"
                   value={resolvedTheme.primaryForeground}
-                  onChange={(v) => updateToken("primaryForeground", v)}
-                  onOpenPicker={() =>
-                    setPickerTarget({
-                      title: "Pick Primary Button Text",
-                      tokenKey: "primaryForeground",
-                      initialColor: resolvedTheme.primaryForeground,
-                    })
-                  }
-                  theme={resolvedTheme}
+                  accentColor={resolvedTheme.primary}
+                  borderColor={resolvedTheme.cardBorder}
+                  mutedColor={resolvedTheme.textMuted}
+                  onChange={handleColorChange}
+                  onOpenPicker={handleOpenPicker}
+                  onReset={handleResetToken}
+                  isDefault={isTokenDefault("primaryForeground")}
                 />
                 <ColorField
                   label="Secondary Button Surface"
                   tokenKey="secondary"
+                  pickerTitle="Pick Secondary Button Surface"
                   value={resolvedTheme.secondary}
-                  onChange={(v) => updateToken("secondary", v)}
-                  onOpenPicker={() =>
-                    setPickerTarget({
-                      title: "Pick Secondary Button Surface",
-                      tokenKey: "secondary",
-                      initialColor: resolvedTheme.secondary,
-                    })
-                  }
-                  theme={resolvedTheme}
+                  accentColor={resolvedTheme.primary}
+                  borderColor={resolvedTheme.cardBorder}
+                  mutedColor={resolvedTheme.textMuted}
+                  onChange={handleColorChange}
+                  onOpenPicker={handleOpenPicker}
+                  onReset={handleResetToken}
+                  isDefault={isTokenDefault("secondary")}
                 />
                 <ColorField
                   label="Secondary Button Text"
                   tokenKey="secondaryForeground"
+                  pickerTitle="Pick Secondary Button Text"
                   value={resolvedTheme.secondaryForeground}
-                  onChange={(v) => updateToken("secondaryForeground", v)}
-                  onOpenPicker={() =>
-                    setPickerTarget({
-                      title: "Pick Secondary Button Text",
-                      tokenKey: "secondaryForeground",
-                      initialColor: resolvedTheme.secondaryForeground,
-                    })
-                  }
-                  theme={resolvedTheme}
+                  accentColor={resolvedTheme.primary}
+                  borderColor={resolvedTheme.cardBorder}
+                  mutedColor={resolvedTheme.textMuted}
+                  onChange={handleColorChange}
+                  onOpenPicker={handleOpenPicker}
+                  onReset={handleResetToken}
+                  isDefault={isTokenDefault("secondaryForeground")}
                 />
               </View>
-            )}
-          </View>
+            </CollapsibleSection>
 
-          {/* 3. Semantics */}
-          <View className="rounded-card border border-border bg-card p-3">
-            <Pressable
-              className="flex-row items-center justify-between"
-              onPress={() => toggleSection("semantics")}
+            {/* 3. Semantics */}
+            <CollapsibleSection
+              sectionKey="semantics"
+              icon={ColorPickerIcon}
+              iconColor={resolvedTheme.success}
+              title="3. Semantic Status Colors"
+              expanded={expandedSection === "semantics"}
+              onToggle={toggleSection}
+              chevronColor={resolvedTheme.textMuted}
+              className="rounded-card border border-border bg-card p-3"
             >
-              <View className="flex-row items-center gap-2">
-                <AppIcon icon={ColorPickerIcon} size={16} color={resolvedTheme.success} />
-                <Text className="font-ui-bold text-xs uppercase tracking-wider text-text-primary">
-                  3. Semantic Status Colors
-                </Text>
-              </View>
-              <AppIcon
-                icon={collapsedSections.semantics ? ArrowDown01Icon : ArrowUp01Icon}
-                size={16}
-                color={resolvedTheme.textMuted}
-              />
-            </Pressable>
-
-            {!collapsedSections.semantics && (
               <View className="mt-3">
                 <ColorField
                   label="Success Color"
                   tokenKey="success"
+                  pickerTitle="Pick Success Color"
                   value={resolvedTheme.success}
-                  onChange={(v) => updateToken("success", v)}
-                  onOpenPicker={() =>
-                    setPickerTarget({
-                      title: "Pick Success Color",
-                      tokenKey: "success",
-                      initialColor: resolvedTheme.success,
-                    })
-                  }
-                  theme={resolvedTheme}
+                  accentColor={resolvedTheme.primary}
+                  borderColor={resolvedTheme.cardBorder}
+                  mutedColor={resolvedTheme.textMuted}
+                  onChange={handleColorChange}
+                  onOpenPicker={handleOpenPicker}
+                  onReset={handleResetToken}
+                  isDefault={isTokenDefault("success")}
                 />
                 <ColorField
                   label="Warning Color"
                   tokenKey="warning"
+                  pickerTitle="Pick Warning Color"
                   value={resolvedTheme.warning}
-                  onChange={(v) => updateToken("warning", v)}
-                  onOpenPicker={() =>
-                    setPickerTarget({
-                      title: "Pick Warning Color",
-                      tokenKey: "warning",
-                      initialColor: resolvedTheme.warning,
-                    })
-                  }
-                  theme={resolvedTheme}
+                  accentColor={resolvedTheme.primary}
+                  borderColor={resolvedTheme.cardBorder}
+                  mutedColor={resolvedTheme.textMuted}
+                  onChange={handleColorChange}
+                  onOpenPicker={handleOpenPicker}
+                  onReset={handleResetToken}
+                  isDefault={isTokenDefault("warning")}
                 />
                 <ColorField
                   label="Danger Color"
                   tokenKey="danger"
+                  pickerTitle="Pick Danger Color"
                   value={resolvedTheme.danger}
-                  onChange={(v) => updateToken("danger", v)}
-                  onOpenPicker={() =>
-                    setPickerTarget({
-                      title: "Pick Danger Color",
-                      tokenKey: "danger",
-                      initialColor: resolvedTheme.danger,
-                    })
-                  }
-                  theme={resolvedTheme}
+                  accentColor={resolvedTheme.primary}
+                  borderColor={resolvedTheme.cardBorder}
+                  mutedColor={resolvedTheme.textMuted}
+                  onChange={handleColorChange}
+                  onOpenPicker={handleOpenPicker}
+                  onReset={handleResetToken}
+                  isDefault={isTokenDefault("danger")}
                 />
               </View>
-            )}
-          </View>
+            </CollapsibleSection>
 
-          {/* E. Master Actions */}
-          <View className="rounded-card border border-border bg-card p-3">
-            <Text className="mb-2 font-ui-bold text-xs uppercase tracking-wider text-text-muted">
-              Master Actions
-            </Text>
-
-            {scope === "character" ? (
-              <View className="gap-2">
-                <Button
-                  variant="default"
-                  size="sm"
-                  onPress={() => promoteCharacterToGlobal(targetCharacterId)}
-                >
-                  Promote to Master Default Theme
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onPress={() => resetCharacterTheme(targetCharacterId)}
-                >
-                  Reset to Default Theme
-                </Button>
+            <CollapsibleSection
+              sectionKey="font"
+              title="Typography"
+              expanded={expandedSection === "font"}
+              onToggle={toggleSection}
+              chevronColor={resolvedTheme.textMuted}
+              className="rounded-card border border-border bg-card p-3"
+            >
+              <View className="gap-4">
+                <TextSizeControl
+                  value={resolvedTheme.fontScale}
+                  onChange={(scale) => updateToken("fontScale", scale)}
+                  onReset={() => handleResetToken("fontScale")}
+                  isDefault={isTokenDefault("fontScale")}
+                  accentColor={resolvedTheme.primary}
+                  mutedColor={resolvedTheme.textMuted}
+                />
+                <FontFamilyPicker
+                  label="Dialogue (--font-main)"
+                  value={resolvedTheme.fontMain}
+                  onSelect={(family) => updateToken("fontMain", family)}
+                  onReset={() => handleResetToken("fontMain")}
+                  isDefault={isTokenDefault("fontMain")}
+                  accentColor={resolvedTheme.primary}
+                  mutedColor={resolvedTheme.textMuted}
+                />
+                <FontFamilyPicker
+                  label="Interface (--font-ui)"
+                  value={resolvedTheme.fontUI}
+                  onSelect={(family) => updateToken("fontUI", family)}
+                  onReset={() => handleResetToken("fontUI")}
+                  isDefault={isTokenDefault("fontUI")}
+                  accentColor={resolvedTheme.primary}
+                  mutedColor={resolvedTheme.textMuted}
+                />
               </View>
-            ) : (
-              <Button variant="destructive" size="sm" onPress={resetGlobalTheme}>
-                Reset to Factory Defaults
-              </Button>
-            )}
-          </View>
-        </ScrollView>
-      </SafeAreaView>
+            </CollapsibleSection>
 
-      {/* Reanimated Color Picker Modal */}
+            <CollapsibleSection
+              sectionKey="inspector"
+              title="Live CSS Variable Inspector"
+              expanded={expandedSection === "inspector"}
+              onToggle={toggleSection}
+              chevronColor={resolvedTheme.textMuted}
+              className="rounded-card border border-border bg-card p-3"
+            >
+              <View className="gap-1 rounded-card bg-input p-3">
+                {INSPECTED_TOKENS.map(([cssVar, tokenKey]) => (
+                  <View key={cssVar} className="flex-row items-center justify-between">
+                    <Text className="font-ui text-[11px] text-text-muted">{cssVar}</Text>
+                    <View className="flex-row items-center gap-1.5">
+                      {typeof resolvedTheme[tokenKey] === "string" &&
+                      String(resolvedTheme[tokenKey]).startsWith("#") ? (
+                        <View
+                          className="h-3 w-3 rounded-full border border-border"
+                          style={{ backgroundColor: String(resolvedTheme[tokenKey]) }}
+                        />
+                      ) : null}
+                      <Text className="font-ui-bold text-[11px] text-text-primary">
+                        {String(resolvedTheme[tokenKey])}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </CollapsibleSection>
+
+            {/* E. Master Actions */}
+            <CollapsibleSection
+              sectionKey="actions"
+              title="Master Actions"
+              expanded={expandedSection === "actions"}
+              onToggle={toggleSection}
+              chevronColor={resolvedTheme.textMuted}
+              className="rounded-card border border-border bg-card p-3"
+            >
+              {scope === "character" ? (
+                <View className="gap-2">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onPress={() => promoteCharacterToGlobal(targetCharacterId)}
+                  >
+                    Promote to Master Default Theme
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onPress={() => resetCharacterTheme(targetCharacterId)}
+                  >
+                    Reset to Default Theme
+                  </Button>
+                </View>
+              ) : (
+                <Button variant="destructive" size="sm" onPress={resetGlobalTheme}>
+                  Reset to Factory Defaults
+                </Button>
+              )}
+            </CollapsibleSection>
+          </ScrollView>
+        </SafeAreaView>
+      </VariableContextProvider>
+
       <ColorPickerModal
-        isOpen={Boolean(pickerTarget)}
-        onClose={() => setPickerTarget(null)}
+        isOpen={pickerOpen}
+        onClose={() => setPickerOpen(false)}
         title={pickerTarget?.title ?? ""}
         initialColor={pickerTarget?.initialColor ?? "#F59E0B"}
         onSelectColor={(hex) => {
           if (pickerTarget) {
-            updateToken(pickerTarget.tokenKey, hex);
+            updateToken(pickerTarget.tokenKey, hex as never);
           }
         }}
       />

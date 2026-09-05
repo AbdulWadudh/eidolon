@@ -1,4 +1,3 @@
-import { ArrowDown01Icon, ArrowUp01Icon, QrCodeIcon } from "@hugeicons/core-free-icons";
 import { type BarcodeScanningResult, CameraView, useCameraPermissions } from "expo-camera";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
@@ -17,14 +16,14 @@ import { AppIcon } from "@/components/common/icon";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ArrowDown01Icon, ArrowUp01Icon, QrCodeIcon } from "@/lib/icons";
 import { useConnectionStore } from "@/store/connection";
-import { useThemeStore } from "@/store/theme-store";
+import { useResolvedTheme } from "@/store/theme-store";
 
 export default function PairingScreen() {
   const router = useRouter();
   const { pairFromUri, setManualConnection } = useConnectionStore();
-  const { getResolvedTheme, activeCharacterId } = useThemeStore();
-  const theme = getResolvedTheme(activeCharacterId ?? undefined);
+  const theme = useResolvedTheme();
   const [permission, requestPermission] = useCameraPermissions();
 
   const [isManualOpen, setIsManualOpen] = React.useState(false);

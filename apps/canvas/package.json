@@ -7,8 +7,12 @@
     "dev": "expo start",
     "dev:web": "expo start --web",
     "dev:go": "expo start --go",
-    "android": "expo start --android",
-    "typecheck": "tsc --noEmit"
+    "android": "expo run:android",
+    "typecheck": "tsc --noEmit",
+    "prebuild:android": "expo prebuild --platform android",
+    "build:apk": "expo prebuild --platform android --no-install && cd android && ./gradlew.bat app:assembleRelease -x lint -x test",
+    "build:apk:dev": "expo run:android",
+    "build:aab": "expo prebuild --platform android --no-install && cd android && ./gradlew.bat app:bundleRelease -x lint -x test"
   },
   "dependencies": {
     "@eidolon/protocol": "workspace:*",

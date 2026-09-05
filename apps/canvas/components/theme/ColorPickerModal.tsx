@@ -1,15 +1,22 @@
-import { Cancel01Icon, CheckmarkCircle01Icon } from "@hugeicons/core-free-icons";
 import * as React from "react";
 import { Modal, Platform, Pressable, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import ColorPicker, { HueSlider, Panel1, Preview, Swatches } from "reanimated-color-picker";
+import ColorPicker, {
+  type ColorPickerRef,
+  HueSlider,
+  Panel1,
+  Preview,
+  Swatches,
+} from "reanimated-color-picker";
 import { AppIcon } from "@/components/common/icon";
 import { Button } from "@/components/ui/button";
+import { Cancel01Icon, CheckmarkCircle01Icon } from "@/lib/icons";
 
 export interface ColorPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
+  /** Must stay stable while the sheet is open (see note below). */
   initialColor: string;
   onSelectColor: (hex: string) => void;
 }
@@ -27,6 +34,20 @@ const DEFAULT_SWATCHES = [
   "#FFFFFF",
 ];
 
+/**
+ * Stays mounted and is shown via `visible`, because on Android creating a nested
+ * Dialog plus a GestureHandlerRootView and the Reanimated picker on demand costs
+ * a visible freeze every single time the colour wheel is opened.
+ *
+ * Two things make that safe:
+ *
+ * 1. The picker is reset imperatively through `setColor` when it opens, so it
+ *    always starts on the token being edited rather than the previous one.
+ * 2. The live colour is tracked in a ref and never fed back through `value`.
+ *    `ColorPicker` re-runs `setColor` with a 200ms `withTiming` whenever `value`
+ *    changes, so echoing the gesture result back made the thumb animate away
+ *    from the finger and re-rendered the modal on every frame.
+ */
 export function ColorPickerModal({
   isOpen,
   onClose,
@@ -34,16 +55,35 @@ export function ColorPickerModal({
   initialColor,
   onSelectColor,
 }: ColorPickerModalProps) {
-  const [selectedHex, setSelectedHex] = React.useState(initialColor || "#F59E0B");
+  const liveHex = React.useRef(initialColor);
+  const pickerRef = React.useRef<ColorPickerRef>(null);
+
+  // Only drives the web <input type="color"> swatch; native never sets it.
+  const [webHex, setWebHex] = React.useState(initialColor);
 
   React.useEffect(() => {
-    if (initialColor) {
-      setSelectedHex(initialColor);
-    }
-  }, [initialColor]);
+    if (!isOpen) return;
+    liveHex.current = initialColor;
+    if (Platform.OS === "web") setWebHex(initialColor);
+    // duration 0, so opening does not animate in from the previous token colour
+    pickerRef.current?.setColor(initialColor, 0);
+  }, [isOpen, initialColor]);
+
+  const handleChange = React.useCallback(({ hex }: { hex: string }) => {
+    if (!hex) return;
+    liveHex.current = hex.toUpperCase();
+    if (Platform.OS === "web") setWebHex(liveHex.current);
+  }, []);
+
+  const handleWebInput = React.useCallback((next: string) => {
+    const hex = next.toUpperCase();
+    liveHex.current = hex;
+    setWebHex(hex);
+    pickerRef.current?.setColor(hex);
+  }, []);
 
   const handleApply = () => {
-    onSelectColor(selectedHex);
+    onSelectColor(liveHex.current);
     onClose();
   };
 
@@ -71,8 +111,8 @@ export function ColorPickerModal({
                 </Text>
                 <input
                   type="color"
-                  value={selectedHex.startsWith("#") ? selectedHex.slice(0, 7) : selectedHex}
-                  onChange={(e) => setSelectedHex(e.target.value.toUpperCase())}
+                  value={webHex.startsWith("#") ? webHex.slice(0, 7) : webHex}
+                  onChange={(e) => handleWebInput(e.target.value)}
                   style={{
                     cursor: "pointer",
                     border: "1px solid #2A2C37",
@@ -88,14 +128,11 @@ export function ColorPickerModal({
 
             {/* Reanimated Color Picker */}
             <ColorPicker
-              value={selectedHex}
+              ref={pickerRef}
+              value={initialColor}
               style={{ width: "100%", gap: 14 }}
-              onChangeJS={({ hex }) => {
-                if (hex) setSelectedHex(hex.toUpperCase());
-              }}
-              onCompleteJS={({ hex }) => {
-                if (hex) setSelectedHex(hex.toUpperCase());
-              }}
+              onChangeJS={handleChange}
+              onCompleteJS={handleChange}
             >
               <Preview style={{ height: 36, borderRadius: 8 }} />
               <Panel1 style={{ height: 180, borderRadius: 10 }} />

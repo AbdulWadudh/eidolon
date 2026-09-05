@@ -1,4 +1,3 @@
-import { ArrowLeft01Icon, Call02Icon } from "@hugeicons/core-free-icons";
 import { capitalize, isString } from "es-toolkit";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as React from "react";
@@ -7,15 +6,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AppIcon } from "@/components/common/icon";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { useThemeStore } from "@/store/theme-store";
+import { ArrowLeft01Icon, Call02Icon } from "@/lib/icons";
+import { useResolvedTheme, useThemeStore } from "@/store/theme-store";
 
 export default function ChatShellScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getResolvedTheme, setActiveCharacter } = useThemeStore();
+  const setActiveCharacter = useThemeStore((state) => state.setActiveCharacter);
 
   const characterId = isString(id) ? id : "default";
-  const theme = getResolvedTheme(characterId);
+  const theme = useResolvedTheme(characterId);
 
   React.useEffect(() => {
     setActiveCharacter(characterId);

@@ -41,6 +41,7 @@ describe("Connection Store & Pairing Engine", () => {
   });
 
   afterEach(() => {
+    useConnectionStore.getState().disconnect();
     globalThis.fetch = originalFetch;
   });
 
@@ -79,10 +80,10 @@ describe("Connection Store & Pairing Engine", () => {
   });
 
   describe("pairFromUri action", () => {
-    it("successfully pairs when health check succeeds", async () => {
+    it("successfully pairs when the server accepts the token", async () => {
       globalThis.fetch = (async (input: RequestInfo | URL) => {
         const urlStr = String(input);
-        if (urlStr.includes("192.168.1.39:3000/health")) {
+        if (urlStr.includes("192.168.1.39:3000/api/pair/verify")) {
           return new Response(JSON.stringify({ status: "ok" }), {
             status: 200,
             headers: { "Content-Type": "application/json" },
@@ -100,10 +101,29 @@ describe("Connection Store & Pairing Engine", () => {
       expect(state.isPaired).toBe(true);
       expect(state.serverHost).toBe("192.168.1.39:3000");
       expect(state.pairingToken).toBe("secret_abc");
-      expect(state.connectionState).toBe("connected");
+      // Credentials are accepted; the socket decides when it becomes "connected".
+      expect(state.connectionState).toBe("connecting");
     });
 
-    it("throws and sets error state when health check fails", async () => {
+    it("rejects a token the server refuses instead of pairing anyway", async () => {
+      globalThis.fetch = (async () =>
+        new Response(JSON.stringify({ ok: false, error: "Invalid pairing token." }), {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        })) as unknown as typeof fetch;
+
+      await expect(
+        useConnectionStore
+          .getState()
+          .pairFromUri("eidolon://pair?server=192.168.1.39:3000&token=stale_token"),
+      ).rejects.toThrow(/rejected/i);
+
+      const state = useConnectionStore.getState();
+      expect(state.isPaired).toBe(false);
+      expect(state.connectionState).toBe("error");
+    });
+
+    it("throws and sets error state when the server is unreachable", async () => {
       globalThis.fetch = (async () => {
         return new Response("Service Unavailable", { status: 503 });
       }) as unknown as typeof fetch;
@@ -124,7 +144,7 @@ describe("Connection Store & Pairing Engine", () => {
     it("successfully establishes manual connection", async () => {
       globalThis.fetch = (async (input: RequestInfo | URL) => {
         const urlStr = String(input);
-        if (urlStr.includes("localhost:3000/health")) {
+        if (urlStr.includes("localhost:3000/api/pair/verify")) {
           return new Response(JSON.stringify({ status: "ok" }), {
             status: 200,
             headers: { "Content-Type": "application/json" },
@@ -142,7 +162,8 @@ describe("Connection Store & Pairing Engine", () => {
       expect(state.isPaired).toBe(true);
       expect(state.serverHost).toBe("localhost:3000");
       expect(state.pairingToken).toBe("manual_token_xyz");
-      expect(state.connectionState).toBe("connected");
+      // Credentials are accepted; the socket decides when it becomes "connected".
+      expect(state.connectionState).toBe("connecting");
     });
   });
 

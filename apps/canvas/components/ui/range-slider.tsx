@@ -22,6 +22,11 @@ export function RangeSlider({
 }: RangeSliderProps) {
   const [trackWidth, setTrackWidth] = React.useState(200);
 
+  const lastEmitted = React.useRef(value);
+  React.useEffect(() => {
+    lastEmitted.current = value;
+  }, [value]);
+
   if (Platform.OS === "web") {
     return (
       <View className={className} style={{ width: "100%", justifyContent: "center" }}>
@@ -46,13 +51,14 @@ export function RangeSlider({
 
   const percent = Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100));
 
-  const handlePress = (e: GestureResponderEvent) => {
+  const handleTouch = (e: GestureResponderEvent) => {
     if (trackWidth <= 0) return;
-    const x = e.nativeEvent.locationX;
-    const ratio = Math.max(0, Math.min(1, x / trackWidth));
+    const ratio = Math.max(0, Math.min(1, e.nativeEvent.locationX / trackWidth));
     const rawVal = min + ratio * (max - min);
-    const steppedVal = Math.round(rawVal / step) * step;
-    onChange(Math.max(min, Math.min(max, steppedVal)));
+    const steppedVal = Math.max(min, Math.min(max, Math.round(rawVal / step) * step));
+    if (steppedVal === lastEmitted.current) return;
+    lastEmitted.current = steppedVal;
+    onChange(steppedVal);
   };
 
   return (
@@ -60,8 +66,8 @@ export function RangeSlider({
       className={className}
       style={{ width: "100%", height: 36, justifyContent: "center" }}
       onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
-      onTouchStart={handlePress}
-      onTouchMove={handlePress}
+      onTouchStart={handleTouch}
+      onTouchMove={handleTouch}
     >
       <View className="h-2 w-full rounded-full bg-input">
         <View

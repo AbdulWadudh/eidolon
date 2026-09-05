@@ -31,6 +31,7 @@ export interface ThemeTokens {
   // Typography
   fontMain: string;
   fontUI: string;
+  fontScale: number;
 }
 
 export const DEFAULT_THEME_TOKENS: ThemeTokens = {
@@ -53,6 +54,7 @@ export const DEFAULT_THEME_TOKENS: ThemeTokens = {
   borderWidth: 1,
   fontMain: "NunitoSans-Regular",
   fontUI: "PublicSans-Regular",
+  fontScale: 1,
 };
 
 export const DEFAULT_LIGHT_THEME_TOKENS: ThemeTokens = {
@@ -75,4 +77,5 @@ export const DEFAULT_LIGHT_THEME_TOKENS: ThemeTokens = {
   borderWidth: 1,
   fontMain: "NunitoSans-Regular",
   fontUI: "PublicSans-Regular",
+  fontScale: 1,
 };
