@@ -3,7 +3,7 @@
     "name": "Eidolon",
     "slug": "eidolon",
     "scheme": "eidolon",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "../../public/logo_512x512.png",
     "userInterfaceStyle": "dark",
@@ -21,7 +21,8 @@
         "foregroundImage": "../../public/logo_512x512.png",
         "backgroundColor": "#0D0E11"
       },
-      "package": "com.eidolon.canvas"
+      "package": "com.eidolon.canvas",
+      "versionCode": 1
     },
     "web": {
       "favicon": "../../public/logo_192x192.png"

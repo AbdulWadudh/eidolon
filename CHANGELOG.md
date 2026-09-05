@@ -12,6 +12,21 @@ and publishes it as the GitHub release notes.
 
 Nothing yet.
 
+## [1.0.1] - 2026-09-05
+
+### Added
+
+- Per-mode theme palettes, font system, and authenticated pairing (edde280)
+- Scaffold canvas app with Expo router, themed UI components, and OTA font registry (70e1dc1)
+- Initialize conductor service with authentication, database, and resilient JSON parsing support (96b3528)
+- Initialize project structure with typed protocol schemas and message validation tests (8978d23)
+
+### Documentation
+
+- Correct the release instructions now that the remote exists (6d2fa36)
+- Forbid AI co-author trailers on commits (34f8010)
+- Project documentation, agent guides, and release tooling (dddfc76)
+
 ## [1.0.0] - 2026-09-05
 
 ### Added
