@@ -25,6 +25,7 @@ build/
 # Native builds
 android/
 ios/
+.native-build
 
 # Testing & Coverage
 coverage/

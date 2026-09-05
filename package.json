@@ -9,18 +9,26 @@
   ],
   "scripts": {
     "dev": "turbo run dev",
-    "dev:conductor": "bun --cwd apps/conductor dev",
-    "dev:canvas": "bun --cwd apps/canvas dev",
-    "dev:canvas:web": "bun --cwd apps/canvas dev:web",
-    "dev:canvas:go": "bun --cwd apps/canvas dev:go",
+    "doctor": "bun scripts/doctor.ts",
+    "doctor:check": "bun scripts/doctor.ts --check",
+    "dev:conductor": "bunx kill-port 3000 && bun --cwd apps/conductor dev",
+    "dev:canvas": "bunx kill-port 8081 && bun --cwd apps/canvas dev",
+    "dev:canvas:web": "bunx kill-port 8081 && bun --cwd apps/canvas dev:web",
+    "dev:canvas:go": "bunx kill-port 8081 && bun --cwd apps/canvas dev:go",
     "build": "turbo run build",
     "test": "turbo run test",
-    "typecheck": "turbo run typecheck",
+    "typecheck": "turbo run typecheck && tsc --noEmit -p tsconfig.json",
     "lint": "biome check .",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "build:apk": "bun --cwd apps/canvas build:apk",
+    "release": "bun scripts/release.ts",
+    "release:dry": "bun scripts/release.ts --dry-run",
+    "check:size": "bun scripts/check-file-size.ts",
+    "check:size:all": "bun scripts/check-file-size.ts --all"
   },
   "devDependencies": {
     "@biomejs/biome": "latest",
+    "@types/bun": "^1.4.1",
     "turbo": "latest",
     "typescript": "^5.7.3"
   },
