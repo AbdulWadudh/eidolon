@@ -181,10 +181,18 @@ export async function handleChatTurn(
   ]);
 
   if (audio) {
-    const url = assistantId ? await storeVoiceNote(characterId, assistantId, audio) : null;
+    const note = assistantId
+      ? await storeVoiceNote(characterId, assistantId, audio)
+      : { url: null, durationSeconds: null };
     sendServerMessage(ws, {
       type: "audio_chunk",
-      payload: { format: "mp3", data: url ? "" : audio, url: url ?? undefined, sentence_index: 0 },
+      payload: {
+        format: "mp3",
+        data: note.url ? "" : audio,
+        url: note.url ?? undefined,
+        duration: note.durationSeconds ?? undefined,
+        sentence_index: 0,
+      },
     });
   }
 

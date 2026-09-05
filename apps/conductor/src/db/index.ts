@@ -49,6 +49,14 @@ db.exec(`
   );
 `);
 
+function addColumnIfMissing(table: string, column: string, definition: string): void {
+  const columns = db.query(`PRAGMA table_info(${table})`).all() as { name: string }[];
+  if (columns.some((entry) => entry.name === column)) return;
+  db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+}
+
+addColumnIfMissing("messages", "audio_duration", "REAL");
+
 /**
  * Health check helper for the SQLite database.
  */
@@ -152,8 +160,16 @@ export function appendMessage(
   return id;
 }
 
-export function setMessageAudio(messageId: string, audioUrl: string): void {
-  db.query("UPDATE messages SET audio_url = ?1 WHERE id = ?2").run(audioUrl, messageId);
+export function setMessageAudio(
+  messageId: string,
+  audioUrl: string,
+  audioDuration: number | null,
+): void {
+  db.query("UPDATE messages SET audio_url = ?1, audio_duration = ?2 WHERE id = ?3").run(
+    audioUrl,
+    audioDuration,
+    messageId,
+  );
 }
 
 export function getRecentMessages(characterId: string): { role: string; content: string }[] {
@@ -170,19 +186,21 @@ export interface StoredMessage {
   role: string;
   content: string;
   audioUrl: string | null;
+  audioDuration: number | null;
   createdAt: number;
 }
 
 export function getTranscript(characterId: string, limit: number): StoredMessage[] {
   const rows = db
     .query(
-      "SELECT id, role, content, audio_url, created_at FROM messages WHERE character_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ?",
+      "SELECT id, role, content, audio_url, audio_duration, created_at FROM messages WHERE character_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ?",
     )
     .all(characterId, limit) as {
     id: string;
     role: string;
     content: string;
     audio_url: string | null;
+    audio_duration: number | null;
     created_at: number;
   }[];
 
@@ -192,6 +210,7 @@ export function getTranscript(characterId: string, limit: number): StoredMessage
       role: row.role,
       content: row.content,
       audioUrl: row.audio_url,
+      audioDuration: row.audio_duration,
       createdAt: row.created_at,
     }))
     .reverse();

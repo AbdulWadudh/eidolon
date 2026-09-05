@@ -7,6 +7,7 @@ interface TranscriptRow {
   role: string;
   content: string;
   audioUrl?: string | null;
+  audioDuration?: number | null;
   createdAt: number;
 }
 
@@ -28,7 +29,7 @@ function toMessage(row: TranscriptRow, characterId: string): ChatMessage {
     text: row.content,
     isNarration: false,
     audioUrl: row.audioUrl ?? null,
-    audioDuration: null,
+    audioDuration: row.audioDuration ?? null,
     timestamp: formatClockTime(new Date(row.createdAt)),
   };
 }

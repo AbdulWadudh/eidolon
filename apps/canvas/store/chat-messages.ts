@@ -67,11 +67,12 @@ export function audioChunkToAttachment(event: AudioChunkEvent): AudioAttachment 
   const data = event.payload?.data ?? event.data;
   const format = event.payload?.format ?? event.format;
   const url = event.payload?.url ?? event.url;
-  if (url) return { audioUrl: url, audioDuration: null };
+  const duration = event.payload?.duration ?? event.duration ?? null;
+  if (url) return { audioUrl: url, audioDuration: duration };
   if (!data) return null;
 
   if (format === "mp3") {
-    return { audioUrl: `data:audio/mpeg;base64,${data}`, audioDuration: null };
+    return { audioUrl: `data:audio/mpeg;base64,${data}`, audioDuration: duration };
   }
 
   const bytes = Math.floor(data.length * BASE64_BYTES_PER_CHAR);

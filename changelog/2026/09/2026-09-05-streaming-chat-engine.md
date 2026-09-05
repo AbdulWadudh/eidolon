@@ -460,3 +460,57 @@ every token.
   `expo-file-system` contract, including a `write()` that rejects an uncreated
   file.
 - Lint 167 files clean, typecheck clean, size gate clean.
+
+## The pill knows how long the note is before you play it
+
+`audioDuration` was null for every hosted note, so the pill rendered `0"` until
+`expo-audio` loaded the file and reported a real duration — which only happens
+once playback starts. Nothing upstream ever measured it: the TTS response carries
+no duration, and the mp3 was passed through untouched.
+
+Kokoro's mp3 has an ID3v2 tag and **no Xing or Info header**, so there is no frame
+count to read; the length has to come from walking the frames.
+`services/audio-duration.ts` skips the ID3 tag using its syncsafe size, then
+decodes each frame header — MPEG version, layer, bitrate index, sample rate
+index, padding — and sums `samplesPerFrame / sampleRate`. Kokoro emits MPEG-2
+Layer III at 24kHz, which is 576 samples per frame rather than MPEG-1's 1152, so
+assuming 1152 would have reported every note at half its real length.
+
+Walking frames rather than dividing file size by bitrate costs nothing here and
+stays correct if the encoder ever switches to VBR.
+
+The duration rides along with the URL: a new `audio_duration` column, a `duration`
+field on `audio_chunk`, and `audioDuration` in the transcript. `messages` gains
+the column through an idempotent `PRAGMA table_info` check, since the schema is
+`CREATE TABLE IF NOT EXISTS` with no migration runner.
+
+## A silent no-op edit, and how it presented
+
+Worth recording because the symptom pointed at the wrong layer entirely. The
+first cut of this change appeared to work — the row had a URL, the file was in
+the bucket — but the socket carried base64 with no URL and no duration, and the
+`console.log` added to `storeVoiceNote` never printed.
+
+`voice-notes.ts` had never been modified. Biome reformatted the `uploadAudio(...)`
+call across three lines after the file was written, so a later exact-match edit
+found nothing and wrote the file back unchanged. Every other file in the change
+did apply, leaving `chat-turn.ts` calling `note.url` on a function that still
+returned a bare string — `undefined` at runtime, which is falsy, which sent the
+base64 branch. Types would have caught it instantly; the mistake was verifying
+with a single targeted test instead of `bun run typecheck`.
+
+## Evidence
+
+- Live turn: `audio_chunk duration=2.02s url=yes base64=0`; the pill reads `2"`
+  before playback. Reopening the chat reads `2"` from the transcript. Re-parsing
+  the stored object returns `2.02s`.
+- Cross-checked the parser against `ffprobe` on a stored note: ffprobe
+  `4.536000`, parser `4.54`.
+- `bun run test` — 272 pass / 0 fail, including four cases for the parser: frame
+  summing, skipping an ID3v2 tag, a buffer with no frame, and an empty buffer.
+- Lint 169 files clean, typecheck clean, size gate clean.
+
+## Still open
+
+- Notes stored before this change have a URL but no duration, and nothing
+  backfills them. They will read `0"` until played.
