@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { parseServerMessage, type ServerMessage } from "@eidolon/protocol";
-import { app } from "../src";
-import { PAIRING_SECRET } from "../src/auth";
-import { websocket } from "../src/ws";
+import { PAIRING_SECRET } from "@/auth";
+import { app } from "@/index";
+import { websocket } from "@/ws";
 
 describe("Conductor WebSocket Router", () => {
   let server: ReturnType<typeof Bun.serve>;

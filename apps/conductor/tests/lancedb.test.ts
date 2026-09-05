@@ -4,7 +4,7 @@ import {
   generateMockEmbedding,
   insertMemory,
   searchMemories,
-} from "../src/services/lancedb";
+} from "@/services/lancedb";
 
 describe("LanceDB Vector Memory Engine", () => {
   it("generates deterministic 384-dimensional unit vector", () => {

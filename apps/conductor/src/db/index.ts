@@ -1,13 +1,12 @@
 import { Database } from "bun:sqlite";
-import { mkdirSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { SQLITE_DB_PATH } from "@/utils/paths";
 
-const dbPath = resolve(process.cwd(), process.env.DATABASE_URL || "data/sqlite/eidolon.db");
+// The path is external to the repository on purpose - see src/utils/paths.ts.
+// It is printed because a database whose location depends on the OS is a
+// database nobody can find when they need to inspect or back it up.
+console.log(`[Database] SQLite: ${SQLITE_DB_PATH}`);
 
-// Ensure directory exists
-mkdirSync(dirname(dbPath), { recursive: true });
-
-export const db = new Database(dbPath, { create: true });
+export const db = new Database(SQLITE_DB_PATH, { create: true });
 
 // Enable Write-Ahead Logging for high concurrency and performance
 db.exec("PRAGMA journal_mode = WAL;");

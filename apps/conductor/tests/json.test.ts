@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { safeJsonParse, stripCodeFences } from "../src/utils/json";
+import { safeJsonParse, stripCodeFences } from "@/utils/json";
 
 describe("Safe JSON Parser", () => {
   it("parses valid JSON string", () => {

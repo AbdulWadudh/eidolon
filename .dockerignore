@@ -1,0 +1,48 @@
+# Everything the image does not need. Keeping this tight matters more than
+# usual here: the build context is the whole monorepo, and apps/canvas carries
+# an Android toolchain and a native build tree that dwarf the server.
+
+node_modules
+**/node_modules
+
+# Generated output
+dist
+**/dist
+build
+**/build
+.expo
+**/.expo
+.turbo
+**/.turbo
+.native-build
+
+# Native app - the conductor image never builds or serves it
+apps/canvas/android
+apps/canvas/ios
+apps/canvas/.expo
+
+# Local state. The container gets a mounted volume instead; see
+# apps/conductor/src/utils/paths.ts.
+data
+**/data
+*.db
+*.db-wal
+*.db-shm
+
+# Secrets. Coolify injects the real values as environment variables.
+.env
+**/.env
+.env.*
+!**/.env.example
+
+# Local tooling and history
+.git
+.gitignore
+.claude
+coverage
+*.log
+.DS_Store
+Thumbs.db
+
+# Dev-only compose file
+docker-compose.dev.yml

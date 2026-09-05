@@ -1,5 +1,5 @@
 import { delay } from "es-toolkit";
-import { safeJsonParse } from "../utils/json";
+import { safeJsonParse } from "@/utils/json";
 
 export interface ChatMessage {
   role: string;

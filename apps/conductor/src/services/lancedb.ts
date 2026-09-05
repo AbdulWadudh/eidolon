@@ -1,10 +1,10 @@
 import { mkdirSync } from "node:fs";
-import { resolve } from "node:path";
 import * as lancedb from "@lancedb/lancedb";
-import { safeJsonParse } from "../utils/json";
+import { safeJsonParse } from "@/utils/json";
+import { LANCEDB_DIR_PATH } from "@/utils/paths";
 
-const dbDir = resolve(process.cwd(), "data/lancedb");
-mkdirSync(dbDir, { recursive: true });
+// External to the repository, alongside the SQLite file - see src/utils/paths.ts.
+mkdirSync(LANCEDB_DIR_PATH, { recursive: true });
 
 export interface MemoryRecord {
   [key: string]: unknown;
@@ -37,7 +37,7 @@ export async function getLanceDb(): Promise<{ db: lancedb.Connection; table: lan
     return { db: dbInstance, table: tableInstance };
   }
 
-  dbInstance = await lancedb.connect(dbDir);
+  dbInstance = await lancedb.connect(LANCEDB_DIR_PATH);
   const tableNames = await dbInstance.tableNames();
 
   if (tableNames.includes(TABLE_NAME)) {

@@ -1,8 +1,8 @@
 import { type ClientMessage, parseClientMessage, parseServerMessage } from "@eidolon/protocol";
 import type { WSMessageReceive } from "hono/ws";
-import { queueImageGeneration } from "../services/comfyui";
-import { streamChatCompletion } from "../services/llm";
-import { formatSearchResults, searchWeb } from "../services/searxng";
+import { queueImageGeneration } from "@/services/comfyui";
+import { streamChatCompletion } from "@/services/llm";
+import { formatSearchResults, searchWeb } from "@/services/searxng";
 
 export interface WebSocketSender {
   send: (data: string) => void;

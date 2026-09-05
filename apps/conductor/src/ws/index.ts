@@ -1,7 +1,7 @@
 import type { Hono } from "hono";
 import { createBunWebSocket } from "hono/bun";
-import { validateToken } from "../auth";
-import { handleClientMessage, sessionManager } from "./handler";
+import { validateToken } from "@/auth";
+import { handleClientMessage, sessionManager } from "@/ws/handler";
 
 export const { upgradeWebSocket, websocket } = createBunWebSocket();
 

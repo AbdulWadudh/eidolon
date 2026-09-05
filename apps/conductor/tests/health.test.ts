@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { COLORS } from "@eidolon/tokens";
-import { app } from "../src";
-import { PAIRING_SECRET } from "../src/auth";
+import { PAIRING_SECRET } from "@/auth";
+import { app } from "@/index";
 
 describe("Conductor Health & REST Endpoints", () => {
   it("GET /health returns 200 with service health breakdown and themeAccent", async () => {

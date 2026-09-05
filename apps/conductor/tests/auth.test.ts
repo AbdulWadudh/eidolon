@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { generatePairingPayload, PAIRING_SECRET, validateToken } from "../src/auth";
+import { generatePairingPayload, PAIRING_SECRET, validateToken } from "@/auth";
 
 describe("Authentication & Pairing", () => {
   it("validates exact pairing secret", () => {

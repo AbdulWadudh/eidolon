@@ -4,7 +4,7 @@ import {
   formatSearchResults,
   getSearchCacheSize,
   searchWeb,
-} from "../src/services/searxng";
+} from "@/services/searxng";
 
 describe("SearXNG Search Client", () => {
   beforeEach(() => {

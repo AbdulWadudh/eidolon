@@ -8,6 +8,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "latest",
     "@eidolon/protocol": "workspace:*",
     "@eidolon/tokens": "workspace:*",
     "@lancedb/lancedb": "latest",

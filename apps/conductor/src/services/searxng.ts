@@ -1,4 +1,9 @@
-export const SEARXNG_URL = process.env.SEARXNG_URL || "https://searxng.k79.quest";
+/**
+ * Search backend, supplied by the environment. No host is baked in: the
+ * instance is deployment-specific, so an empty value simply disables search
+ * rather than sending queries somewhere the operator never chose.
+ */
+export const SEARXNG_URL = process.env.SEARXNG_URL ?? "";
 
 export interface SearchResultItem {
   title: string;
@@ -35,6 +40,12 @@ export function getSearchCacheSize(): number {
 export async function searchWeb(query: string): Promise<SearchResultItem[]> {
   const normalizedQuery = query.trim().toLowerCase();
   if (!normalizedQuery) {
+    return [];
+  }
+
+  // Unset means "no search backend for this deployment", which is a supported
+  // configuration - not an error worth a warning on every turn.
+  if (!SEARXNG_URL) {
     return [];
   }
 

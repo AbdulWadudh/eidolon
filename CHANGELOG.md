@@ -10,7 +10,26 @@ and publishes it as the GitHub release notes.
 
 ## [Unreleased]
 
-Nothing yet.
+### Changed
+
+- Conductor databases now live outside the repository, under
+  `%LOCALAPPDATA%\eidolon\data` on Windows and `~/.eidolon/data` elsewhere, so a
+  reclone or `git clean` no longer destroys characters, messages and memories.
+  `GET /health` reports the resolved location.
+
+### Added
+
+- S3-compatible object storage for character images and voice notes, served for
+  anonymous read so the mobile app streams media directly. The bucket and its
+  public read policy are ensured on boot, and `GET /health` reports storage
+  connectivity. Endpoint, bucket and credentials come from `S3_*` environment
+  variables — no host is baked into the source.
+- Docker image for the conductor and a Coolify deployment stack
+  (`docker-compose.yaml`), with SQLite and LanceDB on a named volume so a
+  redeploy keeps every character, message and memory. `EIDOLON_DATA_DIR` points
+  the databases at that volume.
+- Local development storage: `bun run storage:up` brings up an S3-compatible
+  server and prints the settings to paste into `apps/conductor/.env`.
 
 ## [1.0.1] - 2026-09-05
 

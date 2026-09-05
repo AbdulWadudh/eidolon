@@ -2,18 +2,20 @@ import { COLORS } from "@eidolon/tokens";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { generatePairingPayload, getLocalIp, PAIRING_SECRET, validateToken } from "./auth";
-import { checkDatabaseHealth } from "./db";
+import { generatePairingPayload, getLocalIp, PAIRING_SECRET, validateToken } from "@/auth";
+import { checkDatabaseHealth } from "@/db";
 import {
   buildQrMatrix,
   qrTerminalColumns,
   renderPairingPage,
   renderQrTerminal,
-} from "./pairing/qr";
-import { checkComfyHealth } from "./services/comfyui";
-import { checkLanceDbHealth } from "./services/lancedb";
-import { checkLlmHealth } from "./services/llm";
-import { setupWebSocketRoutes, websocket } from "./ws";
+} from "@/pairing/qr";
+import { checkComfyHealth } from "@/services/comfyui";
+import { checkLanceDbHealth } from "@/services/lancedb";
+import { checkLlmHealth } from "@/services/llm";
+import { getStorageConfig, initStorage, isStorageConnected } from "@/services/storage";
+import { SQLITE_DB_PATH } from "@/utils/paths";
+import { setupWebSocketRoutes, websocket } from "@/ws";
 
 export const app = new Hono();
 
@@ -37,6 +39,8 @@ app.get("/health", async (c) => {
     checkComfyHealth(),
   ]);
 
+  const storage = getStorageConfig();
+
   return c.json({
     status: "ok",
     service: "eidolon-conductor",
@@ -48,6 +52,15 @@ app.get("/health", async (c) => {
       llm: llmOk ? "healthy" : "offline",
       comfyui: comfyOk ? "healthy" : "offline",
     },
+    storage: {
+      type: "s3",
+      endpoint: storage.endpoint,
+      bucket: storage.bucket,
+      status: isStorageConnected() ? "connected" : "offline",
+    },
+    // Surfaced so the operator can find the databases without knowing the
+    // per-OS convention - they are deliberately outside the checkout.
+    databaseLocation: SQLITE_DB_PATH,
     themeAccent: COLORS.accentAmber,
   });
 });
@@ -101,14 +114,19 @@ const port = Number(process.env.PORT) || 3000;
 const host = process.env.HOST || "0.0.0.0";
 const pairingPayload = generatePairingPayload(port);
 
+// Reaching the bucket is a network round trip, so it is kept out of the test
+// run: `bun test` imports this module and would otherwise hit the configured
+// bucket on every invocation. Failure is logged and non-fatal - media degrades, the
+// gateway keeps serving pairing and chat.
+if (process.env.NODE_ENV !== "test") {
+  void initStorage();
+}
+
 // Boot banner (suppressed in test environment)
 if (process.env.NODE_ENV !== "test") {
   console.log("\n========================================");
   console.log("  EIDOLON CONDUCTOR GATEWAY ACTIVE");
   console.log(`  Listening on: http://${host}:${port}`);
-  // Host and token are printed separately as well as inside the URI, because the
-  // pairing screen offers manual entry with exactly those two fields and reading
-  // them back out of a wrapped deep link is needless work.
   console.log(`  Server:  ${getLocalIp()}:${port}`);
   console.log(`  Token:   ${PAIRING_SECRET}`);
   console.log(`  Pairing: ${pairingPayload}`);

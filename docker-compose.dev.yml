@@ -1,0 +1,51 @@
+# Local development infrastructure. NOT the deployment - that is
+# docker-compose.yaml, which Coolify builds and runs.
+#
+#   bun run storage:up      start
+#   bun run storage:down    stop, keeping objects
+#   bun run storage:reset   stop and delete every object
+#
+# An S3-compatible server so local media behaves the way it will in production,
+# without pointing a dev machine at shared storage. The implementation is
+# swappable - anything speaking S3 works, because nothing in the app knows or
+# cares which one is running.
+
+services:
+  storage:
+    image: rustfs/rustfs:latest
+    container_name: eidolon-storage
+    restart: unless-stopped
+    ports:
+      # S3 API - S3_ENDPOINT points here.
+      - "9000:9000"
+      # Web console, same credentials as below.
+      - "9001:9001"
+    environment:
+      # Local-only credentials. These are development defaults, not secrets:
+      # the server is bound to this machine and holds nothing but test media.
+      # The deployed environment takes its keys from the environment instead.
+      RUSTFS_ACCESS_KEY: eidolon
+      RUSTFS_SECRET_KEY: eidolon_local_dev
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_OBS_LOGGER_LEVEL: warn
+    volumes:
+      # Named volumes rather than bind mounts, for two reasons: objects stay
+      # outside the checkout - the whole point of moving state out of git - and
+      # the image runs as UID 10001, which a Windows bind mount cannot chown.
+      - s3-data:/data
+      - s3-logs:/logs
+    healthcheck:
+      # The server binary answering at all is proof the process is up; the S3
+      # port only ever returns 403 to an unauthenticated probe anyway, and the
+      # image ships no HTTP client to tell those two cases apart.
+      test: ["CMD-SHELL", "rustfs --version > /dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+volumes:
+  s3-data:
+    name: eidolon-s3-data
+  s3-logs:
+    name: eidolon-s3-logs

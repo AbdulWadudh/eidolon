@@ -23,6 +23,11 @@
     "build:apk": "bun --cwd apps/canvas build:apk",
     "release": "bun scripts/release.ts",
     "release:dry": "bun scripts/release.ts --dry-run",
+    "storage:up": "docker compose -f docker-compose.dev.yml up -d --wait && bun scripts/storage-env.ts",
+    "storage:down": "docker compose -f docker-compose.dev.yml down",
+    "storage:reset": "docker compose -f docker-compose.dev.yml down -v",
+    "storage:logs": "docker compose -f docker-compose.dev.yml logs -f storage",
+    "docker:build": "docker build -f apps/conductor/Dockerfile -t eidolon-conductor:local .",
     "check:size": "bun scripts/check-file-size.ts",
     "check:size:all": "bun scripts/check-file-size.ts --all"
   },

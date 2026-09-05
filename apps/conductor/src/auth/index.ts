@@ -1,6 +1,6 @@
 import { networkInterfaces } from "node:os";
 import { betterAuth } from "better-auth";
-import { db } from "../db";
+import { db } from "@/db";
 
 export const PAIRING_SECRET = process.env.PAIRING_SECRET || "eidolon_dev_secret_key_change_in_prod";
 
