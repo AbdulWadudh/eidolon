@@ -37,6 +37,7 @@ export const CHAT = {
   shimmerBarHeightPx: 12,
   shimmerBarRadiusPx: 3,
   minTouchTargetPx: 48,
+  toolButtonPx: 32,
   sendButtonPx: 42,
 } as const;
 

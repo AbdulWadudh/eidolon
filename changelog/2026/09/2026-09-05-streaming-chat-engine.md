@@ -281,3 +281,34 @@ completions.
   conductor 135). `ws.test.ts` now asserts a plain turn emits **no**
   `reply_suggestions`, and that `regenerate_suggestions` does.
 - `bun run check:size` — no new file over 300 lines.
+
+## The ⚡ button was opening the wrong sheet
+
+Tapping the lightning glyph opened the More actions sheet. The dispatch was
+right — `if (action === "suggestions") toggleSuggestions()` — but the tap never
+reached that button.
+
+`ToolButton` carried `hitSlop={CHAT.minTouchTargetPx / 4}`, a 12px halo on a
+32px button laid out with a 4px gap. Neighbouring hit rects therefore overlapped
+by 20px, and `more` renders after `suggestions` in `RIGHT_TOOLS`, so it won
+every contested point. Its rect reached 8px past the lightning icon's centre
+while the glyph itself is 18px wide — **the entire right half of the visible
+icon dispatched `more`.**
+
+The halo now derives from the geometry instead of guessing at it:
+
+```ts
+const TOOL_SLOP = (CHAT.minTouchTargetPx - CHAT.toolButtonPx) / 2;
+const TOOL_GAP = CHAT.minTouchTargetPx - CHAT.toolButtonPx;
+```
+
+With `toolButtonPx: 32` against a 48px target that is an 8px halo and a 16px
+gap, so each button owns exactly one 48px band and adjacent bands meet without
+crossing: `-8 → 40`, `40 → 88`, `88 → 136`. The buttons look the same; only the
+spacing widened. Both groups plus the dock's `mx-4` and `p-2.5` come to 308px,
+so the row still fits a 320px screen.
+
+Worth generalising: `hitSlop` large enough to reach a 48px target is only safe
+when the gap is at least as large as the slop on both sides. A slop bigger than
+the gap silently hands taps to whichever sibling renders last, and it looks
+exactly like a miswired handler.

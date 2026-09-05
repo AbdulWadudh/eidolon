@@ -33,6 +33,10 @@ const RIGHT_TOOLS: ToolSpec[] = [
   { action: "more", icon: AddCircleIcon, label: "More actions" },
 ];
 
+const TOOL_SLOP = (CHAT.minTouchTargetPx - CHAT.toolButtonPx) / 2;
+const TOOL_GAP = CHAT.minTouchTargetPx - CHAT.toolButtonPx;
+const TOOL_HIT_SLOP = { top: TOOL_SLOP, bottom: TOOL_SLOP, left: TOOL_SLOP, right: TOOL_SLOP };
+
 export interface InputToolbarProps {
   characterId?: string;
   suggestionsOpen?: boolean;
@@ -57,10 +61,14 @@ function ToolButton({
       accessibilityRole="button"
       accessibilityLabel={spec.label}
       accessibilityState={active === undefined ? undefined : { selected: active }}
-      hitSlop={CHAT.minTouchTargetPx / 4}
+      hitSlop={TOOL_HIT_SLOP}
       onPress={() => onAction(spec.action)}
-      className="h-8 w-8 items-center justify-center rounded-button"
-      style={active ? { backgroundColor: `${activeColor}22` } : undefined}
+      className="items-center justify-center rounded-button"
+      style={{
+        width: CHAT.toolButtonPx,
+        height: CHAT.toolButtonPx,
+        backgroundColor: active ? `${activeColor}22` : undefined,
+      }}
     >
       <AppIcon
         icon={spec.icon}
@@ -77,12 +85,12 @@ export function InputToolbar({ characterId, suggestionsOpen, onAction }: InputTo
 
   return (
     <View className="mt-2 flex-row items-center justify-between border-border border-t pt-2">
-      <View className="flex-row items-center gap-1">
+      <View className="flex-row items-center" style={{ gap: TOOL_GAP }}>
         {LEFT_TOOLS.map((spec) => (
           <ToolButton key={spec.action} spec={spec} color={theme.textMuted} onAction={onAction} />
         ))}
       </View>
-      <View className="flex-row items-center gap-1">
+      <View className="flex-row items-center" style={{ gap: TOOL_GAP }}>
         {RIGHT_TOOLS.map((spec) => (
           <ToolButton
             key={spec.action}
