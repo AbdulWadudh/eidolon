@@ -100,4 +100,20 @@ describe("voice note playback", () => {
     expect(useChatStore.getState().autoPlayMessageId).toBeNull();
     expect(useChatStore.getState().messages.at(-1)?.audioUrl).toBe("data:audio/mpeg;base64,QUJD");
   });
+
+  it("adds a photo message when the character sends one", () => {
+    feed({
+      type: "image_ready",
+      payload: {
+        image_url: "https://media.example/photo.png",
+        aspect_ratio: "9:16",
+        prompt_used: "a bookshop",
+      },
+    } as unknown as ServerMessage);
+
+    const last = useChatStore.getState().messages.at(-1);
+    expect(last?.imageUrl).toBe("https://media.example/photo.png");
+    expect(last?.role).toBe("assistant");
+    expect(useChatStore.getState().isPainting).toBe(false);
+  });
 });

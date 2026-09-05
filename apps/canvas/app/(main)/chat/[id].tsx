@@ -182,6 +182,7 @@ export default function ChatScreen() {
             onAction={(action) => {
               if (action === "more") setActionsOpen(true);
               if (action === "suggestions") toggleSuggestions();
+              if (action === "gallery") chat.requestImage(characterId);
             }}
           />
         </VoiceNotesProvider>

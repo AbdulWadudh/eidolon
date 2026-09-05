@@ -33,7 +33,8 @@
       "expo-asset",
       "expo-font",
       "./plugins/with-android-build-optimizations",
-      "expo-audio"
+      "expo-audio",
+      "expo-image"
     ]
   }
 }

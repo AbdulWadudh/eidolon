@@ -1,9 +1,7 @@
-import { MOCK } from "@eidolon/config";
-import { getMockBackdropUrl } from "@eidolon/config/server";
 import { type ClientMessage, parseClientMessage } from "@eidolon/protocol";
 import type { WSMessageReceive } from "hono/ws";
-import { queueImageGeneration } from "@/services/comfyui";
 import { handleChatTurn, handleRegenerateSuggestions } from "@/ws/chat-turn";
+import { handleImageRequest } from "@/ws/image-turn";
 import { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
 /**
  * Manages per-connection streaming tasks and abort handles.
@@ -100,43 +98,12 @@ export async function handleClientMessage(
     }
 
     case "request_image": {
-      sendServerMessage(ws, {
-        type: "status_update",
-        payload: {
-          status: "painting",
-          detail: "Dispatching generation workflow...",
-        },
-      });
-
-      const prompt = clientMsg.prompt_override || "A high quality character portrait";
-      await queueImageGeneration(prompt);
-
-      // Emit mock preview frames followed by image_ready
-      sendServerMessage(ws, {
-        type: "image_preview",
-        payload: {
-          step: 12,
-          total_steps: 25,
-          preview_base64:
-            "data:image/webp;base64,UklGRkAAAABXRUJQVlA4IDQAAADwAQCdASoBAAEAAQAcJaACdLoAAP7/1/4AA=",
-        },
-      });
-
-      sendServerMessage(ws, {
-        type: "image_ready",
-        payload: {
-          image_url: getMockBackdropUrl(),
-          aspect_ratio: MOCK.aspectRatio,
-          prompt_used: prompt,
-        },
-      });
-
-      sendServerMessage(ws, {
-        type: "status_update",
-        payload: {
-          status: "idle",
-        },
-      });
+      await handleImageRequest(
+        ws,
+        clientMsg.character_id,
+        clientMsg.prompt_override,
+        sessionManager.getAbortSignal(ws),
+      );
       break;
     }
   }

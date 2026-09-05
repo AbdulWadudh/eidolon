@@ -27,6 +27,7 @@ export {
   DATA_FILES,
   EASING,
   EASING_BEZIER,
+  IMAGE,
   MEMORY,
   MOCK,
   PAIRING,

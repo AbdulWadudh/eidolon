@@ -14,6 +14,7 @@ export interface ChatMessage {
   isNarration: boolean;
   audioUrl: string | null;
   audioDuration: number | null;
+  imageUrl: string | null;
   timestamp: string;
 }
 
@@ -32,6 +33,7 @@ export interface NewMessage {
   isNarration?: boolean;
   audioUrl?: string | null;
   audioDuration?: number | null;
+  imageUrl?: string | null;
 }
 
 let sequence = 0;
@@ -50,6 +52,7 @@ export function createMessage(input: NewMessage): ChatMessage {
     isNarration: input.isNarration ?? isNarrationOnly(input.text),
     audioUrl: input.audioUrl ?? null,
     audioDuration: input.audioDuration ?? null,
+    imageUrl: input.imageUrl ?? null,
     timestamp: formatClockTime(),
   };
 }

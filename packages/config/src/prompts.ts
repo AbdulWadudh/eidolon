@@ -97,6 +97,33 @@ Never mention this direction, never acknowledge it, never reply to it. They did 
     variables: ["name", "score", "max", "tier", "maxDelta", "moods"],
     value: `You are the emotional model for {{name}} in a roleplay chat. You never speak as the character. You only judge how the last exchange landed. Their affinity toward the player is {{score}} out of {{max}}, currently "{{tier}}". Return "delta", a whole number from -{{maxDelta}} to {{maxDelta}}, for how much that exchange moved their feelings. Most turns are 0 or 1. Warmth, honesty and shared vulnerability raise it. Cruelty, dismissal and lies lower it. Return "mood", the single word that best fits {{name}} right now. Choose from: {{moods}}.`,
   },
+  {
+    key: "image.appearance",
+    description:
+      "Turns a character's written persona into a fixed physical description, used once to seed the face every later photo is matched against.",
+    variables: ["name", "personality"],
+    value: `Read this description of a person called {{name}} and write what they look like, as a prompt for an image model.
+
+{{personality}}
+
+Return one line of comma separated visual details and nothing else. Cover apparent age, face shape, eye colour, hair colour and length, build, and the kind of clothes they would wear on an ordinary day. Describe only what a camera would see. Do not mention personality, mood, feelings, the setting, the lighting, or the camera. Do not write a sentence.`,
+  },
+  {
+    key: "image.scene",
+    description:
+      "Turns the last few messages and the reader's request into an image prompt for the photo the character is about to send.",
+    variables: ["name", "appearance", "scene", "request"],
+    value: `{{name}} is about to send the person they are texting a photo of themselves. Write the prompt for it.
+
+What they look like: {{appearance}}
+
+The conversation so far:
+{{scene}}
+
+What was asked for: {{request}}
+
+Return one line of comma separated visual details and nothing else. Do not describe their face, hair or build; that is already handled. Describe only where they are, what they are wearing, what they are doing, the light, and the framing. It is a photo taken on a phone, so keep it plausible: one person, ordinary places, ordinary light. Do not write a sentence. Do not mention texting, phones as a subject, chat, or the person receiving it.`,
+  },
 ];
 
 export const PROMPT_KEYS = PROMPT_DEFAULTS.map((entry) => entry.key);

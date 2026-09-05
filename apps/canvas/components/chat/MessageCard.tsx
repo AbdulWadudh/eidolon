@@ -4,6 +4,7 @@ import { Text, View } from "react-native";
 import { AudioNotePill } from "@/components/audio/AudioNotePill";
 import { cn } from "@/lib/utils";
 import type { ChatMessage } from "@/store/chat-messages";
+import { MessageImage } from "./MessageImage";
 import { RoleplayText } from "./RoleplayText";
 
 export interface MessageCardProps {
@@ -32,6 +33,10 @@ function MessageCardBase({ message }: MessageCardProps) {
           isUser ? "border-primary/25" : "",
         )}
       >
+        {message.imageUrl ? (
+          <MessageImage uri={message.imageUrl} characterId={message.characterId} />
+        ) : null}
+
         <RoleplayText text={message.text} />
 
         <View className="mt-2.5 flex-row items-center justify-end gap-1.5">

@@ -56,6 +56,8 @@ function addColumnIfMissing(table: string, column: string, definition: string): 
 }
 
 addColumnIfMissing("messages", "audio_duration", "REAL");
+addColumnIfMissing("messages", "image_url", "TEXT");
+addColumnIfMissing("characters", "appearance", "TEXT");
 
 /**
  * Health check helper for the SQLite database.
@@ -160,6 +162,32 @@ export function appendMessage(
   return id;
 }
 
+export function setMessageImage(messageId: string, imageUrl: string): void {
+  db.query("UPDATE messages SET image_url = ?1 WHERE id = ?2").run(imageUrl, messageId);
+}
+
+export function setCharacterAvatar(characterId: string, avatarUrl: string): void {
+  db.query("UPDATE characters SET avatar_url = ?1 WHERE id = ?2").run(avatarUrl, characterId);
+}
+
+export function setCharacterAppearance(characterId: string, appearance: string): void {
+  db.query("UPDATE characters SET appearance = ?1 WHERE id = ?2").run(appearance, characterId);
+}
+
+export function getCharacterAppearance(characterId: string): string | null {
+  const row = db.query("SELECT appearance FROM characters WHERE id = ?").get(characterId) as
+    | { appearance: string | null }
+    | undefined;
+  return row?.appearance ?? null;
+}
+
+export function getCharacterAvatar(characterId: string): string | null {
+  const row = db.query("SELECT avatar_url FROM characters WHERE id = ?").get(characterId) as
+    | { avatar_url: string | null }
+    | undefined;
+  return row?.avatar_url ?? null;
+}
+
 export function setMessageAudio(
   messageId: string,
   audioUrl: string,
@@ -187,13 +215,14 @@ export interface StoredMessage {
   content: string;
   audioUrl: string | null;
   audioDuration: number | null;
+  imageUrl: string | null;
   createdAt: number;
 }
 
 export function getTranscript(characterId: string, limit: number): StoredMessage[] {
   const rows = db
     .query(
-      "SELECT id, role, content, audio_url, audio_duration, created_at FROM messages WHERE character_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ?",
+      "SELECT id, role, content, audio_url, audio_duration, image_url, created_at FROM messages WHERE character_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ?",
     )
     .all(characterId, limit) as {
     id: string;
@@ -201,6 +230,7 @@ export function getTranscript(characterId: string, limit: number): StoredMessage
     content: string;
     audio_url: string | null;
     audio_duration: number | null;
+    image_url: string | null;
     created_at: number;
   }[];
 
@@ -211,6 +241,7 @@ export function getTranscript(characterId: string, limit: number): StoredMessage
       content: row.content,
       audioUrl: row.audio_url,
       audioDuration: row.audio_duration,
+      imageUrl: row.image_url,
       createdAt: row.created_at,
     }))
     .reverse();

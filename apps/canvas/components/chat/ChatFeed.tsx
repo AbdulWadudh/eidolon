@@ -31,6 +31,7 @@ function keyExtractor(item: ChatMessage): string {
 }
 
 function getItemType(item: ChatMessage): string {
+  if (item.imageUrl) return "photo";
   return item.audioUrl ? "voice" : item.role;
 }
 

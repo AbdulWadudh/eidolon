@@ -17,6 +17,7 @@ import { appStorage } from "./storage";
 
 export type { ActiveStatus, ChatMessage, MindState } from "./chat-messages";
 
+const SENT_A_PHOTO = "*sends a photo*";
 const HEARTBEAT_DETAIL = "pong";
 
 const SUGGESTIONS_HIDDEN_KEY = "eidolon.chat.suggestions_hidden";
@@ -47,6 +48,8 @@ export interface ChatStore {
   setSuggestionsHidden: (hidden: boolean) => void;
   setInputText: (text: string) => void;
   sendUserMessage: (text: string, characterId: string) => void;
+  requestImage: (characterId: string, prompt?: string) => void;
+  isPainting: boolean;
   handleServerMessage: (msg: ServerMessage) => void;
   rerollSuggestions: (characterId: string) => void;
   selectSuggestion: (suggestion: string) => void;
@@ -71,6 +74,7 @@ export const INITIAL_CHAT = {
   mind: null as MindState | null,
   pendingAudio: null as AudioAttachment | null,
   isSynthesizingAudio: false,
+  isPainting: false,
   autoPlayMessageId: null as string | null,
   isLoadingHistory: false,
   lastError: null as string | null,
@@ -123,6 +127,21 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     });
   },
 
+  requestImage: (characterId, prompt) => {
+    set({
+      activeCharacterId: characterId,
+      isPainting: true,
+      activeStatus: "painting",
+      statusDetail: null,
+      lastError: null,
+    });
+    sendMessage({
+      type: "request_image",
+      character_id: characterId,
+      prompt_override: prompt?.trim() || undefined,
+    });
+  },
+
   handleServerMessage: (msg) => {
     switch (msg.type) {
       case "text_delta": {
@@ -143,6 +162,23 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           // A reroll the reader asked for keeps the tray open under them.
           // Anything else arrives folded away behind the chip.
           isTrayOpen: state.isSuggestionsLoading ? state.isTrayOpen : false,
+        }));
+        break;
+      }
+
+      case "image_ready": {
+        const source = msg.payload ?? msg;
+        set((state) => ({
+          isPainting: false,
+          messages: [
+            ...state.messages,
+            createMessage({
+              characterId: state.activeCharacterId,
+              role: "assistant",
+              text: SENT_A_PHOTO,
+              imageUrl: source.image_url,
+            }),
+          ],
         }));
         break;
       }
