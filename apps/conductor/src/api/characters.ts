@@ -1,6 +1,7 @@
 import { API_ROUTES, CHARACTER_PRESETS, presetByKey, QUEUE_JOBS } from "@eidolon/config";
 import { type Context, Hono } from "hono";
 import { authoring } from "@/api/authoring";
+import { cards } from "@/api/cards";
 import { gallery } from "@/api/gallery";
 import { ownerFor } from "@/auth/session";
 import {
@@ -254,6 +255,7 @@ characters.post("/:id/portrait", async (c) => {
 });
 
 characters.route("/author", authoring);
+characters.route("/", cards);
 characters.route("/", gallery);
 
 export function mountCharacters(app: Hono): void {

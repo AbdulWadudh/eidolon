@@ -6,6 +6,7 @@ export const ChatTurnSchema = z.object({
   text: z.string().min(1, "text cannot be empty"),
   allow_search: z.boolean().default(true),
   user_timezone: z.string().default("UTC"),
+  live_voice: z.boolean().default(false),
 });
 
 export const InterruptSchema = z.object({
@@ -38,6 +39,16 @@ export const EnhanceMessageSchema = z.object({
   text: z.string().min(1, "text cannot be empty"),
 });
 
+export const VoiceInputSchema = z.object({
+  type: z.literal("voice_input"),
+  character_id: z.string().min(1, "character_id cannot be empty"),
+  format: z.string().min(1, "format cannot be empty"),
+  data: z.string().min(1, "data cannot be empty"),
+  allow_search: z.boolean().default(true),
+  user_timezone: z.string().default("UTC"),
+  live_voice: z.boolean().default(true),
+});
+
 export const PingSchema = z.object({
   type: z.literal("ping"),
   timestamp: z.number().optional(),
@@ -50,6 +61,7 @@ export const ClientMessageSchema = z.discriminatedUnion("type", [
   RequestPhotoIdeasSchema,
   RegenerateSuggestionsSchema,
   EnhanceMessageSchema,
+  VoiceInputSchema,
   PingSchema,
 ]);
 
@@ -59,5 +71,6 @@ export type RequestImageEvent = z.infer<typeof RequestImageSchema>;
 export type RequestPhotoIdeasEvent = z.infer<typeof RequestPhotoIdeasSchema>;
 export type RegenerateSuggestionsEvent = z.infer<typeof RegenerateSuggestionsSchema>;
 export type EnhanceMessageEvent = z.infer<typeof EnhanceMessageSchema>;
+export type VoiceInputEvent = z.infer<typeof VoiceInputSchema>;
 export type PingEvent = z.infer<typeof PingSchema>;
 export type ClientMessage = z.infer<typeof ClientMessageSchema>;

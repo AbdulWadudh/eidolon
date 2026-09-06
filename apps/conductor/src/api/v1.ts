@@ -29,19 +29,21 @@ import { checkLanceDbHealth } from "@/services/lancedb";
 import { checkLlmHealth } from "@/services/llm";
 import { forgetFace } from "@/services/selfie";
 import { getStorageConfig, isStorageConnected } from "@/services/storage";
+import { checkTranscribeHealth, isTranscriptionConfigured } from "@/services/transcribe";
 import { checkTtsHealth } from "@/services/tts";
 import { getConnectedDeviceCount, setupWebSocketRoutes } from "@/ws";
 
 export const v1 = new Hono();
 
 export async function buildHealthReport() {
-  const [sqliteOk, lancedbOk, llmOk, comfyOk, cacheOk, ttsOk] = await Promise.all([
+  const [sqliteOk, lancedbOk, llmOk, comfyOk, cacheOk, ttsOk, sttOk] = await Promise.all([
     Promise.resolve(checkDatabaseHealth()),
     checkLanceDbHealth(),
     checkLlmHealth(),
     checkComfyHealth(),
     checkCacheHealth(),
     checkTtsHealth(),
+    checkTranscribeHealth(),
   ]);
 
   const storage = getStorageConfig();
@@ -59,6 +61,7 @@ export async function buildHealthReport() {
       comfyui: comfyOk ? "healthy" : "offline",
       cache: cacheOk ? "healthy" : "offline",
       tts: ttsOk ? "healthy" : "offline",
+      stt: isTranscriptionConfigured() ? (sttOk ? "healthy" : "offline") : "unconfigured",
     },
     storage: {
       type: "s3",

@@ -16,6 +16,7 @@ import { storeVoiceNote } from "@/services/voice-notes";
 import type { WebSocketSender } from "@/ws/protocol";
 import { sendServerMessage } from "@/ws/protocol";
 import { streamReply } from "@/ws/reply-stream";
+import { createVoiceStream } from "@/ws/voice-turn";
 
 export { hasTemporalMarker as shouldSearch } from "@/orchestrator/search-trigger";
 
@@ -51,15 +52,20 @@ export async function handleChatTurn(
     (message): message is ChatMessage => message.role === "assistant",
   );
 
+  const card = getCharacter(characterId);
+  const voiceId = card?.voice ?? TTS.voice;
+  const voice = event.live_voice ? createVoiceStream(ws, { characterId, voiceId, signal }) : null;
+
   const outcome = await streamReply(
     ws,
     assembled.messages,
     signal,
     [
       ...history.map((entry) => entry.content),
-      ...exampleLines(getCharacter(characterId)?.exampleDialogue ?? "", assembled.characterName),
+      ...exampleLines(card?.exampleDialogue ?? "", assembled.characterName),
     ],
     assembled.characterName,
+    { onSpeech: voice ? (text) => voice.push(text) : undefined },
   );
 
   if (signal.aborted) return;
@@ -94,7 +100,7 @@ export async function handleChatTurn(
   // Reply options cost three model calls, and most turns are answered by typing.
   // They are generated when the reader asks for them, not on every turn.
   const [audio, suggestions] = await Promise.all([
-    synthesizeSpeech(reply, getCharacter(characterId)?.voice ?? TTS.voice, signal),
+    voice ? Promise.resolve(null) : synthesizeSpeech(reply, voiceId, signal),
     SUGGESTIONS.autoGenerate
       ? generateReplySuggestions(
           turn,
@@ -103,6 +109,8 @@ export async function handleChatTurn(
         )
       : Promise.resolve(null),
   ]);
+
+  if (voice) await voice.finish(assistantId);
 
   if (audio) {
     const note = assistantId

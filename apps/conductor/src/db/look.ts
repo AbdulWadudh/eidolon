@@ -56,6 +56,17 @@ export function setCharacterAvatar(characterId: string, avatarUrl: string): void
   db.query("UPDATE characters SET avatar_url = ?1 WHERE id = ?2").run(avatarUrl, characterId);
 }
 
+export function setCharacterPigment(characterId: string, pigment: string | null): void {
+  db.query("UPDATE characters SET theme_pigment = ?1 WHERE id = ?2").run(pigment, characterId);
+}
+
+export function getCharacterPigment(characterId: string): string | null {
+  const row = db.query("SELECT theme_pigment FROM characters WHERE id = ?").get(characterId) as
+    | { theme_pigment: string | null }
+    | undefined;
+  return row?.theme_pigment ?? null;
+}
+
 export function setCharacterAppearance(characterId: string, appearance: string): void {
   db.query("UPDATE characters SET appearance = ?1 WHERE id = ?2").run(appearance, characterId);
 }

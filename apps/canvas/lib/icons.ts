@@ -19,16 +19,20 @@ export { default as ArrowUp01Icon } from "@hugeicons/core-free-icons/ArrowUp01Ic
 export { default as Book02Icon } from "@hugeicons/core-free-icons/Book02Icon";
 export { default as BookOpen01Icon } from "@hugeicons/core-free-icons/BookOpen01Icon";
 export { default as Call02Icon } from "@hugeicons/core-free-icons/Call02Icon";
+export { default as CallEnd01Icon } from "@hugeicons/core-free-icons/CallEnd01Icon";
 export { default as Cancel01Icon } from "@hugeicons/core-free-icons/Cancel01Icon";
 export { default as CheckmarkCircle01Icon } from "@hugeicons/core-free-icons/CheckmarkCircle01Icon";
 export { default as ColorPickerIcon } from "@hugeicons/core-free-icons/ColorPickerIcon";
 export { default as Download01Icon } from "@hugeicons/core-free-icons/Download01Icon";
+export { default as FileUploadIcon } from "@hugeicons/core-free-icons/FileUploadIcon";
 export { default as FlashIcon } from "@hugeicons/core-free-icons/FlashIcon";
 export { default as Globe02Icon } from "@hugeicons/core-free-icons/Globe02Icon";
+export { default as HandIcon } from "@hugeicons/core-free-icons/HandIcon";
 export { default as Image01Icon } from "@hugeicons/core-free-icons/Image01Icon";
 export { default as Logout01Icon } from "@hugeicons/core-free-icons/Logout01Icon";
 export { default as MagicWand01Icon } from "@hugeicons/core-free-icons/MagicWand01Icon";
 export { default as Mic01Icon } from "@hugeicons/core-free-icons/Mic01Icon";
+export { default as MicOff01Icon } from "@hugeicons/core-free-icons/MicOff01Icon";
 export { default as Moon02Icon } from "@hugeicons/core-free-icons/Moon02Icon";
 export { default as MoreVerticalIcon } from "@hugeicons/core-free-icons/MoreVerticalIcon";
 export { default as PaintBoardIcon } from "@hugeicons/core-free-icons/PaintBoardIcon";
@@ -46,3 +50,4 @@ export { default as SquareUnlock01Icon } from "@hugeicons/core-free-icons/Square
 export { default as Sun02Icon } from "@hugeicons/core-free-icons/Sun02Icon";
 export { default as Undo02Icon } from "@hugeicons/core-free-icons/Undo02Icon";
 export { default as VolumeHighIcon } from "@hugeicons/core-free-icons/VolumeHighIcon";
+export { default as VolumeOffIcon } from "@hugeicons/core-free-icons/VolumeOffIcon";

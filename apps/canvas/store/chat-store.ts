@@ -2,6 +2,7 @@ import { last } from "es-toolkit";
 import { create } from "zustand";
 import { sendMessage } from "@/services/websocket";
 import { useAffinityStore } from "@/store/affinity-store";
+import { isCallLive } from "@/store/call-store";
 import { reduceServerMessage } from "./chat-events";
 import {
   type ActiveStatus,
@@ -147,6 +148,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       text: trimmed,
       allow_search: useAffinityStore.getState().allowWebSearch,
       user_timezone: resolveUserTimezone(),
+      live_voice: isCallLive(characterId),
     });
   },
 
@@ -235,6 +237,9 @@ export function commitStreamingTurn(): void {
     streamingIsNarration: false,
     pendingAudio: null,
     isSynthesizingAudio: false,
-    autoPlayMessageId: message.audioUrl ? message.id : current.autoPlayMessageId,
+    autoPlayMessageId:
+      message.audioUrl && !isCallLive(current.activeCharacterId)
+        ? message.id
+        : current.autoPlayMessageId,
   }));
 }

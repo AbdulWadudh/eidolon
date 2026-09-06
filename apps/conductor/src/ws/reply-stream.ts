@@ -31,10 +31,15 @@ interface StreamResult {
   emitted: number;
 }
 
+export interface ReplyHooks {
+  onSpeech?: (text: string) => void;
+}
+
 async function streamOnce(
   ws: WebSocketSender,
   messages: ChatMessage[],
   signal: AbortSignal,
+  hooks: ReplyHooks = {},
 ): Promise<StreamResult> {
   const filter = createPersonaFilter();
   const mind = createMindTail();
@@ -86,6 +91,7 @@ async function streamOnce(
     if (visible.length > 0) {
       reply += visible;
       emit(ws, visible, isActionChunk(visible));
+      hooks.onSpeech?.(visible);
     }
 
     if (breakAt >= 0 || hasSaidEnough(reply)) said = true;
@@ -95,6 +101,7 @@ async function streamOnce(
   if (tail.length > 0 && !said) {
     reply += tail;
     emit(ws, tail, isActionChunk(tail));
+    hooks.onSpeech?.(tail);
   }
 
   return {
@@ -158,8 +165,9 @@ export async function streamReply(
   signal: AbortSignal,
   said: string[] = [],
   characterName = "",
+  hooks: ReplyHooks = {},
 ): Promise<ReplyOutcome> {
-  let result = await streamOnce(ws, messages, signal);
+  let result = await streamOnce(ws, messages, signal, hooks);
 
   for (
     let retry = 0;
@@ -167,12 +175,13 @@ export async function streamReply(
     retry += 1
   ) {
     if (signal.aborted) return { reply: result.reply, mindBlock: result.mindBlock };
-    result = await streamOnce(ws, [...messages, hardenedReminder()], signal);
+    result = await streamOnce(ws, [...messages, hardenedReminder()], signal, hooks);
   }
 
   if (result.tripped && result.emitted === 0) {
     const line = deflection();
     emit(ws, line, false);
+    hooks.onSpeech?.(line);
     return { reply: line, mindBlock: "" };
   }
 
@@ -202,6 +211,7 @@ export async function streamReply(
     const line = await sayItOutLoud(messages, result.reply, signal);
     const spacer = result.reply.trim().length > 0 ? " " : "";
     emit(ws, `${spacer}${line}`, false);
+    hooks.onSpeech?.(`${spacer}${line}`);
     return { reply: `${result.reply}${spacer}${line}`.trim(), mindBlock: result.mindBlock };
   }
 

@@ -5,6 +5,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CharacterRosterCard } from "@/components/characters/CharacterCard";
+import { ImportCardButton } from "@/components/characters/ImportCardButton";
 import { AppIcon } from "@/components/common/icon";
 import { LoadingState } from "@/components/common/loading-state";
 import { ThemeStudioSheet } from "@/components/theme/ThemeStudioSheet";
@@ -30,6 +31,11 @@ export default function MainCharactersScreen() {
   const [showThemeStudio, setShowThemeStudio] = React.useState(false);
   const [roster, setRoster] = React.useState<CharacterSummary[]>([]);
   const [isLoadingRoster, setLoadingRoster] = React.useState(true);
+
+  const refreshRoster = React.useCallback(
+    () => fetchCharacters(serverHost).then(setRoster),
+    [serverHost],
+  );
 
   // The roster is re-read whenever this screen regains focus, so a portrait
   // rendered in the background appears without the reader doing anything.
@@ -158,6 +164,15 @@ export default function MainCharactersScreen() {
           >
             {CHARACTER_COPY.newCharacter}
           </Button>
+        </Animated.View>
+
+        <Animated.View entering={revealAt(0)}>
+          <ImportCardButton
+            serverHost={serverHost}
+            onImported={(characterId) => {
+              void refreshRoster().then(() => router.push(`/chat/${characterId}`));
+            }}
+          />
         </Animated.View>
 
         {/* Dynamic Theming Studio Card */}

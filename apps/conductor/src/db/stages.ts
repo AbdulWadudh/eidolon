@@ -46,6 +46,32 @@ export function getCurrentStage(characterId: string): StoredStage | null {
   return row ? toStage(row) : null;
 }
 
+export function listStages(characterId: string): StoredStage[] {
+  return db
+    .query<StageRow, [string]>(
+      "SELECT id, name, backdrop_url, lighting_tint, soundscape_stems FROM stages WHERE character_id = ?1 ORDER BY rowid ASC",
+    )
+    .all(characterId)
+    .map(toStage);
+}
+
+export function registerStage(characterId: string, stageName: string): void {
+  ensureCharacter(characterId);
+
+  db.query(
+    `INSERT INTO stages (id, character_id, name, backdrop_url, lighting_tint, soundscape_stems, updated_at)
+     VALUES (?1, ?2, ?3, NULL, ?4, ?5, ?6)
+     ON CONFLICT(character_id, name) DO NOTHING`,
+  ).run(
+    crypto.randomUUID(),
+    characterId,
+    stageName,
+    STAGE.defaultLightingTint,
+    JSON.stringify(STAGE.defaultSoundscapeStems),
+    Date.now(),
+  );
+}
+
 export function saveStageBackdrop(
   characterId: string,
   stageName: string,

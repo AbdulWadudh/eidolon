@@ -7,7 +7,7 @@ import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { croppedStyle } from "@/lib/avatar-crop";
-import { ArrowLeft01Icon, MoreVerticalIcon } from "@/lib/icons";
+import { ArrowLeft01Icon, Call02Icon, MoreVerticalIcon } from "@/lib/icons";
 import { useAffinityStore } from "@/store/affinity-store";
 import type { MindState } from "@/store/chat-messages";
 import type { AvatarCropRect } from "@/store/chat-photos";
@@ -26,6 +26,7 @@ export interface ChatTopBarProps {
   mind: MindState | null;
   onBack: () => void;
   onOverflow: () => void;
+  onCall?: () => void;
 }
 
 const AVATAR_PX = 38;
@@ -45,6 +46,7 @@ export function ChatTopBar({
   mind,
   onBack,
   onOverflow,
+  onCall,
 }: ChatTopBarProps) {
   const theme = useResolvedTheme(characterId);
   const reduced = useReducedMotion();
@@ -143,6 +145,17 @@ export function ChatTopBar({
             {subtitle}
           </Animated.Text>
         </View>
+      </PressableScale>
+
+      <PressableScale
+        accessibilityRole="button"
+        accessibilityLabel={`Call ${characterName}`}
+        disabled={!onCall}
+        hitSlop={8}
+        onPress={onCall}
+        className="h-10 w-10 items-center justify-center rounded-button border border-border bg-card"
+      >
+        <AppIcon icon={Call02Icon} size={18} color={theme.primary} />
       </PressableScale>
 
       <PressableScale

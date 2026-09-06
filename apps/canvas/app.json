@@ -46,7 +46,12 @@
       ],
       "./plugins/with-android-build-optimizations",
       "./plugins/with-dark-system-chrome",
-      "expo-audio",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Eidolon uses the microphone so a live voice call can hear you."
+        }
+      ],
       "expo-image",
       [
         "expo-build-properties",
@@ -55,7 +60,8 @@
             "usesCleartextTraffic": true
           }
         }
-      ]
+      ],
+      "expo-speech-recognition"
     ],
     "backgroundColor": "#0D0E11"
   }

@@ -117,6 +117,7 @@ describe("service configuration", () => {
       "COMFYUI_URL",
       "LLM_MODEL",
       "TTS_API_URL",
+      "STT_API_URL",
       "EMBEDDINGS_API_URL",
       "EMBEDDINGS_MODEL",
     ]) {
@@ -128,6 +129,7 @@ describe("service configuration", () => {
       llmModel: "",
       comfyUiUrl: "",
       ttsApiUrl: "",
+      sttApiUrl: "",
       embeddingsApiUrl: "",
       embeddingsModel: "",
     });

@@ -1,3 +1,5 @@
+import { MP3_SCAN } from "@eidolon/config";
+
 const MPEG_VERSION = [2.5, 0, 2, 1] as const;
 const SAMPLE_RATES: Record<number, readonly number[]> = {
   1: [44100, 48000, 32000],
@@ -38,32 +40,66 @@ function readFrame(buffer: Uint8Array, offset: number): Frame | null {
   return { lengthBytes, seconds: samplesPerFrame / sampleRate };
 }
 
-function audioStart(buffer: Uint8Array): number {
-  const hasId3 = buffer[0] === 0x49 && buffer[1] === 0x44 && buffer[2] === 0x33;
-  if (!hasId3 || buffer.length < 10) return 0;
-  const size =
-    ((buffer[6] & 0x7f) << 21) |
-    ((buffer[7] & 0x7f) << 14) |
-    ((buffer[8] & 0x7f) << 7) |
-    (buffer[9] & 0x7f);
-  return 10 + size;
+function matches(buffer: Uint8Array, offset: number, marker: readonly number[]): boolean {
+  return marker.every((byte, index) => buffer[offset + index] === byte);
+}
+
+function tagEnd(buffer: Uint8Array, offset: number): number {
+  if (matches(buffer, offset, MP3_SCAN.id3v2Marker) && offset + 10 <= buffer.length) {
+    const size =
+      (((buffer[offset + 6] ?? 0) & 0x7f) << 21) |
+      (((buffer[offset + 7] ?? 0) & 0x7f) << 14) |
+      (((buffer[offset + 8] ?? 0) & 0x7f) << 7) |
+      ((buffer[offset + 9] ?? 0) & 0x7f);
+    return offset + MP3_SCAN.id3v2HeaderBytes + size;
+  }
+
+  if (matches(buffer, offset, MP3_SCAN.id3v1Marker)) {
+    return offset + MP3_SCAN.id3v1Bytes;
+  }
+
+  return offset;
+}
+
+function isAnchored(buffer: Uint8Array, offset: number): boolean {
+  const first = readFrame(buffer, offset);
+  if (!first) return false;
+
+  const next = offset + first.lengthBytes;
+  return next >= buffer.length || readFrame(buffer, next) !== null;
+}
+
+function findNextFrame(buffer: Uint8Array, from: number): number {
+  const limit = Math.min(buffer.length, from + MP3_SCAN.resyncWindowBytes);
+  for (let offset = from; offset < limit; offset += 1) {
+    if (isAnchored(buffer, offset)) return offset;
+  }
+  return -1;
 }
 
 export function mp3DurationSeconds(buffer: Uint8Array): number | null {
-  let offset = audioStart(buffer);
+  let offset = 0;
   let seconds = 0;
   let frames = 0;
 
   while (offset < buffer.length) {
-    const frame = readFrame(buffer, offset);
-    if (!frame) {
-      offset += 1;
-      if (frames > 0) break;
+    const afterTag = tagEnd(buffer, offset);
+    if (afterTag > offset) {
+      offset = afterTag;
       continue;
     }
-    seconds += frame.seconds;
-    frames += 1;
-    offset += frame.lengthBytes;
+
+    const frame = readFrame(buffer, offset);
+    if (frame) {
+      seconds += frame.seconds;
+      frames += 1;
+      offset += frame.lengthBytes;
+      continue;
+    }
+
+    const resync = findNextFrame(buffer, offset + 1);
+    if (resync < 0) break;
+    offset = resync;
   }
 
   return frames > 0 ? Number(seconds.toFixed(2)) : null;

@@ -15,6 +15,7 @@ mock.module("@/services/websocket", () => ({
 }));
 
 const { commitStreamingTurn, useChatStore } = await import("../store/chat-store");
+const { useCallStore } = await import("../store/call-store");
 const { visibleText } = await import("../store/chat-messages");
 
 function feed(...messages: ServerMessage[]): void {
@@ -31,6 +32,7 @@ const IDLE: ServerMessage = { type: "status_update", status: "idle" };
 
 describe("voice note playback", () => {
   beforeEach(() => {
+    useCallStore.getState().close();
     useChatStore.getState().resetChat();
     useChatStore.getState().setActiveCharacter("emma");
   });
@@ -42,6 +44,75 @@ describe("voice note playback", () => {
 
     const state = useChatStore.getState();
     expect(state.messages.at(-1)?.audioUrl).toBe("data:audio/mpeg;base64,QUJD");
+    expect(state.autoPlayMessageId).toBe(state.messages.at(-1)?.id ?? null);
+  });
+
+  it("ignores the sentences a live call speaks, so the note is the whole reply", () => {
+    feed(delta("Oh nothing much. Just trying to keep my head above water."));
+    feed(
+      { type: "audio_chunk", format: "mp3", data: "Rklstsentence0", sentence_index: 0, live: true },
+      { type: "audio_chunk", format: "mp3", data: "Rklstsentence1", sentence_index: 1, live: true },
+    );
+
+    expect(useChatStore.getState().pendingAudio).toBeNull();
+
+    feed(
+      { type: "audio_chunk", format: "mp3", data: "QUJD", duration: 7.63, sentence_index: 0 },
+      IDLE,
+    );
+
+    const note = useChatStore.getState().messages.at(-1);
+    expect(note?.audioUrl).toBe("data:audio/mpeg;base64,QUJD");
+    expect(note?.audioDuration).toBe(7.63);
+  });
+
+  it("never leaves a voice note without the length the conductor measured", () => {
+    feed(delta("Listen."));
+    feed({ type: "audio_chunk", format: "mp3", data: "QUJD", duration: 4.03, sentence_index: 0 });
+    feed(IDLE);
+
+    expect(useChatStore.getState().messages.at(-1)?.audioDuration).toBe(4.03);
+  });
+
+  it("writes what the conductor heard into the feed as your turn", () => {
+    feed({ type: "transcript", text: "  Oh really  ", is_final: true });
+
+    const said = useChatStore.getState().messages.at(-1);
+    expect(said?.role).toBe("user");
+    expect(said?.text).toBe("Oh really");
+  });
+
+  it("ignores a partial or empty transcript", () => {
+    feed(
+      { type: "transcript", text: "Oh re", is_final: false },
+      { type: "transcript", text: "   ", is_final: true },
+    );
+    expect(useChatStore.getState().messages).toHaveLength(0);
+  });
+
+  it("does not autoplay in the feed while a call is speaking the same reply", () => {
+    useCallStore.getState().open("emma");
+
+    feed(delta("Oh nothing much."));
+    feed({ type: "audio_chunk", format: "mp3", data: "QUJD", duration: 7.63, sentence_index: 0 });
+    feed(IDLE);
+
+    const state = useChatStore.getState();
+    expect(state.messages.at(-1)?.audioUrl).toBe("data:audio/mpeg;base64,QUJD");
+    expect(state.autoPlayMessageId).toBeNull();
+
+    useCallStore.getState().close();
+  });
+
+  it("autoplays again once the call has ended", () => {
+    useCallStore.getState().open("emma");
+    useCallStore.getState().close();
+
+    feed(delta("Back to typing."));
+    feed({ type: "audio_chunk", format: "mp3", data: "QUJD", duration: 2.1, sentence_index: 0 });
+    feed(IDLE);
+
+    const state = useChatStore.getState();
     expect(state.autoPlayMessageId).toBe(state.messages.at(-1)?.id ?? null);
   });
 

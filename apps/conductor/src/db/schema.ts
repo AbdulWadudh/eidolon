@@ -130,4 +130,5 @@ export function applySchema(db: Database): void {
   addColumnIfMissing(db, "characters", "background_url", "TEXT");
   addColumnIfMissing(db, "characters", "avatar_crop", "TEXT");
   addColumnIfMissing(db, "characters", "face_url", "TEXT");
+  addColumnIfMissing(db, "characters", "theme_pigment", "TEXT");
 }

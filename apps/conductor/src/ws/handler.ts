@@ -5,6 +5,7 @@ import { handleEnhanceMessage } from "@/ws/enhance-turn";
 import { handleImageRequest, handlePhotoIdeas } from "@/ws/image-turn";
 import { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
 import { bindCharacter } from "@/ws/registry";
+import { handleVoiceInput } from "@/ws/voice-input";
 /**
  * Manages per-connection streaming tasks and abort handles.
  */
@@ -117,6 +118,11 @@ export async function handleClientMessage(
 
     case "enhance_message": {
       await handleEnhanceMessage(ws, clientMsg.text);
+      break;
+    }
+
+    case "voice_input": {
+      await handleVoiceInput(ws, clientMsg, sessionManager.getAbortSignal(ws));
       break;
     }
 

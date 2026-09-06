@@ -136,6 +136,7 @@ export default function ChatScreen() {
         mind={view.mind}
         onBack={() => router.back()}
         onOverflow={() => setSettingsOpen(true)}
+        onCall={() => router.push(`/call/${characterId}`)}
       />
 
       {/* Behind everything below the top bar — the messages and the dock — but

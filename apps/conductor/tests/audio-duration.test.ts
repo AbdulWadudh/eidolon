@@ -34,6 +34,16 @@ function stream(frameCount: number, id3Bytes = 0): Uint8Array {
   return out;
 }
 
+function concat(...parts: Uint8Array[]): Uint8Array {
+  const out = new Uint8Array(parts.reduce((total, part) => total + part.length, 0));
+  let at = 0;
+  for (const part of parts) {
+    out.set(part, at);
+    at += part.length;
+  }
+  return out;
+}
+
 describe("mp3 duration", () => {
   it("sums frame durations", () => {
     expect(mp3DurationSeconds(stream(10))).toBeCloseTo(10 * FRAME_SECONDS, 2);
@@ -49,5 +59,23 @@ describe("mp3 duration", () => {
 
   it("returns null for an empty buffer", () => {
     expect(mp3DurationSeconds(new Uint8Array(0))).toBeNull();
+  });
+
+  it("counts every sentence in a concatenated stream, not just the first", () => {
+    const joined = concat(stream(6, 44), stream(9, 44), stream(5, 44));
+    expect(mp3DurationSeconds(joined)).toBeCloseTo(20 * FRAME_SECONDS, 2);
+  });
+
+  it("resyncs across a gap of junk between two runs of frames", () => {
+    const joined = concat(stream(7), new Uint8Array(12), stream(4));
+    expect(mp3DurationSeconds(joined)).toBeCloseTo(11 * FRAME_SECONDS, 2);
+  });
+
+  it("stops at a trailing ID3v1 tag rather than reading it as audio", () => {
+    const tag = new Uint8Array(128);
+    tag[0] = 0x54;
+    tag[1] = 0x41;
+    tag[2] = 0x47;
+    expect(mp3DurationSeconds(concat(stream(8), tag))).toBeCloseTo(8 * FRAME_SECONDS, 2);
   });
 });

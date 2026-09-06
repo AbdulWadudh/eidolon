@@ -1,5 +1,10 @@
 import type { ServerMessage } from "@eidolon/protocol";
-import { attachAudioToLastAssistant, audioChunkToAttachment, createMessage } from "./chat-messages";
+import {
+  attachAudioToLastAssistant,
+  audioChunkToAttachment,
+  createMessage,
+  isLiveSentence,
+} from "./chat-messages";
 import { type ChatSetter, HEARTBEAT_DETAIL } from "./chat-types";
 
 // The commit is handed in rather than imported: reading it from the store here
@@ -93,6 +98,7 @@ export function reduceServerMessage(
     }
 
     case "audio_chunk": {
+      if (isLiveSentence(msg)) break;
       const attachment = audioChunkToAttachment(msg);
       if (!attachment) break;
       set((state) =>
@@ -123,6 +129,19 @@ export function reduceServerMessage(
     case "message_enhanced": {
       const source = msg.payload ?? msg;
       set({ inputText: source.text, isEnhancing: false });
+      break;
+    }
+
+    case "transcript": {
+      const source = msg.payload ?? msg;
+      const heard = source.text.trim();
+      if (!source.is_final || heard.length === 0) break;
+      set((state) => ({
+        messages: [
+          ...state.messages,
+          createMessage({ characterId: state.activeCharacterId, role: "user", text: heard }),
+        ],
+      }));
       break;
     }
 

@@ -33,10 +33,12 @@ export const TextDeltaSchema = z.object({
 export const AudioChunkSchema = z.object({
   type: z.literal("audio_chunk"),
   format: AudioFormatEnum,
-  data: z.string(), // base64 encoded audio
+  data: z.string(),
   url: z.string().optional(),
   duration: z.number().nonnegative().optional(),
   sentence_index: z.number().int().nonnegative(),
+  text: z.string().optional(),
+  live: z.boolean().optional(),
   payload: z
     .object({
       format: AudioFormatEnum,
@@ -44,6 +46,8 @@ export const AudioChunkSchema = z.object({
       url: z.string().optional(),
       duration: z.number().nonnegative().optional(),
       sentence_index: z.number().int().nonnegative(),
+      text: z.string().optional(),
+      live: z.boolean().optional(),
     })
     .optional(),
 });
@@ -152,6 +156,18 @@ export const MessageEnhancedSchema = z.object({
     .optional(),
 });
 
+export const TranscriptSchema = z.object({
+  type: z.literal("transcript"),
+  text: z.string(),
+  is_final: z.boolean(),
+  payload: z
+    .object({
+      text: z.string(),
+      is_final: z.boolean(),
+    })
+    .optional(),
+});
+
 export const ErrorSchema = z.object({
   type: z.literal("error"),
   code: z.string(),
@@ -187,6 +203,7 @@ export const ServerMessageSchema = z.discriminatedUnion("type", [
   MindUpdateSchema,
   ReplySuggestionsSchema,
   MessageEnhancedSchema,
+  TranscriptSchema,
   ErrorSchema,
   PongSchema,
 ]);
@@ -206,6 +223,7 @@ export type ImageFailedEvent = z.infer<typeof ImageFailedSchema>;
 export type MindUpdateEvent = z.infer<typeof MindUpdateSchema>;
 export type ReplySuggestionsEvent = z.infer<typeof ReplySuggestionsSchema>;
 export type MessageEnhancedEvent = z.infer<typeof MessageEnhancedSchema>;
+export type TranscriptEvent = z.infer<typeof TranscriptSchema>;
 export type ErrorEvent = z.infer<typeof ErrorSchema>;
 export type PongEvent = z.infer<typeof PongSchema>;
 export type ServerMessage = z.infer<typeof ServerMessageSchema>;

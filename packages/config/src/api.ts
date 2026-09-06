@@ -210,3 +210,23 @@ export function characterMemoryUrl(
 ): string {
   return `${scheme}://${stripAuthority(host)}${characterMemoryPath(characterId)}`;
 }
+
+export function characterImportPath(): string {
+  return `${apiPath("characters")}/import`;
+}
+
+export function characterImportUrl(host: string, scheme = httpScheme(host)): string {
+  return `${scheme}://${stripAuthority(host)}${characterImportPath()}`;
+}
+
+export function characterExportPath(characterId: string): string {
+  return `${characterPath(characterId)}/export`;
+}
+
+export function characterExportUrl(
+  host: string,
+  characterId: string,
+  scheme = httpScheme(host),
+): string {
+  return `${scheme}://${stripAuthority(host)}${characterExportPath(characterId)}`;
+}

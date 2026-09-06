@@ -74,6 +74,10 @@ const PCM_SAMPLE_RATE = 16000;
 const PCM_BYTES_PER_SAMPLE = 2;
 const BASE64_BYTES_PER_CHAR = 3 / 4;
 
+export function isLiveSentence(event: AudioChunkEvent): boolean {
+  return (event.payload?.live ?? event.live) === true;
+}
+
 export function audioChunkToAttachment(event: AudioChunkEvent): AudioAttachment | null {
   const data = event.payload?.data ?? event.data;
   const format = event.payload?.format ?? event.format;

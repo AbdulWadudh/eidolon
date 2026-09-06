@@ -3,12 +3,10 @@ import {
   ADMIN_ROUTES,
   API_PREFIX,
   AUTH_ROUTES,
-  apiPath,
   HEALTH_ALIAS_PATH,
   STATIC_ROUTES,
 } from "@eidolon/config";
 import {
-  getPairingHost,
   getPublicAssetDir,
   getServerConfig,
   hasPairingSecret,
@@ -18,8 +16,8 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { buildHealthReport, v1 } from "@/api/v1";
-import { auth, generatePairingPayload, getLocalIp, PAIRING_SECRET } from "@/auth";
-import { buildQrMatrix, qrTerminalColumns, renderQrTerminal } from "@/pairing/qr";
+import { auth, generatePairingPayload } from "@/auth";
+import { renderBanner, renderPairingQr } from "@/pairing/banner";
 import { loadPrompts } from "@/prompts/store";
 import { createQueueBoard } from "@/queue/board";
 import { closeQueues } from "@/queue/queues";
@@ -35,11 +33,10 @@ app.use(
   cors({
     origin: "*",
     allowHeaders: ["Content-Type", "Authorization"],
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   }),
 );
 
-// Better Auth owns this whole subtree: sign-up, sign-in, session and sign-out.
 app.on(["GET", "POST"], `${AUTH_ROUTES.base}/*`, (c) => auth.handler(c.req.raw));
 
 app.route(API_PREFIX, v1);
@@ -62,7 +59,7 @@ app.get(STATIC_ROUTES.logo, async (c) => {
   });
 });
 
-const { port, host } = getServerConfig();
+const { port } = getServerConfig();
 const pairingPayload = generatePairingPayload();
 
 if (!isTestEnv()) {
@@ -81,34 +78,9 @@ if (!isTestEnv()) {
     console.error("[Auth] PAIRING_SECRET is not set. Every pairing attempt and socket will be");
     console.error("[Auth] refused. Set it in apps/conductor/.env before pairing a device.");
   }
-}
 
-if (!isTestEnv()) {
-  console.log("\n========================================");
-  console.log("  EIDOLON CONDUCTOR GATEWAY ACTIVE");
-  console.log(`  Listening on: http://${host}:${port}`);
-  console.log(`  API base:     ${API_PREFIX}`);
-  console.log(`  Server:  ${getPairingHost()}`);
-  console.log(`  Token:   ${PAIRING_SECRET}`);
-  console.log(`  Pairing: ${pairingPayload}`);
-  console.log(`  Bull-Board Dashboard: http://localhost:${port}${ADMIN_ROUTES.queues}`);
-  console.log("========================================\n");
-  const matrix = buildQrMatrix(pairingPayload);
-  const columns = process.stdout.columns ?? 80;
-  const extraQuiet = Math.max(
-    0,
-    Math.min(4, Math.floor((columns - qrTerminalColumns(matrix)) / 4)),
-  );
-
-  console.log(renderQrTerminal(matrix, extraQuiet));
-  console.log(`\n  Scannable page: http://${getLocalIp()}:${port}${apiPath("pairingQr")}`);
-  if (extraQuiet < 2) {
-    console.log(
-      `  This terminal is ${columns} columns wide; a reliable quiet zone needs ` +
-        `${qrTerminalColumns(matrix, 4)}.\n  Widen it, open the page above, or type Server/Token manually.`,
-    );
-  }
-  console.log("");
+  console.log(renderBanner(pairingPayload));
+  console.log(renderPairingQr(pairingPayload, process.stdout.columns ?? 80));
 }
 
 await loadPrompts();

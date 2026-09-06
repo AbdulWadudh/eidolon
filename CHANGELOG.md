@@ -10,7 +10,46 @@ and publishes it as the GitHub release notes.
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- **Voice calls.** The phone button is back in the chat header, and this time
+  there is a call behind it. She speaks a sentence at a time while she is still
+  writing rather than after she has finished, so the first sound arrives in
+  under a tenth of a second instead of after the whole reply. The call screen
+  shows her face inside four amber rings that move with her actual voice, the
+  sentence she is speaking as a subtitle, and a large button to cut in — which
+  stops her mid-word, on the device and on the server.
+- **She hears you too.** Hold the amber button and talk — your words appear in
+  the call as you say them, and letting go sends them. Pressing it while she is
+  mid-sentence cuts her off first, so you can talk over her the way you would on
+  a real call. A conductor with a transcription service configured can do the
+  listening instead, for phones without speech recognition of their own.
+- Going back from a call returns you to the chat with the call still running,
+  so you can type while she talks.
+- **Import a character card.** "Import Tavern Card" on the home screen takes a
+  V2 character card PNG from anywhere and brings her whole self across: her
+  portrait, her greeting, her scenario, her example dialogue and her lorebook,
+  including which entries stay locked until she trusts you. Her portrait becomes
+  the face every photo she sends is built from.
+- **Export a character card.** Any character can be written back out as a PNG
+  that other apps can read, carrying her affinity, her voice and her stages with
+  her.
+
+### Fixed
+
+- Voice notes played only the last sentence of what she said, and showed `0"`
+  instead of their length. The whole reply plays now, with the right length on
+  the pill.
+- A call played the same reply twice at once — the sentences on the call screen
+  and the finished voice note in the chat behind it, over the top of each other.
+- What you said in a call now stays on screen while she answers, instead of her
+  reply replacing it, so you can see whether she heard you correctly.
+- Your words appear in a call as you speak them.
+- The call screen showed only the last sentence of her reply while the voice
+  played the whole thing. It shows all of it now, and scrolls when she says
+  more than fits.
+- A voice note built from several sentences showed the wrong length — the first
+  sentence's, not the whole note's.
 
 ## [1.1.0] - 2026-09-06
 
