@@ -2,20 +2,23 @@ import { Directory, File, Paths } from "expo-file-system";
 
 export type SaveResult = "saved" | "denied" | "unavailable" | "failed";
 
-type MediaLibraryModule = typeof import("expo-media-library");
+type MediaLibraryModule = typeof import("expo-media-library/legacy");
 
-// expo-media-library links native code. Importing it at module scope throws
-// "Cannot find native module 'ExpoMediaLibraryNext'" on a client built before it
-// was added, and this module is reached from the chat route, so that throw took
-// the whole route down with it. Loading it at the point of use fixes that.
+// Deliberately the /legacy entry, not the package root. The root is the new
+// "Next" API: it imports ExpoMediaLibraryNext at module scope and builds classes
+// out of it, so on any client without that native module — Expo Go, or a dev
+// client built before this dependency was added — the import throws. Because
+// this module is reached from the chat route, that throw took the whole route
+// down with it.
 //
-// The import still resolves on such a client — Expo logs the missing native
-// module and leaves the exports undefined rather than rejecting — so the
-// functions have to be checked before they are called. A try/catch alone gets
-// "undefined is not a function" instead.
+// /legacy is backed by the older ExpoMediaLibrary native module, which Expo Go
+// does ship, and exposes the same two functions. Loading it at the point of use
+// rather than at module scope keeps a client without either one running, and
+// the exports are checked because a missing native module leaves them undefined
+// rather than rejecting the import.
 async function loadMediaLibrary(): Promise<MediaLibraryModule | null> {
   try {
-    const module = await import("expo-media-library");
+    const module = await import("expo-media-library/legacy");
     const usable =
       typeof module?.requestPermissionsAsync === "function" &&
       typeof module?.saveToLibraryAsync === "function";
