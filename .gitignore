@@ -41,3 +41,6 @@ bun.lockb
 
 # Scratch verification scripts
 *.local.ts
+
+# Built APKs, kept per version and commit
+/apks/
