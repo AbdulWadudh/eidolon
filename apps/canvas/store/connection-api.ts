@@ -1,4 +1,4 @@
-import { apiUrl, healthUrl, PAIRING_COPY, stripAuthority, TIMEOUTS_MS } from "@eidolon/config";
+import { apiUrl, healthUrl, PAIRING_COPY, TIMEOUTS_MS } from "@eidolon/config";
 
 /**
  * Confirms the token is actually accepted by this conductor.
@@ -8,13 +8,12 @@ import { apiUrl, healthUrl, PAIRING_COPY, stripAuthority, TIMEOUTS_MS } from "@e
  * the WebSocket upgrade with nothing to explain why.
  */
 export async function verifyPairing(host: string, token: string): Promise<void> {
-  const cleanHost = stripAuthority(host);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUTS_MS.clientRequest);
 
   let response: Response;
   try {
-    response = await fetch(apiUrl(cleanHost, "pairVerify"), {
+    response = await fetch(apiUrl(host, "pairVerify"), {
       method: "GET",
       headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
       signal: controller.signal,
@@ -34,7 +33,6 @@ export async function verifyPairing(host: string, token: string): Promise<void> 
 }
 
 export async function pingHealth(host: string, token?: string): Promise<boolean> {
-  const cleanHost = stripAuthority(host);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUTS_MS.clientRequest);
 
@@ -46,7 +44,7 @@ export async function pingHealth(host: string, token?: string): Promise<boolean>
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetch(healthUrl(cleanHost), {
+    const response = await fetch(healthUrl(host), {
       method: "GET",
       headers,
       signal: controller.signal,
@@ -59,12 +57,9 @@ export async function pingHealth(host: string, token?: string): Promise<boolean>
     }
 
     return true;
-  } catch (err) {
+  } catch {
     clearTimeout(timeoutId);
-    if (err instanceof Error) {
-      throw new Error(`Conductor host '${cleanHost}' unreachable: ${err.message}`);
-    }
-    throw new Error(`Conductor host '${cleanHost}' unreachable.`);
+    throw new Error(PAIRING_COPY.unreachable);
   }
 }
 

@@ -79,7 +79,7 @@ v1.get(API_ROUTES.pairing, (c) => {
   const { port } = getServerConfig();
 
   return c.json({
-    pairing_url: generatePairingPayload(port),
+    pairing_url: generatePairingPayload(),
     secret: PAIRING_SECRET,
     server: `${getLocalIp()}:${port}`,
   });
@@ -102,7 +102,7 @@ v1.get(API_ROUTES.pairVerify, (c) => {
 
 v1.get(API_ROUTES.pairingQr, (c) => {
   const { port } = getServerConfig();
-  const payload = generatePairingPayload(port);
+  const payload = generatePairingPayload();
 
   return c.html(renderPairingPage(payload, `${getLocalIp()}:${port}`, PAIRING_SECRET));
 });

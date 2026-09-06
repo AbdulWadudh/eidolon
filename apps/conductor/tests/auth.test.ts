@@ -23,10 +23,24 @@ describe("Authentication & Pairing", () => {
   });
 
   it("generates correct deep-link pairing payload format", () => {
-    const payload = generatePairingPayload(3000);
+    const payload = generatePairingPayload();
     expect(payload).toStartWith("eidolon://pair?server=");
-    expect(payload).toContain(":3000&token=");
+    expect(payload).toContain("&token=");
     expect(payload).toContain(PAIRING_SECRET);
+  });
+
+  it("advertises PUBLIC_URL over the LAN address when one is set", () => {
+    const previous = process.env.PUBLIC_URL;
+    process.env.PUBLIC_URL = "https://eidolon.example.com";
+
+    try {
+      expect(generatePairingPayload()).toStartWith(
+        "eidolon://pair?server=https://eidolon.example.com&token=",
+      );
+    } finally {
+      if (previous === undefined) delete process.env.PUBLIC_URL;
+      else process.env.PUBLIC_URL = previous;
+    }
   });
 });
 

@@ -48,7 +48,7 @@ app.get(STATIC_ROUTES.logo, async (c) => {
 });
 
 const { port, host } = getServerConfig();
-const pairingPayload = generatePairingPayload(port);
+const pairingPayload = generatePairingPayload();
 
 if (!isTestEnv()) {
   void initStorage();

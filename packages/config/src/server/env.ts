@@ -49,6 +49,17 @@ export function hasPairingSecret(): boolean {
   return getPairingSecret().trim().length > 0;
 }
 
+export function getPublicUrl(): string {
+  return (process.env.PUBLIC_URL ?? "").trim().replace(/\/+$/, "");
+}
+
+export function getPairingHost(): string {
+  const publicUrl = getPublicUrl();
+  if (publicUrl) return publicUrl;
+  const { port } = getServerConfig();
+  return `${getLocalIp()}:${port}`;
+}
+
 export function getAuthBaseUrl(): string {
   const { port } = getServerConfig();
   return process.env.BETTER_AUTH_URL || `http://${getLocalIp()}:${port}`;
@@ -56,7 +67,13 @@ export function getAuthBaseUrl(): string {
 
 export function getTrustedOrigins(): string[] {
   const { port } = getServerConfig();
-  return [`http://localhost:${port}`, `http://127.0.0.1:${port}`, `http://${getLocalIp()}:${port}`];
+  const publicUrl = getPublicUrl();
+  const origins = [
+    `http://localhost:${port}`,
+    `http://127.0.0.1:${port}`,
+    `http://${getLocalIp()}:${port}`,
+  ];
+  return publicUrl ? [...origins, publicUrl] : origins;
 }
 
 export function getCacheUrl(): string {

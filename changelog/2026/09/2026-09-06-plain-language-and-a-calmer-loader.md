@@ -157,3 +157,46 @@ with `behavior="height"` on Android. The manifest already sets
 `adjustResize`, so the window shrinks once from the platform and once more from
 the component, pushing the inputs out of view. It now uses the
 `react-native-keyboard-controller` one, as the chat screen does.
+
+---
+
+## Second follow-up: the QR advertised an address the phone cannot reach
+
+Pairing still failed after the font fix, and the cause was never on the phone.
+
+`GET /api/v1/pairing` on the deployed conductor returns:
+
+```
+{"pairing_url":"eidolon://pair?server=192.168.1.39:3000&token=k79", ...}
+```
+
+`generatePairingPayload` always built the payload from `getLocalIp():port`. That
+is right on a LAN and wrong everywhere else: a conductor reached through a
+domain or tunnel advertises a private address, the phone cannot route to it,
+`fetch` throws, and the screen reads "Could not reach that address" — which was
+accurate, just not about the address the user typed.
+
+- `PUBLIC_URL` (new, `@eidolon/config/server`) is advertised when set;
+  `getPairingHost()` falls back to the LAN address otherwise, so the dev flow is
+  untouched. It is also added to the Better Auth trusted origins.
+- Set on the deployed instance to `https://eidolon-conductor.k79.quest`.
+
+### The scheme was being thrown away
+
+`verifyPairing` and `pingHealth` both called `stripAuthority(host)` *before*
+`apiUrl`/`healthUrl`. Those helpers pick the scheme from the host they are
+given, so removing `https://` first meant they always chose `http`:
+
+```
+stored:   https://3000.k79.quest
+built:    http://3000.k79.quest/api/v1/pair/verify
+socket:   ws://3000.k79.quest/api/v1/ws
+```
+
+The host is passed through intact now — the helpers strip it themselves, after
+deciding. `websocket.ts` was already correct, which is why only the REST calls
+were downgraded. Verified by running the builders over both host shapes: a
+deployed origin yields `https`/`wss`, a LAN address still yields `http`/`ws`.
+
+This mattered less than it looks for pairing (the proxy answers on both) but
+would have broken the chat socket over any HTTPS-only origin.

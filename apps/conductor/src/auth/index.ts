@@ -2,8 +2,8 @@ import { PAIRING } from "@eidolon/config";
 import {
   getAuthBaseUrl,
   getLocalIp,
+  getPairingHost,
   getPairingSecret,
-  getServerConfig,
   getTrustedOrigins,
   hasPairingSecret,
 } from "@eidolon/config/server";
@@ -34,9 +34,8 @@ export const auth = betterAuth({
  * Generates the deep-link pairing payload for mobile client onboarding.
  * Format: eidolon://pair?server=<local-ip>:<port>&token=<PAIRING_SECRET>
  */
-export function generatePairingPayload(port = getServerConfig().port): string {
-  const host = getLocalIp();
-  return `${PAIRING.uriScheme}?server=${host}:${port}&token=${PAIRING_SECRET}`;
+export function generatePairingPayload(): string {
+  return `${PAIRING.uriScheme}?server=${getPairingHost()}&token=${PAIRING_SECRET}`;
 }
 
 /**
