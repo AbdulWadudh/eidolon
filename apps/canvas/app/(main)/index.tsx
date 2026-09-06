@@ -1,16 +1,16 @@
-import { CONNECTION_COPY, HOME_COPY, UI_MS } from "@eidolon/config";
-import { useRouter } from "expo-router";
+import { CHARACTER_COPY, CONNECTION_COPY, HOME_COPY, UI_MS } from "@eidolon/config";
+import { useFocusEffect, useRouter } from "expo-router";
 import * as React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { CharacterRosterCard } from "@/components/characters/CharacterCard";
 import { AppIcon } from "@/components/common/icon";
 import { ThemeStudioSheet } from "@/components/theme/ThemeStudioSheet";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Logout01Icon, PaintBoardIcon, Settings01Icon, SparklesIcon } from "@/lib/icons";
+import { type CharacterSummary, fetchCharacters } from "@/store/character-api";
 import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme } from "@/store/theme-store";
 
@@ -27,6 +27,15 @@ export default function MainCharactersScreen() {
 
   const [showSettings, setShowSettings] = React.useState(false);
   const [showThemeStudio, setShowThemeStudio] = React.useState(false);
+  const [roster, setRoster] = React.useState<CharacterSummary[]>([]);
+
+  // The roster is re-read whenever this screen regains focus, so a portrait
+  // rendered in the background appears without the reader doing anything.
+  useFocusEffect(
+    React.useCallback(() => {
+      void fetchCharacters(serverHost).then(setRoster);
+    }, [serverHost]),
+  );
 
   // The pill used to be hard-coded green, which said "connected" even while the
   // socket was down. It now reflects the actual connection state.
@@ -36,10 +45,6 @@ export default function MainCharactersScreen() {
     error: { color: theme.danger, label: CONNECTION_COPY.disconnected },
     disconnected: { color: theme.textMuted, label: CONNECTION_COPY.disconnected },
   }[connectionState];
-
-  const handleEnterStage = () => {
-    router.push("/chat/emma");
-  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.canvas }} className="flex-1 bg-canvas">
@@ -110,42 +115,35 @@ export default function MainCharactersScreen() {
           </Text>
         </View>
 
-        {/* Emma Character Card */}
-        <Animated.View entering={revealAt(0)}>
-          <Card className="border-border bg-card p-5">
-            <CardHeader className="flex-row items-center gap-4 pb-4">
-              <Avatar size={56} className="border-2 border-primary">
-                <AvatarFallback textClassName="text-lg font-main-bold text-primary">
-                  EM
-                </AvatarFallback>
-              </Avatar>
-              <View className="flex-1">
-                <View className="flex-row items-center justify-between">
-                  <Text className="font-main-bold text-xl text-text-primary">Emma</Text>
-                  <Badge variant="success">Active • Teasing</Badge>
-                </View>
-                <Text className="mt-0.5 font-ui text-xs text-text-muted">{HOME_COPY.ready}</Text>
-              </View>
-            </CardHeader>
-
-            <CardContent className="pb-3">
+        {roster.length === 0 ? (
+          <Animated.View entering={revealAt(0)}>
+            <Card className="border-border bg-card p-5">
               <Text className="font-main text-sm text-text-muted leading-5">
-                Quick-witted and a little bit trouble. Talks back, sends photos, and remembers how
-                things went between you.
+                {CHARACTER_COPY.emptyRoster}
               </Text>
-            </CardContent>
+            </Card>
+          </Animated.View>
+        ) : (
+          roster.map((character, index) => (
+            <Animated.View entering={revealAt(index)} key={character.id}>
+              <CharacterRosterCard
+                character={character}
+                onOpen={() => router.push(`/chat/${character.id}`)}
+                onEdit={() => router.push(`/chat/${character.id}`)}
+              />
+            </Animated.View>
+          ))
+        )}
 
-            <CardFooter className="pt-2">
-              <Button
-                variant="default"
-                size="default"
-                className="w-full"
-                onPress={handleEnterStage}
-              >
-                {HOME_COPY.sayHello}
-              </Button>
-            </CardFooter>
-          </Card>
+        <Animated.View entering={revealAt(roster.length)}>
+          <Button
+            variant="secondary"
+            size="default"
+            className="w-full"
+            onPress={() => router.push("/characters/new")}
+          >
+            {CHARACTER_COPY.newCharacter}
+          </Button>
         </Animated.View>
 
         {/* Dynamic Theming Studio Card */}

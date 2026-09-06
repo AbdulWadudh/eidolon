@@ -36,6 +36,7 @@ export { default as PauseIcon } from "@hugeicons/core-free-icons/PauseIcon";
 export { default as PlayIcon } from "@hugeicons/core-free-icons/PlayIcon";
 export { default as QrCodeIcon } from "@hugeicons/core-free-icons/QrCodeIcon";
 export { default as RefreshIcon } from "@hugeicons/core-free-icons/RefreshIcon";
+export { default as Search01Icon } from "@hugeicons/core-free-icons/Search01Icon";
 export { default as SentIcon } from "@hugeicons/core-free-icons/SentIcon";
 export { default as Settings01Icon } from "@hugeicons/core-free-icons/Settings01Icon";
 export { default as SmileIcon } from "@hugeicons/core-free-icons/SmileIcon";
@@ -44,3 +45,4 @@ export { default as SquareLock01Icon } from "@hugeicons/core-free-icons/SquareLo
 export { default as SquareUnlock01Icon } from "@hugeicons/core-free-icons/SquareUnlock01Icon";
 export { default as Sun02Icon } from "@hugeicons/core-free-icons/Sun02Icon";
 export { default as Undo02Icon } from "@hugeicons/core-free-icons/Undo02Icon";
+export { default as VolumeHighIcon } from "@hugeicons/core-free-icons/VolumeHighIcon";

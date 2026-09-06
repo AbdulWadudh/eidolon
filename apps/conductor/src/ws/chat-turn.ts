@@ -1,6 +1,7 @@
 import { STATUS_COPY, SUGGESTIONS, TTS } from "@eidolon/config";
 import { type ChatTurnEvent, splitInfluence } from "@eidolon/protocol";
 import { appendMessage, getCharacterCard, getRecentMessages } from "@/db";
+import { getCharacter } from "@/db/characters";
 import { maybeSummarizeChronicle } from "@/orchestrator/chronicle";
 import { rememberExchange } from "@/orchestrator/memory-manager";
 import { scheduleProactiveFollowUp } from "@/orchestrator/proactive";
@@ -8,6 +9,7 @@ import { assemblePrompt } from "@/orchestrator/prompt-builder";
 import { settleMind } from "@/orchestrator/turn-mind";
 import type { ChatMessage } from "@/services/llm";
 import { forHistory } from "@/services/photo-line";
+import { exampleLines } from "@/services/self-reference";
 import { fallbackSuggestions, formatScene, generateReplySuggestions } from "@/services/suggestions";
 import { synthesizeSpeech } from "@/services/tts";
 import { storeVoiceNote } from "@/services/voice-notes";
@@ -53,7 +55,11 @@ export async function handleChatTurn(
     ws,
     assembled.messages,
     signal,
-    history.map((entry) => entry.content),
+    [
+      ...history.map((entry) => entry.content),
+      ...exampleLines(getCharacter(characterId)?.exampleDialogue ?? "", assembled.characterName),
+    ],
+    assembled.characterName,
   );
 
   if (signal.aborted) return;
@@ -88,7 +94,7 @@ export async function handleChatTurn(
   // Reply options cost three model calls, and most turns are answered by typing.
   // They are generated when the reader asks for them, not on every turn.
   const [audio, suggestions] = await Promise.all([
-    synthesizeSpeech(reply, TTS.voice, signal),
+    synthesizeSpeech(reply, getCharacter(characterId)?.voice ?? TTS.voice, signal),
     SUGGESTIONS.autoGenerate
       ? generateReplySuggestions(
           turn,

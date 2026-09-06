@@ -34,8 +34,11 @@ export {
   socketScheme,
   socketUrl,
   stripAuthority,
+  voicePreviewUrl,
+  voicesUrl,
 } from "./api";
 export {
+  CHARACTER_COPY,
   CONNECTION_COPY,
   type ConnectionKey,
   ENHANCE_COPY,
@@ -94,6 +97,13 @@ export {
   WORKING_CONTEXT,
 } from "./memory";
 export {
+  CHARACTER_PRESETS,
+  type CharacterPreset,
+  PRESET_COPY,
+  type PresetLore,
+  presetByKey,
+} from "./presets";
+export {
   defaultPrompt,
   PROMPT_DEFAULTS,
   PROMPT_KEYS,
@@ -115,3 +125,13 @@ export {
   type QueueKey,
   STAGE,
 } from "./queue";
+export {
+  isPreferredGrade,
+  type ParsedVoiceId,
+  parseVoiceId,
+  VOICE,
+  VOICE_COPY,
+  VOICE_GENDERS,
+  VOICE_LANGUAGES,
+  voiceLabel,
+} from "./voice";

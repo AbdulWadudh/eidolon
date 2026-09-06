@@ -4,6 +4,7 @@ import { COLORS } from "@eidolon/tokens";
 import { Hono } from "hono";
 import { mountCharacters } from "@/api/characters";
 import { applyAffinityOverride, buildMindView } from "@/api/mind";
+import { mountVoices } from "@/api/voices";
 import { generatePairingPayload, PAIRING_SECRET, validateToken } from "@/auth";
 import {
   checkDatabaseHealth,
@@ -209,3 +210,4 @@ v1.delete(`${API_ROUTES.characters}/:id/memory`, (c) => {
 });
 
 mountCharacters(v1);
+mountVoices(v1);

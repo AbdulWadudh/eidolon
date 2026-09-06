@@ -11,6 +11,7 @@ export const API_ROUTES = {
   ws: "/ws",
   prompts: "/prompts",
   characters: "/characters",
+  voices: "/voices",
 } as const;
 
 export type ApiRoute = keyof typeof API_ROUTES;
@@ -107,6 +108,14 @@ export function characterMessagesUrl(
   scheme = httpScheme(host),
 ): string {
   return `${scheme}://${stripAuthority(host)}${characterMessagesPath(characterId)}`;
+}
+
+export function voicesUrl(host: string, scheme = httpScheme(host)): string {
+  return `${scheme}://${stripAuthority(host)}${apiPath("voices")}`;
+}
+
+export function voicePreviewUrl(host: string, voiceId: string, scheme = httpScheme(host)): string {
+  return `${scheme}://${stripAuthority(host)}${apiPath("voices")}/${encodeURIComponent(voiceId)}/preview`;
 }
 
 export function characterPath(characterId: string): string {

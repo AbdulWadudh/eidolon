@@ -1,4 +1,4 @@
-import { API_ROUTES, QUEUE_JOBS } from "@eidolon/config";
+import { API_ROUTES, CHARACTER_PRESETS, presetByKey, QUEUE_JOBS } from "@eidolon/config";
 import { Hono } from "hono";
 import {
   type CharacterCard,
@@ -25,6 +25,7 @@ const TEXT_FIELDS: Array<keyof Draft> = [
   "rules",
   "exampleDialogue",
   "greeting",
+  "voice",
 ];
 
 export function readDraft(body: Record<string, unknown>): Draft {
@@ -39,6 +40,50 @@ export function readDraft(body: Record<string, unknown>): Draft {
 }
 
 characters.get("/", (c) => c.json({ characters: listCharacters() }));
+
+characters.get("/presets", (c) => c.json({ presets: CHARACTER_PRESETS }));
+
+characters.post("/presets/:key", async (c) => {
+  const preset = presetByKey(c.req.param("key"));
+  if (!preset) return c.json({ error: "No such preset." }, 404);
+
+  const body = (await c.req.json().catch(() => ({}))) as { name?: unknown };
+  const name =
+    typeof body.name === "string" && body.name.trim().length > 0 ? body.name : preset.name;
+
+  const created = createCharacter({
+    name,
+    tagline: preset.tagline,
+    personality: preset.personality,
+    systemPrompt: preset.systemPrompt,
+    scenario: preset.scenario,
+    rules: preset.rules,
+    exampleDialogue: preset.exampleDialogue,
+    greeting: preset.greeting,
+    voice: preset.voice,
+  });
+
+  for (const entry of preset.lore) {
+    upsertLoreEntry(created.id, {
+      keys: entry.keys,
+      content: entry.content,
+      requiredAffinity: entry.requiredAffinity,
+    });
+  }
+
+  // The portrait is minutes of GPU time, so it is queued rather than awaited.
+  // The character is usable the moment this returns; her face arrives later.
+  const portraitJob = await enqueueGpuJob(
+    QUEUE_JOBS.generatePortrait,
+    { characterId: created.id, prompt: preset.portraitPrompt },
+    { jobId: jobKey("portrait", created.id, Date.now()) },
+  );
+
+  return c.json(
+    { character: created, lore: getLoreEntries(created.id), portraitJob: portraitJob ?? null },
+    201,
+  );
+});
 
 characters.post("/", async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;

@@ -1,9 +1,11 @@
 import { CHAT_TURN, MIND_UPDATE, PERSONA_GUARD } from "@eidolon/config";
 import { sample } from "es-toolkit";
+import { stripMindBlock } from "@/orchestrator/mind-block";
 import { type ChatMessage, streamChatCompletion } from "@/services/llm";
 import { freshLineReminder, hardenedReminder, mustSpeakReminder } from "@/services/persona";
 import { createPersonaFilter, deflection, leaksInstruction } from "@/services/persona-guard";
 import { hasSaidEnough, repeatsHistory, spokenWords } from "@/services/reply-length";
+import { narratesInThirdPerson, stripSpeakerLabel } from "@/services/self-reference";
 import { createActionGate, isActionChunk } from "@/services/stage-directions";
 import { createMindTail } from "@/ws/mind-tail";
 import { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
@@ -129,7 +131,10 @@ async function sayItOutLoud(
     return sample(PERSONA_GUARD.spokenFallbacks);
   }
 
-  const said = spokenWords(raw);
+  // This continuation does not run through the mind tail, so a state block the
+  // model appends here would reach the reader as prose. It is cut off the end
+  // before anything else looks at the text.
+  const said = spokenWords(stripMindBlock(raw));
   // This path hands the model a reminder and asks it to try again, which is
   // exactly when it is most likely to recite the reminder instead.
   if (said.length === 0 || leaksInstruction(said)) {
@@ -148,6 +153,7 @@ export async function streamReply(
   messages: ChatMessage[],
   signal: AbortSignal,
   said: string[] = [],
+  characterName = "",
 ): Promise<ReplyOutcome> {
   let result = await streamOnce(ws, messages, signal);
 
@@ -193,6 +199,23 @@ export async function streamReply(
     const spacer = result.reply.trim().length > 0 ? " " : "";
     emit(ws, `${spacer}${line}`, false);
     return { reply: `${result.reply}${spacer}${line}`.trim(), mindBlock: result.mindBlock };
+  }
+
+  // Example dialogue is a transcript, and the model copies its speaker label or
+  // slips into writing about itself in the third person. Both are already on the
+  // wire by now, so the corrected line replaces what was streamed.
+  if (characterName.length > 0 && !signal.aborted) {
+    if (narratesInThirdPerson(result.reply, characterName)) {
+      const spoken = await sayItOutLoud(messages, "", signal);
+      sendServerMessage(ws, { type: "text_replace", payload: { text: spoken } });
+      return { reply: spoken, mindBlock: result.mindBlock };
+    }
+
+    const unlabelled = stripSpeakerLabel(result.reply, characterName);
+    if (unlabelled !== result.reply) {
+      sendServerMessage(ws, { type: "text_replace", payload: { text: unlabelled } });
+      result = { ...result, reply: unlabelled };
+    }
   }
 
   // A reminder is a system turn, and the model sometimes answers by repeating it

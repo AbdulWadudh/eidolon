@@ -80,6 +80,7 @@ export function applySchema(db: Database): void {
   addColumnIfMissing(db, "characters", "scenario", "TEXT");
   addColumnIfMissing(db, "characters", "example_dialogue", "TEXT");
   addColumnIfMissing(db, "characters", "rules", "TEXT");
+  addColumnIfMissing(db, "characters", "voice", "TEXT");
   addColumnIfMissing(db, "messages", "audio_duration", "REAL");
   addColumnIfMissing(db, "messages", "image_url", "TEXT");
   addColumnIfMissing(db, "messages", "image_caption", "TEXT");

@@ -1,3 +1,4 @@
+import { VOICE } from "@eidolon/config";
 import { kebabCase } from "es-toolkit";
 import { db } from "@/db";
 
@@ -11,6 +12,7 @@ export interface CharacterCard {
   rules: string;
   exampleDialogue: string;
   greeting: string;
+  voice: string;
 }
 
 export interface CharacterSummary extends CharacterCard {
@@ -32,6 +34,7 @@ interface CharacterRow {
   rules: string | null;
   example_dialogue: string | null;
   greeting: string | null;
+  voice: string | null;
   avatar_url: string | null;
   affinity_score: number | null;
   affinity_tier: string | null;
@@ -40,7 +43,8 @@ interface CharacterRow {
 }
 
 const COLUMNS = `id, name, tagline, personality, system_prompt, scenario, rules,
-  example_dialogue, greeting, avatar_url, affinity_score, affinity_tier, current_mood, created_at`;
+  example_dialogue, greeting, voice, avatar_url, affinity_score, affinity_tier, current_mood,
+  created_at`;
 
 function toCard(row: CharacterRow): CharacterCard {
   return {
@@ -53,6 +57,7 @@ function toCard(row: CharacterRow): CharacterCard {
     rules: row.rules ?? "",
     exampleDialogue: row.example_dialogue ?? "",
     greeting: row.greeting ?? "",
+    voice: row.voice ?? VOICE.defaultId,
   };
 }
 
@@ -111,8 +116,8 @@ export function createCharacter(draft: CharacterDraft): CharacterCard {
   db.query(
     `INSERT INTO characters
        (id, name, tagline, personality, system_prompt, scenario, rules,
-        example_dialogue, greeting, created_at)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`,
+        example_dialogue, greeting, voice, created_at)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)`,
   ).run(
     id,
     draft.name.trim(),
@@ -123,6 +128,7 @@ export function createCharacter(draft: CharacterDraft): CharacterCard {
     draft.rules ?? "",
     draft.exampleDialogue ?? "",
     draft.greeting ?? "",
+    draft.voice ?? VOICE.defaultId,
     Date.now(),
   );
 
@@ -140,6 +146,7 @@ const EDITABLE: Record<keyof Omit<CharacterCard, "id">, string> = {
   rules: "rules",
   exampleDialogue: "example_dialogue",
   greeting: "greeting",
+  voice: "voice",
 };
 
 export function updateCharacter(
