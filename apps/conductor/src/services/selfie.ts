@@ -4,7 +4,7 @@ import { getCharacterAvatar, getCharacterLook, setCharacterAvatar } from "@/db/l
 
 import { getPrompt } from "@/prompts/store";
 import type { Orientation } from "@/services/comfy-workflow";
-import { generateImage, uploadFaceReference } from "@/services/comfyui";
+import { generateImage, uploadReferenceImage } from "@/services/comfyui";
 import { captionLine } from "@/services/photo-caption";
 import { composeAppearance, describeAppearance, forgetLook, oneLine } from "@/services/photo-look";
 import { ask } from "@/services/prompt-writer";
@@ -17,6 +17,7 @@ export interface SelfieRequest {
   scene: string;
   request: string;
   orientation?: Orientation;
+  referenceUrl?: string | null;
 }
 
 export interface Selfie {
@@ -101,9 +102,26 @@ async function ensureFaceReference(request: SelfieRequest, appearance: string): 
     setCharacterAvatar(request.characterId, url);
   }
 
-  const name = await uploadFaceReference(bytes, `${request.characterId}-face.png`);
+  const name = await uploadReferenceImage(bytes, `${request.characterId}-face.png`);
   faceNames.set(request.characterId, name);
   return name;
+}
+
+// Regenerating from a photo means handing that photo to ComfyUI as the starting
+// point. It is fetched from storage rather than trusted from the client, and a
+// failure falls back to a fresh photo instead of failing the request.
+async function stageSourceImage(request: SelfieRequest): Promise<string | null> {
+  if (!request.referenceUrl) return null;
+
+  const bytes = await readStoredFace(request.referenceUrl);
+  if (!bytes) return null;
+
+  try {
+    return await uploadReferenceImage(bytes, `${request.characterId}-source.png`);
+  } catch (error) {
+    console.warn("[selfie] could not stage the source photo:", error);
+    return null;
+  }
 }
 
 async function composeShot(request: SelfieRequest, signal?: AbortSignal): Promise<Shot | null> {
@@ -154,24 +172,36 @@ export async function paintSelfie(
     shot?.orientation ??
     inferOrientation(`${request.request} ${shot?.setting ?? ""}`);
 
-  const parts = shot
+  const sourceImageName = await stageSourceImage(request);
+
+  // An edit keeps the place, the pose and the light from the photo itself, so
+  // re-describing them only fights the source. What is asked for leads instead.
+  const parts = sourceImageName
     ? [
         appearance,
-        shot.outfit,
-        shot.others,
-        shot.action,
-        shot.setting,
-        shot.light,
-        shot.framing,
+        request.request,
+        shot?.look_change ?? "",
+        shot?.outfit ?? "",
         IMAGE.qualitySuffix,
       ]
-    : [
-        appearance,
-        request.request,
-        sample(IMAGE.framings),
-        sample(IMAGE.flourishes),
-        IMAGE.qualitySuffix,
-      ];
+    : shot
+      ? [
+          appearance,
+          shot.outfit,
+          shot.others,
+          shot.action,
+          shot.setting,
+          shot.light,
+          shot.framing,
+          IMAGE.qualitySuffix,
+        ]
+      : [
+          appearance,
+          request.request,
+          sample(IMAGE.framings),
+          sample(IMAGE.flourishes),
+          IMAGE.qualitySuffix,
+        ];
 
   const promptUsed = parts
     .map(oneLine)
@@ -185,6 +215,7 @@ export async function paintSelfie(
   const [image, message] = await Promise.all([
     generateImage(promptUsed, faceName, {
       orientation,
+      sourceImageName,
       onProgress: hooks.onProgress,
       onPreview: hooks.onPreview,
       signal,

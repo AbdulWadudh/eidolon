@@ -51,6 +51,9 @@ export const PHOTO = {
   doubleTapZoom: 2.2,
   avatarFrameFraction: 0.72,
   cropDimOpacity: 0.3,
+  backdropFadePercent: 34,
+  backdropFadeOpacity: 0.96,
+  backdropFadeMidOpacity: 0.55,
 } as const;
 
 export const CHAT_MS = {

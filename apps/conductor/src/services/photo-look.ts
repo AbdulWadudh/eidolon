@@ -76,16 +76,25 @@ export function usableLookChange(lookChange: string): string {
   return "";
 }
 
+function withNoun(value: string, noun: string): string {
+  const text = oneLine(value);
+  if (text.length === 0) return "";
+  return new RegExp(`\\b${noun}\\b`, "i").test(text) ? text : `${text} ${noun}`;
+}
+
 export function composeAppearance(look: Look, rawLookChange: string): string {
   const lookChange = usableLookChange(rawLookChange);
   const changesHair = replacesHair(lookChange);
+  // Each detail is labelled with what it describes. Bare fragments read as loose
+  // colour to an image model — a stored "bright green" meant for her eyes came
+  // back as green trousers.
   return [
     look.age,
-    look.face,
-    look.eyes,
-    changesHair ? lookChange : look.hair,
-    look.skin,
-    look.build,
+    withNoun(look.face, "face"),
+    withNoun(look.eyes, "eyes"),
+    withNoun(changesHair ? lookChange : look.hair, "hair"),
+    withNoun(look.skin, "skin"),
+    withNoun(look.build, "build"),
     changesHair ? "" : lookChange,
   ]
     .map(oneLine)

@@ -102,7 +102,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     });
   },
 
-  requestImage: (characterId, prompt, orientation) => {
+  requestImage: (characterId, prompt, orientation, referenceUrl) => {
     set({
       activeCharacterId: characterId,
       isPainting: true,
@@ -118,6 +118,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       character_id: characterId,
       prompt_override: prompt?.trim() || undefined,
       orientation,
+      reference_url: referenceUrl ?? undefined,
     });
   },
 

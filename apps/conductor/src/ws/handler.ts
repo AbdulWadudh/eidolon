@@ -103,6 +103,7 @@ export async function handleClientMessage(
         clientMsg.character_id,
         clientMsg.prompt_override,
         clientMsg.orientation,
+        clientMsg.reference_url,
         sessionManager.getAbortSignal(ws),
       );
       break;

@@ -15,6 +15,7 @@ export interface PhotoRequestSheetProps {
   characterName: string;
   ideas: string[];
   areIdeasLoading: boolean;
+  editing?: string | null;
   onRequestIdeas: () => void;
   onClose: () => void;
   onSubmit: (situation: string, orientation: PhotoOrientation) => void;
@@ -31,6 +32,7 @@ export function PhotoRequestSheet({
   characterName,
   ideas,
   areIdeasLoading,
+  editing,
   onRequestIdeas,
   onClose,
   onSubmit,
@@ -81,13 +83,20 @@ export function PhotoRequestSheet({
             <View className="mb-4 flex-row items-center gap-2">
               <AppIcon icon={Image01Icon} size={18} color={theme.primary} strokeWidth={2} />
               <Text className="font-ui-bold text-sm text-text-primary">
-                {orientation ? "What of?" : `Ask ${characterName} for a photo`}
+                {orientation
+                  ? editing
+                    ? "What should change?"
+                    : "What of?"
+                  : editing
+                    ? "Change this photo"
+                    : `Ask ${characterName} for a photo`}
               </Text>
             </View>
 
             {orientation ? (
               <Situation
                 characterId={characterId}
+                editing={editing}
                 value={situation}
                 ideas={ideas}
                 areIdeasLoading={areIdeasLoading}
@@ -129,6 +138,7 @@ export function PhotoRequestSheet({
 
 function Situation({
   characterId,
+  editing,
   value,
   ideas,
   areIdeasLoading,
@@ -137,6 +147,7 @@ function Situation({
   onSend,
 }: {
   characterId: string;
+  editing?: string | null;
   value: string;
   ideas: string[];
   areIdeasLoading: boolean;
@@ -180,7 +191,7 @@ function Situation({
           multiline
           value={value}
           onChangeText={onChange}
-          placeholder="Describe it, or leave it to her"
+          placeholder={editing ? "What is different this time" : "Describe it, or leave it to her"}
           placeholderTextColor={theme.textMuted}
           cursorColor={theme.primary}
           selectionColor={theme.primary}

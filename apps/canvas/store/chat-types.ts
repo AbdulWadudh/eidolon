@@ -33,7 +33,12 @@ export interface ChatStore {
   setSuggestionsHidden: (hidden: boolean) => void;
   setInputText: (text: string) => void;
   sendUserMessage: (text: string, characterId: string) => void;
-  requestImage: (characterId: string, prompt?: string, orientation?: PhotoOrientation) => void;
+  requestImage: (
+    characterId: string,
+    prompt?: string,
+    orientation?: PhotoOrientation,
+    referenceUrl?: string | null,
+  ) => void;
   requestPhotoIdeas: (characterId: string) => void;
   isPainting: boolean;
   paintingStep: number;

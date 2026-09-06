@@ -38,6 +38,7 @@ export async function handleImageRequest(
   characterId: string,
   promptOverride: string | undefined,
   orientation: "portrait" | "landscape" | "square" | undefined,
+  referenceUrl: string | undefined,
   signal: AbortSignal,
 ): Promise<void> {
   const card = getCharacterCard(characterId);
@@ -52,6 +53,7 @@ export async function handleImageRequest(
         scene: formatScene(getRecentMessages(characterId), card.name),
         request: promptOverride?.trim() || DEFAULT_REQUEST,
         orientation,
+        referenceUrl,
       },
       {
         onProgress: (progress) => {

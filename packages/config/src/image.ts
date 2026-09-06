@@ -44,6 +44,7 @@ export const IMAGE = {
   ideaCount: 4,
   ideaMaxChars: 60,
   ideaTemperature: 0.95,
+  editDenoise: 0.62,
   steps: 6,
   cfg: 2,
   sampler: "dpmpp_sde",

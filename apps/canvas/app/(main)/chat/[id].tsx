@@ -1,11 +1,11 @@
 import { capitalize, isString } from "es-toolkit";
-import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as React from "react";
 import { type TextInput, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ActionsSheet, type ChatAction } from "@/components/chat/ActionsSheet";
+import { ChatBackdrop } from "@/components/chat/ChatBackdrop";
 import { ChatFeed } from "@/components/chat/ChatFeed";
 import { ChatTopBar } from "@/components/chat/ChatTopBar";
 import { InputDock } from "@/components/chat/InputDock";
@@ -160,17 +160,7 @@ export default function ChatScreen() {
           not behind the bar itself, which carries the name, mood and affinity
           and has to stay readable whatever picture was chosen. */}
       <View className="flex-1">
-        {chat.characterLook.backgroundUrl ? (
-          <Image
-            source={{ uri: chat.characterLook.backgroundUrl }}
-            contentFit="cover"
-            cachePolicy="disk"
-            pointerEvents="none"
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants"
-            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-          />
-        ) : null}
+        <ChatBackdrop uri={chat.characterLook.backgroundUrl} characterId={characterId} />
 
         <KeyboardAvoidingView behavior="padding" automaticOffset style={{ flex: 1 }}>
           <VoiceNotesProvider autoPlay={autoPlay} onAutoPlayed={chat.clearAutoPlay}>
@@ -228,6 +218,7 @@ export default function ChatScreen() {
         ideas={chat.photoIdeas}
         areIdeasLoading={chat.areIdeasLoading}
         onRequestIdeas={() => chat.requestPhotoIdeas(characterId)}
+        editing={photos.editing}
         onClose={photos.closeSheet}
         onSubmit={photos.submit}
       />

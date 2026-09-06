@@ -85,4 +85,39 @@ describe("asking for a photo", () => {
     expect(useChatStore.getState().photoIdeas).toEqual(["the view", "my dog"]);
     expect(useChatStore.getState().areIdeasLoading).toBe(false);
   });
+
+  it("carries the photo being edited so it is a change, not a new picture", () => {
+    useChatStore
+      .getState()
+      .requestImage("emma", "make the jacket red", "portrait", "https://media.example/p.png");
+
+    expect(sent.at(-1)).toMatchObject({
+      prompt_override: "make the jacket red",
+      reference_url: "https://media.example/p.png",
+    });
+  });
+
+  it("sends no reference for an ordinary request", () => {
+    useChatStore.getState().requestImage("emma", "at the beach", "landscape");
+    expect(sent.at(-1)).toMatchObject({ reference_url: undefined });
+  });
+
+  it("does not leave the card painting when the socket drops", () => {
+    useChatStore.getState().requestImage("emma", "", "portrait");
+    expect(useChatStore.getState().isPainting).toBe(true);
+
+    // What the hook does on any status that is not "connected".
+    useChatStore.setState({
+      isPainting: false,
+      paintingStep: 0,
+      paintingTotal: 0,
+      paintingPreview: null,
+      isStreaming: false,
+      activeStatus: "idle",
+      lastError: "Lost the connection before that finished.",
+    });
+
+    expect(useChatStore.getState().isPainting).toBe(false);
+    expect(useChatStore.getState().activeStatus).toBe("idle");
+  });
 });

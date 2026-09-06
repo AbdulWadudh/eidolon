@@ -26,6 +26,7 @@ export interface PhotoFlow {
   closeViewer: () => void;
   act: (action: PhotoAction) => void;
   crop: (rect: AvatarCropRect) => void;
+  editing: string | null;
   avatarUri: string | null;
   viewAvatar: (uri: string | null) => void;
   closeAvatar: () => void;
@@ -36,8 +37,12 @@ export function usePhotoFlow(characterId: string, serverHost: string): PhotoFlow
   const [isSheetOpen, setSheetOpen] = React.useState(false);
   const [viewing, setViewing] = React.useState<ChatMessage | null>(null);
   const [avatarUri, setAvatarUri] = React.useState<string | null>(null);
+  const [editing, setEditing] = React.useState<string | null>(null);
 
-  const openSheet = React.useCallback(() => setSheetOpen(true), []);
+  const openSheet = React.useCallback(() => {
+    setEditing(null);
+    setSheetOpen(true);
+  }, []);
   const closeSheet = React.useCallback(() => setSheetOpen(false), []);
   const closeViewer = React.useCallback(() => setViewing(null), []);
   const viewAvatar = React.useCallback((uri: string | null) => setAvatarUri(uri), []);
@@ -46,9 +51,9 @@ export function usePhotoFlow(characterId: string, serverHost: string): PhotoFlow
 
   const submit = React.useCallback(
     (situation: string, orientation: PhotoOrientation) => {
-      requestImage(characterId, situation, orientation);
+      requestImage(characterId, situation, orientation, editing);
     },
-    [requestImage, characterId],
+    [requestImage, characterId, editing],
   );
 
   // The profile picture is viewed without a message behind it, so actions read
@@ -88,6 +93,9 @@ export function usePhotoFlow(characterId: string, serverHost: string): PhotoFlow
         return;
       }
 
+      // Regenerate keeps the photo you were looking at, so what comes back is a
+      // change to it rather than an unrelated picture of the same person.
+      setEditing(activeUri);
       dismiss();
       setSheetOpen(true);
     },
@@ -113,6 +121,7 @@ export function usePhotoFlow(characterId: string, serverHost: string): PhotoFlow
     closeViewer,
     act,
     crop,
+    editing,
     avatarUri,
     viewAvatar,
     closeAvatar,

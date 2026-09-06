@@ -51,7 +51,7 @@ export async function checkComfyHealth(): Promise<boolean> {
   }
 }
 
-export async function uploadFaceReference(bytes: Uint8Array, name: string): Promise<string> {
+export async function uploadReferenceImage(bytes: Uint8Array, name: string): Promise<string> {
   const form = new FormData();
   form.append("image", new Blob([bytes as BlobPart], { type: "image/png" }), name);
   form.append("overwrite", "true");
@@ -108,6 +108,7 @@ async function fetchImage(image: { filename: string; subfolder: string; type: st
 
 export interface GenerateOptions {
   orientation?: Orientation;
+  sourceImageName?: string | null;
   onProgress?: (progress: PromptProgress) => void;
   onPreview?: (dataUri: string) => void;
   signal?: AbortSignal;
@@ -131,6 +132,7 @@ export async function generateImage(
       seed,
       faceImageName,
       orientation: options.orientation ?? "portrait",
+      sourceImageName: options.sourceImageName,
     }),
   );
 

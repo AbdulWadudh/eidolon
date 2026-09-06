@@ -18,6 +18,7 @@ export const RequestImageSchema = z.object({
   character_id: z.string().min(1, "character_id cannot be empty"),
   prompt_override: z.string().optional(),
   orientation: z.enum(["portrait", "landscape", "square"]).optional(),
+  reference_url: z.string().optional(),
 });
 
 export const RequestPhotoIdeasSchema = z.object({

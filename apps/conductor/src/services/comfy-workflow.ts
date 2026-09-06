@@ -7,6 +7,7 @@ export interface WorkflowRequest {
   seed: number;
   faceImageName: string | null;
   orientation: Orientation;
+  sourceImageName?: string | null;
 }
 
 export function dimensionsFor(orientation: Orientation): { width: number; height: number } {
@@ -34,6 +35,8 @@ const INSIGHT_FACE = "9";
 const EVA_CLIP = "10";
 const FACE_IMAGE = "11";
 const APPLY_PULID = "12";
+const SOURCE_IMAGE = "13";
+const SOURCE_LATENT = "14";
 
 export function buildImageWorkflow(request: WorkflowRequest): Graph {
   const size = dimensionsFor(request.orientation);
@@ -81,6 +84,22 @@ export function buildImageWorkflow(request: WorkflowRequest): Graph {
       class_type: "SaveImage",
     },
   };
+
+  // Starting from the photo rather than from noise: encode it and leave part of
+  // it intact. A denoise of 1 would discard it entirely, which is what asking
+  // for a fresh photo already does.
+  if (request.sourceImageName) {
+    graph[SOURCE_IMAGE] = {
+      inputs: { image: request.sourceImageName },
+      class_type: "LoadImage",
+    };
+    graph[SOURCE_LATENT] = {
+      inputs: { pixels: [SOURCE_IMAGE, 0], vae: [CHECKPOINT, 2] },
+      class_type: "VAEEncode",
+    };
+    graph[SAMPLER].inputs.latent_image = [SOURCE_LATENT, 0];
+    graph[SAMPLER].inputs.denoise = IMAGE.editDenoise;
+  }
 
   if (!request.faceImageName) return graph;
 
