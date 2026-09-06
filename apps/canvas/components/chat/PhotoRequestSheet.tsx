@@ -49,12 +49,15 @@ export function PhotoRequestSheet({
     }
   }, [isOpen]);
 
+  // Asked for every time the sheet opens, not once a session. Ideas are drawn
+  // from where the conversation has got to, and holding the first set means
+  // seeing the same four chips an hour later.
   const chooseOrientation = React.useCallback(
     (value: PhotoOrientation) => {
       setOrientation(value);
-      if (ideas.length === 0 && !areIdeasLoading) onRequestIdeas();
+      if (!areIdeasLoading) onRequestIdeas();
     },
-    [ideas.length, areIdeasLoading, onRequestIdeas],
+    [areIdeasLoading, onRequestIdeas],
   );
 
   const send = React.useCallback(() => {

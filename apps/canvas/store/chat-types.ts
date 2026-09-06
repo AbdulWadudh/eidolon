@@ -22,6 +22,8 @@ export interface ChatStore {
   isTrayOpen: boolean;
   areSuggestionsHidden: boolean;
   inputText: string;
+  enhanceHistory: string[];
+  isEnhancing: boolean;
   mind: MindState | null;
   pendingAudio: AudioAttachment | null;
   isSynthesizingAudio: boolean;
@@ -49,6 +51,8 @@ export interface ChatStore {
   handleServerMessage: (msg: ServerMessage) => void;
   rerollSuggestions: (characterId: string) => void;
   selectSuggestion: (suggestion: string) => void;
+  enhanceInput: (characterId: string) => void;
+  revertEnhance: () => void;
   interrupt: (characterId: string) => void;
   resetChat: () => void;
   clearAutoPlay: () => void;

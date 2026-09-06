@@ -2,6 +2,7 @@ import { API_ROUTES, API_VERSION, TRANSCRIPT } from "@eidolon/config";
 import { getPairingHost, SQLITE_DB_PATH } from "@eidolon/config/server";
 import { COLORS } from "@eidolon/tokens";
 import { Hono } from "hono";
+import { applyAffinityOverride, buildMindView } from "@/api/mind";
 import { generatePairingPayload, PAIRING_SECRET, validateToken } from "@/auth";
 import {
   checkDatabaseHealth,
@@ -178,6 +179,24 @@ v1.patch(`${API_ROUTES.characters}/:id/look`, async (c) => {
   }
 
   return c.json({ character: { id: characterId, ...getCharacterLook(characterId) } });
+});
+
+v1.get(`${API_ROUTES.characters}/:id/mind`, (c) => c.json(buildMindView(c.req.param("id"))));
+
+v1.patch(`${API_ROUTES.characters}/:id/affinity`, async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as {
+    score?: unknown;
+    locked?: unknown;
+  };
+
+  const score = typeof body.score === "number" ? body.score : undefined;
+  const locked = typeof body.locked === "boolean" ? body.locked : undefined;
+
+  if (score === undefined && locked === undefined) {
+    return c.json({ error: "Body must carry a numeric score, a boolean locked, or both." }, 400);
+  }
+
+  return c.json(applyAffinityOverride(c.req.param("id"), { score, locked }));
 });
 
 v1.delete(`${API_ROUTES.characters}/:id/memory`, (c) => {

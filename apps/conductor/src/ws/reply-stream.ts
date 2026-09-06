@@ -1,9 +1,11 @@
-import { CHAT_TURN, PERSONA_GUARD } from "@eidolon/config";
+import { CHAT_TURN, MIND_UPDATE, PERSONA_GUARD } from "@eidolon/config";
 import { sample } from "es-toolkit";
 import { type ChatMessage, streamChatCompletion } from "@/services/llm";
 import { freshLineReminder, hardenedReminder, mustSpeakReminder } from "@/services/persona";
-import { createPersonaFilter, deflection } from "@/services/persona-guard";
-import { hasSaidEnough, isActionOnly, repeatsHistory, spokenWords } from "@/services/reply-length";
+import { createPersonaFilter, deflection, leaksInstruction } from "@/services/persona-guard";
+import { hasSaidEnough, repeatsHistory, spokenWords } from "@/services/reply-length";
+import { createActionGate, isActionChunk } from "@/services/stage-directions";
+import { createMindTail } from "@/ws/mind-tail";
 import { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
 
 const PARAGRAPH_BREAK = String.fromCharCode(10, 10);
@@ -18,6 +20,7 @@ export function emit(ws: WebSocketSender, text: string, narrating: boolean): voi
 
 interface StreamResult {
   reply: string;
+  mindBlock: string;
   tripped: boolean;
   emitted: number;
 }
@@ -28,43 +31,72 @@ async function streamOnce(
   signal: AbortSignal,
 ): Promise<StreamResult> {
   const filter = createPersonaFilter();
-  // The bracketed photo note in history is a form the model happily copies, so
-  // an open bracket ends the turn rather than becoming part of a reply.
-  const stop = CHAT_TURN.stopOnBlankLine
-    ? [PARAGRAPH_BREAK, CHAT_TURN.photoNoteOpen]
-    : [CHAT_TURN.photoNoteOpen];
-  let narrating = false;
+  const mind = createMindTail();
+  // Asterisks are held back until they close, so a paragraph of narration is
+  // dropped before the reader ever sees it begin.
+  const gate = createActionGate();
+  // The bracketed photo note in history is a form the model happily copies. The
+  // stop names that note specifically rather than any open bracket, so the
+  // trailing state block still has room to arrive. The blank line is not a stop
+  // sequence either: the model puts one in front of that block, so stopping
+  // there threw away the state update on every turn. Brevity is enforced below
+  // instead, where a blank line ends the prose without ending the stream.
+  const stop = [...CHAT_TURN.photoNoteStops];
   let reply = "";
+  let said = false;
+  let drained = 0;
 
   for await (const token of streamChatCompletion(messages, signal, {
     temperature: CHAT_TURN.temperature,
-    maxTokens: CHAT_TURN.maxTokens,
+    maxTokens: CHAT_TURN.maxTokens + MIND_UPDATE.extraTokens,
     presencePenalty: CHAT_TURN.presencePenalty,
     frequencyPenalty: CHAT_TURN.frequencyPenalty,
     stop,
   })) {
     if (signal.aborted) break;
 
-    const safe = filter.push(token);
+    const safe = mind.push(filter.push(token));
     if (filter.tripped()) break;
+
+    // The reply has already said enough. Prose stops here, but the stream keeps
+    // running for a short while so the trailing state block can still land.
+    if (said) {
+      drained += token.length;
+      // Breaking the moment capture starts would keep the marker and throw away
+      // the JSON body behind it. The block is only complete once it closes.
+      const blockClosed = mind.isCapturing() && mind.captured().includes("]");
+      if (blockClosed || drained > MIND_UPDATE.drainChars) break;
+      continue;
+    }
+
     if (safe.length === 0) continue;
 
-    if (safe.includes("*")) narrating = !narrating;
-    reply += safe;
-    emit(ws, safe, narrating);
+    const shown = gate.push(safe);
+    if (shown.length === 0) continue;
 
-    // A hard stop at a sentence boundary. The prompt asks for brevity; this is
-    // what makes it true even when the model keeps going.
-    if (hasSaidEnough(reply)) break;
+    const breakAt = CHAT_TURN.stopOnBlankLine ? shown.indexOf(PARAGRAPH_BREAK) : -1;
+    const visible = breakAt >= 0 ? shown.slice(0, breakAt) : shown;
+
+    if (visible.length > 0) {
+      reply += visible;
+      emit(ws, visible, isActionChunk(visible));
+    }
+
+    if (breakAt >= 0 || hasSaidEnough(reply)) said = true;
   }
 
-  const tail = filter.flush();
-  if (tail.length > 0) {
+  const tail = gate.push(mind.push(filter.flush()) + mind.flush()) + gate.flush();
+  if (tail.length > 0 && !said) {
     reply += tail;
-    emit(ws, tail, narrating);
+    emit(ws, tail, isActionChunk(tail));
   }
 
-  return { reply, tripped: filter.tripped(), emitted: filter.emitted() };
+  return {
+    reply,
+    mindBlock: mind.captured(),
+    tripped: filter.tripped(),
+    emitted: filter.emitted(),
+  };
 }
 
 // The action has already streamed by the time this runs, so it continues the
@@ -75,17 +107,19 @@ async function sayItOutLoud(
   action: string,
   signal: AbortSignal,
 ): Promise<string> {
+  const resumed: ChatMessage[] =
+    action.trim().length > 0 ? [{ role: "assistant", content: action }] : [];
   let raw = "";
   try {
     for await (const token of streamChatCompletion(
-      [...messages, { role: "assistant", content: action }, mustSpeakReminder()],
+      [...messages, ...resumed, mustSpeakReminder()],
       signal,
       {
         temperature: CHAT_TURN.temperature,
         maxTokens: CHAT_TURN.maxTokens,
         presencePenalty: CHAT_TURN.presencePenalty,
         frequencyPenalty: CHAT_TURN.frequencyPenalty,
-        stop: [CHAT_TURN.photoNoteOpen],
+        stop: [...CHAT_TURN.photoNoteStops],
       },
     )) {
       raw += token;
@@ -96,7 +130,17 @@ async function sayItOutLoud(
   }
 
   const said = spokenWords(raw);
-  return said.length > 0 ? said : sample(PERSONA_GUARD.spokenFallbacks);
+  // This path hands the model a reminder and asks it to try again, which is
+  // exactly when it is most likely to recite the reminder instead.
+  if (said.length === 0 || leaksInstruction(said)) {
+    return sample(PERSONA_GUARD.spokenFallbacks);
+  }
+  return said;
+}
+
+export interface ReplyOutcome {
+  reply: string;
+  mindBlock: string;
 }
 
 export async function streamReply(
@@ -104,7 +148,7 @@ export async function streamReply(
   messages: ChatMessage[],
   signal: AbortSignal,
   said: string[] = [],
-): Promise<string> {
+): Promise<ReplyOutcome> {
   let result = await streamOnce(ws, messages, signal);
 
   for (
@@ -112,14 +156,14 @@ export async function streamReply(
     result.tripped && result.emitted === 0 && retry < PERSONA_GUARD.maxRetries;
     retry += 1
   ) {
-    if (signal.aborted) return result.reply;
+    if (signal.aborted) return { reply: result.reply, mindBlock: result.mindBlock };
     result = await streamOnce(ws, [...messages, hardenedReminder()], signal);
   }
 
   if (result.tripped && result.emitted === 0) {
     const line = deflection();
     emit(ws, line, false);
-    return line;
+    return { reply: line, mindBlock: "" };
   }
 
   // A run of photos fills the history with bare stage directions, and the model
@@ -141,11 +185,24 @@ export async function streamReply(
     }
   }
 
-  if (isActionOnly(result.reply) && !signal.aborted) {
+  // Nothing said out loud: either the reply was one bare stage direction, or it
+  // was a paragraph of asterisks and the gate dropped all of it. Either way the
+  // turn carries on until there are words.
+  if (spokenWords(result.reply).length === 0 && !signal.aborted) {
     const line = await sayItOutLoud(messages, result.reply, signal);
-    emit(ws, ` ${line}`, false);
-    return `${result.reply} ${line}`.trim();
+    const spacer = result.reply.trim().length > 0 ? " " : "";
+    emit(ws, `${spacer}${line}`, false);
+    return { reply: `${result.reply}${spacer}${line}`.trim(), mindBlock: result.mindBlock };
   }
 
-  return result.reply;
+  // A reminder is a system turn, and the model sometimes answers by repeating it
+  // rather than obeying it. That text is an instruction, not something a person
+  // would say, so it is replaced rather than shown.
+  if (leaksInstruction(result.reply)) {
+    const line = sample(PERSONA_GUARD.spokenFallbacks);
+    sendServerMessage(ws, { type: "text_replace", payload: { text: line } });
+    return { reply: line, mindBlock: result.mindBlock };
+  }
+
+  return { reply: result.reply, mindBlock: result.mindBlock };
 }

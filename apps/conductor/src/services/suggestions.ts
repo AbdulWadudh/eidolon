@@ -1,19 +1,29 @@
-import { render, SUGGESTIONS } from "@eidolon/config";
+import { render, STAGE_DIRECTIONS, SUGGESTIONS } from "@eidolon/config";
 import { isString, shuffle, take, uniq } from "es-toolkit";
 import { getPrompt } from "@/prompts/store";
 import { type ChatMessage, streamChatCompletion } from "@/services/llm";
+import { spokenWords } from "@/services/reply-length";
+import { hasAction, limitActions, stripActions } from "@/services/stage-directions";
 import { safeJsonParse } from "@/utils/json";
 
-const FALLBACK_POOL = [
-  "*leans in, lowering my voice* Say that again, slowly.",
+const FALLBACK_WITH_ACTION = [
+  "*leans in* Say that again, slowly.",
   "*folds my arms* You are enjoying this far too much.",
-  "*laughs under my breath* Go on then, surprise me.",
-  "*tilts my head* And what exactly am I supposed to do with that?",
+  "*laughs quietly* Go on then, surprise me.",
+  "*tilts my head* And what am I supposed to do with that?",
   "*steps closer* Tell me what you are not saying.",
   "*glances away* Maybe we should change the subject.",
   "*raises an eyebrow* That is a bold thing to admit.",
-  "*settles back* I am listening. Take your time.",
-  "*reaches for your hand* Stay with me a moment longer.",
+];
+
+const FALLBACK_SPOKEN = [
+  "Go on, I am listening.",
+  "That is not the whole story though, is it?",
+  "Tell me more about that.",
+  "You are going to have to explain that one.",
+  "Fair enough. What happens next?",
+  "I was hoping you would say that.",
+  "Stay with me a moment longer.",
 ];
 
 const NEWLINE = String.fromCharCode(10);
@@ -28,6 +38,7 @@ function systemPrompt(intent: string): string {
   return render(getPrompt("suggestions.system"), {
     intent,
     maxSentences: SUGGESTIONS.maxSentences,
+    maxActionWords: STAGE_DIRECTIONS.maxWords,
   });
 }
 
@@ -56,13 +67,19 @@ export function splitSentences(text: string): string[] {
 
 export function shapeSuggestion(raw: string): string {
   const collapsed = raw
+    .replace(/\*{2,}/g, "")
     .replace(/\s+/g, " ")
     .trim()
     .replace(/^["'`]|["'`]$/g, "");
   if (collapsed.length === 0) return "";
 
-  const kept = splitSentences(collapsed).slice(0, SUGGESTIONS.maxSentences).join(" ").trim();
-  const shaped = kept.length > 0 ? kept : collapsed;
+  // A paragraph in asterisks is narration, not an option anyone can send. The
+  // long ones go, and what the player actually says is what is left.
+  const limited = limitActions(collapsed);
+  if (spokenWords(limited).length === 0) return "";
+
+  const kept = splitSentences(limited).slice(0, SUGGESTIONS.maxSentences).join(" ").trim();
+  const shaped = kept.length > 0 ? kept : limited;
   if (shaped.length <= SUGGESTIONS.maxChars) return shaped;
 
   const clipped = shaped.slice(0, SUGGESTIONS.maxChars);
@@ -71,11 +88,31 @@ export function shapeSuggestion(raw: string): string {
 }
 
 export function hasStageDirection(text: string): boolean {
-  return /\*[^*]+\*/.test(text);
+  return hasAction(text);
+}
+
+/**
+ * An action is a garnish, never the dish. Past the budget the option keeps what
+ * the player says and loses the asterisks, so a tray is never three stage
+ * directions in a row.
+ */
+export function capActions(options: string[]): string[] {
+  let used = 0;
+  return options.map((option) => {
+    if (!hasStageDirection(option)) return option;
+    if (used < SUGGESTIONS.maxWithAction) {
+      used += 1;
+      return option;
+    }
+    const spoken = stripActions(option);
+    return spoken.length > 0 ? spoken : option;
+  });
 }
 
 export function fallbackSuggestions(): string[] {
-  return take(shuffle(FALLBACK_POOL), SUGGESTIONS.count);
+  const withAction = take(shuffle(FALLBACK_WITH_ACTION), SUGGESTIONS.maxWithAction);
+  const spoken = take(shuffle(FALLBACK_SPOKEN), Math.max(SUGGESTIONS.count - withAction.length, 0));
+  return shuffle([...withAction, ...spoken]);
 }
 
 function cleanLine(line: string): string {
@@ -121,14 +158,20 @@ export function normalizeSuggestions(candidates: unknown): string[] {
     .map(shapeSuggestion)
     .filter((entry) => entry.length > 0);
 
-  const unique = take(uniq(shaped), SUGGESTIONS.count);
-  if (unique.length === SUGGESTIONS.count) return unique;
-
+  const filled = [...shaped];
   for (const filler of fallbackSuggestions()) {
-    if (unique.length === SUGGESTIONS.count) break;
-    if (!unique.includes(filler)) unique.push(filler);
+    if (filled.length >= SUGGESTIONS.count) break;
+    filled.push(filler);
   }
-  return unique;
+
+  const options = take(uniq(capActions(filled)), SUGGESTIONS.count);
+  // Stripping an action can collide with an option already in the tray, so a
+  // spoken line tops the count back up.
+  for (const spare of shuffle(FALLBACK_SPOKEN)) {
+    if (options.length >= SUGGESTIONS.count) break;
+    if (!options.includes(spare)) options.push(spare);
+  }
+  return options;
 }
 
 export function firstLine(raw: string): string {

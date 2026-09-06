@@ -16,6 +16,7 @@ export { default as ArrowLeft01Icon } from "@hugeicons/core-free-icons/ArrowLeft
 export { default as ArrowReloadHorizontalIcon } from "@hugeicons/core-free-icons/ArrowReloadHorizontalIcon";
 export { default as ArrowRight01Icon } from "@hugeicons/core-free-icons/ArrowRight01Icon";
 export { default as ArrowUp01Icon } from "@hugeicons/core-free-icons/ArrowUp01Icon";
+export { default as Book02Icon } from "@hugeicons/core-free-icons/Book02Icon";
 export { default as BookOpen01Icon } from "@hugeicons/core-free-icons/BookOpen01Icon";
 export { default as Call02Icon } from "@hugeicons/core-free-icons/Call02Icon";
 export { default as Cancel01Icon } from "@hugeicons/core-free-icons/Cancel01Icon";
@@ -23,8 +24,10 @@ export { default as CheckmarkCircle01Icon } from "@hugeicons/core-free-icons/Che
 export { default as ColorPickerIcon } from "@hugeicons/core-free-icons/ColorPickerIcon";
 export { default as Download01Icon } from "@hugeicons/core-free-icons/Download01Icon";
 export { default as FlashIcon } from "@hugeicons/core-free-icons/FlashIcon";
+export { default as Globe02Icon } from "@hugeicons/core-free-icons/Globe02Icon";
 export { default as Image01Icon } from "@hugeicons/core-free-icons/Image01Icon";
 export { default as Logout01Icon } from "@hugeicons/core-free-icons/Logout01Icon";
+export { default as MagicWand01Icon } from "@hugeicons/core-free-icons/MagicWand01Icon";
 export { default as Mic01Icon } from "@hugeicons/core-free-icons/Mic01Icon";
 export { default as Moon02Icon } from "@hugeicons/core-free-icons/Moon02Icon";
 export { default as MoreVerticalIcon } from "@hugeicons/core-free-icons/MoreVerticalIcon";
@@ -37,4 +40,7 @@ export { default as SentIcon } from "@hugeicons/core-free-icons/SentIcon";
 export { default as Settings01Icon } from "@hugeicons/core-free-icons/Settings01Icon";
 export { default as SmileIcon } from "@hugeicons/core-free-icons/SmileIcon";
 export { default as SparklesIcon } from "@hugeicons/core-free-icons/SparklesIcon";
+export { default as SquareLock01Icon } from "@hugeicons/core-free-icons/SquareLock01Icon";
+export { default as SquareUnlock01Icon } from "@hugeicons/core-free-icons/SquareUnlock01Icon";
 export { default as Sun02Icon } from "@hugeicons/core-free-icons/Sun02Icon";
+export { default as Undo02Icon } from "@hugeicons/core-free-icons/Undo02Icon";

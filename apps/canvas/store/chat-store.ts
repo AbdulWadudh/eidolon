@@ -1,6 +1,7 @@
 import { last } from "es-toolkit";
 import { create } from "zustand";
 import { sendMessage } from "@/services/websocket";
+import { useAffinityStore } from "@/store/affinity-store";
 import { reduceServerMessage } from "./chat-events";
 import {
   type ActiveStatus,
@@ -35,6 +36,8 @@ export const INITIAL_CHAT = {
   isSuggestionsLoading: false,
   isTrayOpen: false,
   inputText: "",
+  enhanceHistory: [] as string[],
+  isEnhancing: false,
   mind: null as MindState | null,
   pendingAudio: null as AudioAttachment | null,
   isSynthesizingAudio: false,
@@ -72,6 +75,28 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   setInputText: (text) => set({ inputText: text }),
 
+  enhanceInput: (characterId) => {
+    const draft = get().inputText;
+    if (draft.trim().length === 0 || get().isEnhancing) return;
+
+    // The draft is banked before the request leaves, so revert has something to
+    // return to whatever the conductor says next.
+    set((state) => ({
+      isEnhancing: true,
+      enhanceHistory: [...state.enhanceHistory, draft],
+    }));
+
+    sendMessage({ type: "enhance_message", character_id: characterId, text: draft });
+  },
+
+  revertEnhance: () => {
+    const history = get().enhanceHistory;
+    const previous = history.at(-1);
+    if (previous === undefined) return;
+
+    set({ inputText: previous, enhanceHistory: history.slice(0, -1) });
+  },
+
   sendUserMessage: (text, characterId) => {
     const trimmed = text.trim();
     if (trimmed.length === 0) return;
@@ -81,6 +106,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       activeCharacterId: characterId,
       messages: [...state.messages, message],
       inputText: "",
+      enhanceHistory: [],
+      isEnhancing: false,
       suggestions: [],
       isSuggestionsLoading: false,
       isTrayOpen: false,
@@ -96,7 +123,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       type: "chat_turn",
       character_id: characterId,
       text: trimmed,
-      allow_search: true,
+      allow_search: useAffinityStore.getState().allowWebSearch,
       user_timezone: resolveUserTimezone(),
     });
   },
@@ -141,7 +168,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     });
   },
 
-  selectSuggestion: (suggestion) => set({ inputText: suggestion, isTrayOpen: false }),
+  selectSuggestion: (suggestion) =>
+    set({ inputText: suggestion, isTrayOpen: false, enhanceHistory: [], isEnhancing: false }),
 
   interrupt: (characterId) => {
     sendMessage({ type: "interrupt", character_id: characterId });

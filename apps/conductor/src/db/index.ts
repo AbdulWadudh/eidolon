@@ -2,6 +2,8 @@ import { Database } from "bun:sqlite";
 import { AFFINITY, CHAT_TURN } from "@eidolon/config";
 import { SQLITE_DB_PATH } from "@eidolon/config/server";
 import { capitalize } from "es-toolkit";
+import { rebuildChronicles } from "@/db/migrations";
+import { applySchema } from "@/db/schema";
 import { startingTier } from "@/services/affinity-ladder";
 
 console.log(`[Database] SQLite: ${SQLITE_DB_PATH}`);
@@ -12,56 +14,9 @@ export const db = new Database(SQLITE_DB_PATH, { create: true });
 db.exec("PRAGMA journal_mode = WAL;");
 db.exec("PRAGMA foreign_keys = ON;");
 
-// Initialize relational schema
-db.exec(`
-  CREATE TABLE IF NOT EXISTS characters (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    tagline TEXT,
-    personality TEXT,
-    system_prompt TEXT,
-    avatar_url TEXT,
-    affinity_tier TEXT DEFAULT 'Neutral',
-    affinity_score INTEGER DEFAULT 0,
-    current_mood TEXT DEFAULT 'Neutral',
-    created_at INTEGER NOT NULL
-  );
+rebuildChronicles(db);
 
-  CREATE TABLE IF NOT EXISTS messages (
-    id TEXT PRIMARY KEY,
-    character_id TEXT NOT NULL,
-    role TEXT NOT NULL,
-    content TEXT NOT NULL,
-    is_narration INTEGER DEFAULT 0,
-    audio_url TEXT,
-    created_at INTEGER NOT NULL,
-    FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE
-  );
-
-  CREATE TABLE IF NOT EXISTS stages (
-    id TEXT PRIMARY KEY,
-    character_id TEXT NOT NULL,
-    name TEXT NOT NULL,
-    backdrop_url TEXT,
-    lighting_tint TEXT,
-    soundscape_stems TEXT,
-    FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE
-  );
-`);
-
-function addColumnIfMissing(table: string, column: string, definition: string): void {
-  const columns = db.query(`PRAGMA table_info(${table})`).all() as { name: string }[];
-  if (columns.some((entry) => entry.name === column)) return;
-  db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
-}
-
-addColumnIfMissing("messages", "audio_duration", "REAL");
-addColumnIfMissing("messages", "image_url", "TEXT");
-addColumnIfMissing("messages", "image_caption", "TEXT");
-addColumnIfMissing("characters", "appearance", "TEXT");
-addColumnIfMissing("characters", "background_url", "TEXT");
-addColumnIfMissing("characters", "avatar_crop", "TEXT");
-addColumnIfMissing("characters", "face_url", "TEXT");
+applySchema(db);
 
 /**
  * Health check helper for the SQLite database.
@@ -104,6 +59,23 @@ export function getCharacterMind(characterId: string): StoredMind {
     tier: row?.affinity_tier ?? startingTier(),
     mood: row?.current_mood ?? AFFINITY.defaultMood,
   };
+}
+
+export function isAffinityLocked(characterId: string): boolean {
+  const row = db
+    .query<{ affinity_locked: number | null }, [string]>(
+      "SELECT affinity_locked FROM characters WHERE id = ?",
+    )
+    .get(characterId);
+  return row?.affinity_locked === 1;
+}
+
+export function setAffinityLock(characterId: string, locked: boolean): void {
+  ensureCharacter(characterId);
+  db.query("UPDATE characters SET affinity_locked = ?2 WHERE id = ?1").run(
+    characterId,
+    locked ? 1 : 0,
+  );
 }
 
 export function saveCharacterMind(characterId: string, mind: StoredMind): void {
@@ -192,12 +164,13 @@ export function setMessageAudio(
 
 export function getRecentMessages(
   characterId: string,
+  limit: number = CHAT_TURN.historyTurns,
 ): { role: string; content: string; imageCaption: string | null }[] {
   const rows = db
     .query(
       "SELECT role, content, image_caption FROM messages WHERE character_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ?",
     )
-    .all(characterId, CHAT_TURN.historyTurns) as {
+    .all(characterId, limit) as {
     role: string;
     content: string;
     image_caption: string | null;
@@ -249,8 +222,18 @@ export function getTranscript(characterId: string, limit: number): StoredMessage
     .reverse();
 }
 
+export function countMessages(characterId: string): number {
+  const row = db
+    .query<{ total: number }, [string]>(
+      "SELECT COUNT(*) as total FROM messages WHERE character_id = ?",
+    )
+    .get(characterId);
+  return row?.total ?? 0;
+}
+
 export function forgetCharacter(characterId: string): void {
   db.query("DELETE FROM messages WHERE character_id = ?").run(characterId);
+  db.query("DELETE FROM chronicles WHERE character_id = ?").run(characterId);
   db.query(
     "UPDATE characters SET affinity_score = ?2, affinity_tier = ?3, current_mood = ?4 WHERE id = ?1",
   ).run(characterId, AFFINITY.start, startingTier(), AFFINITY.defaultMood);

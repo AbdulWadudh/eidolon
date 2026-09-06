@@ -31,9 +31,10 @@ services:
       - "6379:6379"
     command:
       - "--logtostderr"
-      - "--cache_mode=true"
+      - "--cluster_mode=emulated"
+      - "--lock_on_hashtags"
       - "--proactor_threads=2"
-      - "--maxmemory=512mb"
+      - "--maxmemory=1gb"
     volumes:
       - cache-data:/data
     healthcheck:

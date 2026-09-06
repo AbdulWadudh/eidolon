@@ -1,4 +1,4 @@
-import { CONNECTION_COPY, STATUS_COPY } from "@eidolon/config";
+import { CONNECTION_COPY, MIND_COPY, STATUS_COPY } from "@eidolon/config";
 import { capitalize, isString } from "es-toolkit";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as React from "react";
@@ -10,16 +10,19 @@ import { ChatBackdrop } from "@/components/chat/ChatBackdrop";
 import { ChatFeed } from "@/components/chat/ChatFeed";
 import { ChatTopBar } from "@/components/chat/ChatTopBar";
 import { InputDock } from "@/components/chat/InputDock";
+import { MindDrawer } from "@/components/chat/MindDrawer";
 import { PhotoRequestSheet } from "@/components/chat/PhotoRequestSheet";
 import { type PhotoAction, PhotoViewer } from "@/components/chat/PhotoViewer";
 import { SuggestionTray } from "@/components/chat/SuggestionTray";
 import { useChatSocket } from "@/hooks/use-chat-socket";
 import { usePhotoFlow } from "@/hooks/use-photo-flow";
 import { VoiceNotesProvider } from "@/hooks/use-voice-notes";
+import { useAffinityStore } from "@/store/affinity-store";
 import { forgetCharacter, loadHistory } from "@/store/chat-history";
 import { isSuggestionTrayVisible } from "@/store/chat-selectors";
 import { useChatStore } from "@/store/chat-store";
 import { useConnectionStore } from "@/store/connection";
+import { fetchMind } from "@/store/mind-api";
 import { useResolvedTheme, useThemeStore } from "@/store/theme-store";
 
 const AVATAR_ACTIONS: PhotoAction[] = ["adjust", "save"];
@@ -45,6 +48,9 @@ export default function ChatScreen() {
   const chat = useChatStore();
   const serverHost = useConnectionStore((state) => state.serverHost);
   const [actionsOpen, setActionsOpen] = React.useState(false);
+  const [mindOpen, setMindOpen] = React.useState(false);
+  const applyMindUpdate = useAffinityStore((state) => state.applyMindUpdate);
+  const resetAffinity = useAffinityStore((state) => state.reset);
   const photos = usePhotoFlow(characterId, serverHost);
   const trayVisible = isSuggestionTrayVisible(chat);
 
@@ -57,7 +63,19 @@ export default function ChatScreen() {
 
   React.useEffect(() => {
     loadHistory(serverHost, characterId);
-  }, [serverHost, characterId]);
+    void fetchMind(serverHost, characterId);
+    return () => {
+      resetAffinity();
+    };
+  }, [serverHost, characterId, resetAffinity]);
+
+  // The socket already carries mind_update into the chat store. Mirroring it
+  // here is what raises the toast and the haptic, and only in Insight Mode.
+  React.useEffect(() => {
+    const mind = chat.mind;
+    if (!mind) return;
+    applyMindUpdate(mind.affinityDelta, mind.affinity, mind.tier, mind.mood);
+  }, [chat.mind, applyMindUpdate]);
 
   const statusColor = socket.isConnected
     ? chat.activeStatus === "idle"
@@ -65,8 +83,12 @@ export default function ChatScreen() {
       : theme.primary
     : theme.textMuted;
 
+  const isBusy = chat.activeStatus !== "idle";
+
   const statusLabel = socket.isConnected
-    ? `${CONNECTION_COPY.connected} • ${STATUS_LABEL[chat.activeStatus] ?? chat.mind?.mood ?? "Here"}`
+    ? isBusy
+      ? (STATUS_LABEL[chat.activeStatus] ?? MIND_COPY.organicStatus)
+      : `${MIND_COPY.organicStatus} • ${chat.mind?.mood ?? "Here"}`
     : CONNECTION_COPY[socket.status];
 
   const autoPlay = React.useMemo(() => {
@@ -126,6 +148,7 @@ export default function ChatScreen() {
       if (action === "refresh") loadHistory(serverHost, characterId);
       if (action === "reset") forgetCharacter(serverHost, characterId);
       if (action === "replies") chat.setSuggestionsHidden(!chat.areSuggestionsHidden);
+      if (action === "lorebook") setMindOpen(true);
     },
     [chat.setSuggestionsHidden, chat.areSuggestionsHidden, serverHost, characterId],
   );
@@ -144,6 +167,7 @@ export default function ChatScreen() {
         characterId={characterId}
         statusLabel={statusLabel}
         statusColor={statusColor}
+        isBusy={isBusy}
         mind={chat.mind}
         onBack={() => router.back()}
         onCall={() => router.push(`/chat/${characterId}`)}
@@ -187,6 +211,8 @@ export default function ChatScreen() {
           <InputDock
             value={chat.inputText}
             isStreaming={chat.isStreaming}
+            isEnhancing={chat.isEnhancing}
+            revertSteps={chat.enhanceHistory.length}
             characterId={characterId}
             inputRef={inputRef}
             onChangeText={chat.setInputText}
@@ -195,6 +221,9 @@ export default function ChatScreen() {
             suggestionsOpen={trayVisible}
             onAction={(action) => {
               if (action === "more") setActionsOpen(true);
+              if (action === "lorebook") setMindOpen(true);
+              if (action === "enhance") chat.enhanceInput(characterId);
+              if (action === "revert") chat.revertEnhance();
               if (action === "suggestions") toggleSuggestions();
               if (action === "gallery") photos.openSheet();
             }}
@@ -229,6 +258,13 @@ export default function ChatScreen() {
         onClose={photos.closeAvatar}
         onAction={photos.act}
         onCrop={photos.crop}
+      />
+
+      <MindDrawer
+        isOpen={mindOpen}
+        characterId={characterId}
+        serverHost={serverHost}
+        onClose={() => setMindOpen(false)}
       />
 
       <ActionsSheet

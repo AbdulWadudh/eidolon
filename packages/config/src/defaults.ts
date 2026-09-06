@@ -76,8 +76,33 @@ export const SUGGESTIONS = {
   sceneTurns: 8,
   maxSentences: 2,
   maxChars: 140,
+  maxWithAction: 1,
   temperature: 0.9,
   maxTokens: 220,
+} as const;
+
+export const STAGE_DIRECTIONS = {
+  maxWords: 5,
+  maxPerReply: 1,
+} as const;
+
+export const ENHANCE = {
+  maxInputChars: 600,
+  maxOutputChars: 400,
+  // Low, deliberately. At conversational temperatures the model stops rewriting
+  // the draft and starts answering it.
+  temperature: 0.2,
+  // A second pass over an already-polished line comes back identical at a low
+  // temperature. Reworking again is the whole point of the button, so the retry
+  // is warmer rather than a refusal.
+  retryTemperature: 0.75,
+  maxTokens: 180,
+  draftLabel: "Sentence:",
+  rewriteLabel: "Rewrite:",
+  // How often a rework also opens the line with a stage direction. Only ever
+  // offered on a draft that has no action already and is not a question: asked
+  // to add an action to a question, the model answers the question instead.
+  actionChance: 0.45,
 } as const;
 
 export const TRANSCRIPT = {
@@ -90,7 +115,7 @@ export const CHAT_TURN = {
   temperature: 0.85,
   presencePenalty: 0.6,
   frequencyPenalty: 0.4,
-  photoNoteOpen: "[",
+  photoNoteStops: ["[photo", "[Photo"],
   maxReplySentences: 3,
   maxReplyChars: 240,
   stopOnBlankLine: true,
@@ -106,6 +131,7 @@ export const TTS = {
 
 export const CACHE = {
   defaultUrl: "redis://127.0.0.1:6379",
+  defaultPort: 6379,
   promptsKey: "eidolon:prompts:v1",
   promptsTtlSeconds: 3600,
   connectTimeoutMs: 1500,
@@ -113,6 +139,9 @@ export const CACHE = {
 
 export const PERSONA_GUARD = {
   primeChars: 90,
+  // How many opening words of an internal reminder count as the model having
+  // repeated it back instead of following it.
+  echoWords: 6,
   lookaheadChars: 40,
   maxRetries: 1,
   spokenFallbacks: [
@@ -166,7 +195,11 @@ export const AFFINITY = {
 } as const;
 
 export const MEMORY = {
+  // The fallback embedder's width. The real width is whatever the embedding
+  // endpoint returns, discovered on the first call, and the table is rebuilt
+  // when it changes.
   embeddingDimensions: 384,
+  dimensionsFile: "dimensions.json",
   searchLimit: 5,
   tableName: "character_memories",
 } as const;

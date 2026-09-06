@@ -1,4 +1,5 @@
 import { CHAT_TURN } from "@eidolon/config";
+import { stripActions } from "@/services/stage-directions";
 
 const SENTENCE_END = /[.!?…]["')\]]?(\s|$)/g;
 const ASTERISK = /\*/g;
@@ -40,8 +41,7 @@ export function hasSaidEnough(reply: string): boolean {
 }
 
 export function spokenWords(reply: string): string {
-  return reply
-    .replace(/\*[^*]*\*?/g, " ")
+  return stripActions(reply)
     .replace(/\([^)]*\)?/g, " ")
     .replace(/\s{2,}/g, " ")
     .trim();

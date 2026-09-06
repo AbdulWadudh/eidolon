@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { SUGGESTIONS } from "@eidolon/config";
 import {
+  capActions,
   extractCandidates,
   fallbackSuggestions,
   firstLine,
@@ -79,10 +80,11 @@ describe("suggestion normalisation", () => {
 });
 
 describe("fallback suggestions", () => {
-  it("always yields the configured count with stage directions", () => {
+  it("yields the configured count, mostly spoken lines", () => {
     const result = fallbackSuggestions();
     expect(result).toHaveLength(SUGGESTIONS.count);
-    expect(result.every(hasStageDirection)).toBe(true);
+    expect(result.filter(hasStageDirection).length).toBeLessThanOrEqual(SUGGESTIONS.maxWithAction);
+    expect(result.every((option) => option.replace(/\*[^*]*\*/g, "").trim().length > 0)).toBe(true);
     expect(new Set(result).size).toBe(SUGGESTIONS.count);
   });
 
@@ -104,6 +106,48 @@ describe("generation against an offline model", () => {
 
     expect(result).toHaveLength(SUGGESTIONS.count);
     expect(result.some((option) => option.includes("local brain is offline"))).toBe(false);
+  });
+});
+
+describe("actions in a tray of options", () => {
+  it("keeps the budget and strips the rest, leaving what was said", () => {
+    const capped = capActions(["*nods* One.", "*waves* Two.", "*grins* Three."]);
+
+    expect(capped.filter(hasStageDirection).length).toBe(SUGGESTIONS.maxWithAction);
+    expect(capped[capped.length - 1]).toBe("Three.");
+  });
+
+  it("drops a paragraph of narration and keeps the spoken line", () => {
+    const raw =
+      "*My heart skips a beat as you lean in closer, your warm breath tickling my skin* Say that again.";
+
+    expect(shapeSuggestion(raw)).toBe("Say that again.");
+  });
+
+  it("throws away an option that is nothing but narration", () => {
+    expect(
+      shapeSuggestion("*raises an eyebrow curiously at your flirtatious response, wondering what*"),
+    ).toBe("");
+  });
+
+  it("keeps a short action at the front", () => {
+    expect(shapeSuggestion("*grins* Go on then.")).toBe("*grins* Go on then.");
+  });
+
+  it("drops the second action in a line", () => {
+    expect(shapeSuggestion("*grins* Go on then. *waits*")).toBe("*grins* Go on then.");
+  });
+
+  it("unbolds markdown the model reached for", () => {
+    expect(shapeSuggestion("*grins* **Oh, you.**")).toBe("*grins* Oh, you.");
+  });
+
+  it("never hands back an option with nothing to say", () => {
+    for (const option of normalizeSuggestions([
+      "*sighs deeply and looks away for a long moment*",
+    ])) {
+      expect(option.replace(/\*[^*]*\*/g, "").trim().length).toBeGreaterThan(0);
+    }
   });
 });
 

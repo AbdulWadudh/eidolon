@@ -3,6 +3,7 @@ import type { Hono } from "hono";
 import { createBunWebSocket } from "hono/bun";
 import { validateToken } from "@/auth";
 import { handleClientMessage, sessionManager } from "@/ws/handler";
+import { releaseSocket, trackSocket } from "@/ws/registry";
 
 export const { upgradeWebSocket, websocket } = createBunWebSocket();
 
@@ -27,8 +28,9 @@ export function setupWebSocketRoutes(app: Hono): void {
     },
     upgradeWebSocket((_c) => {
       return {
-        onOpen(_event, _ws) {
+        onOpen(_event, ws) {
           connectedDevices += 1;
+          trackSocket(ws);
         },
         async onMessage(event, ws) {
           await handleClientMessage(ws, event.data);
@@ -36,10 +38,12 @@ export function setupWebSocketRoutes(app: Hono): void {
         onClose(_event, ws) {
           connectedDevices = Math.max(0, connectedDevices - 1);
           sessionManager.cleanup(ws);
+          releaseSocket(ws);
         },
         onError(_event, ws) {
           connectedDevices = Math.max(0, connectedDevices - 1);
           sessionManager.cleanup(ws);
+          releaseSocket(ws);
         },
       };
     }),

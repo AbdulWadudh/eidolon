@@ -1,17 +1,13 @@
 import { STATUS_COPY, SUGGESTIONS, TTS } from "@eidolon/config";
-import { type ChatTurnEvent, splitInfluence, stripInfluence } from "@eidolon/protocol";
-import {
-  appendMessage,
-  getCharacterCard,
-  getCharacterMind,
-  getRecentMessages,
-  saveCharacterMind,
-} from "@/db";
-import { appraiseTurn, nextMindState } from "@/services/affinity";
+import { type ChatTurnEvent, splitInfluence } from "@eidolon/protocol";
+import { appendMessage, getCharacterCard, getRecentMessages } from "@/db";
+import { maybeSummarizeChronicle } from "@/orchestrator/chronicle";
+import { rememberExchange } from "@/orchestrator/memory-manager";
+import { scheduleProactiveFollowUp } from "@/orchestrator/proactive";
+import { assemblePrompt } from "@/orchestrator/prompt-builder";
+import { settleMind } from "@/orchestrator/turn-mind";
 import type { ChatMessage } from "@/services/llm";
-import { buildChatMessages } from "@/services/persona";
 import { forHistory } from "@/services/photo-line";
-import { searchWeb } from "@/services/search";
 import { fallbackSuggestions, formatScene, generateReplySuggestions } from "@/services/suggestions";
 import { synthesizeSpeech } from "@/services/tts";
 import { storeVoiceNote } from "@/services/voice-notes";
@@ -19,36 +15,7 @@ import type { WebSocketSender } from "@/ws/protocol";
 import { sendServerMessage } from "@/ws/protocol";
 import { streamReply } from "@/ws/reply-stream";
 
-const SEARCH_TRIGGERS = [
-  "who is",
-  "what is",
-  "where is",
-  "when did",
-  "why did",
-  "how to",
-  "search",
-  "look up",
-  "lookup",
-  "tell me about",
-  "weather",
-  "news",
-];
-
-export function shouldSearch(text: string): boolean {
-  const lower = text.toLowerCase();
-  return text.includes("?") || SEARCH_TRIGGERS.some((trigger) => lower.includes(trigger));
-}
-
-async function gatherContext(ws: WebSocketSender, event: ChatTurnEvent): Promise<string> {
-  if (!event.allow_search || !shouldSearch(event.text)) return "";
-
-  sendServerMessage(ws, {
-    type: "status_update",
-    payload: { status: "searching", detail: STATUS_COPY.searching.line },
-  });
-
-  return searchWeb(event.text);
-}
+export { hasTemporalMarker as shouldSearch } from "@/orchestrator/search-trigger";
 
 export async function handleChatTurn(
   ws: WebSocketSender,
@@ -60,40 +27,61 @@ export async function handleChatTurn(
   const { spoken, influences } = splitInfluence(userText);
   if (signal.aborted) return;
 
-  const injectedContext = await gatherContext(ws, { ...event, text: spoken });
+  const assembled = await assemblePrompt({
+    characterId,
+    userText: spoken,
+    allowSearch: event.allow_search,
+    influences,
+    signal,
+    onStatus: (status, detail) => {
+      sendServerMessage(ws, { type: "status_update", payload: { status, detail } });
+    },
+  });
+
   if (signal.aborted) return;
 
-  sendServerMessage(ws, { type: "status_update", payload: { status: "thinking" } });
+  sendServerMessage(ws, {
+    type: "status_update",
+    payload: { status: "thinking", detail: STATUS_COPY.thinking.line },
+  });
 
-  const card = getCharacterCard(characterId);
-  const history = getRecentMessages(characterId)
-    .map((entry) => ({
-      role: entry.role,
-      content:
-        entry.role === "user"
-          ? stripInfluence(entry.content)
-          : forHistory(entry.role, entry.content, entry.imageCaption),
-    }))
-    .filter((entry) => entry.content.trim().length > 0);
+  const history = assembled.messages.filter(
+    (message): message is ChatMessage => message.role === "assistant",
+  );
 
-  const reply = await streamReply(
+  const outcome = await streamReply(
     ws,
-    buildChatMessages(card, history, spoken, influences, injectedContext),
+    assembled.messages,
     signal,
-    history.filter((entry) => entry.role === "assistant").map((entry) => entry.content),
+    history.map((entry) => entry.content),
   );
 
   if (signal.aborted) return;
 
+  const reply = outcome.reply.trim();
   appendMessage(characterId, "user", userText);
-  const assistantId =
-    reply.trim().length > 0 ? appendMessage(characterId, "assistant", reply.trim()) : null;
+  const assistantId = reply.length > 0 ? appendMessage(characterId, "assistant", reply) : null;
 
   const turn: ChatMessage[] = [
     { role: "user", content: spoken },
     { role: "assistant", content: reply },
   ];
-  const sceneTurns: ChatMessage[] = [...history, ...turn];
+
+  void rememberExchange({ characterId, userText: spoken, assistantText: reply }).catch(
+    (error: unknown) => {
+      console.error("[memory] could not index the turn", error);
+    },
+  );
+
+  void maybeSummarizeChronicle(characterId).catch((error: unknown) => {
+    console.error("[chronicle] could not queue a summary", error);
+  });
+
+  void scheduleProactiveFollowUp(characterId, formatScene(turn, assembled.characterName)).catch(
+    (error: unknown) => {
+      console.error("[proactive] could not arm the follow-up", error);
+    },
+  );
 
   sendServerMessage(ws, { type: "status_update", payload: { status: "speaking" } });
 
@@ -102,7 +90,11 @@ export async function handleChatTurn(
   const [audio, suggestions] = await Promise.all([
     synthesizeSpeech(reply, TTS.voice, signal),
     SUGGESTIONS.autoGenerate
-      ? generateReplySuggestions(sceneTurns, { characterName: card.name, tier: card.tier }, signal)
+      ? generateReplySuggestions(
+          turn,
+          { characterName: assembled.characterName, tier: assembled.tier },
+          signal,
+        )
       : Promise.resolve(null),
   ]);
 
@@ -128,24 +120,12 @@ export async function handleChatTurn(
 
   if (signal.aborted) return;
 
-  const previous = getCharacterMind(characterId);
-  const appraisal = await appraiseTurn(
-    formatScene(turn, card.name),
-    card.name,
-    previous.score,
+  await settleMind(ws, {
+    characterId,
+    characterName: assembled.characterName,
+    mindBlock: outcome.mindBlock,
+    scene: formatScene(turn, assembled.characterName),
     signal,
-  );
-  const mind = nextMindState(previous.score, appraisal);
-  saveCharacterMind(characterId, { score: mind.score, tier: mind.tier, mood: mind.mood });
-
-  sendServerMessage(ws, {
-    type: "mind_update",
-    payload: {
-      affinity_delta: mind.delta,
-      current_affinity: mind.score,
-      affinity_tier: mind.tier,
-      current_mood: mind.mood,
-    },
   });
 
   sendServerMessage(ws, { type: "status_update", payload: { status: "idle" } });
@@ -157,8 +137,7 @@ export async function handleRegenerateSuggestions(
   signal: AbortSignal,
 ): Promise<void> {
   const card = getCharacterCard(characterId);
-  const recent = getRecentMessages(characterId)
-    .slice(-SUGGESTIONS.sceneTurns)
+  const recent = getRecentMessages(characterId, SUGGESTIONS.sceneTurns)
     .map((entry) => ({
       role: entry.role,
       content: forHistory(entry.role, entry.content, entry.imageCaption),

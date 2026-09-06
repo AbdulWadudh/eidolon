@@ -14,6 +14,8 @@ export interface InputDockProps {
   isStreaming: boolean;
   characterId: string;
   suggestionsOpen?: boolean;
+  isEnhancing?: boolean;
+  revertSteps?: number;
   inputRef?: React.RefObject<TextInput | null>;
   onChangeText: (text: string) => void;
   onSend: () => void;
@@ -26,6 +28,8 @@ export function InputDock({
   isStreaming,
   characterId,
   suggestionsOpen,
+  isEnhancing = false,
+  revertSteps = 0,
   inputRef,
   onChangeText,
   onSend,
@@ -43,6 +47,7 @@ export function InputDock({
         <TextInput
           ref={inputRef}
           accessibilityLabel="Message input"
+          editable={!isEnhancing}
           multiline
           value={value}
           onChangeText={onChangeText}
@@ -87,6 +92,9 @@ export function InputDock({
       <InputToolbar
         characterId={characterId}
         suggestionsOpen={suggestionsOpen}
+        canEnhance={canSend}
+        isEnhancing={isEnhancing}
+        revertSteps={revertSteps}
         onAction={onAction}
       />
     </View>

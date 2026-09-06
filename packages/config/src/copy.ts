@@ -87,3 +87,11 @@ export const THEME_COPY = {
 
 export type StatusKey = keyof typeof STATUS_COPY;
 export type ConnectionKey = keyof typeof CONNECTION_COPY;
+
+export const ENHANCE_COPY = {
+  action: "Rework this",
+  working: "Reworking your message",
+  revert: "Undo the rework",
+  revertCount: (steps: number) => (steps === 1 ? "Undo the rework" : `Undo rework (${steps})`),
+  failed: "Could not rework that. Your message is untouched.",
+} as const;

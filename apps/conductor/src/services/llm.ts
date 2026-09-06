@@ -154,3 +154,57 @@ export async function checkLlmHealth(): Promise<boolean> {
     return false;
   }
 }
+
+export interface CompletionRequest {
+  prompt: string;
+  temperature: number;
+  maxTokens: number;
+  stop?: string[];
+  signal?: AbortSignal;
+}
+
+export class CompletionUnsupportedError extends Error {}
+
+/**
+ * The raw completion endpoint, without a chat template.
+ *
+ * A roleplay-tuned model reads any chat turn as something to answer, which makes
+ * it useless for text-in/text-out work: asked to rewrite "did you get the job??"
+ * it replies that it got the job. Completions carry no such frame, so the model
+ * continues the pattern it is shown instead of joining a conversation.
+ */
+export async function completeText(request: CompletionRequest): Promise<string> {
+  let response: Response;
+
+  try {
+    response = await fetch(`${LLM_API_URL}/completions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: LLM_MODEL,
+        prompt: request.prompt,
+        temperature: request.temperature,
+        max_tokens: request.maxTokens,
+        ...(request.stop === undefined ? {} : { stop: request.stop }),
+      }),
+      signal: request.signal,
+    });
+  } catch (error) {
+    throw new LlmUnavailableError(
+      error instanceof Error ? error.message : "Completion endpoint unreachable",
+    );
+  }
+
+  if (response.status === 404 || response.status === 501) {
+    throw new CompletionUnsupportedError(
+      `${LLM_API_URL} does not serve /completions, so text rewriting is unavailable.`,
+    );
+  }
+
+  if (!response.ok) {
+    throw new LlmUnavailableError(`Completion endpoint returned status ${response.status}`);
+  }
+
+  const body = (await response.json()) as { choices?: Array<{ text?: string }> };
+  return body.choices?.[0]?.text ?? "";
+}

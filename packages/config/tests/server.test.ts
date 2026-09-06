@@ -112,7 +112,14 @@ describe("storage configuration", () => {
 
 describe("service configuration", () => {
   it("treats an unset backend as absent rather than defaulting to a host", () => {
-    for (const name of ["LLM_API_URL", "COMFYUI_URL", "LLM_MODEL", "TTS_API_URL"]) {
+    for (const name of [
+      "LLM_API_URL",
+      "COMFYUI_URL",
+      "LLM_MODEL",
+      "TTS_API_URL",
+      "EMBEDDINGS_API_URL",
+      "EMBEDDINGS_MODEL",
+    ]) {
       setEnv(name, undefined);
     }
 
@@ -121,7 +128,18 @@ describe("service configuration", () => {
       llmModel: "",
       comfyUiUrl: "",
       ttsApiUrl: "",
+      embeddingsApiUrl: "",
+      embeddingsModel: "",
     });
+  });
+
+  it("falls back to the chat endpoint for embeddings until one is configured", () => {
+    setEnv("LLM_API_URL", "http://127.0.0.1:8080/v1");
+    setEnv("EMBEDDINGS_API_URL", undefined);
+    expect(getServicesConfig().embeddingsApiUrl).toBe("http://127.0.0.1:8080/v1");
+
+    setEnv("EMBEDDINGS_API_URL", "http://127.0.0.1:8090/v1");
+    expect(getServicesConfig().embeddingsApiUrl).toBe("http://127.0.0.1:8090/v1");
   });
 });
 

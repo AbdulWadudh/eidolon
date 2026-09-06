@@ -1,11 +1,13 @@
-import { EASING_BEZIER, UI_MS } from "@eidolon/config";
+import { AFFINITY_HUD, affinityLabel, EASING_BEZIER, UI_MS } from "@eidolon/config";
 import { Image } from "expo-image";
 import { Text, View } from "react-native";
 import Animated, { cubicBezier, FadeIn, useReducedMotion } from "react-native-reanimated";
+import { AffinityToast } from "@/components/chat/AffinityToast";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft01Icon, Call02Icon, MoreVerticalIcon } from "@/lib/icons";
+import { useAffinityStore } from "@/store/affinity-store";
 import type { MindState } from "@/store/chat-messages";
 import type { AvatarCropRect } from "@/store/chat-photos";
 import { useResolvedTheme } from "@/store/theme-store";
@@ -18,6 +20,7 @@ export interface ChatTopBarProps {
   characterId: string;
   statusLabel: string;
   statusColor: string;
+  isBusy: boolean;
   mind: MindState | null;
   onBack: () => void;
   onCall: () => void;
@@ -52,6 +55,7 @@ export function ChatTopBar({
   characterId,
   statusLabel,
   statusColor,
+  isBusy,
   mind,
   onBack,
   onCall,
@@ -59,7 +63,14 @@ export function ChatTopBar({
 }: ChatTopBarProps) {
   const theme = useResolvedTheme(characterId);
   const reduced = useReducedMotion();
+  const insight = useAffinityStore((state) => state.isInsightModeEnabled);
   const initials = characterName.slice(0, 2).toUpperCase();
+
+  // Insight mode replaces the mood line with the numbers rather than stacking a
+  // second row under it. A turn in progress still wins: what she is doing right
+  // now matters more than where the relationship stands.
+  const showsAffinity = insight && !isBusy && mind !== null;
+  const subtitle = showsAffinity && mind ? affinityLabel(mind.tier, mind.affinity) : statusLabel;
 
   return (
     <View className="flex-row items-center gap-2 border-border border-b px-3 py-2">
@@ -78,22 +89,35 @@ export function ChatTopBar({
         accessibilityLabel={`${characterName}'s profile picture`}
         disabled={!avatarUrl}
         onPress={onAvatarPress}
+        className="relative"
       >
-        <Avatar size={AVATAR_PX} className="overflow-hidden border-2 border-primary">
-          {avatarUrl ? (
-            <Image
-              source={{ uri: avatarUrl }}
-              contentFit={avatarCrop ? "fill" : "cover"}
-              cachePolicy="disk"
-              accessibilityLabel={`${characterName}'s picture`}
-              style={avatarCrop ? croppedStyle(avatarCrop) : { width: "100%", height: "100%" }}
-            />
-          ) : (
-            <AvatarFallback textClassName="font-main-bold text-xs text-primary">
-              {initials}
-            </AvatarFallback>
-          )}
-        </Avatar>
+        <Animated.View
+          className="overflow-hidden rounded-full"
+          style={{
+            borderWidth: AFFINITY_HUD.ringWidthPx,
+            borderColor: insight ? theme.primary : "transparent",
+            transitionProperty: "borderColor",
+            transitionDuration: reduced ? 0 : AFFINITY_HUD.ringTransitionMs,
+            transitionTimingFunction: cubicBezier(...EASING_BEZIER.out),
+          }}
+        >
+          <Avatar size={AVATAR_PX} className="overflow-hidden">
+            {avatarUrl ? (
+              <Image
+                source={{ uri: avatarUrl }}
+                contentFit={avatarCrop ? "fill" : "cover"}
+                cachePolicy="disk"
+                accessibilityLabel={`${characterName}'s picture`}
+                style={avatarCrop ? croppedStyle(avatarCrop) : { width: "100%", height: "100%" }}
+              />
+            ) : (
+              <AvatarFallback textClassName="font-main-bold text-xs text-primary">
+                {initials}
+              </AvatarFallback>
+            )}
+          </Avatar>
+        </Animated.View>
+        <AffinityToast characterId={characterId} />
       </PressableScale>
 
       <View className="flex-1 pl-0.5">
@@ -111,21 +135,19 @@ export function ChatTopBar({
             }}
           />
           <Animated.Text
-            key={statusLabel}
+            key={subtitle}
             entering={reduced ? undefined : FadeIn.duration(UI_MS.disclosure)}
             accessibilityLiveRegion="polite"
-            className="flex-1 font-ui text-xs text-text-muted"
+            className={
+              showsAffinity
+                ? "flex-1 font-ui-bold text-primary text-xs"
+                : "flex-1 font-ui text-text-muted text-xs"
+            }
             numberOfLines={1}
           >
-            {statusLabel}
+            {subtitle}
           </Animated.Text>
         </View>
-        {mind ? (
-          <Text className="font-ui text-xs text-text-muted" numberOfLines={2}>
-            {mind.tier} · Affinity{" "}
-            <Text className="font-ui-bold text-primary">{mind.affinity}</Text>
-          </Text>
-        ) : null}
       </View>
 
       <PressableScale

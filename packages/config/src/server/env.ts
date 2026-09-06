@@ -21,6 +21,8 @@ export interface ServicesConfig {
   llmModel: string;
   comfyUiUrl: string;
   ttsApiUrl: string;
+  embeddingsApiUrl: string;
+  embeddingsModel: string;
 }
 
 export function getServerConfig(): ServerConfig {
@@ -106,6 +108,8 @@ export function getServicesConfig(): ServicesConfig {
     llmModel: process.env.LLM_MODEL ?? "",
     comfyUiUrl: process.env.COMFYUI_URL ?? "",
     ttsApiUrl: process.env.TTS_API_URL ?? "",
+    embeddingsApiUrl: process.env.EMBEDDINGS_API_URL ?? process.env.LLM_API_URL ?? "",
+    embeddingsModel: process.env.EMBEDDINGS_MODEL ?? "",
   };
 }
 

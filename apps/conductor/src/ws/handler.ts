@@ -1,8 +1,10 @@
 import { type ClientMessage, parseClientMessage } from "@eidolon/protocol";
 import type { WSMessageReceive } from "hono/ws";
 import { handleChatTurn, handleRegenerateSuggestions } from "@/ws/chat-turn";
+import { handleEnhanceMessage } from "@/ws/enhance-turn";
 import { handleImageRequest, handlePhotoIdeas } from "@/ws/image-turn";
 import { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
+import { bindCharacter } from "@/ws/registry";
 /**
  * Manages per-connection streaming tasks and abort handles.
  */
@@ -59,6 +61,10 @@ export async function handleClientMessage(
     return;
   }
 
+  if ("character_id" in clientMsg && typeof clientMsg.character_id === "string") {
+    bindCharacter(ws, clientMsg.character_id);
+  }
+
   switch (clientMsg.type) {
     case "ping": {
       sendServerMessage(ws, {
@@ -106,6 +112,11 @@ export async function handleClientMessage(
         clientMsg.reference_url,
         sessionManager.getAbortSignal(ws),
       );
+      break;
+    }
+
+    case "enhance_message": {
+      await handleEnhanceMessage(ws, clientMsg.text);
       break;
     }
 

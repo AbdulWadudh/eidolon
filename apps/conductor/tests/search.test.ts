@@ -49,6 +49,7 @@ mock.module("duck-duck-scrape", () => ({
 const { clearSearchCache, formatSearchResults, getSearchCacheSize, searchWeb } = await import(
   "@/services/search"
 );
+const { shouldSearchWeb } = await import("@/orchestrator/search-trigger");
 
 const originalFetch = globalThis.fetch;
 const originalSerper = process.env.SERPER_API_KEY;
@@ -171,6 +172,28 @@ describe("Multi-tier web search", () => {
     expect(context).toContain("Exa Hit");
     expect(context).toContain("Neural result.");
     expect(fetchCalls()).toBe(2);
+  });
+
+  it("only reaches the network for a query with a temporal marker", async () => {
+    duckReturns([duckResult("Tokyo Weather", "18C and clear.", "https://weather.example")]);
+
+    expect(shouldSearchWeb("What is the weather like in Tokyo right now?", true)).toBe(true);
+    expect(shouldSearchWeb("how did you sleep?", true)).toBe(false);
+
+    const context = await searchWeb("What is the weather like in Tokyo right now?");
+    expect(context).toContain("18C and clear.");
+    expect(duckCalls).toBe(1);
+  });
+
+  it("caches per normalised query, so two different questions both hit the network", async () => {
+    duckReturns([duckResult("A", "first answer", "https://a.example")]);
+    await searchWeb("who won the game");
+    await searchWeb("  WHO WON THE GAME  ");
+    expect(duckCalls).toBe(1);
+
+    await searchWeb("what is the weather in Tokyo");
+    expect(duckCalls).toBe(2);
+    expect(getSearchCacheSize()).toBe(2);
   });
 
   it("ignores a blank query without calling any provider", async () => {

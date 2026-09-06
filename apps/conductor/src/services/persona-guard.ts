@@ -1,5 +1,6 @@
 import { PERSONA_GUARD } from "@eidolon/config";
 import { sample } from "es-toolkit";
+import { getPrompt } from "@/prompts/store";
 
 const TELLS: RegExp[] = [
   /\bas an\s+(?:ai|a\.i\.)\b/i,
@@ -33,6 +34,42 @@ export function findTell(text: string): string | null {
 
 export function deflection(): string {
   return sample([...PERSONA_GUARD.deflections]);
+}
+
+const INSTRUCTION_KEYS = [
+  "persona.mustSpeak",
+  "persona.freshLine",
+  "persona.hardenedReminder",
+  "persona.influence",
+  "mind.outputDirective",
+] as const;
+
+function normalizeForEcho(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function opening(text: string, words: number): string {
+  return normalizeForEcho(text).split(" ").slice(0, words).join(" ");
+}
+
+/**
+ * A reminder is sent to the model as a system turn, and a small model sometimes
+ * answers by repeating it rather than obeying it. The reader must never see one:
+ * "That was only a stage direction. Say something out loud this time." is not
+ * something a character says.
+ */
+export function leaksInstruction(reply: string): boolean {
+  const spoken = normalizeForEcho(reply);
+  if (spoken.length === 0) return false;
+
+  return INSTRUCTION_KEYS.some((key) => {
+    const head = opening(getPrompt(key), PERSONA_GUARD.echoWords);
+    return head.length > 0 && spoken.includes(head);
+  });
 }
 
 /**

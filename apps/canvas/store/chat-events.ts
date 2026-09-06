@@ -120,15 +120,27 @@ export function reduceServerMessage(
       break;
     }
 
+    case "message_enhanced": {
+      const source = msg.payload ?? msg;
+      set({ inputText: source.text, isEnhancing: false });
+      break;
+    }
+
     case "error": {
       const source = msg.payload ?? msg;
-      set({
-        isStreaming: false,
-        activeStatus: "idle",
-        statusDetail: null,
-        isSuggestionsLoading: false,
+      const failedToEnhance = source.code === "ENHANCE_FAILED";
+
+      set((state) => ({
+        isStreaming: failedToEnhance ? state.isStreaming : false,
+        activeStatus: failedToEnhance ? state.activeStatus : "idle",
+        statusDetail: failedToEnhance ? state.statusDetail : null,
+        isSuggestionsLoading: failedToEnhance ? state.isSuggestionsLoading : false,
+        isEnhancing: false,
+        // A rework that never landed must not leave a step on the stack, or
+        // revert would appear to do nothing the first time it is pressed.
+        enhanceHistory: failedToEnhance ? state.enhanceHistory.slice(0, -1) : state.enhanceHistory,
         lastError: source.message,
-      });
+      }));
       break;
     }
 

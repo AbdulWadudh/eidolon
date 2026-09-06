@@ -1,9 +1,10 @@
-import { UI_MS } from "@eidolon/config";
+import { MIND_COPY, UI_MS } from "@eidolon/config";
 import type { IconSvgElement } from "@hugeicons/react-native";
 import { Modal, Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
+import { SwitchRow } from "@/components/ui/switch";
 import {
   AddCircleIcon,
   BookOpen01Icon,
@@ -14,6 +15,7 @@ import {
   SparklesIcon,
 } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import { useAffinityStore } from "@/store/affinity-store";
 import { useResolvedTheme } from "@/store/theme-store";
 
 export type ChatAction =
@@ -41,7 +43,7 @@ const ACTIONS: ActionSpec[] = [
   { action: "replies", icon: SparklesIcon, label: "Replies", ready: true },
   { action: "call", icon: Call02Icon, label: "Voice call", badge: "Soon", ready: false },
   { action: "image", icon: Image01Icon, label: "Selfie", badge: "Soon", ready: false },
-  { action: "lorebook", icon: BookOpen01Icon, label: "Lorebook", badge: "Soon", ready: false },
+  { action: "lorebook", icon: BookOpen01Icon, label: "Mind", ready: true },
   { action: "outfit", icon: FlashIcon, label: "Outfit", badge: "Soon", ready: false },
   { action: "moment", icon: AddCircleIcon, label: "Moment", badge: "Soon", ready: false },
 ];
@@ -63,6 +65,8 @@ export function ActionsSheet({
 }: ActionsSheetProps) {
   const theme = useResolvedTheme(characterId);
   const reduced = useReducedMotion();
+  const insight = useAffinityStore((state) => state.isInsightModeEnabled);
+  const setInsightMode = useAffinityStore((state) => state.setInsightMode);
 
   return (
     <Modal visible={isOpen} transparent animationType="none" onRequestClose={onClose}>
@@ -137,6 +141,17 @@ export function ActionsSheet({
                 </View>
               );
             })}
+          </View>
+
+          <View className="mt-4 border-border border-t pt-4">
+            <SwitchRow
+              characterId={characterId}
+              label={MIND_COPY.insightToggle}
+              hint={MIND_COPY.insightHint}
+              value={insight}
+              onValueChange={setInsightMode}
+              accessibilityLabel={MIND_COPY.insightToggle}
+            />
           </View>
         </Animated.View>
       </Animated.View>

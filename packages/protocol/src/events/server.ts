@@ -140,6 +140,18 @@ export const ReplySuggestionsSchema = z.object({
     .optional(),
 });
 
+export const MessageEnhancedSchema = z.object({
+  type: z.literal("message_enhanced"),
+  text: z.string(),
+  original: z.string(),
+  payload: z
+    .object({
+      text: z.string(),
+      original: z.string(),
+    })
+    .optional(),
+});
+
 export const ErrorSchema = z.object({
   type: z.literal("error"),
   code: z.string(),
@@ -174,6 +186,7 @@ export const ServerMessageSchema = z.discriminatedUnion("type", [
   PhotoIdeasSchema,
   MindUpdateSchema,
   ReplySuggestionsSchema,
+  MessageEnhancedSchema,
   ErrorSchema,
   PongSchema,
 ]);
@@ -192,6 +205,7 @@ export type PhotoIdeasEvent = z.infer<typeof PhotoIdeasSchema>;
 export type ImageFailedEvent = z.infer<typeof ImageFailedSchema>;
 export type MindUpdateEvent = z.infer<typeof MindUpdateSchema>;
 export type ReplySuggestionsEvent = z.infer<typeof ReplySuggestionsSchema>;
+export type MessageEnhancedEvent = z.infer<typeof MessageEnhancedSchema>;
 export type ErrorEvent = z.infer<typeof ErrorSchema>;
 export type PongEvent = z.infer<typeof PongSchema>;
 export type ServerMessage = z.infer<typeof ServerMessageSchema>;

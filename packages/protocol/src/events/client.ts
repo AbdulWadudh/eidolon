@@ -32,6 +32,12 @@ export const RegenerateSuggestionsSchema = z.object({
   last_message_id: z.string().min(1, "last_message_id cannot be empty"),
 });
 
+export const EnhanceMessageSchema = z.object({
+  type: z.literal("enhance_message"),
+  character_id: z.string().min(1, "character_id cannot be empty"),
+  text: z.string().min(1, "text cannot be empty"),
+});
+
 export const PingSchema = z.object({
   type: z.literal("ping"),
   timestamp: z.number().optional(),
@@ -43,6 +49,7 @@ export const ClientMessageSchema = z.discriminatedUnion("type", [
   RequestImageSchema,
   RequestPhotoIdeasSchema,
   RegenerateSuggestionsSchema,
+  EnhanceMessageSchema,
   PingSchema,
 ]);
 
@@ -51,5 +58,6 @@ export type InterruptEvent = z.infer<typeof InterruptSchema>;
 export type RequestImageEvent = z.infer<typeof RequestImageSchema>;
 export type RequestPhotoIdeasEvent = z.infer<typeof RequestPhotoIdeasSchema>;
 export type RegenerateSuggestionsEvent = z.infer<typeof RegenerateSuggestionsSchema>;
+export type EnhanceMessageEvent = z.infer<typeof EnhanceMessageSchema>;
 export type PingEvent = z.infer<typeof PingSchema>;
 export type ClientMessage = z.infer<typeof ClientMessageSchema>;

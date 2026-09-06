@@ -3,16 +3,17 @@ import {
   checkLanceDbHealth,
   generateMockEmbedding,
   insertMemory,
+  memoryDimensions,
   searchMemories,
 } from "@/services/lancedb";
 
 describe("LanceDB Vector Memory Engine", () => {
-  it("generates deterministic 384-dimensional unit vector", () => {
+  it("generates a deterministic unit vector as wide as the table", () => {
     const text = "A memory of twilight rain on neon glass";
     const v1 = generateMockEmbedding(text);
     const v2 = generateMockEmbedding(text);
 
-    expect(v1.length).toBe(384);
+    expect(v1.length).toBe(memoryDimensions());
     expect(v1).toEqual(v2);
 
     // Verify L2 norm is ~1.0
@@ -21,6 +22,11 @@ describe("LanceDB Vector Memory Engine", () => {
       sumSq += val * val;
     }
     expect(Math.abs(Math.sqrt(sumSq) - 1.0)).toBeLessThan(0.001);
+  });
+
+  it("produces whatever width the embedder in use asks for", () => {
+    expect(generateMockEmbedding("x", 384)).toHaveLength(384);
+    expect(generateMockEmbedding("x", 4096)).toHaveLength(4096);
   });
 
   it("checks database health status", async () => {

@@ -43,6 +43,8 @@ export const IMAGE = {
   bodyChangeWords: ["tan", "tanned", "sunburnt", "wet", "freckled", "glasses", "makeup"],
   ideaCount: 4,
   ideaMaxChars: 60,
+  ideaMaxWords: 9,
+  ideaOverlap: 0.6,
   ideaTemperature: 0.95,
   editDenoise: 0.62,
   steps: 6,

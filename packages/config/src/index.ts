@@ -1,16 +1,24 @@
 export {
+  ADMIN_ROUTES,
+  type AdminRoute,
   API_PREFIX,
   API_ROUTES,
   API_VERSION,
   type ApiRoute,
+  adminPath,
+  adminUrl,
   apiPath,
   apiUrl,
+  characterAffinityPath,
+  characterAffinityUrl,
   characterLookUrl,
   characterMemoryPath,
   characterMemoryUrl,
   characterMessagesPath,
   characterMessagesUrl,
   characterMessageUrl,
+  characterMindPath,
+  characterMindUrl,
   HEALTH_ALIAS_PATH,
   healthUrl,
   httpScheme,
@@ -23,6 +31,7 @@ export {
 export {
   CONNECTION_COPY,
   type ConnectionKey,
+  ENHANCE_COPY,
   HOME_COPY,
   PAIRING_COPY,
   PAIRING_MESSAGES,
@@ -40,6 +49,7 @@ export {
   DATA_FILES,
   EASING,
   EASING_BEZIER,
+  ENHANCE,
   MEMORY,
   MOCK,
   PAIRING,
@@ -50,6 +60,7 @@ export {
   SEARCH,
   SERVER_DEFAULTS,
   SOCKET,
+  STAGE_DIRECTIONS,
   STORAGE,
   SUGGESTIONS,
   TIMEOUTS_MS,
@@ -57,7 +68,24 @@ export {
   TTS,
   UI_MS,
 } from "./defaults";
+export {
+  AFFINITY_HUD,
+  affinityLabel,
+  affinityToastAnnouncement,
+  affinityToastLabel,
+  MIND_COPY,
+} from "./hud";
 export { IMAGE } from "./image";
+export {
+  CHRONICLE_CONTEXT,
+  LOREBOOK,
+  MIND_UPDATE,
+  PROMPT_BUDGET,
+  type PromptSection,
+  RECALL,
+  WEB_CONTEXT,
+  WORKING_CONTEXT,
+} from "./memory";
 export {
   defaultPrompt,
   PROMPT_DEFAULTS,
@@ -65,3 +93,17 @@ export {
   type PromptDefinition,
   render,
 } from "./prompts";
+export {
+  CHRONICLE,
+  PROACTIVE,
+  QUEUE_CONCURRENCY,
+  QUEUE_JOBS,
+  QUEUE_NAMES,
+  QUEUE_PREFIXES,
+  QUEUE_PROACTIVE_RETRY,
+  QUEUE_RETENTION,
+  QUEUE_SHUTDOWN,
+  QUEUE_UPLOAD_RETRY,
+  type QueueKey,
+  STAGE,
+} from "./queue";

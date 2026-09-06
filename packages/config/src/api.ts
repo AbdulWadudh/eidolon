@@ -21,6 +21,20 @@ export const STATIC_ROUTES = {
   logo: "/assets/logo.svg",
 } as const;
 
+export const ADMIN_ROUTES = {
+  queues: "/admin/queues",
+} as const;
+
+export type AdminRoute = keyof typeof ADMIN_ROUTES;
+
+export function adminPath(route: AdminRoute): string {
+  return ADMIN_ROUTES[route];
+}
+
+export function adminUrl(host: string, route: AdminRoute, scheme = httpScheme(host)): string {
+  return `${scheme}://${stripAuthority(host)}${adminPath(route)}`;
+}
+
 export function apiPath(route: ApiRoute): string {
   return `${API_PREFIX}${API_ROUTES[route]}`;
 }
@@ -93,6 +107,30 @@ export function characterMessagesUrl(
   scheme = httpScheme(host),
 ): string {
   return `${scheme}://${stripAuthority(host)}${characterMessagesPath(characterId)}`;
+}
+
+export function characterMindPath(characterId: string): string {
+  return `${apiPath("characters")}/${encodeURIComponent(characterId)}/mind`;
+}
+
+export function characterMindUrl(
+  host: string,
+  characterId: string,
+  scheme = httpScheme(host),
+): string {
+  return `${scheme}://${stripAuthority(host)}${characterMindPath(characterId)}`;
+}
+
+export function characterAffinityPath(characterId: string): string {
+  return `${apiPath("characters")}/${encodeURIComponent(characterId)}/affinity`;
+}
+
+export function characterAffinityUrl(
+  host: string,
+  characterId: string,
+  scheme = httpScheme(host),
+): string {
+  return `${scheme}://${stripAuthority(host)}${characterAffinityPath(characterId)}`;
 }
 
 export function characterMemoryPath(characterId: string): string {

@@ -10,6 +10,39 @@ and publishes it as the GitHub release notes.
 
 ## [Unreleased]
 
+### Fixed
+
+- She no longer reads her own stage directions out loud. An internal reminder
+  could be repeated back as if it were dialogue; it is caught and replaced now.
+- Asked about something current that the web cannot actually answer, she says she
+  does not know instead of inventing a winner, a score or a date.
+- Answers built from a live search sound like her again — "RCB took it this year,
+  they beat Gujarat in the final" rather than an encyclopedia entry.
+
+### Added
+
+- A wand button next to the message box rewrites what you have typed. Press it
+  again to rework the rewrite, as many times as you like, and the undo button
+  beside it walks back one version per press until your original draft is back.
+
+- She remembers. Conversations are summarised into chapters every 30 messages,
+  past exchanges are recalled when they become relevant again, and a lorebook
+  lets you write world facts and secrets that surface when you mention them —
+  with the more private ones staying shut until she trusts you enough.
+- Insight mode, off by default. The relationship normally shows only in how she
+  writes; turn it on from the chat menu and you get a trust score, a tier, and a
+  quiet pill whenever her feelings shift.
+- A Mind & Lorebook drawer behind the book icon: what she remembers, which
+  secrets are still locked, a slider to set the relationship yourself, a lock to
+  hold it there, and a switch for live web search.
+
+- Slow work no longer blocks a reply. Stage backdrops, chronicle summaries, media
+  uploads and spontaneous messages run as background jobs on three queues, so the
+  conversation continues while the GPU renders. A character can now message first
+  after a stretch of quiet.
+- A queue dashboard at `/admin/queues` shows what each queue is doing, in the app's
+  own colours.
+
 ### Changed
 
 - Web search no longer needs a SearXNG host. It queries DuckDuckGo directly with
@@ -39,6 +72,18 @@ and publishes it as the GitHub release notes.
 
 ### Fixed
 
+- The photo ideas offered when you ask a character for a picture come out of the
+  conversation instead of being the same four every time. Two of them used to be
+  the prompt's own examples handed back verbatim — "me and the dog on the sofa",
+  for a character with no dog. Ideas that repeat each other, run on into a
+  sentence, or talk about phones are dropped, and the reroll now changes what it
+  offers.
+- Replies and reply options are things people say again, not paragraphs of
+  narration. An action in *asterisks* is optional, capped at five words, and at
+  most one per message; anything longer is dropped as it streams, and a message
+  that is only an action is never sent. At most one of the three reply options
+  carries an action, so the tray is no longer three stage directions and nothing
+  to say.
 - The chat input dock lifts the full keyboard height again, so the action-button
   row is no longer hidden behind the keyboard. Putting the chat backdrop behind
   the dock had nested the keyboard-avoiding view one level deeper than it needed
