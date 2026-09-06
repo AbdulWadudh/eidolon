@@ -1,4 +1,3 @@
-import type { ServerMessage } from "@eidolon/protocol";
 import { last } from "es-toolkit";
 import { create } from "zustand";
 import { sendMessage } from "@/services/websocket";
@@ -12,59 +11,17 @@ import {
   type MindState,
   resolveUserTimezone,
 } from "./chat-messages";
-import type { CharacterLook, PhotoOrientation } from "./chat-photos";
+import type { CharacterLook } from "./chat-photos";
+import type { ChatStore } from "./chat-types";
 import { appStorage } from "./storage";
 
 export type { ActiveStatus, ChatMessage, MindState } from "./chat-messages";
-
-export const SENT_A_PHOTO = "*sends a photo*";
-export const HEARTBEAT_DETAIL = "pong";
+export type { ChatStore } from "./chat-types";
+export { HEARTBEAT_DETAIL, SENT_A_PHOTO } from "./chat-types";
 
 const SUGGESTIONS_HIDDEN_KEY = "eidolon.chat.suggestions_hidden";
 
 const NEW_CHAT_ANCHOR = "new-chat";
-
-export interface ChatStore {
-  activeCharacterId: string;
-  messages: ChatMessage[];
-  isStreaming: boolean;
-  streamingText: string;
-  streamingIsNarration: boolean;
-  activeStatus: ActiveStatus;
-  statusDetail: string | null;
-  suggestions: string[];
-  isSuggestionsLoading: boolean;
-  isTrayOpen: boolean;
-  areSuggestionsHidden: boolean;
-  inputText: string;
-  mind: MindState | null;
-  pendingAudio: AudioAttachment | null;
-  isSynthesizingAudio: boolean;
-  autoPlayMessageId: string | null;
-  lastError: string | null;
-  setActiveCharacter: (characterId: string) => void;
-  dismissSuggestions: () => void;
-  revealSuggestions: () => void;
-  setSuggestionsHidden: (hidden: boolean) => void;
-  setInputText: (text: string) => void;
-  sendUserMessage: (text: string, characterId: string) => void;
-  requestImage: (characterId: string, prompt?: string, orientation?: PhotoOrientation) => void;
-  requestPhotoIdeas: (characterId: string) => void;
-  isPainting: boolean;
-  paintingStep: number;
-  paintingTotal: number;
-  paintingPreview: string | null;
-  photoIdeas: string[];
-  areIdeasLoading: boolean;
-  characterLook: CharacterLook;
-  handleServerMessage: (msg: ServerMessage) => void;
-  rerollSuggestions: (characterId: string) => void;
-  selectSuggestion: (suggestion: string) => void;
-  interrupt: (characterId: string) => void;
-  resetChat: () => void;
-  clearAutoPlay: () => void;
-  isLoadingHistory: boolean;
-}
 
 export const INITIAL_CHAT = {
   activeCharacterId: "",
@@ -164,7 +121,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     sendMessage({ type: "request_photo_ideas", character_id: characterId });
   },
 
-  handleServerMessage: (msg) => reduceServerMessage(msg, set),
+  handleServerMessage: (msg) => reduceServerMessage(msg, set, commitStreamingTurn),
 
   rerollSuggestions: (characterId) => {
     // A fresh chat has nothing to anchor to; the conductor reads its own history

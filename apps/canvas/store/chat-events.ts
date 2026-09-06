@@ -1,10 +1,14 @@
 import type { ServerMessage } from "@eidolon/protocol";
 import { attachAudioToLastAssistant, audioChunkToAttachment, createMessage } from "./chat-messages";
-import { type ChatStore, commitStreamingTurn, HEARTBEAT_DETAIL } from "./chat-store";
+import { type ChatSetter, HEARTBEAT_DETAIL } from "./chat-types";
 
+// The commit is handed in rather than imported: reading it from the store here
+// would close a require cycle, and Metro warns that the value can be
+// uninitialised when it does.
 export function reduceServerMessage(
   msg: ServerMessage,
-  set: (partial: Partial<ChatStore> | ((state: ChatStore) => Partial<ChatStore>)) => void,
+  set: ChatSetter,
+  commitStreamingTurn: () => void,
 ): void {
   switch (msg.type) {
     case "text_delta": {

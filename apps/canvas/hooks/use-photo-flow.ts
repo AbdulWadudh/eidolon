@@ -10,6 +10,12 @@ import {
 } from "@/store/chat-photos";
 import { useChatStore } from "@/store/chat-store";
 
+const SAVE_ERRORS: Record<string, string> = {
+  denied: "Eidolon needs permission to save photos.",
+  unavailable: "Saving photos needs a new build of the app.",
+  failed: "Could not save that photo.",
+};
+
 export interface PhotoFlow {
   isSheetOpen: boolean;
   openSheet: () => void;
@@ -53,12 +59,7 @@ export function usePhotoFlow(characterId: string, serverHost: string): PhotoFlow
       if (action === "save") {
         void savePhotoToDevice(target.imageUrl).then((result) => {
           if (result === "saved") return;
-          useChatStore.setState({
-            lastError:
-              result === "denied"
-                ? "Eidolon needs permission to save photos."
-                : "Could not save that photo.",
-          });
+          useChatStore.setState({ lastError: SAVE_ERRORS[result] });
         });
         setViewing(null);
         return;

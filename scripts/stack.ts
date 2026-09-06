@@ -1,4 +1,3 @@
-import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
@@ -64,13 +63,16 @@ async function waitFor(service: Service): Promise<boolean> {
   return false;
 }
 
+// `cmd /c start` returns as soon as it has handed the batch file to a new
+// console, so the child here is the launcher rather than the server. Unref so
+// this script can exit without waiting on it either way.
 function launch(service: Service): void {
   if (!service.launch) return;
-  const child = spawn(service.launch.command, service.launch.args, {
+  const child = Bun.spawn([service.launch.command, ...service.launch.args], {
     cwd: service.launch.cwd,
-    detached: true,
-    stdio: "ignore",
-    shell: false,
+    stdout: "ignore",
+    stderr: "ignore",
+    stdin: "ignore",
   });
   child.unref();
 }
