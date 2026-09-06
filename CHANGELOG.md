@@ -19,11 +19,13 @@ and publishes it as the GitHub release notes.
   shows her face inside four amber rings that move with her actual voice, the
   sentence she is speaking as a subtitle, and a large button to cut in — which
   stops her mid-word, on the device and on the server.
-- **She hears you too.** Tap the amber button and talk — your words appear in
-  the call as you say them — then tap again to send. Tapping it while she is
-  mid-sentence cuts her off first, so you can talk over her the way you would on
-  a real call. A conductor with a transcription service configured can do the
-  listening instead, for phones without speech recognition of their own.
+- **She hears you too — just talk.** The microphone opens itself whenever she
+  is not speaking, your words appear as you say them, and a pause of about a
+  second sends them. Nothing to press. She stops listening while she talks, so
+  she never answers her own voice coming out of the speaker; the amber button is
+  there to cut in when she does not stop. A conductor with a transcription
+  service configured can do the listening instead, for phones without speech
+  recognition of their own.
 - Going back from a call returns you to the chat with the call still running,
   so you can type while she talks.
 - **Import a character card.** "Import Tavern Card" on the home screen takes a

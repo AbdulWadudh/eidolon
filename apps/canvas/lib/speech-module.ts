@@ -10,6 +10,8 @@ export interface SpeechSubscription {
 
 export interface SpeechEvents {
   start: () => void;
+  speechstart: () => void;
+  speechend: () => void;
   result: (event: ExpoSpeechRecognitionResultEvent) => void;
   error: (event: ExpoSpeechRecognitionErrorEvent) => void;
   end: () => void;

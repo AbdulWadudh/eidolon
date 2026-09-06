@@ -28,7 +28,13 @@ function describe(error: ExpoSpeechRecognitionErrorEvent["error"]): string | nul
   return CALL_COPY.heardNothing;
 }
 
-export function useDeviceSpeech(onCommit: (text: string) => void): SpeechCapture {
+export interface SpeechHandlers {
+  onCommit: (text: string) => void;
+  onSpeechStart?: () => void;
+  onSpeechEnd?: () => void;
+}
+
+export function useDeviceSpeech(handlers: SpeechHandlers): SpeechCapture {
   const [isAvailable] = React.useState(hasDeviceRecogniser);
   const [isListening, setListening] = React.useState(false);
   const [heard, setHeard] = React.useState("");
@@ -39,9 +45,9 @@ export function useDeviceSpeech(onCommit: (text: string) => void): SpeechCapture
   const onDevice = React.useRef(SPEECH.preferOnDevice && supportsOnDevice());
   const granted = React.useRef(false);
   const watchdog = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const commit = React.useRef(onCommit);
+  const bound = React.useRef(handlers);
   const launch = React.useRef<() => void>(() => undefined);
-  commit.current = onCommit;
+  bound.current = handlers;
 
   const clearWatchdog = React.useCallback(() => {
     if (watchdog.current === null) return;
@@ -65,7 +71,7 @@ export function useDeviceSpeech(onCommit: (text: string) => void): SpeechCapture
         return;
       }
 
-      commit.current(spoken);
+      bound.current.onCommit(spoken);
     },
     [clearWatchdog],
   );
@@ -76,6 +82,14 @@ export function useDeviceSpeech(onCommit: (text: string) => void): SpeechCapture
 
     const onStart = speech.addListener("start", () => {
       if (phase.current === "starting") phase.current = "listening";
+    });
+
+    const onSpeechStart = speech.addListener("speechstart", () => {
+      bound.current.onSpeechStart?.();
+    });
+
+    const onSpeechEnd = speech.addListener("speechend", () => {
+      bound.current.onSpeechEnd?.();
     });
 
     const onResult = speech.addListener("result", (event) => {
@@ -113,6 +127,8 @@ export function useDeviceSpeech(onCommit: (text: string) => void): SpeechCapture
 
     return () => {
       onStart.remove();
+      onSpeechStart.remove();
+      onSpeechEnd.remove();
       onResult.remove();
       onError.remove();
       onEnd.remove();

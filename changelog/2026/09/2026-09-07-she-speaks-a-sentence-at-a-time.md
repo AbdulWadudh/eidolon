@@ -259,6 +259,35 @@ that had to land exactly, on a recogniser whose session can end underneath it.
 Every button fault in this change set came from that seam. Two discrete taps have
 no such seam: each is a committed action against a state the button can read.
 
+## Half-duplex gating: no button to talk
+
+The microphone opens itself. Whenever she is neither thinking nor speaking, the
+recogniser is live; `speechend` starts a 900 ms timer and, if no `speechstart`
+arrives before it fires, the turn commits. `speechstart` cancels the timer, so a
+pause to think does not send. The mic closes while she talks and reopens 400 ms
+after she stops, which keeps the tail of playback out of the transcript.
+
+**It is half duplex because Android cannot do better here.** The recogniser
+records from `MediaRecorder.AudioSource.VOICE_RECOGNITION` and the package wires
+no `AcousticEchoCanceler` and no `VOICE_COMMUNICATION` source; iOS gets
+`setVoiceProcessingEnabled(true)` on both nodes and Android gets nothing. With
+the mic open while Kokoro plays through the speaker, she would transcribe herself
+and answer her own words. Gating the mic is what makes an always-on microphone
+survivable on a speakerphone.
+
+What gating costs is barge-in, so the amber button keeps that job and only that
+job: it reads "Cut in" and is live only while she is speaking or thinking. The
+mute button rings green while the microphone is actually open, because an
+always-on mic that gives no sign of being on is not something to ship.
+
+Server-side transcription stays manual. Endpointing needs the recogniser's own
+speech boundaries, and a recording uploaded after the fact has none, so a device
+without its own recogniser keeps tap-to-talk.
+
+`SPEECH.autoListen` turns the whole thing off and returns the button to
+tap-to-talk, and `endpointSilenceMs` is the one number worth tuning against a
+real room.
+
 ## Follow-ups
 
 - **Nothing here has run on a device.** The Aqueous Pool's feel, the interrupt

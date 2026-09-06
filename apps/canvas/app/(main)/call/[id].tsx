@@ -33,7 +33,15 @@ export default function CallScreen() {
   const call = useCallStore();
   const audio = useCallAudio();
   const canTranscribeOnServer = useServerCapability(serverHost, "stt");
-  const speech = useCallSpeech(characterId, canTranscribeOnServer);
+
+  const isSpeaking = call.phase === "speaking";
+  const isBusy = isSpeaking || call.phase === "thinking";
+
+  const speech = useCallSpeech({
+    characterId,
+    canTranscribeOnServer,
+    shouldOpen: !isBusy && !call.isMuted && socket.isConnected,
+  });
 
   const [now, setNow] = React.useState(() => Date.now());
 
@@ -52,8 +60,6 @@ export default function CallScreen() {
     return () => clearInterval(ticker);
   }, []);
 
-  const isSpeaking = call.phase === "speaking";
-
   const handleTalkToggle = React.useCallback(() => {
     tap("medium");
 
@@ -62,7 +68,7 @@ export default function CallScreen() {
       return;
     }
 
-    if (isSpeaking || call.phase === "thinking") {
+    if (isBusy) {
       audio.stop();
       call.interrupt();
     }
@@ -72,12 +78,17 @@ export default function CallScreen() {
     speech.isListening,
     speech.finish,
     speech.begin,
-    isSpeaking,
-    call.phase,
+    isBusy,
     call.interrupt,
     call.beginTurn,
     audio.stop,
   ]);
+
+  const handleInterrupt = React.useCallback(() => {
+    tap("medium");
+    audio.stop();
+    call.interrupt();
+  }, [audio.stop, call.interrupt]);
 
   const handleEnd = React.useCallback(() => {
     tap("light");
@@ -137,13 +148,16 @@ export default function CallScreen() {
           characterId={characterId}
           isMuted={call.isMuted}
           isListening={speech.isListening}
+          isAuto={speech.isAuto}
           canTalk={!call.isMuted && speech.mode !== "unavailable" && socket.isConnected}
+          canInterrupt={isBusy}
           onToggleMute={() => {
             tap("light");
             if (speech.isListening) speech.cancel();
             call.toggleMute();
           }}
           onTalkToggle={handleTalkToggle}
+          onInterrupt={handleInterrupt}
           onEnd={handleEnd}
         />
       </View>

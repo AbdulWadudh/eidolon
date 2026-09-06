@@ -9,9 +9,12 @@ export interface CallControlsProps {
   characterId: string;
   isMuted: boolean;
   isListening: boolean;
+  isAuto: boolean;
   canTalk: boolean;
+  canInterrupt: boolean;
   onToggleMute: () => void;
   onTalkToggle: () => void;
+  onInterrupt: () => void;
   onEnd: () => void;
 }
 
@@ -19,13 +22,29 @@ export function CallControls({
   characterId,
   isMuted,
   isListening,
+  isAuto,
   canTalk,
+  canInterrupt,
   onToggleMute,
   onTalkToggle,
+  onInterrupt,
   onEnd,
 }: CallControlsProps) {
   const theme = useResolvedTheme(characterId);
-  const hint = isListening ? CALL_COPY.tapToSend : CALL_COPY.tapToTalk;
+  const hint = isAuto
+    ? isListening
+      ? CALL_COPY.justTalk
+      : CALL_COPY.interrupt
+    : isListening
+      ? CALL_COPY.tapToSend
+      : CALL_COPY.tapToTalk;
+
+  const centreEnabled = isAuto ? canInterrupt : canTalk;
+  const centreLabel = isAuto
+    ? CALL_COPY.cutInHint
+    : isListening
+      ? CALL_COPY.sendWhatYouSaid
+      : CALL_COPY.startTalking;
 
   return (
     <View className="flex-row items-center justify-center gap-6">
@@ -35,37 +54,40 @@ export function CallControls({
         accessibilityLabel={isMuted ? CALL_COPY.unmute : CALL_COPY.mute}
         hitSlop={8}
         onPress={onToggleMute}
-        className="items-center justify-center rounded-full border border-border bg-card"
-        style={{ width: CALL.muteButtonPx, height: CALL.muteButtonPx }}
+        className="items-center justify-center rounded-full border bg-card"
+        style={{
+          width: CALL.muteButtonPx,
+          height: CALL.muteButtonPx,
+          borderColor: isListening && !isMuted ? theme.success : theme.cardBorder,
+        }}
       >
         <AppIcon
           icon={isMuted ? MicOff01Icon : Mic01Icon}
           size={22}
-          color={isMuted ? theme.danger : theme.textPrimary}
+          color={isMuted ? theme.danger : isListening ? theme.success : theme.textPrimary}
         />
       </PressableScale>
 
       <View className="items-center">
         <PressableScale
           accessibilityRole="button"
-          accessibilityState={{ disabled: !canTalk, busy: isListening }}
-          accessibilityLabel={isListening ? CALL_COPY.sendWhatYouSaid : CALL_COPY.startTalking}
-          accessibilityHint={CALL_COPY.interrupt}
-          disabled={!canTalk}
+          accessibilityState={{ disabled: !centreEnabled, busy: isListening }}
+          accessibilityLabel={centreLabel}
+          disabled={!centreEnabled}
           hitSlop={8}
-          onPress={onTalkToggle}
+          onPress={isAuto ? onInterrupt : onTalkToggle}
           className="items-center justify-center rounded-full"
           style={{
             width: CALL.interruptButtonPx,
             height: CALL.interruptButtonPx,
-            backgroundColor: isListening ? theme.success : theme.primary,
+            backgroundColor: isAuto || !isListening ? theme.primary : theme.success,
             borderWidth: CALL.avatarBorderPx,
-            borderColor: isListening ? theme.textPrimary : "transparent",
-            opacity: canTalk ? 1 : 0.45,
+            borderColor: !isAuto && isListening ? theme.textPrimary : "transparent",
+            opacity: centreEnabled ? 1 : 0.45,
           }}
         >
           <AppIcon
-            icon={isListening ? Mic01Icon : HandIcon}
+            icon={!isAuto && isListening ? Mic01Icon : HandIcon}
             size={30}
             color={theme.primaryForeground}
             strokeWidth={2}
