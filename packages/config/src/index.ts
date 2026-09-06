@@ -5,6 +5,7 @@ export {
   API_ROUTES,
   API_VERSION,
   type ApiRoute,
+  AUTH_ROUTES,
   adminPath,
   adminUrl,
   apiPath,
@@ -52,6 +53,7 @@ export {
 } from "./copy";
 export {
   AFFINITY,
+  AUTH,
   CACHE,
   CHAT,
   CHAT_MS,

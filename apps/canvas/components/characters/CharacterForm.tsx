@@ -4,7 +4,7 @@ import { VoicePicker } from "@/components/ui/voice-picker";
 import type { CharacterCard } from "@/store/character-api";
 import { useResolvedTheme } from "@/store/theme-store";
 
-export type Draft = Omit<CharacterCard, "id">;
+export type Draft = Omit<CharacterCard, "id" | "ownerId" | "isPublic" | "forkedFrom">;
 
 export const EMPTY_DRAFT: Draft = {
   name: "",

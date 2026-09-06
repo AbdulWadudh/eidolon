@@ -2,6 +2,9 @@ import { characterPortraitUrl, charactersUrl, characterUrl, TIMEOUTS_MS } from "
 
 export interface CharacterCard {
   id: string;
+  ownerId?: string | null;
+  isPublic?: boolean;
+  forkedFrom?: string | null;
   name: string;
   tagline: string;
   personality: string;
@@ -104,18 +107,62 @@ export async function createCharacter(
   }
 }
 
-export async function updateCharacter(
+export interface SaveResult {
+  character: CharacterCard;
+  forked: boolean;
+}
+
+/**
+ * The conductor decides whether this is an edit or a fork: editing a character
+ * somebody else authored leaves theirs alone and hands back a copy that is
+ * yours. The caller is told which happened so it can say so.
+ */
+export async function saveCharacter(
   host: string,
   id: string,
   patch: Partial<CharacterCard>,
-): Promise<CharacterCard | null> {
+  token: string,
+): Promise<SaveResult | null> {
   try {
     const res = await fetch(characterUrl(host, id), {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(patch),
       signal: signal(),
     });
+    if (!res.ok) return null;
+
+    const body = (await res.json()) as { character: CharacterCard; forked?: boolean };
+    return { character: body.character, forked: body.forked === true };
+  } catch {
+    return null;
+  }
+}
+
+export async function publishCharacter(
+  host: string,
+  id: string,
+  isPublic: boolean,
+  token: string,
+): Promise<CharacterCard | null> {
+  try {
+    const res = await fetch(`${characterUrl(host, id)}/publish`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ isPublic }),
+      signal: signal(),
+    });
+    if (!res.ok) return null;
+    const body = (await res.json()) as { character: CharacterCard };
+    return body.character;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchCharacter(host: string, id: string): Promise<CharacterCard | null> {
+  try {
+    const res = await fetch(characterUrl(host, id), { signal: signal() });
     if (!res.ok) return null;
     const body = (await res.json()) as { character: CharacterCard };
     return body.character;

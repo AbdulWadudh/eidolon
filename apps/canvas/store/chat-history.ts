@@ -16,15 +16,29 @@ export async function loadHistory(host: string, characterId: string): Promise<vo
 
   try {
     const { messages, mind, look } = await fetchTranscript(host, characterId);
-    useChatStore.setState((state) => ({
-      activeCharacterId: characterId,
-      // A turn that landed while this was in flight wins; the socket is more
-      // current than the page of history we asked for.
-      messages: state.messages.length > messages.length ? state.messages : messages,
-      mind: mind ?? state.mind,
-      characterLook: look,
-      isLoadingHistory: false,
-    }));
+    useChatStore.setState((state) => {
+      // Opening a different character replaces everything. Keeping the longer
+      // list is only ever right for the character already on screen: switching
+      // from someone with a long history to someone with none used to leave the
+      // first one's conversation sitting under the second one's name.
+      const sameCharacter = state.activeCharacterId === characterId;
+
+      return {
+        activeCharacterId: characterId,
+        // A turn that landed while this was in flight wins; the socket is more
+        // current than the page of history we asked for.
+        messages:
+          sameCharacter && state.messages.length > messages.length ? state.messages : messages,
+        mind: sameCharacter ? (mind ?? state.mind) : mind,
+        streamingText: sameCharacter ? state.streamingText : "",
+        isStreaming: sameCharacter ? state.isStreaming : false,
+        suggestions: sameCharacter ? state.suggestions : [],
+        enhanceHistory: sameCharacter ? state.enhanceHistory : [],
+        inputText: sameCharacter ? state.inputText : "",
+        characterLook: look,
+        isLoadingHistory: false,
+      };
+    });
   } catch (err) {
     useChatStore.setState({
       isLoadingHistory: false,

@@ -1,11 +1,16 @@
 import { API_ROUTES, CHARACTER_PRESETS, presetByKey, QUEUE_JOBS } from "@eidolon/config";
-import { Hono } from "hono";
+import { type Context, Hono } from "hono";
+import { ownerFor } from "@/auth/session";
 import {
+  adopt,
   type CharacterCard,
   createCharacter,
   deleteCharacter,
+  forkCharacter,
   getCharacter,
   listCharacters,
+  ownsCharacter,
+  setPublic,
   updateCharacter,
 } from "@/db/characters";
 import { deleteLoreEntry, getLoreEntries, upsertLoreEntry } from "@/db/lorebook";
@@ -14,7 +19,7 @@ import { enqueueGpuJob } from "@/queue/queues";
 
 export const characters = new Hono();
 
-type Draft = Partial<Omit<CharacterCard, "id">>;
+type Draft = Partial<Omit<CharacterCard, "id" | "ownerId" | "isPublic" | "forkedFrom">>;
 
 const TEXT_FIELDS: Array<keyof Draft> = [
   "name",
@@ -29,17 +34,24 @@ const TEXT_FIELDS: Array<keyof Draft> = [
 ];
 
 export function readDraft(body: Record<string, unknown>): Draft {
-  const draft: Draft = {};
+  const draft: Record<string, string> = {};
 
   for (const field of TEXT_FIELDS) {
     const value = body[field];
     if (typeof value === "string") draft[field] = value;
   }
 
-  return draft;
+  return draft as Draft;
 }
 
-characters.get("/", (c) => c.json({ characters: listCharacters() }));
+async function requireOwner(c: Context) {
+  return ownerFor(c.req.header("Authorization") ?? c.req.query("token"));
+}
+
+characters.get("/", async (c) => {
+  const owner = await requireOwner(c);
+  return c.json({ characters: listCharacters(owner?.id), owner: owner?.id ?? null });
+});
 
 characters.get("/presets", (c) => c.json({ presets: CHARACTER_PRESETS }));
 
@@ -51,7 +63,9 @@ characters.post("/presets/:key", async (c) => {
   const name =
     typeof body.name === "string" && body.name.trim().length > 0 ? body.name : preset.name;
 
+  const owner = await requireOwner(c);
   const created = createCharacter({
+    ownerId: owner?.id ?? null,
     name,
     tagline: preset.tagline,
     personality: preset.personality,
@@ -93,7 +107,11 @@ characters.post("/", async (c) => {
     return c.json({ error: "A character needs a name." }, 400);
   }
 
-  return c.json({ character: createCharacter({ ...draft, name: draft.name }) }, 201);
+  const owner = await requireOwner(c);
+  return c.json(
+    { character: createCharacter({ ...draft, name: draft.name, ownerId: owner?.id ?? null }) },
+    201,
+  );
 });
 
 characters.get("/:id", (c) => {
@@ -103,6 +121,7 @@ characters.get("/:id", (c) => {
 });
 
 characters.patch("/:id", async (c) => {
+  const id = c.req.param("id");
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   const draft = readDraft(body);
 
@@ -110,15 +129,58 @@ characters.patch("/:id", async (c) => {
     return c.json({ error: "Nothing to change." }, 400);
   }
 
-  const updated = updateCharacter(c.req.param("id"), draft);
-  if (!updated) return c.json({ error: "No such character." }, 404);
-  return c.json({ character: updated });
+  const existing = getCharacter(id);
+  if (!existing) return c.json({ error: "No such character." }, 404);
+
+  const owner = await requireOwner(c);
+  if (!owner) return c.json({ error: "Sign in to change a character." }, 401);
+
+  // Editing something you wrote changes it. Editing someone else's, or a preset
+  // you were given, makes it yours instead and leaves theirs alone.
+  if (!ownsCharacter(id, owner.id)) {
+    const fork = forkCharacter(existing, owner.id, draft);
+    for (const entry of getLoreEntries(id)) {
+      upsertLoreEntry(fork.id, {
+        keys: entry.keys,
+        content: entry.content,
+        requiredAffinity: entry.requiredAffinity,
+        isActive: entry.isActive,
+      });
+    }
+    return c.json({ character: fork, forked: true }, 201);
+  }
+
+  adopt(id, owner.id);
+  const updated = updateCharacter(id, draft);
+  return c.json({ character: updated, forked: false });
 });
 
-characters.delete("/:id", (c) => {
-  if (!deleteCharacter(c.req.param("id"))) {
-    return c.json({ error: "No such character." }, 404);
+characters.post("/:id/publish", async (c) => {
+  const id = c.req.param("id");
+  if (!getCharacter(id)) return c.json({ error: "No such character." }, 404);
+
+  const owner = await requireOwner(c);
+  if (!owner) return c.json({ error: "Sign in to publish a character." }, 401);
+  if (!ownsCharacter(id, owner.id)) {
+    return c.json({ error: "Only her author can publish her." }, 403);
   }
+
+  const body = (await c.req.json().catch(() => ({}))) as { isPublic?: unknown };
+  adopt(id, owner.id);
+
+  return c.json({ character: setPublic(id, body.isPublic !== false) });
+});
+
+characters.delete("/:id", async (c) => {
+  const id = c.req.param("id");
+  if (!getCharacter(id)) return c.json({ error: "No such character." }, 404);
+
+  const owner = await requireOwner(c);
+  if (!owner || !ownsCharacter(id, owner.id)) {
+    return c.json({ error: "Only her author can remove her." }, 403);
+  }
+
+  deleteCharacter(id);
   return c.json({ ok: true });
 });
 

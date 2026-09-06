@@ -22,6 +22,10 @@ export const STATIC_ROUTES = {
   logo: "/assets/logo.svg",
 } as const;
 
+export const AUTH_ROUTES = {
+  base: "/api/auth",
+} as const;
+
 export const ADMIN_ROUTES = {
   queues: "/admin/queues",
 } as const;

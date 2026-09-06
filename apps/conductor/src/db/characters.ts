@@ -13,6 +13,9 @@ export interface CharacterCard {
   exampleDialogue: string;
   greeting: string;
   voice: string;
+  ownerId: string | null;
+  isPublic: boolean;
+  forkedFrom: string | null;
 }
 
 export interface CharacterSummary extends CharacterCard {
@@ -35,6 +38,9 @@ interface CharacterRow {
   example_dialogue: string | null;
   greeting: string | null;
   voice: string | null;
+  owner_id: string | null;
+  is_public: number | null;
+  forked_from: string | null;
   avatar_url: string | null;
   affinity_score: number | null;
   affinity_tier: string | null;
@@ -43,8 +49,8 @@ interface CharacterRow {
 }
 
 const COLUMNS = `id, name, tagline, personality, system_prompt, scenario, rules,
-  example_dialogue, greeting, voice, avatar_url, affinity_score, affinity_tier, current_mood,
-  created_at`;
+  example_dialogue, greeting, voice, owner_id, is_public, forked_from, avatar_url,
+  affinity_score, affinity_tier, current_mood, created_at`;
 
 function toCard(row: CharacterRow): CharacterCard {
   return {
@@ -58,6 +64,9 @@ function toCard(row: CharacterRow): CharacterCard {
     exampleDialogue: row.example_dialogue ?? "",
     greeting: row.greeting ?? "",
     voice: row.voice ?? VOICE.defaultId,
+    ownerId: row.owner_id,
+    isPublic: row.is_public === 1,
+    forkedFrom: row.forked_from,
   };
 }
 
@@ -84,10 +93,19 @@ export function getCharacter(id: string): CharacterCard | null {
   return row ? toCard(row) : null;
 }
 
-export function listCharacters(): CharacterSummary[] {
-  const rows = db
-    .query<CharacterRow, []>(`SELECT ${COLUMNS} FROM characters ORDER BY created_at DESC`)
-    .all();
+export function listCharacters(ownerId?: string): CharacterSummary[] {
+  // Yours, anything published, and anything from before ownership existed.
+  const rows = ownerId
+    ? db
+        .query<CharacterRow, [string]>(
+          `SELECT ${COLUMNS} FROM characters
+           WHERE owner_id = ?1 OR owner_id IS NULL OR is_public = 1
+           ORDER BY created_at DESC`,
+        )
+        .all(ownerId)
+    : db
+        .query<CharacterRow, []>(`SELECT ${COLUMNS} FROM characters ORDER BY created_at DESC`)
+        .all();
 
   return rows.map((row) => {
     const counted = db
@@ -116,8 +134,8 @@ export function createCharacter(draft: CharacterDraft): CharacterCard {
   db.query(
     `INSERT INTO characters
        (id, name, tagline, personality, system_prompt, scenario, rules,
-        example_dialogue, greeting, voice, created_at)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)`,
+        example_dialogue, greeting, voice, owner_id, is_public, forked_from, created_at)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)`,
   ).run(
     id,
     draft.name.trim(),
@@ -129,6 +147,9 @@ export function createCharacter(draft: CharacterDraft): CharacterCard {
     draft.exampleDialogue ?? "",
     draft.greeting ?? "",
     draft.voice ?? VOICE.defaultId,
+    draft.ownerId ?? null,
+    draft.isPublic ? 1 : 0,
+    draft.forkedFrom ?? null,
     Date.now(),
   );
 
@@ -137,7 +158,11 @@ export function createCharacter(draft: CharacterDraft): CharacterCard {
   return created;
 }
 
-const EDITABLE: Record<keyof Omit<CharacterCard, "id">, string> = {
+type EditableField = keyof Omit<CharacterCard, "id" | "ownerId" | "forkedFrom">;
+
+// Ownership is never editable through a patch body. It is set when a character
+// is created or forked and changed only by the publish endpoint.
+const EDITABLE: Record<EditableField, string> = {
   name: "name",
   tagline: "tagline",
   personality: "personality",
@@ -147,6 +172,7 @@ const EDITABLE: Record<keyof Omit<CharacterCard, "id">, string> = {
   exampleDialogue: "example_dialogue",
   greeting: "greeting",
   voice: "voice",
+  isPublic: "is_public",
 };
 
 export function updateCharacter(
@@ -156,12 +182,58 @@ export function updateCharacter(
   if (!characterExists(id)) return null;
 
   for (const [field, column] of Object.entries(EDITABLE)) {
-    const value = patch[field as keyof typeof EDITABLE];
+    const value = patch[field as EditableField];
     if (value === undefined) continue;
-    db.query(`UPDATE characters SET ${column} = ?2 WHERE id = ?1`).run(id, value);
+    db.query(`UPDATE characters SET ${column} = ?2 WHERE id = ?1`).run(
+      id,
+      typeof value === "boolean" ? (value ? 1 : 0) : value,
+    );
   }
 
   return getCharacter(id);
+}
+
+export function ownsCharacter(id: string, ownerId: string): boolean {
+  const row = db
+    .query<{ owner_id: string | null }, [string]>("SELECT owner_id FROM characters WHERE id = ?")
+    .get(id);
+
+  // A character from before ownership existed has no owner. The first person to
+  // reach for it adopts it rather than being locked out of their own roster.
+  return row !== null && (row.owner_id === null || row.owner_id === ownerId);
+}
+
+export function adopt(id: string, ownerId: string): void {
+  db.query("UPDATE characters SET owner_id = ?2 WHERE id = ?1 AND owner_id IS NULL").run(
+    id,
+    ownerId,
+  );
+}
+
+export function setPublic(id: string, isPublic: boolean): CharacterCard | null {
+  if (!characterExists(id)) return null;
+  db.query("UPDATE characters SET is_public = ?2 WHERE id = ?1").run(id, isPublic ? 1 : 0);
+  return getCharacter(id);
+}
+
+/**
+ * Forking is what happens when someone edits a character they did not author:
+ * their version is theirs, the original is untouched, and the lore comes with it
+ * because a character without her secrets is not the same character.
+ */
+export function forkCharacter(
+  source: CharacterCard,
+  ownerId: string,
+  patch: Partial<Omit<CharacterCard, "id">>,
+): CharacterCard {
+  return createCharacter({
+    ...source,
+    ...patch,
+    name: patch.name ?? source.name,
+    ownerId,
+    isPublic: false,
+    forkedFrom: source.id,
+  });
 }
 
 export function deleteCharacter(id: string): boolean {

@@ -129,6 +129,16 @@ export const TTS = {
   timeoutMs: 20000,
 } as const;
 
+export const AUTH = {
+  minPasswordLength: 8,
+  sessionExpirySeconds: 60 * 60 * 24 * 30,
+  sessionRefreshSeconds: 60 * 60 * 24,
+  // The account the paired device is signed in as when nobody has made one.
+  // A single-user conductor still needs an owner for a character to belong to.
+  localOwnerEmail: "owner@eidolon.local",
+  localOwnerName: "You",
+} as const;
+
 export const CACHE = {
   defaultUrl: "redis://127.0.0.1:6379",
   defaultPort: 6379,

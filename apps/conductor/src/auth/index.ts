@@ -4,11 +4,11 @@ import {
   getLocalIp,
   getPairingHost,
   getPairingSecret,
-  getTrustedOrigins,
   hasPairingSecret,
 } from "@eidolon/config/server";
 import { betterAuth } from "better-auth";
-import { db } from "@/db";
+import { authOptions } from "@/auth/options";
+import { hasActiveSession } from "@/auth/sessions-read";
 
 export { getLocalIp };
 
@@ -23,12 +23,7 @@ export const PAIRING_SECRET = getPairingSecret();
  */
 export const AUTH_BASE_URL = getAuthBaseUrl();
 
-export const auth = betterAuth({
-  database: db,
-  secret: PAIRING_SECRET,
-  baseURL: AUTH_BASE_URL,
-  trustedOrigins: getTrustedOrigins(),
-});
+export const auth = betterAuth(authOptions);
 
 /**
  * Generates the deep-link pairing payload for mobile client onboarding.
@@ -52,6 +47,9 @@ export function validateToken(token: string | null | undefined): boolean {
     return false;
   }
 
-  // Check matching pairing secret or active session token
-  return cleanToken === PAIRING_SECRET;
+  if (cleanToken === PAIRING_SECRET) return true;
+
+  // A signed-in account reaches the socket with its own session token rather
+  // than the device secret, so both are accepted.
+  return hasActiveSession(cleanToken);
 }

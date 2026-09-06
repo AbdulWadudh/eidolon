@@ -81,6 +81,9 @@ export function applySchema(db: Database): void {
   addColumnIfMissing(db, "characters", "example_dialogue", "TEXT");
   addColumnIfMissing(db, "characters", "rules", "TEXT");
   addColumnIfMissing(db, "characters", "voice", "TEXT");
+  addColumnIfMissing(db, "characters", "owner_id", "TEXT");
+  addColumnIfMissing(db, "characters", "is_public", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "characters", "forked_from", "TEXT");
   addColumnIfMissing(db, "messages", "audio_duration", "REAL");
   addColumnIfMissing(db, "messages", "image_url", "TEXT");
   addColumnIfMissing(db, "messages", "image_caption", "TEXT");

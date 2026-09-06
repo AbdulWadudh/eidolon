@@ -2,6 +2,7 @@ import { join } from "node:path";
 import {
   ADMIN_ROUTES,
   API_PREFIX,
+  AUTH_ROUTES,
   apiPath,
   HEALTH_ALIAS_PATH,
   STATIC_ROUTES,
@@ -17,7 +18,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { buildHealthReport, v1 } from "@/api/v1";
-import { generatePairingPayload, getLocalIp, PAIRING_SECRET } from "@/auth";
+import { auth, generatePairingPayload, getLocalIp, PAIRING_SECRET } from "@/auth";
 import { buildQrMatrix, qrTerminalColumns, renderQrTerminal } from "@/pairing/qr";
 import { loadPrompts } from "@/prompts/store";
 import { createQueueBoard } from "@/queue/board";
@@ -37,6 +38,9 @@ app.use(
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   }),
 );
+
+// Better Auth owns this whole subtree: sign-up, sign-in, session and sign-out.
+app.on(["GET", "POST"], `${AUTH_ROUTES.base}/*`, (c) => auth.handler(c.req.raw));
 
 app.route(API_PREFIX, v1);
 app.route(ADMIN_ROUTES.queues, createQueueBoard());

@@ -8,9 +8,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ActionsSheet, type ChatAction } from "@/components/chat/ActionsSheet";
 import { ChatBackdrop } from "@/components/chat/ChatBackdrop";
 import { ChatFeed } from "@/components/chat/ChatFeed";
+import { ChatSheets } from "@/components/chat/ChatSheets";
 import { ChatTopBar } from "@/components/chat/ChatTopBar";
 import { InputDock } from "@/components/chat/InputDock";
-import { MindDrawer } from "@/components/chat/MindDrawer";
 import { PhotoRequestSheet } from "@/components/chat/PhotoRequestSheet";
 import { type PhotoAction, PhotoViewer } from "@/components/chat/PhotoViewer";
 import { SuggestionTray } from "@/components/chat/SuggestionTray";
@@ -49,6 +49,8 @@ export default function ChatScreen() {
   const serverHost = useConnectionStore((state) => state.serverHost);
   const [actionsOpen, setActionsOpen] = React.useState(false);
   const [mindOpen, setMindOpen] = React.useState(false);
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const [themeOpen, setThemeOpen] = React.useState(false);
   const applyMindUpdate = useAffinityStore((state) => state.applyMindUpdate);
   const resetAffinity = useAffinityStore((state) => state.reset);
   const photos = usePhotoFlow(characterId, serverHost);
@@ -171,7 +173,7 @@ export default function ChatScreen() {
         mind={chat.mind}
         onBack={() => router.back()}
         onCall={() => router.push(`/chat/${characterId}`)}
-        onOverflow={() => router.push("/demo")}
+        onOverflow={() => setSettingsOpen(true)}
       />
 
       {/* Behind everything below the top bar — the messages and the dock — but
@@ -260,11 +262,24 @@ export default function ChatScreen() {
         onCrop={photos.crop}
       />
 
-      <MindDrawer
-        isOpen={mindOpen}
+      <ChatSheets
         characterId={characterId}
+        characterName={characterName}
         serverHost={serverHost}
-        onClose={() => setMindOpen(false)}
+        settingsOpen={settingsOpen}
+        themeOpen={themeOpen}
+        mindOpen={mindOpen}
+        onCloseSettings={() => setSettingsOpen(false)}
+        onOpenTheme={() => {
+          setSettingsOpen(false);
+          setThemeOpen(true);
+        }}
+        onForked={(id) => {
+          setSettingsOpen(false);
+          router.replace(`/chat/${id}`);
+        }}
+        onCloseTheme={() => setThemeOpen(false)}
+        onCloseMind={() => setMindOpen(false)}
       />
 
       <ActionsSheet

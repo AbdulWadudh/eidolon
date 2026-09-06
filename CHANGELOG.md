@@ -18,8 +18,20 @@ and publishes it as the GitHub release notes.
   does not know instead of inventing a winner, a score or a date.
 - Answers built from a live search sound like her again — "RCB took it this year,
   they beat Gujarat in the final" rather than an encyclopedia entry.
+- Opening a different character no longer shows you the last one's conversation.
 
 ### Added
+
+- Characters you write yourself. A roster with a create screen covering name,
+  personality, system prompt, scenario, rules, example dialogue, greeting and
+  voice, a generated portrait, and six women to start from — loyal, sarcastic,
+  flirty, guarded, driven and whimsical — each with her own lorebook.
+- A voice picker that plays a line before you commit to it, grouped by language
+  and marked by quality.
+- The three-dot button in a chat now opens that character's settings: every
+  field editable in place, a paint icon through to her theme, and a switch to
+  publish her for others. Editing a character somebody else wrote saves a copy
+  under your name and leaves theirs alone; editing your own edits your own.
 
 - A wand button next to the message box rewrites what you have typed. Press it
   again to rework the rewrite, as many times as you like, and the undo button
