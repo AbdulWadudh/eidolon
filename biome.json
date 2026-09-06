@@ -15,6 +15,7 @@
       "!**/dist",
       "!**/android",
       "!**/ios",
+      "!**/graphify-out",
       "!**/public"
     ]
   },

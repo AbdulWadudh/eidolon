@@ -333,3 +333,36 @@ to build. Build only on an explicit yes.
 
 The same applies to anything else with a multi-minute, exclusive hold on the
 tree — a prebuild, a clean Gradle run, an `expo prebuild --clean`.
+
+## 20. Ask the graph before you go looking
+
+`graphify-out/` holds a knowledge graph of this repo: every file, symbol, and
+import the AST could see, plus the concepts and rationale extracted from the
+docs and the changelog. It is committed, so a fresh clone has it.
+
+When the question is *where does this live*, *what talks to what*, or *why is it
+built this way*, ask it first:
+
+```
+graphify query "how does the chat turn reach the LLM?"
+```
+
+It answers with real files and line numbers, and it crosses boundaries a grep
+cannot — a changelog note explaining a guard, and the guard itself, are one hop
+apart. Grepping for a name you guessed finds the files that happen to contain
+that string, which is a different question and usually the wrong one.
+
+This is for orientation, not a toll gate. Opening a file you already know the
+path of needs no ceremony. Reading one file, or grepping for a literal string
+you are certain of, is still the right tool.
+
+**The graph goes stale.** It is a snapshot of the tree at build time, so a change
+set that adds, moves, or deletes files leaves it describing a repo that no longer
+exists. Run `/graphify . --update` when that happens — it re-extracts only what
+changed — and say you did in the changelog entry, so the next reader knows how
+current the graph they are trusting actually is.
+
+**When the graph and the source disagree, the source is right.** The graph is
+derived, and derived data is a claim about the tree rather than the tree itself.
+Some of its edges are marked `INFERRED` or `AMBIGUOUS` precisely because they are
+guesses. Verify anything load-bearing by opening the file, then rebuild.
