@@ -117,9 +117,10 @@ export const IMAGE = {
   appearanceFallback:
     "a woman in her late twenties, shoulder length dark hair, warm brown eyes, casual everyday clothes",
   captionMaxChars: 90,
+  captionAttempts: 3,
   captionMinWords: 3,
   captionMaxWords: 14,
-  captionMaxTokens: 44,
+  captionMaxTokens: 72,
   captionTemperature: 1.0,
   captionPresencePenalty: 0.8,
   captionFrequencyPenalty: 0.6,

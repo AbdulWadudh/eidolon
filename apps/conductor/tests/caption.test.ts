@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { usableCaption } from "@/services/selfie";
+import { firstCaption, usableCaption } from "@/services/photo-caption";
 
 describe("photo captions", () => {
   it("keeps an offhand remark", () => {
@@ -38,5 +38,29 @@ describe("photo captions", () => {
         "Emma",
       ),
     ).toBe(false);
+  });
+});
+
+describe("taking a caption out of a paragraph", () => {
+  it("keeps whole sentences and drops the truncated tail", () => {
+    expect(
+      firstCaption(
+        "Hey! Looks like Mittens is lounging on my sofa today. She sure does love nap",
+        14,
+      ),
+    ).toBe("Hey! Looks like Mittens is lounging on my sofa today.");
+  });
+
+  it("stops at the word budget rather than running on", () => {
+    const long = "One two three. Four five six seven eight nine ten. Eleven twelve thirteen.";
+    expect(firstCaption(long, 8).split(/\s+/).length).toBeLessThanOrEqual(8);
+  });
+
+  it("keeps a single line that never had punctuation", () => {
+    expect(firstCaption("worth the early start", 14)).toBe("worth the early start");
+  });
+
+  it("returns nothing for an empty reply", () => {
+    expect(firstCaption("   ", 14)).toBe("");
   });
 });

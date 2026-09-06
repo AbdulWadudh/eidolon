@@ -3,10 +3,15 @@ import { useChatStore } from "./chat-store";
 
 export type PhotoOrientation = "portrait" | "landscape";
 
+// The circle expressed in the photo's own coordinates: where its centre sits
+// (0..1 of the image), and how many circle-widths the whole image spans. That
+// is all the avatar needs to lay the image out, and it does not depend on the
+// screen it was chosen on.
 export interface AvatarCropRect {
-  zoom: number;
-  offsetX: number;
-  offsetY: number;
+  cx: number;
+  cy: number;
+  widthRatio: number;
+  heightRatio: number;
 }
 
 export interface CharacterLook {

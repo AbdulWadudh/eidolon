@@ -62,12 +62,29 @@ export function characterMessagesPath(characterId: string): string {
   return `${apiPath("characters")}/${encodeURIComponent(characterId)}/messages`;
 }
 
-export function characterLookUrl(host: string, characterId: string): string {
-  return `${httpScheme(host)}${stripAuthority(host)}${API_PREFIX}${API_ROUTES.characters}/${characterId}/look`;
+export function characterLookPath(characterId: string): string {
+  return `${apiPath("characters")}/${encodeURIComponent(characterId)}/look`;
 }
 
-export function characterMessageUrl(host: string, characterId: string, messageId: string): string {
-  return `${httpScheme(host)}${stripAuthority(host)}${API_PREFIX}${API_ROUTES.characters}/${characterId}/messages/${messageId}`;
+export function characterLookUrl(
+  host: string,
+  characterId: string,
+  scheme = httpScheme(host),
+): string {
+  return `${scheme}://${stripAuthority(host)}${characterLookPath(characterId)}`;
+}
+
+export function characterMessagePath(characterId: string, messageId: string): string {
+  return `${apiPath("characters")}/${encodeURIComponent(characterId)}/messages/${encodeURIComponent(messageId)}`;
+}
+
+export function characterMessageUrl(
+  host: string,
+  characterId: string,
+  messageId: string,
+  scheme = httpScheme(host),
+): string {
+  return `${scheme}://${stripAuthority(host)}${characterMessagePath(characterId, messageId)}`;
 }
 
 export function characterMessagesUrl(

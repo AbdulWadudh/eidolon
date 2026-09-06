@@ -35,6 +35,14 @@ export function reduceServerMessage(
 
     case "image_preview": {
       const source = msg.payload ?? msg;
+
+      // A frame of the image as it denoises, which carries no step of its own —
+      // writing the step here as well would reset the bar to zero on every one.
+      if (source.preview_base64) {
+        set({ paintingPreview: source.preview_base64 });
+        break;
+      }
+
       set({
         paintingStep: source.step ?? 0,
         paintingTotal: source.total_steps ?? 0,

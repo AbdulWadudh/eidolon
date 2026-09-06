@@ -15,21 +15,27 @@ export interface AvatarCropProps {
   onConfirm: (crop: AvatarCropRect) => void;
 }
 
+const DIM = "rgba(0,0,0,0.72)";
+
 export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCropProps) {
   const theme = useResolvedTheme(characterId);
   const { width, height } = useWindowDimensions();
+  const [ratio, setRatio] = React.useState(1);
 
-  const side = width;
   const circle = Math.round(width * PHOTO.avatarFrameFraction);
-  const imageTop = (height - side) / 2;
 
-  // A border thicker than the screen on a fully round box leaves a transparent
-  // disc and covers everything outside it. The alternative — a second copy of
-  // the image clipped to a circle — does not work: Android ignores
-  // overflow:hidden on a rounded parent once the child has a transform, and the
-  // clipped copy renders in full over everything.
-  const ring = Math.max(width, height);
-  const holeBox = circle + ring * 2;
+  // The photo is laid out at its own aspect ratio, as large as fits. Fitting it
+  // into a square instead is what put black inside the ring: a portrait photo
+  // letterboxed in a square is narrower than the circle, so the circle framed
+  // the letterbox as well as the picture.
+  const fit = Math.min(width / ratio, height);
+  const shown = { width: fit * ratio, height: fit };
+  const left = (width - shown.width) / 2;
+  const top = (height - shown.height) / 2;
+
+  const circleLeft = (width - circle) / 2;
+  const circleTop = (height - circle) / 2;
+  const half = circle / 2;
 
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
@@ -46,9 +52,7 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
             Math.min(PHOTO.maxZoom, Math.max(PHOTO.minZoom, savedScale.get() * event.scale)),
           );
         })
-        .onEnd(() => {
-          savedScale.set(scale.get());
-        }),
+        .onEnd(() => savedScale.set(scale.get())),
     [scale, savedScale],
   );
 
@@ -77,47 +81,79 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
     ],
   }));
 
-  // The crop is saved against the circle rather than the screen, so it survives
-  // a different device: the avatar fills its container edge to edge while the
-  // ring only framed part of a picture laid out `side` wide.
+  // The circle sits at the centre of the screen and the photo is moved under it,
+  // so the offset from the photo's centre to the circle's is exactly minus the
+  // drag. Everything is written down relative to the photo and the circle, never
+  // to this screen, so the avatar can rebuild it at any size.
   const confirm = React.useCallback(() => {
+    const s = savedScale.get();
+    const drawnWidth = shown.width * s;
+    const drawnHeight = shown.height * s;
+
     onConfirm({
-      zoom: (side / circle) * savedScale.get(),
-      offsetX: savedX.get() / circle,
-      offsetY: savedY.get() / circle,
+      cx: 0.5 - savedX.get() / drawnWidth,
+      cy: 0.5 - savedY.get() / drawnHeight,
+      widthRatio: drawnWidth / circle,
+      heightRatio: drawnHeight / circle,
     });
-  }, [side, circle, onConfirm, savedScale, savedX, savedY]);
+  }, [shown.width, shown.height, circle, onConfirm, savedScale, savedX, savedY]);
 
   return (
     <View className="flex-1">
       <GestureDetector gesture={gesture}>
         <View style={{ flex: 1 }} collapsable={false}>
           <Animated.View
-            style={[
-              { position: "absolute", top: imageTop, left: 0, width: side, height: side },
-              imageStyle,
-            ]}
+            style={[{ position: "absolute", left, top, ...shown }, imageStyle]}
+            pointerEvents="none"
           >
             <Image
               source={{ uri }}
-              contentFit="contain"
+              contentFit="fill"
               cachePolicy="disk"
+              onLoad={(event) => {
+                const source = event.source;
+                if (source?.width && source?.height) setRatio(source.width / source.height);
+              }}
               accessibilityLabel="Drag and pinch to choose the part of the photo to use"
               style={{ width: "100%", height: "100%" }}
             />
           </Animated.View>
 
+          {/* Four bands and four corner wedges, rather than one view with a
+              border thicker than the screen: Android renders that inconsistently
+              at this size and the dimming came out covering only part of it. */}
+          <View
+            pointerEvents="none"
+            style={{ position: "absolute", left: 0, right: 0, top: 0, height: circleTop }}
+          >
+            <View style={{ flex: 1, backgroundColor: DIM }} />
+          </View>
+          <View
+            pointerEvents="none"
+            style={{ position: "absolute", left: 0, right: 0, top: circleTop + circle, bottom: 0 }}
+          >
+            <View style={{ flex: 1, backgroundColor: DIM }} />
+          </View>
           <View
             pointerEvents="none"
             style={{
               position: "absolute",
-              left: (width - holeBox) / 2,
-              top: (height - holeBox) / 2,
-              width: holeBox,
-              height: holeBox,
-              borderRadius: holeBox / 2,
-              borderWidth: ring,
-              borderColor: "rgba(0,0,0,0.72)",
+              left: 0,
+              top: circleTop,
+              width: circleLeft,
+              height: circle,
+              backgroundColor: DIM,
+            }}
+          />
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: circleLeft + circle,
+              right: 0,
+              top: circleTop,
+              height: circle,
+              backgroundColor: DIM,
             }}
           />
 
@@ -125,11 +161,60 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
             pointerEvents="none"
             style={{
               position: "absolute",
-              left: (width - circle) / 2,
-              top: (height - circle) / 2,
+              left: circleLeft,
+              top: circleTop,
+              width: half,
+              height: half,
+              backgroundColor: DIM,
+              borderBottomRightRadius: half,
+            }}
+          />
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: circleLeft + half,
+              top: circleTop,
+              width: half,
+              height: half,
+              backgroundColor: DIM,
+              borderBottomLeftRadius: half,
+            }}
+          />
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: circleLeft,
+              top: circleTop + half,
+              width: half,
+              height: half,
+              backgroundColor: DIM,
+              borderTopRightRadius: half,
+            }}
+          />
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: circleLeft + half,
+              top: circleTop + half,
+              width: half,
+              height: half,
+              backgroundColor: DIM,
+              borderTopLeftRadius: half,
+            }}
+          />
+
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: circleLeft,
+              top: circleTop,
               width: circle,
               height: circle,
-              borderRadius: circle / 2,
+              borderRadius: half,
               borderWidth: 2,
               borderColor: theme.primary,
             }}

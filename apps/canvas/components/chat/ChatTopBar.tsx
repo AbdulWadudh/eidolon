@@ -24,6 +24,24 @@ export interface ChatTopBarProps {
 
 const AVATAR_PX = 38;
 
+// The crop names a circle inside the photo. Rebuilding it is arithmetic rather
+// than a transform: draw the photo at the size that makes that circle exactly
+// the avatar's width, then move it so the circle's centre lands in the middle.
+// Because both ratios come from the same picture, the box keeps its aspect and
+// "fill" does not distort.
+function croppedStyle(crop: AvatarCropRect) {
+  const width = AVATAR_PX * crop.widthRatio;
+  const height = AVATAR_PX * crop.heightRatio;
+
+  return {
+    position: "absolute" as const,
+    width,
+    height,
+    left: AVATAR_PX / 2 - crop.cx * width,
+    top: AVATAR_PX / 2 - crop.cy * height,
+  };
+}
+
 export function ChatTopBar({
   characterName,
   avatarUrl,
@@ -62,20 +80,10 @@ export function ChatTopBar({
           {avatarUrl ? (
             <Image
               source={{ uri: avatarUrl }}
-              contentFit={avatarCrop ? "contain" : "cover"}
+              contentFit={avatarCrop ? "fill" : "cover"}
               cachePolicy="disk"
               accessibilityLabel={`${characterName}'s picture`}
-              style={{
-                width: "100%",
-                height: "100%",
-                transform: avatarCrop
-                  ? [
-                      { translateX: avatarCrop.offsetX * AVATAR_PX },
-                      { translateY: avatarCrop.offsetY * AVATAR_PX },
-                      { scale: avatarCrop.zoom },
-                    ]
-                  : undefined,
-              }}
+              style={avatarCrop ? croppedStyle(avatarCrop) : { width: "100%", height: "100%" }}
             />
           ) : (
             <AvatarFallback textClassName="font-main-bold text-xs text-primary">
