@@ -244,3 +244,43 @@ RULES.md §19. `bun run build:apk` takes minutes and holds an exclusive lock on
 `apps/canvas/android` — a second run fails with `EBUSY` and blocks the
 workspace. Report that a change is ready for a device and stop; build only when
 asked.
+
+---
+
+## Fourth follow-up: the app could never load a plain-HTTP asset
+
+Pairing worked, then no images or voice notes appeared.
+
+`app.json` carried `android.usesCleartextTraffic: true`, and it had no effect.
+The built `AndroidManifest.xml` had no `android:usesCleartextTraffic` and no
+`networkSecurityConfig`, so the release APK used the API 28+ default: cleartext
+HTTP is **blocked**. Media is served from `http://192.168.1.39:9000/...`, so
+every asset request failed regardless of which network the phone was on.
+
+Expo sets that attribute from the **`expo-build-properties`** plugin, not from a
+bare `android.usesCleartextTraffic` key — confirmed in
+`expo-build-properties/src/android.ts`, whose `withAndroidCleartextTraffic` mod
+is the only thing that writes it. The bare key was removed rather than left
+sitting there looking effective.
+
+```
+plugins: [..., ["expo-build-properties", { android: { usesCleartextTraffic: true } }]]
+```
+
+Verified by running prebuild alone and reading the result:
+
+```
+<application ... android:usesCleartextTraffic="true">
+```
+
+This is also what made the conductor address feel "baked in".
+`EXPO_PUBLIC_CONDUCTOR_HOST` was never a constraint — it is the initial value of
+the host field and its placeholder, nothing more, and a scanned QR overrides it.
+But any `http://` address typed into that field failed silently for the same
+reason, which looked like the app refusing anything but the compiled-in URL.
+With cleartext allowed, an arbitrary LAN address works.
+
+Storage itself was never broken: the object returns `200` and 1.2 MB of webp
+over both `127.0.0.1:9000` and `192.168.1.39:9000`. Media URLs are stored
+absolute at write time, so they stay LAN-only by decision — the phone loads them
+on the same wifi and not over the tunnel.

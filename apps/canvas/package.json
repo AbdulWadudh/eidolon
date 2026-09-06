@@ -32,6 +32,7 @@
     "expo": "57.0.20",
     "expo-asset": "~57.0.16",
     "expo-audio": "~57.0.4",
+    "expo-build-properties": "~57.0.17",
     "expo-camera": "~57.0.4",
     "expo-constants": "~57.0.17",
     "expo-file-system": "~57.0.6",
