@@ -48,6 +48,29 @@ Right now you feel {{mood}}. How close you feel to them: {{tier}}.`,
 {{context}}`,
   },
   {
+    key: "persona.scenario",
+    description: "Where the two of you are and what is going on, injected when the card sets one.",
+    variables: ["scenario"],
+    value: `Where things stand between you right now:
+{{scenario}}`,
+  },
+  {
+    key: "persona.rules",
+    description:
+      "Hard boundaries for this character, kept apart from personality so they can be edited on their own.",
+    variables: ["rules"],
+    value: `Things you always or never do, whatever else happens:
+{{rules}}`,
+  },
+  {
+    key: "persona.exampleDialogue",
+    description:
+      "Sample exchanges showing how the character talks. The strongest lever for voice on a small model.",
+    variables: ["examples"],
+    value: `How you talk, shown rather than described. Match this voice, never repeat these lines:
+{{examples}}`,
+  },
+  {
     key: "persona.hardenedReminder",
     description: "Injected on a retry after the guard caught the model admitting it is an AI.",
     variables: [],

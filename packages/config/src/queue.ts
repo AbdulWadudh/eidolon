@@ -14,6 +14,7 @@ export const QUEUE_PREFIXES = {
 
 export const QUEUE_JOBS = {
   generateStageBackdrop: "generate-stage-backdrop",
+  generatePortrait: "generate-portrait",
   summarizeChronicle: "summarize-chronicle",
   uploadImage: "upload-image",
   uploadAudio: "upload-audio",
@@ -61,6 +62,11 @@ export const PROACTIVE = {
   maxChars: 240,
   minDelayMs: 45 * 60 * 1000,
   maxDelayMs: 5 * 60 * 60 * 1000,
+} as const;
+
+export const PORTRAIT = {
+  orientation: "portrait",
+  framing: "head and shoulders portrait, looking at camera, soft even light, plain background",
 } as const;
 
 export const STAGE = {

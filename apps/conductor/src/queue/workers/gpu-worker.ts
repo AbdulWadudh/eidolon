@@ -1,7 +1,8 @@
-import { QUEUE_CONCURRENCY, QUEUE_NAMES, QUEUE_PREFIXES, STAGE } from "@eidolon/config";
+import { PORTRAIT, QUEUE_CONCURRENCY, QUEUE_NAMES, QUEUE_PREFIXES, STAGE } from "@eidolon/config";
 import { Worker } from "bullmq";
 import { getCharacterCard } from "@/db";
 import { appendChronicle, nextChapterIndex } from "@/db/chronicles";
+import { setCharacterAvatar, setCharacterFace } from "@/db/look";
 import { saveStageBackdrop } from "@/db/stages";
 import { queueConnection } from "@/queue/connection";
 import {
@@ -10,11 +11,14 @@ import {
   type GpuJobData,
   type GpuJobName,
   isChronicleSummaryJob,
+  isPortraitJob,
   isStageBackdropJob,
+  type PortraitJob,
   type StageBackdropJob,
 } from "@/queue/types";
 import { summarizeMessages } from "@/services/chronicle-writer";
 import { generateImage } from "@/services/comfyui";
+import { describeAppearance } from "@/services/photo-look";
 import { isStorageConnected, uploadImage } from "@/services/storage";
 import { broadcastToCharacter } from "@/ws/registry";
 
@@ -64,9 +68,46 @@ async function summarizeChronicle(data: ChronicleSummaryJob): Promise<void> {
   appendChronicle(data.characterId, chapterIndex, bullets.join(NEWLINE));
 }
 
+async function renderPortrait(data: PortraitJob): Promise<void> {
+  if (!isStorageConnected()) {
+    throw new Error("Object storage is offline, so the portrait would have nowhere to live.");
+  }
+
+  const card = getCharacterCard(data.characterId);
+  const look = await describeAppearance({
+    characterId: data.characterId,
+    name: card.name,
+    personality: card.personality,
+  });
+
+  const described = [look.age, look.face, look.eyes, look.hair, look.skin, look.build]
+    .filter((part) => part.trim().length > 0)
+    .join(", ");
+
+  const prompt = [described, data.prompt.trim(), PORTRAIT.framing]
+    .filter((part) => part.length > 0)
+    .join(", ");
+
+  const image = await generateImage(prompt, null, { orientation: PORTRAIT.orientation });
+  const url = await uploadImage(
+    data.characterId,
+    `portrait-${Date.now()}.${STAGE.backdropFileExtension}`,
+    image.bytes,
+  );
+
+  // The same picture becomes both the avatar and the face reference, so every
+  // later selfie is recognisably the same person.
+  setCharacterAvatar(data.characterId, url);
+  setCharacterFace(data.characterId, url);
+}
+
 export async function processGpuJob(job: GpuJob): Promise<void> {
   if (isStageBackdropJob(job)) {
     await renderStageBackdrop(job.data);
+    return;
+  }
+  if (isPortraitJob(job)) {
+    await renderPortrait(job.data);
     return;
   }
   if (isChronicleSummaryJob(job)) {

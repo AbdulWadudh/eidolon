@@ -109,6 +109,42 @@ export function characterMessagesUrl(
   return `${scheme}://${stripAuthority(host)}${characterMessagesPath(characterId)}`;
 }
 
+export function characterPath(characterId: string): string {
+  return `${apiPath("characters")}/${encodeURIComponent(characterId)}`;
+}
+
+export function characterUrl(host: string, characterId: string, scheme = httpScheme(host)): string {
+  return `${scheme}://${stripAuthority(host)}${characterPath(characterId)}`;
+}
+
+export function charactersUrl(host: string, scheme = httpScheme(host)): string {
+  return `${scheme}://${stripAuthority(host)}${apiPath("characters")}`;
+}
+
+export function characterLorePath(characterId: string): string {
+  return `${characterPath(characterId)}/lore`;
+}
+
+export function characterLoreUrl(
+  host: string,
+  characterId: string,
+  scheme = httpScheme(host),
+): string {
+  return `${scheme}://${stripAuthority(host)}${characterLorePath(characterId)}`;
+}
+
+export function characterPortraitPath(characterId: string): string {
+  return `${characterPath(characterId)}/portrait`;
+}
+
+export function characterPortraitUrl(
+  host: string,
+  characterId: string,
+  scheme = httpScheme(host),
+): string {
+  return `${scheme}://${stripAuthority(host)}${characterPortraitPath(characterId)}`;
+}
+
 export function characterMindPath(characterId: string): string {
   return `${apiPath("characters")}/${encodeURIComponent(characterId)}/mind`;
 }

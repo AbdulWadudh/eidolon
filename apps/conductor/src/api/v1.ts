@@ -2,6 +2,7 @@ import { API_ROUTES, API_VERSION, TRANSCRIPT } from "@eidolon/config";
 import { getPairingHost, SQLITE_DB_PATH } from "@eidolon/config/server";
 import { COLORS } from "@eidolon/tokens";
 import { Hono } from "hono";
+import { mountCharacters } from "@/api/characters";
 import { applyAffinityOverride, buildMindView } from "@/api/mind";
 import { generatePairingPayload, PAIRING_SECRET, validateToken } from "@/auth";
 import {
@@ -206,3 +207,5 @@ v1.delete(`${API_ROUTES.characters}/:id/memory`, (c) => {
 
   return c.json({ character: { id: characterId, ...mind }, messages: [] });
 });
+
+mountCharacters(v1);

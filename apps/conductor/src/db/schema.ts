@@ -76,6 +76,10 @@ export function applySchema(db: Database): void {
 
   addColumnIfMissing(db, "stages", "updated_at", "INTEGER");
   addColumnIfMissing(db, "characters", "affinity_locked", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "characters", "greeting", "TEXT");
+  addColumnIfMissing(db, "characters", "scenario", "TEXT");
+  addColumnIfMissing(db, "characters", "example_dialogue", "TEXT");
+  addColumnIfMissing(db, "characters", "rules", "TEXT");
   addColumnIfMissing(db, "messages", "audio_duration", "REAL");
   addColumnIfMissing(db, "messages", "image_url", "TEXT");
   addColumnIfMissing(db, "messages", "image_caption", "TEXT");

@@ -8,6 +8,9 @@ export interface CharacterCard {
   name: string;
   personality: string;
   systemPrompt: string;
+  scenario: string;
+  rules: string;
+  exampleDialogue: string;
   mood: string;
   tier: string;
 }
@@ -24,10 +27,18 @@ export function hardenedReminder(): ChatMessage {
   return { role: "system", content: getPrompt("persona.hardenedReminder") };
 }
 
+function block(key: string, variable: string, value: string): string {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? render(getPrompt(key), { [variable]: trimmed }) : "";
+}
+
 export function buildSystemPrompt(card: CharacterCard, injectedContext?: string): string {
   const context = injectedContext?.trim() ?? "";
   const extra = [
     card.systemPrompt.trim(),
+    block("persona.scenario", "scenario", card.scenario),
+    block("persona.rules", "rules", card.rules),
+    block("persona.exampleDialogue", "examples", card.exampleDialogue),
     context.length > 0 ? render(getPrompt("persona.searchContext"), { context }) : "",
   ]
     .filter((part) => part.length > 0)

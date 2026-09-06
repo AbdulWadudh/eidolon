@@ -7,6 +7,11 @@ export interface StageBackdropJob {
   prompt: string;
 }
 
+export interface PortraitJob {
+  characterId: string;
+  prompt: string;
+}
+
 export interface ChronicleSummaryJob {
   characterId: string;
   messageBatch: string[];
@@ -27,6 +32,7 @@ export interface ProactiveMessageJob {
 
 export interface GpuJobMap {
   [QUEUE_JOBS.generateStageBackdrop]: StageBackdropJob;
+  [QUEUE_JOBS.generatePortrait]: PortraitJob;
   [QUEUE_JOBS.summarizeChronicle]: ChronicleSummaryJob;
 }
 
@@ -55,6 +61,12 @@ export function isStageBackdropJob(
   job: GpuJob,
 ): job is Job<StageBackdropJob, void, typeof QUEUE_JOBS.generateStageBackdrop> {
   return job.name === QUEUE_JOBS.generateStageBackdrop;
+}
+
+export function isPortraitJob(
+  job: GpuJob,
+): job is Job<PortraitJob, void, typeof QUEUE_JOBS.generatePortrait> {
+  return job.name === QUEUE_JOBS.generatePortrait;
 }
 
 export function isChronicleSummaryJob(

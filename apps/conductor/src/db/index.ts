@@ -93,6 +93,9 @@ export interface StoredCharacter {
   name: string;
   personality: string;
   systemPrompt: string;
+  scenario: string;
+  rules: string;
+  exampleDialogue: string;
   mood: string;
   tier: string;
 }
@@ -100,12 +103,17 @@ export interface StoredCharacter {
 export function getCharacterCard(characterId: string): StoredCharacter {
   const row = db
     .query(
-      "SELECT name, personality, system_prompt, current_mood, affinity_tier FROM characters WHERE id = ?",
+      `SELECT name, personality, system_prompt, scenario, rules, example_dialogue,
+              current_mood, affinity_tier
+       FROM characters WHERE id = ?`,
     )
     .get(characterId) as {
     name?: string;
     personality?: string;
     system_prompt?: string;
+    scenario?: string;
+    rules?: string;
+    example_dialogue?: string;
     current_mood?: string;
     affinity_tier?: string;
   } | null;
@@ -114,6 +122,9 @@ export function getCharacterCard(characterId: string): StoredCharacter {
     name: row?.name?.trim() || capitalize(characterId),
     personality: row?.personality ?? "",
     systemPrompt: row?.system_prompt ?? "",
+    scenario: row?.scenario ?? "",
+    rules: row?.rules ?? "",
+    exampleDialogue: row?.example_dialogue ?? "",
     mood: row?.current_mood ?? AFFINITY.defaultMood,
     tier: row?.affinity_tier ?? startingTier(),
   };

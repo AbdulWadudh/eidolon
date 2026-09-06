@@ -12,6 +12,8 @@ export {
   characterAffinityPath,
   characterAffinityUrl,
   characterLookUrl,
+  characterLorePath,
+  characterLoreUrl,
   characterMemoryPath,
   characterMemoryUrl,
   characterMessagesPath,
@@ -19,6 +21,11 @@ export {
   characterMessageUrl,
   characterMindPath,
   characterMindUrl,
+  characterPath,
+  characterPortraitPath,
+  characterPortraitUrl,
+  charactersUrl,
+  characterUrl,
   HEALTH_ALIAS_PATH,
   healthUrl,
   httpScheme,
@@ -95,6 +102,7 @@ export {
 } from "./prompts";
 export {
   CHRONICLE,
+  PORTRAIT,
   PROACTIVE,
   QUEUE_CONCURRENCY,
   QUEUE_JOBS,
