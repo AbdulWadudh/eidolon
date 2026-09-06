@@ -120,3 +120,40 @@ in two files.
   and removing `automaticOffset`. Both were guesses at the inset arithmetic
   without a device; the first hid the dock entirely. Finding the commit that
   introduced the regression settled it in one step.
+
+---
+
+## Follow-up, same day: fonts were never in the app
+
+The release APK rendered in the system sans, and both header lines lost their
+last word — "Connect to your Eidolon" showed as "Connect to your".
+
+`apps/canvas/assets/` did not exist. Every font the interface depends on —
+Nunito Sans and Public Sans, six faces — was fetched from
+`raw.githubusercontent.com` on first launch and cached to the document
+directory. A device that could not reach GitHub got no typography at all, fell
+back to the system face, and then measured text with one font while drawing it
+in another, which is what clipped the trailing word.
+
+The same missing connectivity is why the conductor was unreachable in that
+screenshot: both hosts answer `200` from a machine with a working network.
+
+- The six faces are committed under `apps/canvas/assets/fonts/` and declared to
+  the `expo-font` config plugin, so they are linked into the binary.
+- `initializeFonts` loads them from `require(...)` instead of downloading, and
+  the native and web branches collapsed into one path. The function no longer
+  touches the filesystem, and `font-registry.ts` fell under the 300-line limit.
+- The OTA download path stays, but only for the optional Google Fonts browser,
+  which is opt-in and can reasonably need the network.
+
+Pairing errors also stopped telling the truth. `verifyPairing` distinguishes an
+unreachable host, a refused token, and a server error; `humanPairingError` only
+passes through strings it recognises, so all three arrived as "Could not reach
+that address" — a wrong passphrase was reported as a network fault. Those three
+now throw `PAIRING_COPY.unreachable`, `.refused` and `.serverError`.
+
+The pairing screen was still using React Native's own `KeyboardAvoidingView`
+with `behavior="height"` on Android. The manifest already sets
+`adjustResize`, so the window shrinks once from the platform and once more from
+the component, pushing the inputs out of view. It now uses the
+`react-native-keyboard-controller` one, as the chat screen does.

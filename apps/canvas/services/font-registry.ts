@@ -10,40 +10,33 @@ type InstalledFonts = Record<string, Record<string, string>>;
 
 interface FontDefinition {
   name: string;
-  file: string;
-  url: string;
+  asset: number;
 }
 
 const REQUIRED_FONTS: FontDefinition[] = [
   {
     name: "NunitoSans-Regular",
-    file: "NunitoSans-Regular.ttf",
-    url: "https://raw.githubusercontent.com/googlefonts/NunitoSans/master/fonts/ttf/NunitoSans-Regular.ttf",
+    asset: require("../assets/fonts/NunitoSans-Regular.ttf"),
   },
   {
     name: "NunitoSans-Bold",
-    file: "NunitoSans-Bold.ttf",
-    url: "https://raw.githubusercontent.com/googlefonts/NunitoSans/master/fonts/ttf/NunitoSans-Bold.ttf",
+    asset: require("../assets/fonts/NunitoSans-Bold.ttf"),
   },
   {
     name: "NunitoSans-Italic",
-    file: "NunitoSans-Italic.ttf",
-    url: "https://raw.githubusercontent.com/googlefonts/NunitoSans/master/fonts/ttf/NunitoSans-Italic.ttf",
+    asset: require("../assets/fonts/NunitoSans-Italic.ttf"),
   },
   {
     name: "PublicSans-Regular",
-    file: "PublicSans-Regular.ttf",
-    url: "https://raw.githubusercontent.com/uswds/public-sans/master/fonts/ttf/PublicSans-Regular.ttf",
+    asset: require("../assets/fonts/PublicSans-Regular.ttf"),
   },
   {
     name: "PublicSans-Medium",
-    file: "PublicSans-Medium.ttf",
-    url: "https://raw.githubusercontent.com/uswds/public-sans/master/fonts/ttf/PublicSans-Medium.ttf",
+    asset: require("../assets/fonts/PublicSans-Medium.ttf"),
   },
   {
     name: "PublicSans-Bold",
-    file: "PublicSans-Bold.ttf",
-    url: "https://raw.githubusercontent.com/uswds/public-sans/master/fonts/ttf/PublicSans-Bold.ttf",
+    asset: require("../assets/fonts/PublicSans-Bold.ttf"),
   },
 ];
 
@@ -157,79 +150,24 @@ function requiredFontByName(name: string): FontDefinition | undefined {
  * then re-registers any fonts installed from the Google Fonts browser.
  */
 export async function initializeFonts(): Promise<void> {
-  const baseDir = FileSystem.documentDirectory;
-  if (!baseDir) {
-    // Web environment: register fonts directly via expo-font
-    try {
-      const webFonts: Record<string, string> = {};
-      for (const font of REQUIRED_FONTS) {
-        if (!Font.isLoaded(font.name)) {
-          webFonts[font.name] = font.url;
-        }
-      }
-      for (const [alias, target] of Object.entries(BUNDLED_FONT_ALIASES)) {
-        const source = requiredFontByName(target);
-        if (source && !Font.isLoaded(alias)) {
-          webFonts[alias] = source.url;
-        }
-      }
-
-      if (Object.keys(webFonts).length > 0) {
-        await Font.loadAsync(webFonts);
-      }
-    } catch (e) {
-      console.warn("Web font load error:", e);
-    }
-    await restoreInstalledFonts();
-    return;
-  }
-
-  const fontDir = `${baseDir}fonts/`;
-
   try {
-    const dirInfo = await FileSystem.getInfoAsync(fontDir);
-    if (!dirInfo.exists) {
-      await FileSystem.makeDirectoryAsync(fontDir, { intermediates: true });
-    }
-
-    const fontsToLoad: Record<string, string> = {};
+    const fontsToLoad: Record<string, number> = {};
 
     for (const font of REQUIRED_FONTS) {
-      if (Font.isLoaded(font.name)) {
-        continue;
-      }
-
-      const localUri = `${fontDir}${font.file}`;
-      const fileInfo = await FileSystem.getInfoAsync(localUri);
-
-      if (!fileInfo.exists) {
-        try {
-          await FileSystem.downloadAsync(font.url, localUri);
-        } catch (err) {
-          console.warn(`Failed to download font: ${font.name}`, err);
-          continue;
-        }
-      }
-
-      fontsToLoad[font.name] = localUri;
+      if (!Font.isLoaded(font.name)) fontsToLoad[font.name] = font.asset;
     }
 
     for (const [alias, target] of Object.entries(BUNDLED_FONT_ALIASES)) {
       if (Font.isLoaded(alias)) continue;
       const source = requiredFontByName(target);
-      if (!source) continue;
-      const localUri = `${fontDir}${source.file}`;
-      const info = await FileSystem.getInfoAsync(localUri);
-      if (info.exists) {
-        fontsToLoad[alias] = localUri;
-      }
+      if (source) fontsToLoad[alias] = source.asset;
     }
 
     if (Object.keys(fontsToLoad).length > 0) {
       await Font.loadAsync(fontsToLoad);
     }
   } catch (error) {
-    console.warn("Error during OTA font initialization:", error);
+    console.warn("Error loading bundled fonts:", error);
   }
 
   await restoreInstalledFonts();

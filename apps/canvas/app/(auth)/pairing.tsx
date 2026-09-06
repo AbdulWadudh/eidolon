@@ -3,15 +3,8 @@ import { type BarcodeScanningResult, CameraView, useCameraPermissions } from "ex
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import * as React from "react";
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppIcon } from "@/components/common/icon";
@@ -102,11 +95,7 @@ export default function PairingScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.canvas }} className="flex-1 bg-canvas">
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-        className="flex-1"
-      >
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }} className="flex-1">
         <ScrollView
           contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingVertical: 24 }}
           keyboardShouldPersistTaps="handled"

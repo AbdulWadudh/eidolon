@@ -117,7 +117,7 @@ describe("Connection Store & Pairing Engine", () => {
         useConnectionStore
           .getState()
           .pairFromUri("eidolon://pair?server=192.168.1.39:3000&token=stale_token"),
-      ).rejects.toThrow(/rejected/i);
+      ).rejects.toThrow(PAIRING_COPY.refused);
 
       const state = useConnectionStore.getState();
       expect(state.isPaired).toBe(false);

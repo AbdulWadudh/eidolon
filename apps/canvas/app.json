@@ -31,7 +31,19 @@
     "plugins": [
       "expo-router",
       "expo-asset",
-      "expo-font",
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/NunitoSans-Regular.ttf",
+            "./assets/fonts/NunitoSans-Bold.ttf",
+            "./assets/fonts/NunitoSans-Italic.ttf",
+            "./assets/fonts/PublicSans-Regular.ttf",
+            "./assets/fonts/PublicSans-Medium.ttf",
+            "./assets/fonts/PublicSans-Bold.ttf"
+          ]
+        }
+      ],
       "./plugins/with-android-build-optimizations",
       "expo-audio",
       "expo-image"

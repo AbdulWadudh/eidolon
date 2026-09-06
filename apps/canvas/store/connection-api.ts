@@ -1,4 +1,4 @@
-import { apiUrl, healthUrl, stripAuthority, TIMEOUTS_MS } from "@eidolon/config";
+import { apiUrl, healthUrl, PAIRING_COPY, stripAuthority, TIMEOUTS_MS } from "@eidolon/config";
 
 /**
  * Confirms the token is actually accepted by this conductor.
@@ -19,19 +19,17 @@ export async function verifyPairing(host: string, token: string): Promise<void> 
       headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
       signal: controller.signal,
     });
-  } catch (err) {
-    throw new Error(
-      `Conductor host '${cleanHost}' unreachable: ${err instanceof Error ? err.message : err}`,
-    );
+  } catch {
+    throw new Error(PAIRING_COPY.unreachable);
   } finally {
     clearTimeout(timeoutId);
   }
 
   if (response.status === 401) {
-    throw new Error("This pairing code was rejected. Generate a fresh one on the server.");
+    throw new Error(PAIRING_COPY.refused);
   }
   if (!response.ok) {
-    throw new Error(`Conductor returned HTTP ${response.status}.`);
+    throw new Error(PAIRING_COPY.serverError);
   }
 }
 

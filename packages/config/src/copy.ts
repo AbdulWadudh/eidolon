@@ -35,6 +35,7 @@ export const PAIRING_COPY = {
   notOurCode: "That is not an Eidolon code. Scan the one showing on your computer.",
   incompleteCode: "That code is incomplete. Show the full one on your computer and scan again.",
   refused: "That passphrase was not accepted. Check it matches the one on your computer.",
+  serverError: "Your Eidolon answered, but something went wrong at its end. Check it is running.",
   unreachable:
     "Could not reach that address. Check it matches your computer and that you are both on the same network.",
 } as const;
@@ -44,6 +45,7 @@ export const PAIRING_MESSAGES: readonly string[] = [
   PAIRING_COPY.notOurCode,
   PAIRING_COPY.incompleteCode,
   PAIRING_COPY.refused,
+  PAIRING_COPY.serverError,
   PAIRING_COPY.unreachable,
 ];
 
