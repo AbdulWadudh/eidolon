@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 interface Service {
   name: string;
@@ -9,8 +9,9 @@ interface Service {
   optional?: boolean;
 }
 
-const AI_ROOT = process.env.EIDOLON_AI_ROOT ?? "G:\\AI\\EIDOLON";
-const START = join(AI_ROOT, "START");
+// The batch files ship with the repo. Where the servers themselves live is
+// their business, through EIDOLON_AI_ROOT — see stack/README.md.
+const START = resolve(import.meta.dir, "..", "stack");
 
 const SERVICES: Service[] = [
   {
@@ -132,9 +133,24 @@ async function up(): Promise<void> {
   process.exit(failures === 0 ? 0 : 1);
 }
 
+// `panes` opens a window and must not be waited on; `down` has to finish before
+// this process exits or nothing is killed.
+function runBatch(name: string, wait: boolean): void {
+  const argv = ["cmd", "/c", join(START, name)];
+  if (wait) {
+    Bun.spawnSync(argv, { stdout: "inherit", stderr: "inherit" });
+    return;
+  }
+  Bun.spawn(argv, { stdout: "inherit", stderr: "inherit", stdin: "ignore" }).unref();
+}
+
 const command = process.argv[2] ?? "up";
 if (command === "status") {
   await status();
+} else if (command === "panes") {
+  runBatch("start-panes.bat", false);
+} else if (command === "down") {
+  runBatch("stop-all.bat", true);
 } else {
   await up();
 }
