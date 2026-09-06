@@ -145,7 +145,7 @@ describe("working context window", () => {
       appendMessage(CHARACTER_ID, index % 2 === 0 ? "user" : "assistant", `line ${index}`);
     }
 
-    const history = workingHistory(CHARACTER_ID);
+    const history = workingHistory(CHARACTER_ID, WORKING_CONTEXT.maxHistoryChars);
     expect(history.length).toBeLessThanOrEqual(WORKING_CONTEXT.windowSize);
     expect(history.at(-1)?.content).toBe("line 39");
   });

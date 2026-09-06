@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { isPromptLike } from "@/services/prompt-writer";
-import { inferOrientation } from "@/services/selfie";
+import { inferOrientation, sceneField, whoElse } from "@/services/selfie";
 
 describe("orientation", () => {
   it("goes wide when the place is the subject", () => {
@@ -28,5 +28,34 @@ describe("prompt guard", () => {
 
   it("accepts a plain visual line", () => {
     expect(isPromptLike("late twenties, dark wavy hair, warm brown eyes")).toBe(true);
+  });
+});
+
+describe("scene fields the planner overran", () => {
+  it("caps a field the model wrote as a sentence", () => {
+    expect(
+      sceneField("a warm sunlit kitchen with copper pans and a long oak table by the window"),
+    ).toBe("a warm sunlit kitchen with copper pans and");
+  });
+
+  it("leaves a short field alone", () => {
+    expect(sceneField("at the kitchen counter")).toBe("at the kitchen counter");
+  });
+
+  it("drops an others field that describes the room instead of a person", () => {
+    expect(whoElse("An empty glass jar on the counter, a dish towel hanging from the rail")).toBe(
+      "",
+    );
+    expect(whoElse("Her cat, Luna, is curled up on the bed")).toBe("");
+  });
+
+  it("keeps an others field that actually names someone", () => {
+    expect(whoElse("her sister")).toBe("her sister");
+    expect(whoElse("a poodle")).toBe("a poodle");
+  });
+
+  it("returns nothing for an empty others field", () => {
+    expect(whoElse("")).toBe("");
+    expect(whoElse("   ")).toBe("");
   });
 });

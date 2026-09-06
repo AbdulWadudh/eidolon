@@ -66,6 +66,10 @@ export function leaksInstruction(reply: string): boolean {
   const spoken = normalizeForEcho(reply);
   if (spoken.length === 0) return false;
 
+  if (PERSONA_GUARD.metaPhrases.some((phrase) => spoken.includes(normalizeForEcho(phrase)))) {
+    return true;
+  }
+
   return INSTRUCTION_KEYS.some((key) => {
     const head = opening(getPrompt(key), PERSONA_GUARD.echoWords);
     return head.length > 0 && spoken.includes(head);

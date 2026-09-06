@@ -142,6 +142,15 @@ export const PERSONA_GUARD = {
   // How many opening words of an internal reminder count as the model having
   // repeated it back instead of following it.
   echoWords: 6,
+  // Words that only exist inside this app's machinery. A character has no idea
+  // what a stage direction is, so saying the phrase at all gives the game away
+  // even when the reminder itself was not quoted.
+  metaPhrases: [
+    "stage direction",
+    "system prompt",
+    "the instruction",
+    "what you wanted me to say instead",
+  ],
   lookaheadChars: 40,
   maxRetries: 1,
   spokenFallbacks: [

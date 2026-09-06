@@ -7,6 +7,7 @@ import { shouldSearchWeb } from "@/orchestrator/search-trigger";
 import { getPrompt } from "@/prompts/store";
 import { type ChatMessage, streamChatCompletion } from "@/services/llm";
 import { buildSystemPrompt } from "@/services/persona";
+import { leaksInstruction } from "@/services/persona-guard";
 import { forHistory } from "@/services/photo-line";
 import { searchWeb } from "@/services/search";
 import { answersQuery } from "@/services/search-relevance";
@@ -45,13 +46,43 @@ export function outputDirective(): string {
   return getPrompt("mind.outputDirective");
 }
 
-export function workingHistory(characterId: string): ChatMessage[] {
-  return getRecentMessages(characterId, WORKING_CONTEXT.windowSize)
+export function clip(text: string, limit: number): string {
+  return text.length > limit ? `${text.slice(0, limit).trimEnd()}…` : text;
+}
+
+/**
+ * Newest first until the character budget is spent, so a pasted wall of text
+ * costs itself and the turns behind it rather than the whole context. Counting
+ * messages alone bounds nothing: a typed message has no maximum length.
+ */
+export function fitHistory(messages: ChatMessage[], budget: number): ChatMessage[] {
+  const kept: ChatMessage[] = [];
+  let spent = 0;
+
+  for (const message of [...messages].reverse()) {
+    const content = clip(message.content, WORKING_CONTEXT.maxMessageChars);
+    if (spent + content.length > budget) break;
+    spent += content.length;
+    kept.push({ role: message.role, content });
+  }
+
+  return kept.reverse();
+}
+
+export function workingHistory(characterId: string, budget: number): ChatMessage[] {
+  const recent = getRecentMessages(characterId, WORKING_CONTEXT.windowSize)
     .map((entry) => ({
       role: entry.role,
       content: forHistory(entry.role, entry.content, entry.imageCaption),
     }))
-    .filter((entry) => entry.content.trim().length > 0);
+    // A reminder that once leaked into a reply is still sitting in the
+    // transcript, and every later turn reads it back. Left in, the model sees a
+    // conversation that broke down and starts apologising for things that never
+    // happened. Dropping it here heals turns that were already recorded.
+    .filter((entry) => entry.content.trim().length > 0)
+    .filter((entry) => entry.role !== "assistant" || !leaksInstruction(entry.content));
+
+  return fitHistory(recent, budget);
 }
 
 export function estimateTokens(text: string): number {
@@ -142,7 +173,7 @@ export async function assemblePrompt(options: AssembleOptions): Promise<Assemble
   }
 
   const influences = options.influences ?? [];
-  const influenceNote =
+  const influenceNote: string =
     influences.length > 0
       ? render(getPrompt("persona.influence"), {
           influence: influences.map((line) => `- ${line}`).join(NEWLINE),
@@ -157,12 +188,25 @@ export async function assemblePrompt(options: AssembleOptions): Promise<Assemble
     ? getPrompt(web.found ? "persona.webAnswerOnly" : "persona.noWebResult")
     : "";
 
+  const system = orderedSections(budgeted).join(SECTION_BREAK);
+  const spokenTurn = clip(userText, WORKING_CONTEXT.maxMessageChars);
+
+  // Everything mandatory is counted first. Whatever is left of the budget buys
+  // history, so the total prompt is bounded no matter what was pasted into it.
+  const historyBudget = Math.max(
+    0,
+    Math.min(
+      WORKING_CONTEXT.maxHistoryChars,
+      PROMPT_BUDGET.maxChars - system.length - spokenTurn.length - influenceNote.length,
+    ),
+  );
+
   const messages: ChatMessage[] = [
-    { role: "system", content: orderedSections(budgeted).join(SECTION_BREAK) },
-    ...workingHistory(characterId),
+    { role: "system", content: system },
+    ...workingHistory(characterId, historyBudget),
     ...(influenceNote ? [{ role: "system", content: influenceNote }] : []),
     ...(webVoice ? [{ role: "system", content: webVoice }] : []),
-    { role: "user", content: userText },
+    { role: "user", content: spokenTurn },
   ];
 
   return {

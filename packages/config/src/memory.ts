@@ -1,5 +1,11 @@
 export const WORKING_CONTEXT = {
   windowSize: 20,
+  // A typed message has no length limit anywhere in the protocol, so counting
+  // messages does not bound anything. Twenty pasted paragraphs measured 20,698
+  // prompt tokens, which overruns even a 16k context. History is taken newest
+  // first until these characters are spent, and one message cannot eat them all.
+  maxHistoryChars: 6000,
+  maxMessageChars: 1500,
 } as const;
 
 export const RECALL = {
@@ -109,8 +115,19 @@ export const MIND_UPDATE = {
 } as const;
 
 export const PROMPT_BUDGET = {
-  maxChars: 12000,
+  // The context llama-server is started with. The character ceiling below is
+  // derived from it rather than guessed, and a test fails if the two drift.
+  contextTokens: 8192,
+  // Measured against the real tokenizer at 12,000 characters: ordinary prose
+  // runs 4.5 chars/token, random letters 1.53, and arbitrary printable bytes
+  // 1.33. The budget has to survive the last of those, because a pasted hash
+  // dump or a block of minified code is exactly that.
+  worstCharsPerToken: 1.33,
   charsPerToken: 4,
+  // The whole prompt, not just the system sections: persona, state, directive,
+  // the user's turn, and the history that fits after them.
+  // 10,000 / 1.33 = 7,519 tokens, plus the 200-token reply reserve, under 8,192.
+  maxChars: 10000,
   sectionOrder: ["persona", "state", "chronicle", "recall", "lore", "web", "directive"],
 } as const;
 

@@ -9,6 +9,14 @@ export const IMAGE = {
   squarePx: 1024,
   sceneTurns: 6,
   lookFieldMaxWords: 4,
+  // The scene planner is told twelve words a field and does not obey it, so the
+  // cap is applied here instead. Without it "others" arrived as a whole clause
+  // and was pasted straight into a caption: "with Her cat, Luna, is curled up
+  // on the bed at Emma's bedroom, Emma is".
+  sceneFieldMaxWords: 8,
+  // "others" is meant to name who else is in frame. A clause is a description of
+  // the room, not a person, and reads as nonsense after the word "with".
+  othersClauseWords: ["is", "are", "was", "were", "hanging", "sitting on", "lying on"],
   emptyWords: ["none", "nothing", "n/a", "na", "empty", "no one", "nobody", "null", "-"],
   hairChangeWords: [
     "dyed",

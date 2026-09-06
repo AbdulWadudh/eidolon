@@ -141,11 +141,11 @@ async function composeShot(request: SelfieRequest, signal?: AbortSignal): Promis
   if (!parsed || typeof parsed !== "object") return null;
 
   return {
-    setting: oneLine(parsed.setting ?? ""),
-    outfit: oneLine(parsed.outfit ?? ""),
-    others: oneLine(parsed.others ?? ""),
-    action: oneLine(parsed.action ?? ""),
-    light: oneLine(parsed.light ?? ""),
+    setting: sceneField(parsed.setting ?? ""),
+    outfit: sceneField(parsed.outfit ?? ""),
+    others: whoElse(parsed.others ?? ""),
+    action: sceneField(parsed.action ?? ""),
+    light: sceneField(parsed.light ?? ""),
     framing: oneLine(parsed.framing ?? "") || sample(IMAGE.framings),
     orientation: parsed.orientation === "landscape" ? "landscape" : "portrait",
     look_change: oneLine(parsed.look_change ?? ""),
@@ -241,6 +241,27 @@ const WIDE_WORDS = new RegExp(`\\b(${IMAGE.wideWords.join("|")})\\b`, "i");
 
 export function inferOrientation(text: string): Orientation {
   return WIDE_WORDS.test(text) ? "landscape" : "portrait";
+}
+
+const OTHERS_CLAUSE = new RegExp(`\\b(${IMAGE.othersClauseWords.join("|")})\\b`, "i");
+
+/**
+ * The planner is asked for short phrases and returns whole clauses. Capping the
+ * fields here is what keeps a caption readable, because the prompt does not.
+ */
+export function sceneField(text: string): string {
+  return oneLine(text).split(/\s+/).slice(0, IMAGE.sceneFieldMaxWords).join(" ");
+}
+
+/**
+ * "others" names who else is in the frame. A clause describes the room instead,
+ * and reading "with An empty glass jar on the counter" after the word "with" is
+ * worse than saying nothing.
+ */
+export function whoElse(text: string): string {
+  const trimmed = oneLine(text);
+  if (trimmed.length === 0 || OTHERS_CLAUSE.test(trimmed)) return "";
+  return sceneField(trimmed);
 }
 
 function captionFor(shot: Shot | null, request: string): string {
