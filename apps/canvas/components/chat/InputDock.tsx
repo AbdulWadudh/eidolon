@@ -7,7 +7,7 @@ import { Cancel01Icon, SentIcon } from "@/lib/icons";
 import { useResolvedTheme } from "@/store/theme-store";
 import { InputToolbar, type ToolbarAction } from "./InputToolbar";
 
-export const INPUT_PLACEHOLDER = "Message  ·  *action*  ·  <nudge her>";
+export const INPUT_PLACEHOLDER = "Message  ·  *action*  ·  <nudge>";
 
 export interface InputDockProps {
   value: string;

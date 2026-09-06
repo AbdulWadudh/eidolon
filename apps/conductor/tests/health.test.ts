@@ -20,6 +20,11 @@ describe("Conductor Health & REST Endpoints", () => {
         llm: string;
         comfyui: string;
       };
+      webSearch: {
+        primary: string;
+        hasSerperFallback: boolean;
+        hasExaFallback: boolean;
+      };
       themeAccent: string;
     };
 
@@ -29,6 +34,9 @@ describe("Conductor Health & REST Endpoints", () => {
     expect(typeof body.timestamp).toBe("number");
     expect(body.services.sqlite).toBe("healthy");
     expect(body.services.lancedb).toBe("healthy");
+    expect(body.webSearch.primary).toBe("duck-duck-scrape");
+    expect(typeof body.webSearch.hasSerperFallback).toBe("boolean");
+    expect(typeof body.webSearch.hasExaFallback).toBe("boolean");
     expect(body.themeAccent).toBe(COLORS.accentAmber);
   });
 

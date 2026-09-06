@@ -1,5 +1,7 @@
+import { EASING_BEZIER, UI_MS } from "@eidolon/config";
 import { Image } from "expo-image";
 import { Text, View } from "react-native";
+import Animated, { cubicBezier, FadeIn, useReducedMotion } from "react-native-reanimated";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -56,6 +58,7 @@ export function ChatTopBar({
   onOverflow,
 }: ChatTopBarProps) {
   const theme = useResolvedTheme(characterId);
+  const reduced = useReducedMotion();
   const initials = characterName.slice(0, 2).toUpperCase();
 
   return (
@@ -98,10 +101,24 @@ export function ChatTopBar({
           {characterName}
         </Text>
         <View className="flex-row items-center gap-1.5">
-          <View className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: statusColor }} />
-          <Text className="flex-1 font-ui text-xs text-text-muted" numberOfLines={1}>
+          <Animated.View
+            className="h-1.5 w-1.5 rounded-full"
+            style={{
+              backgroundColor: statusColor,
+              transitionProperty: "backgroundColor",
+              transitionDuration: UI_MS.disclosure,
+              transitionTimingFunction: cubicBezier(...EASING_BEZIER.out),
+            }}
+          />
+          <Animated.Text
+            key={statusLabel}
+            entering={reduced ? undefined : FadeIn.duration(UI_MS.disclosure)}
+            accessibilityLiveRegion="polite"
+            className="flex-1 font-ui text-xs text-text-muted"
+            numberOfLines={1}
+          >
             {statusLabel}
-          </Text>
+          </Animated.Text>
         </View>
         {mind ? (
           <Text className="font-ui text-xs text-text-muted" numberOfLines={2}>

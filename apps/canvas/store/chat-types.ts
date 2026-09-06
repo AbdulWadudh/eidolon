@@ -43,7 +43,6 @@ export interface ChatStore {
   isPainting: boolean;
   paintingStep: number;
   paintingTotal: number;
-  paintingPreview: string | null;
   photoIdeas: string[];
   areIdeasLoading: boolean;
   characterLook: CharacterLook;

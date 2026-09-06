@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import { PAIRING_COPY } from "@eidolon/config";
 
 // Mock react-native and react-native-mmkv before loading store
 mock.module("react-native", () => ({
@@ -65,17 +66,17 @@ describe("Connection Store & Pairing Engine", () => {
     it("throws on invalid protocol", () => {
       expect(() => {
         parsePairingUri("https://pair?server=192.168.1.39:3000&token=abc");
-      }).toThrow("Invalid pairing URI protocol");
+      }).toThrow(PAIRING_COPY.notOurCode);
     });
 
     it("throws when server or token is missing", () => {
       expect(() => {
         parsePairingUri("eidolon://pair?server=192.168.1.39:3000");
-      }).toThrow("Missing required 'server' or 'token'");
+      }).toThrow(PAIRING_COPY.incompleteCode);
 
       expect(() => {
         parsePairingUri("eidolon://pair?token=abc");
-      }).toThrow("Missing required 'server' or 'token'");
+      }).toThrow(PAIRING_COPY.incompleteCode);
     });
   });
 

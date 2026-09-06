@@ -112,7 +112,7 @@ describe("storage configuration", () => {
 
 describe("service configuration", () => {
   it("treats an unset backend as absent rather than defaulting to a host", () => {
-    for (const name of ["LLM_API_URL", "COMFYUI_URL", "SEARXNG_URL", "LLM_MODEL", "TTS_API_URL"]) {
+    for (const name of ["LLM_API_URL", "COMFYUI_URL", "LLM_MODEL", "TTS_API_URL"]) {
       setEnv(name, undefined);
     }
 
@@ -120,7 +120,6 @@ describe("service configuration", () => {
       llmApiUrl: "",
       llmModel: "",
       comfyUiUrl: "",
-      searxngUrl: "",
       ttsApiUrl: "",
     });
   });

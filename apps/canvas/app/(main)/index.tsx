@@ -1,6 +1,8 @@
+import { CONNECTION_COPY, HOME_COPY, UI_MS } from "@eidolon/config";
 import { useRouter } from "expo-router";
 import * as React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppIcon } from "@/components/common/icon";
 import { ThemeStudioSheet } from "@/components/theme/ThemeStudioSheet";
@@ -16,6 +18,12 @@ export default function MainCharactersScreen() {
   const router = useRouter();
   const { serverHost, unpair, connectionState } = useConnectionStore();
   const theme = useResolvedTheme();
+  const reduced = useReducedMotion();
+
+  const revealAt = (index: number) =>
+    reduced
+      ? FadeIn.duration(UI_MS.revealReduced)
+      : FadeInDown.duration(UI_MS.reveal).delay(index * UI_MS.revealStagger);
 
   const [showSettings, setShowSettings] = React.useState(false);
   const [showThemeStudio, setShowThemeStudio] = React.useState(false);
@@ -24,9 +32,9 @@ export default function MainCharactersScreen() {
   // socket was down. It now reflects the actual connection state.
   const status = {
     connected: { color: theme.success, label: serverHost || "connected" },
-    connecting: { color: theme.warning, label: "Connecting…" },
-    error: { color: theme.danger, label: "Disconnected" },
-    disconnected: { color: theme.textMuted, label: "Offline" },
+    connecting: { color: theme.warning, label: CONNECTION_COPY.connecting },
+    error: { color: theme.danger, label: CONNECTION_COPY.disconnected },
+    disconnected: { color: theme.textMuted, label: CONNECTION_COPY.disconnected },
   }[connectionState];
 
   const handleEnterStage = () => {
@@ -71,7 +79,9 @@ export default function MainCharactersScreen() {
           <Card className="border-primary/30 bg-card">
             <View className="flex-row items-center justify-between">
               <View>
-                <Text className="font-ui-bold text-sm text-text-primary">Conductor Node</Text>
+                <Text className="font-ui-bold text-sm text-text-primary">
+                  {HOME_COPY.connectedTo}
+                </Text>
                 <Text className="font-ui text-xs text-text-muted">{serverHost}</Text>
               </View>
               <Button
@@ -84,7 +94,9 @@ export default function MainCharactersScreen() {
                 }}
               >
                 <AppIcon icon={Logout01Icon} size={14} color={theme.textPrimary} />
-                <Text className="font-ui-medium text-xs text-text-primary">Unpair</Text>
+                <Text className="font-ui-medium text-xs text-text-primary">
+                  {HOME_COPY.disconnect}
+                </Text>
               </Button>
             </View>
           </Card>
@@ -94,83 +106,87 @@ export default function MainCharactersScreen() {
         <View className="flex-row items-center gap-2">
           <AppIcon icon={SparklesIcon} size={16} color={theme.primary} />
           <Text className="font-ui-medium text-xs text-text-muted uppercase tracking-wider">
-            Available Personas
+            {HOME_COPY.whosHere}
           </Text>
         </View>
 
         {/* Emma Character Card */}
-        <Card className="border-border bg-card p-5">
-          <CardHeader className="flex-row items-center gap-4 pb-4">
-            <Avatar size={56} className="border-2 border-primary">
-              <AvatarFallback textClassName="text-lg font-main-bold text-primary">
-                EM
-              </AvatarFallback>
-            </Avatar>
-            <View className="flex-1">
-              <View className="flex-row items-center justify-between">
-                <Text className="font-main-bold text-xl text-text-primary">Emma</Text>
-                <Badge variant="success">Active • Teasing</Badge>
+        <Animated.View entering={revealAt(0)}>
+          <Card className="border-border bg-card p-5">
+            <CardHeader className="flex-row items-center gap-4 pb-4">
+              <Avatar size={56} className="border-2 border-primary">
+                <AvatarFallback textClassName="text-lg font-main-bold text-primary">
+                  EM
+                </AvatarFallback>
+              </Avatar>
+              <View className="flex-1">
+                <View className="flex-row items-center justify-between">
+                  <Text className="font-main-bold text-xl text-text-primary">Emma</Text>
+                  <Badge variant="success">Active • Teasing</Badge>
+                </View>
+                <Text className="mt-0.5 font-ui text-xs text-text-muted">{HOME_COPY.ready}</Text>
               </View>
-              <Text className="mt-0.5 font-ui text-xs text-text-muted">
-                Stage 1 Persona • Conductor Synced
+            </CardHeader>
+
+            <CardContent className="pb-3">
+              <Text className="font-main text-sm text-text-muted leading-5">
+                Quick-witted and a little bit trouble. Talks back, sends photos, and remembers how
+                things went between you.
               </Text>
-            </View>
-          </CardHeader>
+            </CardContent>
 
-          <CardContent className="pb-3">
-            <Text className="font-main text-sm text-text-muted leading-5">
-              Quick-witted and playfully challenging. Designed for deep dialogue, responsive audio
-              synthesis, and adaptive interaction.
-            </Text>
-          </CardContent>
-
-          <CardFooter className="pt-2">
-            <Button variant="default" size="default" className="w-full" onPress={handleEnterStage}>
-              Enter Stage
-            </Button>
-          </CardFooter>
-        </Card>
+            <CardFooter className="pt-2">
+              <Button
+                variant="default"
+                size="default"
+                className="w-full"
+                onPress={handleEnterStage}
+              >
+                {HOME_COPY.sayHello}
+              </Button>
+            </CardFooter>
+          </Card>
+        </Animated.View>
 
         {/* Dynamic Theming Studio Card */}
-        <Card className="border-border bg-card p-4">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-1 pr-3">
-              <View className="flex-row items-center gap-2">
-                <AppIcon icon={PaintBoardIcon} size={16} color={theme.primary} />
-                <Text className="font-main-bold text-sm text-text-primary">
-                  Dynamic Theme Studio
-                </Text>
+        <Animated.View entering={revealAt(1)}>
+          <Card className="border-border bg-card p-4">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1 pr-3">
+                <View className="flex-row items-center gap-2">
+                  <AppIcon icon={PaintBoardIcon} size={16} color={theme.primary} />
+                  <Text className="font-main-bold text-sm text-text-primary">
+                    {HOME_COPY.lookTitle}
+                  </Text>
+                </View>
+                <Text className="mt-1 font-ui text-xs text-text-muted">{HOME_COPY.lookBlurb}</Text>
               </View>
-              <Text className="mt-1 font-ui text-xs text-text-muted">
-                100% dynamic CSS variable customizer. Control global defaults and character
-                overrides with custom hex pickers and arbitrary radius.
-              </Text>
+              <Button variant="default" size="sm" onPress={() => setShowThemeStudio(true)}>
+                {HOME_COPY.open}
+              </Button>
             </View>
-            <Button variant="default" size="sm" onPress={() => setShowThemeStudio(true)}>
-              Open Studio
-            </Button>
-          </View>
-        </Card>
+          </Card>
+        </Animated.View>
 
         {/* Lab Link Card */}
-        <Card className="border-border bg-card p-4">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-1 pr-3">
-              <View className="flex-row items-center gap-2">
-                <AppIcon icon={SparklesIcon} size={16} color={theme.primary} />
-                <Text className="font-main-bold text-sm text-text-primary">
-                  Font & Typography Lab
-                </Text>
+        <Animated.View entering={revealAt(2)}>
+          <Card className="border-border bg-card p-4">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1 pr-3">
+                <View className="flex-row items-center gap-2">
+                  <AppIcon icon={SparklesIcon} size={16} color={theme.primary} />
+                  <Text className="font-main-bold text-sm text-text-primary">
+                    {HOME_COPY.typeTitle}
+                  </Text>
+                </View>
+                <Text className="mt-1 font-ui text-xs text-text-muted">{HOME_COPY.typeBlurb}</Text>
               </View>
-              <Text className="mt-1 font-ui text-xs text-text-muted">
-                OTA font downloads and live typography inspector.
-              </Text>
+              <Button variant="secondary" size="sm" onPress={() => router.push("/demo")}>
+                {HOME_COPY.open}
+              </Button>
             </View>
-            <Button variant="secondary" size="sm" onPress={() => router.push("/demo")}>
-              Open Lab
-            </Button>
-          </View>
-        </Card>
+          </Card>
+        </Animated.View>
       </ScrollView>
 
       {/* Theme Studio Modal Sheet */}

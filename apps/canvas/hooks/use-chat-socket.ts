@@ -28,7 +28,6 @@ export function useChatSocket(characterId: string) {
           isPainting: false,
           paintingStep: 0,
           paintingTotal: 0,
-          paintingPreview: null,
           isStreaming: false,
           activeStatus: "idle",
           statusDetail: null,

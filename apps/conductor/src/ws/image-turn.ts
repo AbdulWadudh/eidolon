@@ -1,4 +1,4 @@
-import { IMAGE } from "@eidolon/config";
+import { IMAGE, PHOTO_COPY } from "@eidolon/config";
 import { appendMessage, getCharacterCard, getRecentMessages, setMessageImage } from "@/db";
 import { ComfyUnavailableError } from "@/services/comfyui";
 import { generatePhotoIdeas } from "@/services/photo-ideas";
@@ -42,7 +42,7 @@ export async function handleImageRequest(
   signal: AbortSignal,
 ): Promise<void> {
   const card = getCharacterCard(characterId);
-  speak(ws, "painting", "Finding the light");
+  speak(ws, "painting", PHOTO_COPY.framing);
 
   try {
     const selfie = await paintSelfie(
@@ -60,12 +60,6 @@ export async function handleImageRequest(
           sendServerMessage(ws, {
             type: "image_preview",
             payload: { step: progress.value, total_steps: progress.max },
-          });
-        },
-        onPreview: (dataUri) => {
-          sendServerMessage(ws, {
-            type: "image_preview",
-            payload: { step: 0, total_steps: IMAGE.steps, preview_base64: dataUri },
           });
         },
       },
@@ -93,7 +87,7 @@ export async function handleImageRequest(
     sendServerMessage(ws, {
       type: "image_failed",
       payload: {
-        reason: offline ? "No camera on this side" : "That photo did not come out",
+        reason: offline ? PHOTO_COPY.noCamera : PHOTO_COPY.didNotCome,
       },
     });
     speak(ws, "idle");

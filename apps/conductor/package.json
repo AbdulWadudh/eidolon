@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "bun --watch src/index.ts",
+    "lint": "biome check .",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
@@ -14,6 +15,7 @@
     "@eidolon/tokens": "workspace:*",
     "@lancedb/lancedb": "latest",
     "better-auth": "latest",
+    "duck-duck-scrape": "^2.2.7",
     "es-toolkit": "latest",
     "eventsource-parser": "^4.1.0",
     "hono": "^4.6.0",

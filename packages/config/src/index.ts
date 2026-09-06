@@ -21,6 +21,17 @@ export {
   stripAuthority,
 } from "./api";
 export {
+  CONNECTION_COPY,
+  type ConnectionKey,
+  HOME_COPY,
+  PAIRING_COPY,
+  PAIRING_MESSAGES,
+  PHOTO_COPY,
+  STATUS_COPY,
+  type StatusKey,
+  THEME_COPY,
+} from "./copy";
+export {
   AFFINITY,
   CACHE,
   CHAT,

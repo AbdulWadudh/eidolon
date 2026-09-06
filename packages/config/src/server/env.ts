@@ -20,7 +20,6 @@ export interface ServicesConfig {
   llmApiUrl: string;
   llmModel: string;
   comfyUiUrl: string;
-  searxngUrl: string;
   ttsApiUrl: string;
 }
 
@@ -89,7 +88,6 @@ export function getServicesConfig(): ServicesConfig {
     llmApiUrl: process.env.LLM_API_URL ?? "",
     llmModel: process.env.LLM_MODEL ?? "",
     comfyUiUrl: process.env.COMFYUI_URL ?? "",
-    searxngUrl: process.env.SEARXNG_URL ?? "",
     ttsApiUrl: process.env.TTS_API_URL ?? "",
   };
 }

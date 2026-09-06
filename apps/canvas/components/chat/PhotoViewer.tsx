@@ -38,7 +38,7 @@ export interface PhotoViewerProps {
 const LABELS: Record<PhotoAction, string> = {
   avatar: "Profile picture",
   adjust: "Adjust framing",
-  face: "Use as her face",
+  face: "Use as the face",
   background: "Chat background",
   save: "Save to device",
   regenerate: "Regenerate",

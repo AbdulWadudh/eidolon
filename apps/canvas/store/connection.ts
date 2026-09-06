@@ -1,4 +1,4 @@
-import { isSecureHost, PAIRING, SOCKET, stripAuthority } from "@eidolon/config";
+import { isSecureHost, PAIRING, PAIRING_COPY, SOCKET, stripAuthority } from "@eidolon/config";
 import { create } from "zustand";
 import {
   closeSocket,
@@ -46,7 +46,7 @@ export function normalizeHost(host: string): string {
 export function parsePairingUri(uri: string): { server: string; token: string } {
   const cleanUri = uri.trim();
   if (!cleanUri.startsWith(PAIRING.uriScheme)) {
-    throw new Error(`Invalid pairing URI protocol. Expected ${PAIRING.uriScheme}?...`);
+    throw new Error(PAIRING_COPY.notOurCode);
   }
 
   const queryPart = cleanUri.includes("?") ? cleanUri.split("?")[1] : "";
@@ -56,7 +56,7 @@ export function parsePairingUri(uri: string): { server: string; token: string } 
   const token = params.get("token");
 
   if (!server || !token) {
-    throw new Error("Invalid pairing URI. Missing required 'server' or 'token' parameters.");
+    throw new Error(PAIRING_COPY.incompleteCode);
   }
 
   return { server: normalizeHost(server), token };
@@ -143,7 +143,7 @@ export const useConnectionStore = create<ConnectionStore>((set, get) => ({
       const cleanToken = token.trim();
 
       if (!cleanHost || !cleanToken) {
-        throw new Error("Both server host and pairing token are required.");
+        throw new Error(PAIRING_COPY.missingFields);
       }
 
       await verifyPairing(cleanHost, cleanToken);

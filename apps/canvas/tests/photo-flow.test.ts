@@ -111,7 +111,6 @@ describe("asking for a photo", () => {
       isPainting: false,
       paintingStep: 0,
       paintingTotal: 0,
-      paintingPreview: null,
       isStreaming: false,
       activeStatus: "idle",
       lastError: "Lost the connection before that finished.",

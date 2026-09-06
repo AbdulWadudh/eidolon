@@ -63,6 +63,11 @@ export async function buildHealthReport() {
       bucket: storage.bucket,
       status: isStorageConnected() ? "connected" : "offline",
     },
+    webSearch: {
+      primary: "duck-duck-scrape",
+      hasSerperFallback: !!process.env.SERPER_API_KEY,
+      hasExaFallback: !!process.env.EXA_API_KEY,
+    },
     databaseLocation: SQLITE_DB_PATH,
     themeAccent: COLORS.accentAmber,
   };

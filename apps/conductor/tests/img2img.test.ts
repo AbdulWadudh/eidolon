@@ -36,7 +36,8 @@ describe("editing a photo rather than making one", () => {
     });
 
     const sampler = Object.values(graph).find((node) => node.class_type === "KSampler");
-    const latentNode = (sampler?.inputs.latent_image as [string, number])[0];
+    expect(sampler).toBeDefined();
+    const latentNode = (sampler?.inputs.latent_image as [string, number])?.[0];
 
     expect(graph[latentNode].class_type).toBe("VAEEncode");
   });

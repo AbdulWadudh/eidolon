@@ -1,4 +1,4 @@
-import { SUGGESTIONS, TTS } from "@eidolon/config";
+import { STATUS_COPY, SUGGESTIONS, TTS } from "@eidolon/config";
 import { type ChatTurnEvent, splitInfluence, stripInfluence } from "@eidolon/protocol";
 import {
   appendMessage,
@@ -11,7 +11,7 @@ import { appraiseTurn, nextMindState } from "@/services/affinity";
 import type { ChatMessage } from "@/services/llm";
 import { buildChatMessages } from "@/services/persona";
 import { forHistory } from "@/services/photo-line";
-import { formatSearchResults, searchWeb } from "@/services/searxng";
+import { searchWeb } from "@/services/search";
 import { fallbackSuggestions, formatScene, generateReplySuggestions } from "@/services/suggestions";
 import { synthesizeSpeech } from "@/services/tts";
 import { storeVoiceNote } from "@/services/voice-notes";
@@ -44,10 +44,10 @@ async function gatherContext(ws: WebSocketSender, event: ChatTurnEvent): Promise
 
   sendServerMessage(ws, {
     type: "status_update",
-    payload: { status: "searching", detail: `Searching for: ${event.text.slice(0, 30)}...` },
+    payload: { status: "searching", detail: STATUS_COPY.searching.line },
   });
 
-  return formatSearchResults(await searchWeb(event.text));
+  return searchWeb(event.text);
 }
 
 export async function handleChatTurn(

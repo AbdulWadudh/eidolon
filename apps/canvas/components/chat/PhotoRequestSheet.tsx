@@ -22,8 +22,8 @@ export interface PhotoRequestSheetProps {
 }
 
 const ORIENTATIONS: { value: PhotoOrientation; label: string; hint: string; ratio: number }[] = [
-  { value: "portrait", label: "Upright", hint: "Her, close up", ratio: 3 / 4 },
-  { value: "landscape", label: "Wide", hint: "Where she is", ratio: 4 / 3 },
+  { value: "portrait", label: "Upright", hint: "Close up", ratio: 3 / 4 },
+  { value: "landscape", label: "Wide", hint: "The whole scene", ratio: 4 / 3 },
 ];
 
 export function PhotoRequestSheet({
@@ -191,7 +191,7 @@ function Situation({
           multiline
           value={value}
           onChangeText={onChange}
-          placeholder={editing ? "What is different this time" : "Describe it, or leave it to her"}
+          placeholder={editing ? "What is different this time" : "Describe it, or leave it open"}
           placeholderTextColor={theme.textMuted}
           cursorColor={theme.primary}
           selectionColor={theme.primary}

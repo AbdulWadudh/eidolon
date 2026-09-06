@@ -1,7 +1,8 @@
+import { CONNECTION_COPY, STATUS_COPY } from "@eidolon/config";
 import { capitalize, isString } from "es-toolkit";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as React from "react";
-import { type TextInput, View } from "react-native";
+import type { TextInput } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ActionsSheet, type ChatAction } from "@/components/chat/ActionsSheet";
@@ -23,18 +24,11 @@ import { useResolvedTheme, useThemeStore } from "@/store/theme-store";
 
 const AVATAR_ACTIONS: PhotoAction[] = ["adjust", "save"];
 
-const CONNECTION_LABEL = {
-  connected: "Active now",
-  connecting: "Connecting…",
-  reconnecting: "Reconnecting…",
-  disconnected: "Offline",
-} as const;
-
 const STATUS_LABEL: Record<string, string> = {
-  thinking: "Composing",
-  searching: "Searching",
-  painting: "Painting",
-  speaking: "Speaking",
+  thinking: STATUS_COPY.thinking.label,
+  searching: STATUS_COPY.searching.label,
+  painting: STATUS_COPY.painting.label,
+  speaking: STATUS_COPY.speaking.label,
 };
 
 export default function ChatScreen() {
@@ -72,8 +66,8 @@ export default function ChatScreen() {
     : theme.textMuted;
 
   const statusLabel = socket.isConnected
-    ? `${CONNECTION_LABEL.connected} • ${STATUS_LABEL[chat.activeStatus] ?? chat.mind?.mood ?? "Ready"}`
-    : CONNECTION_LABEL[socket.status];
+    ? `${CONNECTION_COPY.connected} • ${STATUS_LABEL[chat.activeStatus] ?? chat.mind?.mood ?? "Here"}`
+    : CONNECTION_COPY[socket.status];
 
   const autoPlay = React.useMemo(() => {
     const target = chat.messages.find((entry) => entry.id === chat.autoPlayMessageId);
@@ -159,57 +153,54 @@ export default function ChatScreen() {
       {/* Behind everything below the top bar — the messages and the dock — but
           not behind the bar itself, which carries the name, mood and affinity
           and has to stay readable whatever picture was chosen. */}
-      <View className="flex-1">
+      <KeyboardAvoidingView behavior="padding" automaticOffset style={{ flex: 1 }}>
         <ChatBackdrop uri={chat.characterLook.backgroundUrl} characterId={characterId} />
 
-        <KeyboardAvoidingView behavior="padding" automaticOffset style={{ flex: 1 }}>
-          <VoiceNotesProvider autoPlay={autoPlay} onAutoPlayed={chat.clearAutoPlay}>
-            <ChatFeed
-              messages={chat.messages}
-              isStreaming={chat.isStreaming}
-              streamingText={chat.streamingText}
-              activeStatus={chat.activeStatus}
-              statusDetail={chat.statusDetail}
-              characterId={characterId}
-              characterName={characterName}
-              isSynthesizingAudio={chat.isSynthesizingAudio}
-              isPainting={chat.isPainting}
-              paintingStep={chat.paintingStep}
-              paintingTotal={chat.paintingTotal}
-              paintingPreview={chat.paintingPreview}
-              onOpenPhoto={photos.view}
-            />
+        <VoiceNotesProvider autoPlay={autoPlay} onAutoPlayed={chat.clearAutoPlay}>
+          <ChatFeed
+            messages={chat.messages}
+            isStreaming={chat.isStreaming}
+            streamingText={chat.streamingText}
+            activeStatus={chat.activeStatus}
+            statusDetail={chat.statusDetail}
+            characterId={characterId}
+            characterName={characterName}
+            isSynthesizingAudio={chat.isSynthesizingAudio}
+            isPainting={chat.isPainting}
+            paintingStep={chat.paintingStep}
+            paintingTotal={chat.paintingTotal}
+            onOpenPhoto={photos.view}
+          />
 
-            {trayVisible ? (
-              <SuggestionTray
-                suggestions={chat.suggestions}
-                isLoading={chat.isSuggestionsLoading}
-                characterId={characterId}
-                onSend={handleSendSuggestion}
-                onEdit={handleEditSuggestion}
-                onReroll={handleReroll}
-                onHide={handleHideSuggestions}
-              />
-            ) : null}
-
-            <InputDock
-              value={chat.inputText}
-              isStreaming={chat.isStreaming}
+          {trayVisible ? (
+            <SuggestionTray
+              suggestions={chat.suggestions}
+              isLoading={chat.isSuggestionsLoading}
               characterId={characterId}
-              inputRef={inputRef}
-              onChangeText={chat.setInputText}
-              onSend={handleSend}
-              onInterrupt={() => chat.interrupt(characterId)}
-              suggestionsOpen={trayVisible}
-              onAction={(action) => {
-                if (action === "more") setActionsOpen(true);
-                if (action === "suggestions") toggleSuggestions();
-                if (action === "gallery") photos.openSheet();
-              }}
+              onSend={handleSendSuggestion}
+              onEdit={handleEditSuggestion}
+              onReroll={handleReroll}
+              onHide={handleHideSuggestions}
             />
-          </VoiceNotesProvider>
-        </KeyboardAvoidingView>
-      </View>
+          ) : null}
+
+          <InputDock
+            value={chat.inputText}
+            isStreaming={chat.isStreaming}
+            characterId={characterId}
+            inputRef={inputRef}
+            onChangeText={chat.setInputText}
+            onSend={handleSend}
+            onInterrupt={() => chat.interrupt(characterId)}
+            suggestionsOpen={trayVisible}
+            onAction={(action) => {
+              if (action === "more") setActionsOpen(true);
+              if (action === "suggestions") toggleSuggestions();
+              if (action === "gallery") photos.openSheet();
+            }}
+          />
+        </VoiceNotesProvider>
+      </KeyboardAvoidingView>
 
       <PhotoRequestSheet
         isOpen={photos.isSheetOpen}

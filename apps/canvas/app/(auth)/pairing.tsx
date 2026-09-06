@@ -1,3 +1,4 @@
+import { PAIRING_COPY, PAIRING_MESSAGES, UI_MS } from "@eidolon/config";
 import { type BarcodeScanningResult, CameraView, useCameraPermissions } from "expo-camera";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
@@ -11,6 +12,7 @@ import {
   Text,
   View,
 } from "react-native";
+import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppIcon } from "@/components/common/icon";
 import { Button } from "@/components/ui/button";
@@ -24,10 +26,16 @@ import { useResolvedTheme } from "@/store/theme-store";
  * supported configuration: the field simply starts blank. */
 const DEFAULT_HOST = process.env.EXPO_PUBLIC_CONDUCTOR_HOST ?? "";
 
+function humanPairingError(err: unknown): string {
+  const message = err instanceof Error ? err.message : "";
+  return PAIRING_MESSAGES.includes(message) ? message : PAIRING_COPY.unreachable;
+}
+
 export default function PairingScreen() {
   const router = useRouter();
   const { pairFromUri, setManualConnection } = useConnectionStore();
   const theme = useResolvedTheme();
+  const reduced = useReducedMotion();
   const [permission, requestPermission] = useCameraPermissions();
 
   const [isManualOpen, setIsManualOpen] = React.useState(false);
@@ -53,7 +61,7 @@ export default function PairingScreen() {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace("/(main)");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Pairing failed. Host unreachable.";
+      const msg = humanPairingError(err);
       setErrorMessage(msg);
       try {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -69,7 +77,7 @@ export default function PairingScreen() {
 
   const handleManualConnect = async () => {
     if (!hostInput.trim() || !tokenInput.trim()) {
-      setErrorMessage("Please enter both server host and pairing token.");
+      setErrorMessage(PAIRING_COPY.missingFields);
       return;
     }
 
@@ -81,7 +89,7 @@ export default function PairingScreen() {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace("/(main)");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Connection failed. Host unreachable.";
+      const msg = humanPairingError(err);
       setErrorMessage(msg);
       try {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -106,10 +114,10 @@ export default function PairingScreen() {
           {/* Header */}
           <View className="mb-6 items-center">
             <Text className="font-main-bold text-2xl text-text-primary tracking-tight">
-              Link to Conductor
+              {PAIRING_COPY.title}
             </Text>
             <Text className="mt-1 text-center font-ui text-sm text-text-muted">
-              Scan the QR code printed on your desktop terminal
+              {PAIRING_COPY.subtitle}
             </Text>
           </View>
 
@@ -131,7 +139,7 @@ export default function PairingScreen() {
                     <View className="absolute inset-0 items-center justify-center bg-canvas/80">
                       <ActivityIndicator size="large" color={theme.primary} />
                       <Text className="mt-3 font-ui-medium text-sm text-text-primary">
-                        Connecting to Conductor...
+                        {PAIRING_COPY.connecting}
                       </Text>
                     </View>
                   )}
@@ -140,7 +148,7 @@ export default function PairingScreen() {
                 <View className="flex-1 items-center justify-center p-6">
                   <AppIcon icon={QrCodeIcon} size={48} color={theme.textMuted} />
                   <Text className="mt-3 text-center font-ui text-xs text-text-muted">
-                    Camera permission is required to scan pairing QR codes.
+                    {PAIRING_COPY.cameraNeeded}
                   </Text>
                   <Button
                     variant="default"
@@ -148,7 +156,7 @@ export default function PairingScreen() {
                     className="mt-4"
                     onPress={() => requestPermission()}
                   >
-                    Grant Permission
+                    {PAIRING_COPY.allowCamera}
                   </Button>
                 </View>
               )}
@@ -157,9 +165,20 @@ export default function PairingScreen() {
 
           {/* Error Message Toast/Banner */}
           {errorMessage && (
-            <Card className="mt-4 border-danger bg-card">
-              <Text className="font-ui-medium text-xs text-danger">{errorMessage}</Text>
-            </Card>
+            <Animated.View
+              entering={
+                reduced ? FadeIn.duration(UI_MS.revealReduced) : FadeInDown.duration(UI_MS.reveal)
+              }
+            >
+              <Card className="mt-4 border-danger bg-card">
+                <Text
+                  accessibilityLiveRegion="assertive"
+                  className="font-ui-medium text-xs text-danger"
+                >
+                  {errorMessage}
+                </Text>
+              </Card>
+            </Animated.View>
           )}
 
           {/* Manual Connection Section */}
@@ -168,7 +187,9 @@ export default function PairingScreen() {
               className="flex-row items-center justify-between rounded-button border border-border bg-card px-4 py-3"
               onPress={() => setIsManualOpen((prev) => !prev)}
             >
-              <Text className="font-ui-medium text-sm text-text-primary">Enter Manually</Text>
+              <Text className="font-ui-medium text-sm text-text-primary">
+                {PAIRING_COPY.manual}
+              </Text>
               <AppIcon
                 icon={isManualOpen ? ArrowUp01Icon : ArrowDown01Icon}
                 size={18}
@@ -179,7 +200,9 @@ export default function PairingScreen() {
             {isManualOpen && (
               <Card className="mt-2 flex-col gap-3">
                 <View>
-                  <Text className="mb-1 font-ui text-xs text-text-muted">Server Host & Port</Text>
+                  <Text className="mb-1 font-ui text-xs text-text-muted">
+                    {PAIRING_COPY.addressLabel}
+                  </Text>
                   <Input
                     placeholder={DEFAULT_HOST || "192.168.1.39:3000"}
                     value={hostInput}
@@ -190,9 +213,11 @@ export default function PairingScreen() {
                 </View>
 
                 <View>
-                  <Text className="mb-1 font-ui text-xs text-text-muted">Pairing Secret Token</Text>
+                  <Text className="mb-1 font-ui text-xs text-text-muted">
+                    {PAIRING_COPY.passphraseLabel}
+                  </Text>
                   <Input
-                    placeholder="e.g. eidolon_dev_secret_key"
+                    placeholder={PAIRING_COPY.passphraseHint}
                     value={tokenInput}
                     onChangeText={setTokenInput}
                     secureTextEntry
@@ -207,7 +232,7 @@ export default function PairingScreen() {
                   disabled={isConnecting}
                   onPress={handleManualConnect}
                 >
-                  {isConnecting ? "Connecting..." : "Connect"}
+                  {isConnecting ? PAIRING_COPY.connecting : PAIRING_COPY.connect}
                 </Button>
               </Card>
             )}

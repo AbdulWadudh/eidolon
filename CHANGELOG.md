@@ -12,6 +12,20 @@ and publishes it as the GitHub release notes.
 
 ### Changed
 
+- Web search no longer needs a SearXNG host. It queries DuckDuckGo directly with
+  no key or signup, falling back to `serper.dev` and then `exa.ai` when
+  `SERPER_API_KEY` or `EXA_API_KEY` are set. If every provider is unreachable or
+  unconfigured the turn continues without web context instead of failing.
+  `SEARXNG_URL` is gone.
+- The interface stopped using implementation language. Statuses now read
+  "Capturing the moment" and "Checking what's happening out there" rather than
+  "Painting" and "Searching", and the same applies across the home screen,
+  pairing and the theme studio. Copy no longer assumes the character's gender.
+- Pairing failures explain the cause and the fix instead of surfacing an
+  internal error string.
+- Photo generation shows a calm placeholder with a progress bar rather than
+  streaming the half-finished image, which also stops the conductor pushing a
+  base64 frame over the socket on every step.
 - **Breaking:** every API route now lives under `/api/v1/`. The unversioned
   paths are gone. `GET /health` is additionally served unversioned for container
   health checks and uptime monitors.
@@ -22,6 +36,13 @@ and publishes it as the GitHub release notes.
   `%LOCALAPPDATA%\eidolon\data` on Windows and `~/.eidolon/data` elsewhere, so a
   reclone or `git clean` no longer destroys characters, messages and memories.
   `GET /health` reports the resolved location.
+
+### Fixed
+
+- The chat input dock lifts the full keyboard height again, so the action-button
+  row is no longer hidden behind the keyboard. Putting the chat backdrop behind
+  the dock had nested the keyboard-avoiding view one level deeper than it needed
+  to be.
 
 ### Added
 

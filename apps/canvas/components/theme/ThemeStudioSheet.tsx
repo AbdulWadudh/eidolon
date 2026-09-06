@@ -1,3 +1,4 @@
+import { THEME_COPY } from "@eidolon/config";
 import type { ThemeTokens } from "@eidolon/tokens";
 import * as React from "react";
 import { Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
@@ -207,10 +208,10 @@ export function ThemeStudioSheet({
             {/* A. Scope Selector */}
             <CollapsibleSection
               sectionKey="scope"
-              title="Theme Scope"
+              title={THEME_COPY.appliesTo}
               badge={
                 <Text className="font-ui-bold text-[11px] text-text-primary">
-                  {scope === "global" ? "Global" : characterName}
+                  {scope === "global" ? THEME_COPY.everyone : characterName}
                 </Text>
               }
               expanded={expandedSection === "scope"}
@@ -256,7 +257,7 @@ export function ThemeStudioSheet({
                 <View className="mt-3 flex-row items-center justify-between border-t border-border pt-2">
                   <Text className="font-ui text-xs text-text-muted">Status</Text>
                   <Badge variant={characterHasOverrides ? "warning" : "muted"}>
-                    {characterHasOverrides ? "Custom Overrides Active" : "Inheriting Global Master"}
+                    {characterHasOverrides ? THEME_COPY.ownLook : THEME_COPY.sameAsEveryone}
                   </Badge>
                 </View>
               )}
@@ -314,7 +315,7 @@ export function ThemeStudioSheet({
                     </View>
                     <View>
                       <Text className="font-main-bold text-sm text-text-primary">
-                        {scope === "character" ? characterName : "Master Persona"}
+                        {scope === "character" ? characterName : THEME_COPY.everyone}
                       </Text>
                       <Text className="font-ui text-[11px] text-text-muted">
                         Radius: {resolvedTheme.radius}px • Accent: {resolvedTheme.primary}
@@ -356,7 +357,7 @@ export function ThemeStudioSheet({
                   accessibilityLabel="Reset corner radius to default"
                 />
               }
-              title="Corner Radius (--radius)"
+              title={THEME_COPY.corners}
               badge={
                 <Text className="font-ui-bold text-xs text-primary">{resolvedTheme.radius}px</Text>
               }
@@ -450,9 +451,9 @@ export function ThemeStudioSheet({
             >
               <View className="mt-3">
                 <ColorField
-                  label="Canvas Surface"
+                  label={THEME_COPY.background}
                   tokenKey="canvas"
-                  pickerTitle="Pick Canvas Surface"
+                  pickerTitle={THEME_COPY.background}
                   value={resolvedTheme.canvas}
                   accentColor={resolvedTheme.primary}
                   borderColor={resolvedTheme.cardBorder}
@@ -463,9 +464,9 @@ export function ThemeStudioSheet({
                   isDefault={isTokenDefault("canvas")}
                 />
                 <ColorField
-                  label="Card Background"
+                  label={THEME_COPY.cards}
                   tokenKey="card"
-                  pickerTitle="Pick Card Background"
+                  pickerTitle={THEME_COPY.cards}
                   value={resolvedTheme.card}
                   accentColor={resolvedTheme.primary}
                   borderColor={resolvedTheme.cardBorder}
@@ -476,9 +477,9 @@ export function ThemeStudioSheet({
                   isDefault={isTokenDefault("card")}
                 />
                 <ColorField
-                  label="Card Border"
+                  label={THEME_COPY.cardEdges}
                   tokenKey="cardBorder"
-                  pickerTitle="Pick Card Border"
+                  pickerTitle={THEME_COPY.cardEdges}
                   value={resolvedTheme.cardBorder}
                   accentColor={resolvedTheme.primary}
                   borderColor={resolvedTheme.cardBorder}
@@ -504,9 +505,9 @@ export function ThemeStudioSheet({
             >
               <View className="mt-3">
                 <ColorField
-                  label="Primary Accent (Button)"
+                  label={THEME_COPY.accent}
                   tokenKey="primary"
-                  pickerTitle="Pick Primary Accent Color"
+                  pickerTitle={THEME_COPY.accent}
                   value={resolvedTheme.primary}
                   accentColor={resolvedTheme.primary}
                   borderColor={resolvedTheme.cardBorder}
@@ -517,9 +518,9 @@ export function ThemeStudioSheet({
                   isDefault={isTokenDefault("primary")}
                 />
                 <ColorField
-                  label="Primary Button Text"
+                  label={THEME_COPY.textOnAccent}
                   tokenKey="primaryForeground"
-                  pickerTitle="Pick Primary Button Text"
+                  pickerTitle={THEME_COPY.textOnAccent}
                   value={resolvedTheme.primaryForeground}
                   accentColor={resolvedTheme.primary}
                   borderColor={resolvedTheme.cardBorder}
@@ -530,9 +531,9 @@ export function ThemeStudioSheet({
                   isDefault={isTokenDefault("primaryForeground")}
                 />
                 <ColorField
-                  label="Secondary Button Surface"
+                  label={THEME_COPY.quietButtons}
                   tokenKey="secondary"
-                  pickerTitle="Pick Secondary Button Surface"
+                  pickerTitle={THEME_COPY.quietButtons}
                   value={resolvedTheme.secondary}
                   accentColor={resolvedTheme.primary}
                   borderColor={resolvedTheme.cardBorder}
@@ -543,9 +544,9 @@ export function ThemeStudioSheet({
                   isDefault={isTokenDefault("secondary")}
                 />
                 <ColorField
-                  label="Secondary Button Text"
+                  label={THEME_COPY.textOnQuietButtons}
                   tokenKey="secondaryForeground"
-                  pickerTitle="Pick Secondary Button Text"
+                  pickerTitle={THEME_COPY.textOnQuietButtons}
                   value={resolvedTheme.secondaryForeground}
                   accentColor={resolvedTheme.primary}
                   borderColor={resolvedTheme.cardBorder}
@@ -571,9 +572,9 @@ export function ThemeStudioSheet({
             >
               <View className="mt-3">
                 <ColorField
-                  label="Success Color"
+                  label={THEME_COPY.success}
                   tokenKey="success"
-                  pickerTitle="Pick Success Color"
+                  pickerTitle={THEME_COPY.success}
                   value={resolvedTheme.success}
                   accentColor={resolvedTheme.primary}
                   borderColor={resolvedTheme.cardBorder}
@@ -584,9 +585,9 @@ export function ThemeStudioSheet({
                   isDefault={isTokenDefault("success")}
                 />
                 <ColorField
-                  label="Warning Color"
+                  label={THEME_COPY.caution}
                   tokenKey="warning"
-                  pickerTitle="Pick Warning Color"
+                  pickerTitle={THEME_COPY.caution}
                   value={resolvedTheme.warning}
                   accentColor={resolvedTheme.primary}
                   borderColor={resolvedTheme.cardBorder}
@@ -597,9 +598,9 @@ export function ThemeStudioSheet({
                   isDefault={isTokenDefault("warning")}
                 />
                 <ColorField
-                  label="Danger Color"
+                  label={THEME_COPY.danger}
                   tokenKey="danger"
-                  pickerTitle="Pick Danger Color"
+                  pickerTitle={THEME_COPY.danger}
                   value={resolvedTheme.danger}
                   accentColor={resolvedTheme.primary}
                   borderColor={resolvedTheme.cardBorder}
@@ -614,7 +615,7 @@ export function ThemeStudioSheet({
 
             <CollapsibleSection
               sectionKey="font"
-              title="Typography"
+              title={THEME_COPY.type}
               expanded={expandedSection === "font"}
               onToggle={toggleSection}
               chevronColor={resolvedTheme.textMuted}
@@ -630,7 +631,7 @@ export function ThemeStudioSheet({
                   mutedColor={resolvedTheme.textMuted}
                 />
                 <FontFamilyPicker
-                  label="Dialogue (--font-main)"
+                  label={THEME_COPY.dialogue}
                   value={resolvedTheme.fontMain}
                   onSelect={(family) => updateToken("fontMain", family)}
                   onReset={() => handleResetToken("fontMain")}
@@ -639,7 +640,7 @@ export function ThemeStudioSheet({
                   mutedColor={resolvedTheme.textMuted}
                 />
                 <FontFamilyPicker
-                  label="Interface (--font-ui)"
+                  label={THEME_COPY.interface}
                   value={resolvedTheme.fontUI}
                   onSelect={(family) => updateToken("fontUI", family)}
                   onReset={() => handleResetToken("fontUI")}
@@ -652,7 +653,7 @@ export function ThemeStudioSheet({
 
             <CollapsibleSection
               sectionKey="inspector"
-              title="Live CSS Variable Inspector"
+              title={THEME_COPY.whatIsSet}
               expanded={expandedSection === "inspector"}
               onToggle={toggleSection}
               chevronColor={resolvedTheme.textMuted}
@@ -682,7 +683,7 @@ export function ThemeStudioSheet({
             {/* E. Master Actions */}
             <CollapsibleSection
               sectionKey="actions"
-              title="Master Actions"
+              title={THEME_COPY.startOver}
               expanded={expandedSection === "actions"}
               onToggle={toggleSection}
               chevronColor={resolvedTheme.textMuted}

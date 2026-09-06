@@ -20,7 +20,8 @@ services:
       - S3_PUBLIC_URL=${S3_PUBLIC_URL}
       - S3_FORCE_PATH_STYLE=${S3_FORCE_PATH_STYLE:-true}
 
-      - SEARXNG_URL=${SEARXNG_URL:-}
+      - SERPER_API_KEY=${SERPER_API_KEY:-}
+      - EXA_API_KEY=${EXA_API_KEY:-}
       - LLM_API_URL=${LLM_API_URL:-}
       - LLM_MODEL=${LLM_MODEL:-}
       - COMFYUI_URL=${COMFYUI_URL:-}

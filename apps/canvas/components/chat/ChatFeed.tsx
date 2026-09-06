@@ -1,4 +1,4 @@
-import { CHAT } from "@eidolon/config";
+import { CHAT, STATUS_COPY } from "@eidolon/config";
 import { FlashList, type FlashListRef } from "@shopify/flash-list";
 import * as React from "react";
 import { type NativeScrollEvent, type NativeSyntheticEvent, Text, View } from "react-native";
@@ -9,11 +9,11 @@ import { MessageCard } from "./MessageCard";
 import { PaintingCard } from "./PaintingCard";
 import { StreamingMessageCard } from "./StreamingMessageCard";
 
-const STATUS_COPY: Record<string, string> = {
-  thinking: "Composing a reply",
-  searching: "Checking the world",
-  painting: "Painting a scene",
-  speaking: "Finding her voice",
+const STATUS_LINE: Record<string, string> = {
+  thinking: STATUS_COPY.thinking.line,
+  searching: STATUS_COPY.searching.line,
+  painting: STATUS_COPY.painting.line,
+  speaking: STATUS_COPY.speaking.line,
 };
 
 export interface ChatFeedProps {
@@ -28,7 +28,6 @@ export interface ChatFeedProps {
   isPainting?: boolean;
   paintingStep?: number;
   paintingTotal?: number;
-  paintingPreview?: string | null;
   onOpenPhoto?: (message: ChatMessage) => void;
 }
 
@@ -48,7 +47,7 @@ function EmptyStage({ characterName }: { characterName: string }) {
         The stage is set
       </Text>
       <Text className="mt-2 text-center font-main text-sm text-text-muted leading-normal">
-        Open the scene with {characterName}. Wrap stage directions in *asterisks* and they render as
+        Open the scene with {characterName}. Put actions between *asterisks* and they read as
         narration.
       </Text>
     </View>
@@ -67,7 +66,6 @@ export function ChatFeed({
   isPainting = false,
   paintingStep = 0,
   paintingTotal = 0,
-  paintingPreview = null,
   onOpenPhoto,
 }: ChatFeedProps) {
   const listRef = React.useRef<FlashListRef<ChatMessage>>(null);
@@ -158,7 +156,6 @@ export function ChatFeed({
           step={paintingStep}
           total={paintingTotal}
           detail={statusDetail}
-          preview={paintingPreview}
           characterId={characterId}
         />
       );
@@ -167,7 +164,7 @@ export function ChatFeed({
     return (
       <StreamingMessageCard
         text={streamingText}
-        status={statusDetail ?? STATUS_COPY[activeStatus] ?? null}
+        status={statusDetail ?? STATUS_LINE[activeStatus] ?? null}
         characterId={characterId}
         isSynthesizingAudio={isSynthesizingAudio}
       />
@@ -176,7 +173,6 @@ export function ChatFeed({
     isPainting,
     paintingStep,
     paintingTotal,
-    paintingPreview,
     isStreaming,
     streamingText,
     statusDetail,

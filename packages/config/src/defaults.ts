@@ -38,6 +38,8 @@ export const CHAT = {
   shimmerBarHeightPx: 12,
   shimmerBarRadiusPx: 3,
   imageAspectRatio: 832 / 1216,
+  imageSweepWidthRatio: 0.45,
+  imageSheenOpacity: 0.22,
   minTouchTargetPx: 44,
   toolButtonPx: 32,
   toolIconPx: 20,
@@ -65,6 +67,7 @@ export const CHAT_MS = {
   trayCollapse: 220,
   shimmer: 1200,
   imageFade: 220,
+  imageSweep: 1600,
 } as const;
 
 export const SUGGESTIONS = {

@@ -41,7 +41,6 @@ export const INITIAL_CHAT = {
   isPainting: false,
   paintingStep: 0,
   paintingTotal: 0,
-  paintingPreview: null as string | null,
   photoIdeas: [] as string[],
   areIdeasLoading: false,
   characterLook: {
@@ -108,7 +107,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       isPainting: true,
       paintingStep: 0,
       paintingTotal: 0,
-      paintingPreview: null,
       activeStatus: "painting",
       statusDetail: null,
       lastError: null,

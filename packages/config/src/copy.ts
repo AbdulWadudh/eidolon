@@ -1,0 +1,87 @@
+export const STATUS_COPY = {
+  thinking: { label: "Thinking", line: "Thinking it over" },
+  searching: { label: "Looking it up", line: "Checking what's happening out there" },
+  painting: { label: "Taking a photo", line: "Capturing the moment" },
+  speaking: { label: "Speaking", line: "Saying it out loud" },
+  idle: { label: "Here", line: "" },
+} as const;
+
+export const CONNECTION_COPY = {
+  connected: "Active now",
+  connecting: "Reaching out…",
+  reconnecting: "Reaching out again…",
+  disconnected: "Out of reach",
+} as const;
+
+export const PHOTO_COPY = {
+  framing: "Finding the light",
+  taking: "Capturing the moment",
+  noCamera: "No camera on this side",
+  didNotCome: "That photo did not come out",
+} as const;
+
+export const PAIRING_COPY = {
+  title: "Connect to your Eidolon",
+  subtitle: "Scan the code showing on your computer",
+  connecting: "Connecting…",
+  cameraNeeded: "Let the camera see the code on your computer.",
+  allowCamera: "Allow camera",
+  manual: "Type it in instead",
+  addressLabel: "Address",
+  passphraseLabel: "Passphrase",
+  passphraseHint: "The word shown on your computer",
+  connect: "Connect",
+  missingFields: "Fill in both the address and the passphrase.",
+  notOurCode: "That is not an Eidolon code. Scan the one showing on your computer.",
+  incompleteCode: "That code is incomplete. Show the full one on your computer and scan again.",
+  refused: "That passphrase was not accepted. Check it matches the one on your computer.",
+  unreachable:
+    "Could not reach that address. Check it matches your computer and that you are both on the same network.",
+} as const;
+
+export const PAIRING_MESSAGES: readonly string[] = [
+  PAIRING_COPY.missingFields,
+  PAIRING_COPY.notOurCode,
+  PAIRING_COPY.incompleteCode,
+  PAIRING_COPY.refused,
+  PAIRING_COPY.unreachable,
+];
+
+export const HOME_COPY = {
+  connectedTo: "Connected to",
+  disconnect: "Disconnect",
+  whosHere: "Who's here",
+  ready: "Ready when you are",
+  sayHello: "Say hello",
+  lookTitle: "Look & feel",
+  lookBlurb: "Set the colours, type and corners — for everyone, or for one character.",
+  typeTitle: "Type & fonts",
+  typeBlurb: "Browse fonts and see them in place before you keep them.",
+  open: "Open",
+} as const;
+
+export const THEME_COPY = {
+  appliesTo: "Applies to",
+  everyone: "Everyone",
+  ownLook: "Custom look",
+  sameAsEveryone: "Same as everyone",
+  corners: "Corners",
+  background: "Background",
+  cards: "Cards",
+  cardEdges: "Card edges",
+  accent: "Accent",
+  textOnAccent: "Text on accent",
+  quietButtons: "Quiet buttons",
+  textOnQuietButtons: "Text on quiet buttons",
+  success: "Success",
+  caution: "Caution",
+  danger: "Danger",
+  type: "Type",
+  dialogue: "Dialogue",
+  interface: "Interface",
+  whatIsSet: "What's set right now",
+  startOver: "Start over",
+} as const;
+
+export type StatusKey = keyof typeof STATUS_COPY;
+export type ConnectionKey = keyof typeof CONNECTION_COPY;
