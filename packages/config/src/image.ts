@@ -17,7 +17,24 @@ export const IMAGE = {
   // "others" is meant to name who else is in frame. A clause is a description of
   // the room, not a person, and reads as nonsense after the word "with".
   othersClauseWords: ["is", "are", "was", "were", "hanging", "sitting on", "lying on"],
-  emptyWords: ["none", "nothing", "n/a", "na", "empty", "no one", "nobody", "null", "-"],
+  emptyWords: [
+    "none",
+    "nothing",
+    "n/a",
+    "na",
+    "empty",
+    "no one",
+    "no-one",
+    "nobody",
+    "null",
+    "undefined",
+    "just me",
+    "just her",
+    "only her",
+    "herself",
+    "alone",
+    "-",
+  ],
   hairChangeWords: [
     "dyed",
     "dye",

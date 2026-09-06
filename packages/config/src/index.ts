@@ -12,6 +12,8 @@ export {
   apiUrl,
   characterAffinityPath,
   characterAffinityUrl,
+  characterGalleryPath,
+  characterGalleryUrl,
   characterLookUrl,
   characterLorePath,
   characterLoreUrl,
@@ -39,10 +41,22 @@ export {
   voicesUrl,
 } from "./api";
 export {
+  AUTHOR_FIELD_KEYS,
+  AUTHOR_FIELDS,
+  AUTHORING,
+  type AuthorField,
+  type AuthorFieldSpec,
+  type AuthorMode,
+  isAuthorField,
+  isAuthorMode,
+} from "./authoring";
+export {
+  AUTHOR_COPY,
   CHARACTER_COPY,
   CONNECTION_COPY,
   type ConnectionKey,
   ENHANCE_COPY,
+  GALLERY_COPY,
   HOME_COPY,
   PAIRING_COPY,
   PAIRING_MESSAGES,
@@ -59,15 +73,12 @@ export {
   CHAT_MS,
   CHAT_TURN,
   DATA_FILES,
-  EASING,
-  EASING_BEZIER,
   ENHANCE,
   MEMORY,
   MOCK,
   PAIRING,
   PERSONA_GUARD,
   PHOTO,
-  PRESS_SCALE,
   RECONNECT_DELAYS_MS,
   SEARCH,
   SERVER_DEFAULTS,
@@ -78,7 +89,6 @@ export {
   TIMEOUTS_MS,
   TRANSCRIPT,
   TTS,
-  UI_MS,
 } from "./defaults";
 export {
   AFFINITY_HUD,
@@ -98,6 +108,15 @@ export {
   WEB_CONTEXT,
   WORKING_CONTEXT,
 } from "./memory";
+export {
+  EASING,
+  EASING_BEZIER,
+  FIELD_PADDING,
+  GALLERY,
+  PORTRAIT_POLL_MS,
+  PRESS_SCALE,
+  UI_MS,
+} from "./motion";
 export {
   CHARACTER_PRESETS,
   type CharacterPreset,

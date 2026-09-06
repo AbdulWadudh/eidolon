@@ -6,7 +6,13 @@ import { getPrompt } from "@/prompts/store";
 import type { Orientation } from "@/services/comfy-workflow";
 import { generateImage, uploadReferenceImage } from "@/services/comfyui";
 import { captionLine } from "@/services/photo-caption";
-import { composeAppearance, describeAppearance, forgetLook, oneLine } from "@/services/photo-look";
+import {
+  composeAppearance,
+  describeAppearance,
+  forgetLook,
+  meansNobody,
+  oneLine,
+} from "@/services/photo-look";
 import { ask } from "@/services/prompt-writer";
 import { uploadImage } from "@/services/storage";
 import { safeJsonParse } from "@/utils/json";
@@ -261,6 +267,7 @@ export function sceneField(text: string): string {
 export function whoElse(text: string): string {
   const trimmed = oneLine(text);
   if (trimmed.length === 0 || OTHERS_CLAUSE.test(trimmed)) return "";
+  if (meansNobody(trimmed)) return "";
   return sceneField(trimmed);
 }
 

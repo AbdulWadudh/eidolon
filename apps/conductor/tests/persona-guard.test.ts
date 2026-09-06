@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { PERSONA_GUARD } from "@eidolon/config";
 import { createPersonaFilter, deflection, findTell } from "@/services/persona-guard";
+import { bracketsToActions, stripSpeakerLabel } from "@/services/self-reference";
 
 const TELLS = [
   "Hello! I'm an AI language model designed to have a conversation with you.",
@@ -113,5 +114,71 @@ describe("deflection", () => {
       expect([...PERSONA_GUARD.deflections] as string[]).toContain(line);
       expect(findTell(line)).toBeNull();
     }
+  });
+});
+
+describe("stage directions written in square brackets", () => {
+  it("turns a bracketed direction into the action form the app uses", () => {
+    expect(
+      bracketsToActions("[Ines Vaz's phone rings, she answers it] Alright, let me take this."),
+    ).toBe("*Ines Vaz's phone rings, she answers it* Alright, let me take this.");
+  });
+
+  it("leaves the state block alone, because a colon means it is not prose", () => {
+    const withBlock = "Fine. [mind_update: affinity=+2]";
+    expect(bracketsToActions(withBlock)).toBe(withBlock);
+  });
+
+  it("leaves the photo note alone", () => {
+    const note = "Here. [photo attached: at the kitchen]";
+    expect(bracketsToActions(note)).toBe(note);
+  });
+
+  it("leaves a reply that never used brackets untouched", () => {
+    expect(bracketsToActions("*shrugs* I have no idea.")).toBe("*shrugs* I have no idea.");
+  });
+
+  it("drops an empty bracket rather than leaving stray asterisks", () => {
+    expect(bracketsToActions("Well. [] Fine.")).toBe("Well. [] Fine.");
+  });
+});
+
+describe("the label the transcript uses for the reader", () => {
+  it("drops PLAYER from the front of her reply", () => {
+    expect(stripSpeakerLabel("PLAYER: That's great! I heard RCB won.", "Ines Vaz")).toBe(
+      "That's great! I heard RCB won.",
+    );
+  });
+
+  it("drops it whatever the casing", () => {
+    expect(stripSpeakerLabel("player: sure.", "Ines Vaz")).toBe("sure.");
+    expect(stripSpeakerLabel("User: sure.", "Ines Vaz")).toBe("sure.");
+  });
+
+  it("still drops her own name first", () => {
+    expect(stripSpeakerLabel("Ines: *nods* Alright.", "Ines Vaz")).toBe("*nods* Alright.");
+  });
+
+  it("drops both when the model stacks them", () => {
+    expect(stripSpeakerLabel("Ines Vaz: PLAYER: hello", "Ines Vaz")).toBe("hello");
+  });
+
+  it("leaves a real line that opens with the word You", () => {
+    const line = "You — honestly, I have no idea what to tell you.";
+    expect(stripSpeakerLabel(line, "Ines Vaz")).toBe(line);
+    expect(stripSpeakerLabel("You always do this.", "Ines Vaz")).toBe("You always do this.");
+  });
+
+  it("leaves a line that merely mentions a player", () => {
+    const line = "The player she keeps talking about is called Kohli.";
+    expect(stripSpeakerLabel(line, "Ines Vaz")).toBe(line);
+  });
+});
+
+describe("a reply already recorded with the reader's label", () => {
+  it("is cleaned when read back, with no character name to go on", () => {
+    // workingHistory has the row but not the card, so the reader label has to
+    // come off without knowing whose turn it was.
+    expect(stripSpeakerLabel("PLAYER: *smiles* Absolutely.", "")).toBe("*smiles* Absolutely.");
   });
 });

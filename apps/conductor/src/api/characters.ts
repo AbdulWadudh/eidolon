@@ -1,5 +1,7 @@
 import { API_ROUTES, CHARACTER_PRESETS, presetByKey, QUEUE_JOBS } from "@eidolon/config";
 import { type Context, Hono } from "hono";
+import { authoring } from "@/api/authoring";
+import { gallery } from "@/api/gallery";
 import { ownerFor } from "@/auth/session";
 import {
   adopt,
@@ -114,10 +116,15 @@ characters.post("/", async (c) => {
   );
 });
 
-characters.get("/:id", (c) => {
-  const character = getCharacter(c.req.param("id"));
+characters.get("/:id", async (c) => {
+  const id = c.req.param("id");
+  const character = getCharacter(id);
   if (!character) return c.json({ error: "No such character." }, 404);
-  return c.json({ character });
+
+  // Whether editing this will change it or fork it is the server's answer, not
+  // something the client can work out from an owner id it never sees.
+  const owner = await requireOwner(c);
+  return c.json({ character, isMine: owner ? ownsCharacter(id, owner.id) : false });
 });
 
 characters.patch("/:id", async (c) => {
@@ -245,6 +252,9 @@ characters.post("/:id/portrait", async (c) => {
 
   return c.json({ queued: true, jobId: jobId ?? null }, 202);
 });
+
+characters.route("/author", authoring);
+characters.route("/", gallery);
 
 export function mountCharacters(app: Hono): void {
   app.route(API_ROUTES.characters, characters);

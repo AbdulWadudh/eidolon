@@ -1,11 +1,38 @@
 const LABEL_SEPARATOR = String.raw`\s*[:\-–—]\s*`;
 const SPLIT_LINES = /\r?\n/;
 const PLAYER_LABEL = /^(?:player|you)\s*[:\-–—]\s*/i;
+// Colon only, for text she wrote. A dash is punctuation in a real line —
+// "You — honestly, I have no idea" is something she might say.
+const READER_LABEL = /^(?:player|user|you)\s*:\s*/i;
 const ESCAPABLE = /[.*+?^${}()|[\]\\]/g;
 const ACTION = /\*[^*]*\*/g;
 
 function literal(value: string): string {
   return value.replace(ESCAPABLE, String.raw`\$&`);
+}
+
+const BRACKET_DIRECTION = /\[([^\]]+)\]/g;
+
+/**
+ * The app writes actions in *asterisks*. The model also reaches for square
+ * brackets — "[Ines Vaz's phone rings, she answers it] Alright, let me take
+ * this." — which reads as a script direction rather than as her. The `[`
+ * character cannot be a stop sequence, because the state block that closes a
+ * turn opens with one, so the shape is converted after the fact instead.
+ *
+ * A bracket carrying a colon is left alone: that is the state block or the
+ * photo note, both of which are handled by the code that owns them.
+ */
+export function bracketsToActions(reply: string): string {
+  return reply
+    .replace(BRACKET_DIRECTION, (match, inner: string) => {
+      const text = inner.trim();
+      if (text.length === 0 || text.includes(":")) return match;
+      return `*${text}*`;
+    })
+    .replace(/\*\s*\*/g, "")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
 }
 
 export function firstName(name: string): string {
@@ -30,7 +57,12 @@ export function stripSpeakerLabel(reply: string, name: string): string {
     }
   }
 
-  return text;
+  // The transcript labels the reader's turns PLAYER, and the model copies
+  // whichever label it saw last as readily as its own — so she opened every
+  // reply with "PLAYER:" while still speaking as herself. Her name and the
+  // reader's are both stripped, and both are checked, because she reaches for
+  // either one.
+  return text.replace(READER_LABEL, "").trimStart();
 }
 
 /**

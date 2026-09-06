@@ -3,6 +3,7 @@ import { Worker } from "bullmq";
 import { getCharacterCard } from "@/db";
 import { appendChronicle, nextChapterIndex } from "@/db/chronicles";
 import { setCharacterAvatar, setCharacterFace } from "@/db/look";
+import { addPortrait } from "@/db/portraits";
 import { saveStageBackdrop } from "@/db/stages";
 import { queueConnection } from "@/queue/connection";
 import {
@@ -94,6 +95,10 @@ async function renderPortrait(data: PortraitJob): Promise<void> {
     `portrait-${Date.now()}.${STAGE.backdropFileExtension}`,
     image.bytes,
   );
+
+  // Kept as a row of its own before it is put into use, so the portrait it
+  // replaces stays in her gallery and can be chosen again.
+  addPortrait(data.characterId, url, data.prompt.trim() || null);
 
   // The same picture becomes both the avatar and the face reference, so every
   // later selfie is recognisably the same person.

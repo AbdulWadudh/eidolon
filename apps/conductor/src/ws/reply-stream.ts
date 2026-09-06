@@ -5,7 +5,11 @@ import { type ChatMessage, streamChatCompletion } from "@/services/llm";
 import { freshLineReminder, hardenedReminder, mustSpeakReminder } from "@/services/persona";
 import { createPersonaFilter, deflection, leaksInstruction } from "@/services/persona-guard";
 import { hasSaidEnough, repeatsHistory, spokenWords } from "@/services/reply-length";
-import { narratesInThirdPerson, stripSpeakerLabel } from "@/services/self-reference";
+import {
+  bracketsToActions,
+  narratesInThirdPerson,
+  stripSpeakerLabel,
+} from "@/services/self-reference";
 import { createActionGate, isActionChunk } from "@/services/stage-directions";
 import { createMindTail } from "@/ws/mind-tail";
 import { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
@@ -43,7 +47,7 @@ async function streamOnce(
   // sequence either: the model puts one in front of that block, so stopping
   // there threw away the state update on every turn. Brevity is enforced below
   // instead, where a blank line ends the prose without ending the stream.
-  const stop = [...CHAT_TURN.photoNoteStops];
+  const stop = [...CHAT_TURN.photoNoteStops, ...CHAT_TURN.readerTurnStops];
   let reply = "";
   let said = false;
   let drained = 0;
@@ -121,7 +125,7 @@ async function sayItOutLoud(
         maxTokens: CHAT_TURN.maxTokens,
         presencePenalty: CHAT_TURN.presencePenalty,
         frequencyPenalty: CHAT_TURN.frequencyPenalty,
-        stop: [...CHAT_TURN.photoNoteStops],
+        stop: [...CHAT_TURN.photoNoteStops, ...CHAT_TURN.readerTurnStops],
       },
     )) {
       raw += token;
@@ -216,6 +220,12 @@ export async function streamReply(
       sendServerMessage(ws, { type: "text_replace", payload: { text: unlabelled } });
       result = { ...result, reply: unlabelled };
     }
+  }
+
+  const asActions = bracketsToActions(result.reply);
+  if (asActions !== result.reply && !signal.aborted) {
+    sendServerMessage(ws, { type: "text_replace", payload: { text: asActions } });
+    result = { ...result, reply: asActions };
   }
 
   // A reminder is a system turn, and the model sometimes answers by repeating it

@@ -146,6 +146,23 @@ export function characterLoreUrl(
   return `${scheme}://${stripAuthority(host)}${characterLorePath(characterId)}`;
 }
 
+export function characterGalleryPath(characterId: string): string {
+  return `${characterPath(characterId)}/gallery`;
+}
+
+export function characterGalleryUrl(
+  host: string,
+  characterId: string,
+  options: { limit?: number; offset?: number } = {},
+  scheme = httpScheme(host),
+): string {
+  const query = new URLSearchParams();
+  if (options.limit !== undefined) query.set("limit", String(options.limit));
+  if (options.offset !== undefined) query.set("offset", String(options.offset));
+  const search = query.size > 0 ? `?${query.toString()}` : "";
+  return `${scheme}://${stripAuthority(host)}${characterGalleryPath(characterId)}${search}`;
+}
+
 export function characterPortraitPath(characterId: string): string {
   return `${characterPath(characterId)}/portrait`;
 }

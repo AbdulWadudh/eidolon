@@ -1,5 +1,27 @@
 import type { Database } from "bun:sqlite";
 
+/**
+ * A portrait used to live in `characters.avatar_url` alone, so generating a new
+ * one destroyed the old. Every render is a row now, and the column just points
+ * at whichever is currently in use. The ones already on disk are adopted here so
+ * a reader does not lose the face they have been talking to.
+ */
+function adoptExistingPortraits(db: Database): void {
+  db.exec(`
+    INSERT OR IGNORE INTO character_portraits (id, character_id, url, prompt, created_at)
+    SELECT 'adopted-avatar:' || id, id, avatar_url, NULL, created_at
+      FROM characters
+     WHERE avatar_url IS NOT NULL AND avatar_url != '';
+  `);
+
+  db.exec(`
+    INSERT OR IGNORE INTO character_portraits (id, character_id, url, prompt, created_at)
+    SELECT 'adopted-face:' || id, id, face_url, NULL, created_at
+      FROM characters
+     WHERE face_url IS NOT NULL AND face_url != '';
+  `);
+}
+
 function addColumnIfMissing(db: Database, table: string, column: string, definition: string): void {
   const columns = db.query<{ name: string }, []>(`PRAGMA table_info(${table})`).all();
   if (columns.some((entry) => entry.name === column)) return;
@@ -72,7 +94,24 @@ export function applySchema(db: Database): void {
 
     CREATE UNIQUE INDEX IF NOT EXISTS idx_stages_character_name
       ON stages(character_id, name);
+
+    CREATE TABLE IF NOT EXISTS character_portraits (
+      id TEXT PRIMARY KEY,
+      character_id TEXT NOT NULL,
+      url TEXT NOT NULL,
+      prompt TEXT,
+      created_at INTEGER NOT NULL,
+      FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_portraits_character
+      ON character_portraits(character_id, created_at DESC);
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_portraits_url
+      ON character_portraits(character_id, url);
   `);
+
+  adoptExistingPortraits(db);
 
   addColumnIfMissing(db, "stages", "updated_at", "INTEGER");
   addColumnIfMissing(db, "characters", "affinity_locked", "INTEGER DEFAULT 0");

@@ -12,6 +12,10 @@ export const TIMEOUTS_MS = {
   imageGeneration: 3000,
   search: 4000,
   clientRequest: 6000,
+  /** Reading a whole conversation back, which is far more than a status check. */
+  transcript: 20000,
+  /** Anything the local GPU writes or renders, which is far slower than a read. */
+  generation: 120000,
 } as const;
 
 export const RECONNECT_DELAYS_MS = [1000, 2000, 5000, 10000] as const;
@@ -24,7 +28,12 @@ export const SOCKET = {
 export const CHAT = {
   suggestionCount: 3,
   waveformBars: 4,
-  drawDistancePx: 480,
+  /**
+   * How far past the viewport FlashList renders. At 480 a fast flick outran the
+   * renderer and left blank rows behind it; this is the cost of a few more
+   * mounted cards against rows that are actually there when you arrive.
+   */
+  drawDistancePx: 1400,
   liveEdgeThresholdPx: 96,
   autoscrollBottomThreshold: 0.2,
   scrollPreviousItemPeekPx: 56,
@@ -40,6 +49,12 @@ export const CHAT = {
   imageAspectRatio: 832 / 1216,
   imageSweepWidthRatio: 0.45,
   imageSheenOpacity: 0.22,
+  /** Lets the list settle after mount before it is asked to jump. */
+  focusScrollDelayMs: 250,
+  /** Retries, because a list that has just mounted cannot scroll to an index. */
+  focusScrollAttempts: 6,
+  /** Grace after the last jump before scroll events count as the reader again. */
+  focusSettleMs: 700,
   minTouchTargetPx: 44,
   toolButtonPx: 32,
   toolIconPx: 20,
@@ -116,6 +131,13 @@ export const CHAT_TURN = {
   presencePenalty: 0.6,
   frequencyPenalty: 0.4,
   photoNoteStops: ["[photo", "[Photo"],
+  /**
+   * She was writing the reader's next turn as well as her own, because the
+   * example dialogue is a transcript and a transcript keeps going. Each of these
+   * needs the newline: a bare label would stop the very first token when she
+   * opened a reply with it, leaving nothing to say.
+   */
+  readerTurnStops: ["\nPLAYER:", "\nPlayer:", "\nplayer:", "\nUSER:", "\nUser:"],
   maxReplySentences: 3,
   maxReplyChars: 240,
   stopOnBlankLine: true,
@@ -247,26 +269,3 @@ export const DATA_FILES = {
 export const MOCK = {
   aspectRatio: "9:16",
 } as const;
-
-export const UI_MS = {
-  themePersistDebounce: 120,
-  pairingStatusPoll: 2000,
-  copyFeedback: 1600,
-  pressFeedback: 160,
-  reveal: 400,
-  revealStagger: 55,
-  revealReduced: 200,
-  disclosure: 220,
-} as const;
-
-export const EASING = {
-  out: "cubic-bezier(0.23, 1, 0.32, 1)",
-  inOut: "cubic-bezier(0.77, 0, 0.175, 1)",
-} as const;
-
-export const EASING_BEZIER = {
-  out: [0.23, 1, 0.32, 1],
-  inOut: [0.77, 0, 0.175, 1],
-} as const;
-
-export const PRESS_SCALE = 0.97;

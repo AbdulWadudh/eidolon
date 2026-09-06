@@ -1,31 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
-import { apiPath } from "@eidolon/config";
-import { PAIRING_SECRET } from "@/auth";
-import { ensureLocalOwner } from "@/auth/session";
-import { db, getCharacterCard } from "@/db";
+import { getCharacterCard } from "@/db";
 import { characterIdFor, createCharacter, getCharacter, listCharacters } from "@/db/characters";
-import { getLoreEntries, upsertLoreEntry } from "@/db/lorebook";
 import { app } from "@/index";
 import { loadPrompts } from "@/prompts/store";
 import { buildSystemPrompt } from "@/services/persona";
-
-const MADE = new Set<string>();
-const BASE = apiPath("characters");
-const AUTHED = { "Content-Type": "application/json", Authorization: `Bearer ${PAIRING_SECRET}` };
-
-function remember<T extends { id: string }>(character: T): T {
-  MADE.add(character.id);
-  return character;
-}
-
-function wipe(): void {
-  for (const id of MADE) {
-    db.query("DELETE FROM lorebook_entries WHERE character_id = ?").run(id);
-    db.query("DELETE FROM messages WHERE character_id = ?").run(id);
-    db.query("DELETE FROM characters WHERE id = ?").run(id);
-  }
-  MADE.clear();
-}
+import { AUTHED, BASE, remember, wipe } from "./support/characters";
 
 beforeEach(async () => {
   await loadPrompts();
@@ -193,102 +172,5 @@ describe("lorebook over HTTP", () => {
       });
       expect(res.status).toBe(400);
     }
-  });
-});
-
-describe("ownership", () => {
-  it("refuses an edit from nobody", async () => {
-    const created = remember(createCharacter({ name: "Unowned Guard" }));
-
-    const res = await app.request(`${BASE}/${created.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rules: "x" }),
-    });
-
-    expect(res.status).toBe(401);
-  });
-
-  it("edits in place what the owner authored", async () => {
-    const owner = await ensureLocalOwner();
-    const created = remember(createCharacter({ name: "Mine", ownerId: owner?.id ?? null }));
-
-    const res = await app.request(`${BASE}/${created.id}`, {
-      method: "PATCH",
-      headers: AUTHED,
-      body: JSON.stringify({ rules: "Never lie." }),
-    });
-    const body = (await res.json()) as { character: { id: string }; forked: boolean };
-
-    expect(res.status).toBe(200);
-    expect(body.forked).toBe(false);
-    expect(body.character.id).toBe(created.id);
-  });
-
-  it("forks what somebody else authored, and leaves theirs alone", async () => {
-    const created = remember(
-      createCharacter({ name: "Someone Elses", rules: "Original", ownerId: "another-account" }),
-    );
-    upsertLoreEntry(created.id, {
-      keys: ["secret"],
-      content: "carried over",
-      requiredAffinity: 20,
-    });
-
-    const res = await app.request(`${BASE}/${created.id}`, {
-      method: "PATCH",
-      headers: AUTHED,
-      body: JSON.stringify({ rules: "Changed" }),
-    });
-    const body = (await res.json()) as {
-      character: { id: string; rules: string; forkedFrom: string | null };
-      forked: boolean;
-    };
-
-    remember(body.character);
-    expect(res.status).toBe(201);
-    expect(body.forked).toBe(true);
-    expect(body.character.id).not.toBe(created.id);
-    expect(body.character.rules).toBe("Changed");
-    expect(body.character.forkedFrom).toBe(created.id);
-
-    // The original is untouched, and the fork carries her lore.
-    expect(getCharacter(created.id)?.rules).toBe("Original");
-    expect(getLoreEntries(body.character.id)).toHaveLength(1);
-  });
-
-  it("publishes only what the owner authored", async () => {
-    const owner = await ensureLocalOwner();
-    const mine = remember(createCharacter({ name: "Publishable", ownerId: owner?.id ?? null }));
-    const theirs = remember(createCharacter({ name: "Not Mine", ownerId: "another-account" }));
-
-    const ok = await app.request(`${BASE}/${mine.id}/publish`, {
-      method: "POST",
-      headers: AUTHED,
-      body: JSON.stringify({ isPublic: true }),
-    });
-    expect(ok.status).toBe(200);
-    expect(getCharacter(mine.id)?.isPublic).toBe(true);
-
-    const refused = await app.request(`${BASE}/${theirs.id}/publish`, {
-      method: "POST",
-      headers: AUTHED,
-      body: JSON.stringify({ isPublic: true }),
-    });
-    expect(refused.status).toBe(403);
-  });
-
-  it("shows the owner their own, anything published, and nothing else", async () => {
-    const owner = await ensureLocalOwner();
-    const mine = remember(createCharacter({ name: "Roster Mine", ownerId: owner?.id ?? null }));
-    const published = remember(
-      createCharacter({ name: "Roster Public", ownerId: "another-account", isPublic: true }),
-    );
-    const hidden = remember(createCharacter({ name: "Roster Hidden", ownerId: "another-account" }));
-
-    const ids = listCharacters(owner?.id).map((entry) => entry.id);
-    expect(ids).toContain(mine.id);
-    expect(ids).toContain(published.id);
-    expect(ids).not.toContain(hidden.id);
   });
 });

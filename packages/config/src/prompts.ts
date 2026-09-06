@@ -1,3 +1,4 @@
+import { AUTHORING_PROMPTS } from "./prompts/authoring";
 import { MEDIA_PROMPTS } from "./prompts/media";
 import { MEMORY_PROMPTS } from "./prompts/memory";
 import { PERSONA_PROMPTS } from "./prompts/persona";
@@ -11,6 +12,7 @@ export const PROMPT_DEFAULTS: PromptDefinition[] = [
   ...WRITING_PROMPTS,
   ...MEDIA_PROMPTS,
   ...MEMORY_PROMPTS,
+  ...AUTHORING_PROMPTS,
 ];
 
 export const PROMPT_KEYS = PROMPT_DEFAULTS.map((entry) => entry.key);

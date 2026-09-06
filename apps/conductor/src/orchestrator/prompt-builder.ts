@@ -11,6 +11,7 @@ import { leaksInstruction } from "@/services/persona-guard";
 import { forHistory } from "@/services/photo-line";
 import { searchWeb } from "@/services/search";
 import { answersQuery } from "@/services/search-relevance";
+import { stripSpeakerLabel } from "@/services/self-reference";
 
 const NEWLINE = String.fromCharCode(10);
 const SECTION_BREAK = String.fromCharCode(10, 10);
@@ -73,7 +74,14 @@ export function workingHistory(characterId: string, budget: number): ChatMessage
   const recent = getRecentMessages(characterId, WORKING_CONTEXT.windowSize)
     .map((entry) => ({
       role: entry.role,
-      content: forHistory(entry.role, entry.content, entry.imageCaption),
+      // A reply that opened with the reader's own label is already recorded, and
+      // reading it back is what teaches the model to keep doing it. Stripped at
+      // read time as well as write time, so turns recorded before the guard
+      // existed stop compounding.
+      content:
+        entry.role === "assistant"
+          ? stripSpeakerLabel(forHistory(entry.role, entry.content, entry.imageCaption), "")
+          : forHistory(entry.role, entry.content, entry.imageCaption),
     }))
     // A reminder that once leaked into a reply is still sitting in the
     // transcript, and every later turn reads it back. Left in, the model sees a

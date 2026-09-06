@@ -1,6 +1,7 @@
 import { VOICE } from "@eidolon/config";
 import { kebabCase } from "es-toolkit";
 import { db } from "@/db";
+import { safeJsonParse } from "@/utils";
 
 export interface CharacterCard {
   id: string;
@@ -42,6 +43,7 @@ interface CharacterRow {
   is_public: number | null;
   forked_from: string | null;
   avatar_url: string | null;
+  avatar_crop: string | null;
   affinity_score: number | null;
   affinity_tier: string | null;
   current_mood: string | null;
@@ -50,7 +52,7 @@ interface CharacterRow {
 
 const COLUMNS = `id, name, tagline, personality, system_prompt, scenario, rules,
   example_dialogue, greeting, voice, owner_id, is_public, forked_from, avatar_url,
-  affinity_score, affinity_tier, current_mood, created_at`;
+  avatar_crop, affinity_score, affinity_tier, current_mood, created_at`;
 
 function toCard(row: CharacterRow): CharacterCard {
   return {
@@ -117,6 +119,9 @@ export function listCharacters(ownerId?: string): CharacterSummary[] {
     return {
       ...toCard(row),
       avatarUrl: row.avatar_url,
+      // The chat header framed her correctly while the roster showed the whole
+      // uncropped picture squeezed into a circle. The crop travels with her.
+      avatarCrop: row.avatar_crop ? safeJsonParse<unknown>(row.avatar_crop, null) : null,
       affinity: row.affinity_score ?? 0,
       tier: row.affinity_tier ?? "",
       mood: row.current_mood ?? "",

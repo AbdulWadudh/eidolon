@@ -43,6 +43,19 @@ const FALLBACK_LOOK: Look = {
 
 const EMPTY_WORDS = new Set<string>(IMAGE.emptyWords);
 
+/**
+ * The planner answers "who else is in the frame" with "None, just me" as often
+ * as with "None", and an exact-match check let the first form through into
+ * "with None, just me at the kitchen". The leading phrase decides.
+ */
+export function meansNobody(text: string): boolean {
+  const lead = (text.split(",")[0] ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[.!]+$/, "");
+  return lead.length === 0 || EMPTY_WORDS.has(lead);
+}
+
 export function oneLine(text: string): string {
   const cleaned = text
     .replace(/[\r\n]+/g, ", ")

@@ -59,3 +59,20 @@ describe("scene fields the planner overran", () => {
     expect(whoElse("   ")).toBe("");
   });
 });
+
+describe("who else is in the frame", () => {
+  it("says nobody when the planner says None", () => {
+    expect(whoElse("None")).toBe("");
+  });
+
+  it("says nobody when the planner qualifies it", () => {
+    // A reader saw "with None, just me at the kitchen of my home" before this.
+    expect(whoElse("None, just me")).toBe("");
+    expect(whoElse("Nobody, she is alone")).toBe("");
+    expect(whoElse("no one, it is only her")).toBe("");
+  });
+
+  it("still names a real person", () => {
+    expect(whoElse("her sister Mara")).toBe("her sister Mara");
+  });
+});
