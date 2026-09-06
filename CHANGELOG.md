@@ -19,8 +19,8 @@ and publishes it as the GitHub release notes.
   shows her face inside four amber rings that move with her actual voice, the
   sentence she is speaking as a subtitle, and a large button to cut in — which
   stops her mid-word, on the device and on the server.
-- **She hears you too.** Hold the amber button and talk — your words appear in
-  the call as you say them, and letting go sends them. Pressing it while she is
+- **She hears you too.** Tap the amber button and talk — your words appear in
+  the call as you say them — then tap again to send. Tapping it while she is
   mid-sentence cuts her off first, so you can talk over her the way you would on
   a real call. A conductor with a transcription service configured can do the
   listening instead, for phones without speech recognition of their own.

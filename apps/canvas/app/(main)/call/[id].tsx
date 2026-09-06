@@ -54,19 +54,30 @@ export default function CallScreen() {
 
   const isSpeaking = call.phase === "speaking";
 
-  const handleTalkStart = React.useCallback(() => {
+  const handleTalkToggle = React.useCallback(() => {
     tap("medium");
+
+    if (speech.isListening) {
+      speech.finish();
+      return;
+    }
+
     if (isSpeaking || call.phase === "thinking") {
       audio.stop();
       call.interrupt();
     }
     call.beginTurn();
     speech.begin();
-  }, [isSpeaking, call.phase, call.interrupt, call.beginTurn, audio.stop, speech.begin]);
-
-  const handleTalkEnd = React.useCallback(() => {
-    speech.finish();
-  }, [speech.finish]);
+  }, [
+    speech.isListening,
+    speech.finish,
+    speech.begin,
+    isSpeaking,
+    call.phase,
+    call.interrupt,
+    call.beginTurn,
+    audio.stop,
+  ]);
 
   const handleEnd = React.useCallback(() => {
     tap("light");
@@ -132,8 +143,7 @@ export default function CallScreen() {
             if (speech.isListening) speech.cancel();
             call.toggleMute();
           }}
-          onTalkStart={handleTalkStart}
-          onTalkEnd={handleTalkEnd}
+          onTalkToggle={handleTalkToggle}
           onEnd={handleEnd}
         />
       </View>

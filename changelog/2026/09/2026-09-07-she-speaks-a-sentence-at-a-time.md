@@ -247,6 +247,18 @@ a release after that commits without calling `stop()` on a dead session. A
 watchdog settles the turn if `end` never arrives at all, so nothing can wedge the
 button again.
 
+## Tap to talk, tap to send
+
+Push-to-talk is gone. The amber button is a toggle: one tap opens the
+microphone, another closes it and sends. It reads "Tap to talk" then "Tap to
+send", and turns green while it is listening.
+
+Holding was chosen for the reason it usually is — an open microphone is explicit,
+and there is no ambiguity about when a turn ends. What it cost was a press-out
+that had to land exactly, on a recogniser whose session can end underneath it.
+Every button fault in this change set came from that seam. Two discrete taps have
+no such seam: each is a committed action against a state the button can read.
+
 ## Follow-ups
 
 - **Nothing here has run on a device.** The Aqueous Pool's feel, the interrupt

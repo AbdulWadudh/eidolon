@@ -11,8 +11,7 @@ export interface CallControlsProps {
   isListening: boolean;
   canTalk: boolean;
   onToggleMute: () => void;
-  onTalkStart: () => void;
-  onTalkEnd: () => void;
+  onTalkToggle: () => void;
   onEnd: () => void;
 }
 
@@ -22,12 +21,11 @@ export function CallControls({
   isListening,
   canTalk,
   onToggleMute,
-  onTalkStart,
-  onTalkEnd,
+  onTalkToggle,
   onEnd,
 }: CallControlsProps) {
   const theme = useResolvedTheme(characterId);
-  const hint = isListening ? CALL_COPY.releaseToSend : CALL_COPY.holdToTalk;
+  const hint = isListening ? CALL_COPY.tapToSend : CALL_COPY.tapToTalk;
 
   return (
     <View className="flex-row items-center justify-center gap-6">
@@ -51,12 +49,11 @@ export function CallControls({
         <PressableScale
           accessibilityRole="button"
           accessibilityState={{ disabled: !canTalk, busy: isListening }}
-          accessibilityLabel={CALL_COPY.holdToTalk}
+          accessibilityLabel={isListening ? CALL_COPY.sendWhatYouSaid : CALL_COPY.startTalking}
           accessibilityHint={CALL_COPY.interrupt}
           disabled={!canTalk}
           hitSlop={8}
-          onPressIn={onTalkStart}
-          onPressOut={onTalkEnd}
+          onPress={onTalkToggle}
           className="items-center justify-center rounded-full"
           style={{
             width: CALL.interruptButtonPx,
