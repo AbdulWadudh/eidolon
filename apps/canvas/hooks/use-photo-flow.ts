@@ -1,5 +1,6 @@
 import * as React from "react";
 import type { PhotoAction } from "@/components/chat/PhotoViewer";
+import { savePhotoToDevice } from "@/lib/save-photo";
 import type { ChatMessage } from "@/store/chat-messages";
 import {
   type AvatarCropRect,
@@ -49,6 +50,19 @@ export function usePhotoFlow(characterId: string, serverHost: string): PhotoFlow
       const target = viewing;
       if (!target?.imageUrl) return;
 
+      if (action === "save") {
+        void savePhotoToDevice(target.imageUrl).then((result) => {
+          if (result === "saved") return;
+          useChatStore.setState({
+            lastError:
+              result === "denied"
+                ? "Eidolon needs permission to save photos."
+                : "Could not save that photo.",
+          });
+        });
+        setViewing(null);
+        return;
+      }
       if (action === "background") {
         void saveLook(serverHost, characterId, { backgroundUrl: target.imageUrl });
         setViewing(null);

@@ -53,6 +53,7 @@ export interface ChatStore {
   isPainting: boolean;
   paintingStep: number;
   paintingTotal: number;
+  paintingPreview: string | null;
   photoIdeas: string[];
   areIdeasLoading: boolean;
   characterLook: CharacterLook;
@@ -83,6 +84,7 @@ export const INITIAL_CHAT = {
   isPainting: false,
   paintingStep: 0,
   paintingTotal: 0,
+  paintingPreview: null as string | null,
   photoIdeas: [] as string[],
   areIdeasLoading: false,
   characterLook: { avatarUrl: null, avatarCrop: null, backgroundUrl: null } as CharacterLook,
@@ -144,6 +146,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       isPainting: true,
       paintingStep: 0,
       paintingTotal: 0,
+      paintingPreview: null,
       activeStatus: "painting",
       statusDetail: null,
       lastError: null,

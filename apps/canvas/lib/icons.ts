@@ -21,6 +21,7 @@ export { default as Call02Icon } from "@hugeicons/core-free-icons/Call02Icon";
 export { default as Cancel01Icon } from "@hugeicons/core-free-icons/Cancel01Icon";
 export { default as CheckmarkCircle01Icon } from "@hugeicons/core-free-icons/CheckmarkCircle01Icon";
 export { default as ColorPickerIcon } from "@hugeicons/core-free-icons/ColorPickerIcon";
+export { default as Download01Icon } from "@hugeicons/core-free-icons/Download01Icon";
 export { default as FlashIcon } from "@hugeicons/core-free-icons/FlashIcon";
 export { default as Image01Icon } from "@hugeicons/core-free-icons/Image01Icon";
 export { default as Logout01Icon } from "@hugeicons/core-free-icons/Logout01Icon";

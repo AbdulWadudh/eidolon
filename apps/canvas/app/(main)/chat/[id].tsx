@@ -185,6 +185,7 @@ export default function ChatScreen() {
             isPainting={chat.isPainting}
             paintingStep={chat.paintingStep}
             paintingTotal={chat.paintingTotal}
+            paintingPreview={chat.paintingPreview}
             onOpenPhoto={photos.view}
           />
 

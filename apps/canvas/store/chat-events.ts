@@ -45,7 +45,13 @@ export function reduceServerMessage(
 
     case "image_failed": {
       const source = msg.payload ?? msg;
-      set({ isPainting: false, paintingStep: 0, paintingTotal: 0, lastError: source.reason });
+      set({
+        isPainting: false,
+        paintingStep: 0,
+        paintingTotal: 0,
+        paintingPreview: null,
+        lastError: source.reason,
+      });
       break;
     }
 

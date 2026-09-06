@@ -1,4 +1,5 @@
 import { CHAT, CHAT_MS } from "@eidolon/config";
+import { Image } from "expo-image";
 import { Text, View } from "react-native";
 import Animated, { useReducedMotion } from "react-native-reanimated";
 import { useResolvedTheme } from "@/store/theme-store";
@@ -7,10 +8,11 @@ export interface PaintingCardProps {
   step: number;
   total: number;
   detail: string | null;
+  preview?: string | null;
   characterId?: string;
 }
 
-export function PaintingCard({ step, total, detail, characterId }: PaintingCardProps) {
+export function PaintingCard({ step, total, detail, preview, characterId }: PaintingCardProps) {
   const theme = useResolvedTheme(characterId);
   const reduced = useReducedMotion();
   const progress = total > 0 ? Math.min(1, step / total) : 0;
@@ -21,19 +23,31 @@ export function PaintingCard({ step, total, detail, characterId }: PaintingCardP
         className="w-full overflow-hidden border border-primary/25 bg-card"
         style={{ aspectRatio: CHAT.imageAspectRatio, borderRadius: theme.radius }}
       >
+        {preview ? (
+          <Image
+            source={{ uri: preview }}
+            contentFit="cover"
+            transition={0}
+            accessibilityLabel="The photo as it is being taken"
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+          />
+        ) : null}
+
         <Animated.View
           pointerEvents="none"
           className="absolute inset-0 bg-input"
           style={
-            reduced
-              ? undefined
-              : {
-                  animationName: { from: { opacity: 0.4 }, to: { opacity: 0.8 } },
-                  animationDuration: CHAT_MS.shimmer,
-                  animationIterationCount: "infinite",
-                  animationDirection: "alternate",
-                  animationTimingFunction: "ease-in-out",
-                }
+            preview
+              ? { opacity: 0 }
+              : reduced
+                ? undefined
+                : {
+                    animationName: { from: { opacity: 0.4 }, to: { opacity: 0.8 } },
+                    animationDuration: CHAT_MS.shimmer,
+                    animationIterationCount: "infinite",
+                    animationDirection: "alternate",
+                    animationTimingFunction: "ease-in-out",
+                  }
           }
         />
 

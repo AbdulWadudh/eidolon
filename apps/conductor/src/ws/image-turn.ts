@@ -53,11 +53,19 @@ export async function handleImageRequest(
         request: promptOverride?.trim() || DEFAULT_REQUEST,
         orientation,
       },
-      (progress) => {
-        sendServerMessage(ws, {
-          type: "image_preview",
-          payload: { step: progress.value, total_steps: progress.max },
-        });
+      {
+        onProgress: (progress) => {
+          sendServerMessage(ws, {
+            type: "image_preview",
+            payload: { step: progress.value, total_steps: progress.max },
+          });
+        },
+        onPreview: (dataUri) => {
+          sendServerMessage(ws, {
+            type: "image_preview",
+            payload: { step: 0, total_steps: IMAGE.steps, preview_base64: dataUri },
+          });
+        },
       },
       signal,
     );

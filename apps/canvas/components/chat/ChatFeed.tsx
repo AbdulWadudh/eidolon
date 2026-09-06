@@ -28,6 +28,7 @@ export interface ChatFeedProps {
   isPainting?: boolean;
   paintingStep?: number;
   paintingTotal?: number;
+  paintingPreview?: string | null;
   onOpenPhoto?: (message: ChatMessage) => void;
 }
 
@@ -66,6 +67,7 @@ export function ChatFeed({
   isPainting = false,
   paintingStep = 0,
   paintingTotal = 0,
+  paintingPreview = null,
   onOpenPhoto,
 }: ChatFeedProps) {
   const listRef = React.useRef<FlashListRef<ChatMessage>>(null);
@@ -156,6 +158,7 @@ export function ChatFeed({
           step={paintingStep}
           total={paintingTotal}
           detail={statusDetail}
+          preview={paintingPreview}
           characterId={characterId}
         />
       );
@@ -173,6 +176,7 @@ export function ChatFeed({
     isPainting,
     paintingStep,
     paintingTotal,
+    paintingPreview,
     isStreaming,
     streamingText,
     statusDetail,

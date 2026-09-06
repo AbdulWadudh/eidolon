@@ -1,4 +1,4 @@
-import { IMAGE, render } from "@eidolon/config";
+import { IMAGE, render, TIMEOUTS_MS } from "@eidolon/config";
 import { sample } from "es-toolkit";
 import { getCharacterAvatar, setCharacterAvatar } from "@/db/look";
 
@@ -66,17 +66,33 @@ const SHOT_SCHEMA = {
 
 const faceNames = new Map<string, string>();
 
+// A stored avatar can point anywhere — storage may be down, or the reader may
+// have set one from a photo that has since been deleted. Falling back to a
+// fresh portrait keeps one bad URL from breaking every photo from then on.
+async function readStoredFace(url: string): Promise<Uint8Array | null> {
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(TIMEOUTS_MS.clientRequest) });
+    if (!response.ok) return null;
+    return new Uint8Array(await response.arrayBuffer());
+  } catch (error) {
+    console.warn(`[selfie] stored face unreadable at ${url}:`, error);
+    return null;
+  }
+}
+
 async function ensureFaceReference(request: SelfieRequest, appearance: string): Promise<string> {
   const cached = faceNames.get(request.characterId);
   if (cached) return cached;
 
   const stored = getCharacterAvatar(request.characterId);
-  const bytes = stored
-    ? new Uint8Array(await (await fetch(stored)).arrayBuffer())
-    : (await generateImage(`${appearance}, head and shoulders portrait, neutral expression`, null))
-        .bytes;
+  const existing = stored ? await readStoredFace(stored) : null;
 
-  if (!stored) {
+  const bytes =
+    existing ??
+    (await generateImage(`${appearance}, head and shoulders portrait, neutral expression`, null))
+      .bytes;
+
+  if (!existing) {
     const url = await uploadImage(request.characterId, "face.png", bytes);
     setCharacterAvatar(request.characterId, url);
   }
@@ -114,9 +130,14 @@ async function composeShot(request: SelfieRequest, signal?: AbortSignal): Promis
   };
 }
 
+export interface PaintHooks {
+  onProgress?: (progress: { value: number; max: number }) => void;
+  onPreview?: (dataUri: string) => void;
+}
+
 export async function paintSelfie(
   request: SelfieRequest,
-  onProgress?: (progress: { value: number; max: number }) => void,
+  hooks: PaintHooks = {},
   signal?: AbortSignal,
 ): Promise<Selfie> {
   const look = await describeAppearance(request, signal);
@@ -155,7 +176,8 @@ export async function paintSelfie(
   const subject = captionFor(shot, request.request);
   const image = await generateImage(promptUsed, faceName, {
     orientation,
-    onProgress,
+    onProgress: hooks.onProgress,
+    onPreview: hooks.onPreview,
     signal,
   });
   const imageUrl = await uploadImage(

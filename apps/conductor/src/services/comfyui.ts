@@ -109,6 +109,7 @@ async function fetchImage(image: { filename: string; subfolder: string; type: st
 export interface GenerateOptions {
   orientation?: Orientation;
   onProgress?: (progress: PromptProgress) => void;
+  onPreview?: (dataUri: string) => void;
   signal?: AbortSignal;
 }
 
@@ -134,8 +135,13 @@ export async function generateImage(
   );
 
   let failure: string | null = null;
+  let finished = false;
   const unwatch = watchPrompt(promptId, {
     onProgress: options.onProgress,
+    onPreview: options.onPreview,
+    onFinished: () => {
+      finished = true;
+    },
     onFailed: (reason) => {
       failure = reason;
     },
@@ -148,8 +154,8 @@ export async function generateImage(
       if (failure) throw new ComfyGenerationError(failure);
 
       const entry = await readHistory(promptId);
-      if (entry?.status?.completed) {
-        const image = firstImage(entry);
+      if (entry?.status?.completed || (finished && entry?.outputs)) {
+        const image = firstImage(entry as HistoryEntry);
         return { bytes: await fetchImage(image), filename: image.filename, seed };
       }
       if (entry?.status?.status_str === "error") {
