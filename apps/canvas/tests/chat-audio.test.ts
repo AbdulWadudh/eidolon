@@ -15,6 +15,7 @@ mock.module("@/services/websocket", () => ({
 }));
 
 const { commitStreamingTurn, useChatStore } = await import("../store/chat-store");
+const { visibleText } = await import("../store/chat-messages");
 
 function feed(...messages: ServerMessage[]): void {
   for (const message of messages) {
@@ -115,5 +116,19 @@ describe("voice note playback", () => {
     expect(last?.imageUrl).toBe("https://media.example/photo.png");
     expect(last?.role).toBe("assistant");
     expect(useChatStore.getState().isPainting).toBe(false);
+  });
+
+  it("never renders the photo marker as chat text", () => {
+    expect(visibleText({ text: "*sends a photo*", imageUrl: "https://x/p.png" })).toBe("");
+    expect(visibleText({ text: "*sends a photo of her dog*", imageUrl: "https://x/p.png" })).toBe(
+      "",
+    );
+  });
+
+  it("keeps a real caption", () => {
+    expect(visibleText({ text: "Look at this view", imageUrl: "https://x/p.png" })).toBe(
+      "Look at this view",
+    );
+    expect(visibleText({ text: "*sends a photo*", imageUrl: null })).toBe("*sends a photo*");
   });
 });

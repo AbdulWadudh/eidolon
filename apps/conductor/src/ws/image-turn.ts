@@ -2,7 +2,6 @@ import { IMAGE } from "@eidolon/config";
 import { appendMessage, getCharacterCard, getRecentMessages, setMessageImage } from "@/db";
 import { ComfyUnavailableError } from "@/services/comfyui";
 import { generatePhotoIdeas } from "@/services/photo-ideas";
-import { photoLine } from "@/services/photo-line";
 import { ASPECT_FOR, paintSelfie } from "@/services/selfie";
 import { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
 
@@ -66,11 +65,7 @@ export async function handleImageRequest(
     if (signal.aborted) return;
 
     const spoken = selfie.message.trim();
-    const messageId = appendMessage(
-      characterId,
-      "assistant",
-      spoken.length > 0 ? spoken : photoLine(selfie.caption),
-    );
+    const messageId = appendMessage(characterId, "assistant", spoken);
     setMessageImage(messageId, selfie.imageUrl, selfie.caption || null);
 
     sendServerMessage(ws, {
@@ -79,7 +74,7 @@ export async function handleImageRequest(
         image_url: selfie.imageUrl,
         aspect_ratio: ASPECT_FOR[selfie.orientation],
         prompt_used: selfie.promptUsed,
-        caption: selfie.message.trim() || photoLine(selfie.caption),
+        caption: selfie.message.trim(),
       },
     });
   } catch (error) {

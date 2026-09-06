@@ -1,6 +1,6 @@
 import type { ServerMessage } from "@eidolon/protocol";
 import { attachAudioToLastAssistant, audioChunkToAttachment, createMessage } from "./chat-messages";
-import { type ChatStore, commitStreamingTurn, HEARTBEAT_DETAIL, SENT_A_PHOTO } from "./chat-store";
+import { type ChatStore, commitStreamingTurn, HEARTBEAT_DETAIL } from "./chat-store";
 
 export function reduceServerMessage(
   msg: ServerMessage,
@@ -60,7 +60,7 @@ export function reduceServerMessage(
           createMessage({
             characterId: state.activeCharacterId,
             role: "assistant",
-            text: SENT_A_PHOTO,
+            text: source.caption ?? "",
             imageUrl: source.image_url,
           }),
         ],

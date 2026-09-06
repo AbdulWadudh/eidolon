@@ -1,3 +1,4 @@
+import { Image } from "expo-image";
 import { Text, View } from "react-native";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
@@ -8,6 +9,7 @@ import { useResolvedTheme } from "@/store/theme-store";
 
 export interface ChatTopBarProps {
   characterName: string;
+  avatarUrl?: string | null;
   characterId: string;
   statusLabel: string;
   statusColor: string;
@@ -19,6 +21,7 @@ export interface ChatTopBarProps {
 
 export function ChatTopBar({
   characterName,
+  avatarUrl,
   characterId,
   statusLabel,
   statusColor,
@@ -42,10 +45,20 @@ export function ChatTopBar({
         <AppIcon icon={ArrowLeft01Icon} size={20} color={theme.textPrimary} />
       </PressableScale>
 
-      <Avatar size={38} className="border-2 border-primary">
-        <AvatarFallback textClassName="font-main-bold text-xs text-primary">
-          {initials}
-        </AvatarFallback>
+      <Avatar size={38} className="overflow-hidden border-2 border-primary">
+        {avatarUrl ? (
+          <Image
+            source={{ uri: avatarUrl }}
+            contentFit="cover"
+            cachePolicy="disk"
+            accessibilityLabel={`${characterName}'s picture`}
+            style={{ width: "100%", height: "100%" }}
+          />
+        ) : (
+          <AvatarFallback textClassName="font-main-bold text-xs text-primary">
+            {initials}
+          </AvatarFallback>
+        )}
       </Avatar>
 
       <View className="flex-1 pl-0.5">

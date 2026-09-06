@@ -1,4 +1,6 @@
+import { PHOTO } from "@eidolon/config";
 import { capitalize, isString } from "es-toolkit";
+import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as React from "react";
 import type { TextInput } from "react-native";
@@ -8,8 +10,11 @@ import { ActionsSheet, type ChatAction } from "@/components/chat/ActionsSheet";
 import { ChatFeed } from "@/components/chat/ChatFeed";
 import { ChatTopBar } from "@/components/chat/ChatTopBar";
 import { InputDock } from "@/components/chat/InputDock";
+import { PhotoRequestSheet } from "@/components/chat/PhotoRequestSheet";
+import { PhotoViewer } from "@/components/chat/PhotoViewer";
 import { SuggestionTray } from "@/components/chat/SuggestionTray";
 import { useChatSocket } from "@/hooks/use-chat-socket";
+import { usePhotoFlow } from "@/hooks/use-photo-flow";
 import { VoiceNotesProvider } from "@/hooks/use-voice-notes";
 import { forgetCharacter, loadHistory } from "@/store/chat-history";
 import { isSuggestionTrayVisible } from "@/store/chat-selectors";
@@ -45,6 +50,7 @@ export default function ChatScreen() {
   const chat = useChatStore();
   const serverHost = useConnectionStore((state) => state.serverHost);
   const [actionsOpen, setActionsOpen] = React.useState(false);
+  const photos = usePhotoFlow(characterId, serverHost);
   const trayVisible = isSuggestionTrayVisible(chat);
 
   React.useEffect(() => {
@@ -134,8 +140,28 @@ export default function ChatScreen() {
       style={{ flex: 1, backgroundColor: theme.canvas }}
       className="flex-1 bg-canvas"
     >
+      {chat.characterLook.backgroundUrl ? (
+        <Image
+          source={{ uri: chat.characterLook.backgroundUrl }}
+          contentFit="cover"
+          cachePolicy="disk"
+          pointerEvents="none"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            opacity: PHOTO.backgroundOpacity,
+          }}
+        />
+      ) : null}
+
       <ChatTopBar
         characterName={characterName}
+        avatarUrl={chat.characterLook.avatarUrl}
         characterId={characterId}
         statusLabel={statusLabel}
         statusColor={statusColor}
@@ -156,6 +182,10 @@ export default function ChatScreen() {
             characterId={characterId}
             characterName={characterName}
             isSynthesizingAudio={chat.isSynthesizingAudio}
+            isPainting={chat.isPainting}
+            paintingStep={chat.paintingStep}
+            paintingTotal={chat.paintingTotal}
+            onOpenPhoto={photos.view}
           />
 
           {trayVisible ? (
@@ -182,11 +212,29 @@ export default function ChatScreen() {
             onAction={(action) => {
               if (action === "more") setActionsOpen(true);
               if (action === "suggestions") toggleSuggestions();
-              if (action === "gallery") chat.requestImage(characterId);
+              if (action === "gallery") photos.openSheet();
             }}
           />
         </VoiceNotesProvider>
       </KeyboardAvoidingView>
+
+      <PhotoRequestSheet
+        isOpen={photos.isSheetOpen}
+        characterId={characterId}
+        characterName={characterName}
+        ideas={chat.photoIdeas}
+        areIdeasLoading={chat.areIdeasLoading}
+        onRequestIdeas={() => chat.requestPhotoIdeas(characterId)}
+        onClose={photos.closeSheet}
+        onSubmit={photos.submit}
+      />
+
+      <PhotoViewer
+        uri={photos.viewing?.imageUrl ?? null}
+        characterId={characterId}
+        onClose={photos.closeViewer}
+        onAction={photos.act}
+      />
 
       <ActionsSheet
         isOpen={actionsOpen}

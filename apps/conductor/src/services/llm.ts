@@ -13,6 +13,8 @@ export interface CompletionOptions {
   temperature?: number;
   maxTokens?: number;
   stop?: string[];
+  presencePenalty?: number;
+  frequencyPenalty?: number;
   allowMockFallback?: boolean;
   responseSchema?: { name: string; schema: unknown };
 }
@@ -63,6 +65,12 @@ export async function* streamChatCompletion(
         ...(options?.temperature === undefined ? {} : { temperature: options.temperature }),
         ...(options?.maxTokens === undefined ? {} : { max_tokens: options.maxTokens }),
         ...(options?.stop === undefined ? {} : { stop: options.stop }),
+        ...(options?.presencePenalty === undefined
+          ? {}
+          : { presence_penalty: options.presencePenalty }),
+        ...(options?.frequencyPenalty === undefined
+          ? {}
+          : { frequency_penalty: options.frequencyPenalty }),
         ...(options?.responseSchema === undefined
           ? {}
           : {

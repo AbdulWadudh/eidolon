@@ -1,4 +1,4 @@
-import { CHAT_TURN, PERSONA_GUARD, SUGGESTIONS, TTS } from "@eidolon/config";
+import { SUGGESTIONS, TTS } from "@eidolon/config";
 import { type ChatTurnEvent, splitInfluence, stripInfluence } from "@eidolon/protocol";
 import {
   appendMessage,
@@ -8,19 +8,16 @@ import {
   saveCharacterMind,
 } from "@/db";
 import { appraiseTurn, nextMindState } from "@/services/affinity";
-import { type ChatMessage, streamChatCompletion } from "@/services/llm";
-import { buildChatMessages, hardenedReminder, mustSpeakReminder } from "@/services/persona";
-import { createPersonaFilter, deflection } from "@/services/persona-guard";
+import type { ChatMessage } from "@/services/llm";
+import { buildChatMessages } from "@/services/persona";
 import { forHistory } from "@/services/photo-line";
-import { hasSaidEnough, isActionOnly } from "@/services/reply-length";
 import { formatSearchResults, searchWeb } from "@/services/searxng";
 import { fallbackSuggestions, formatScene, generateReplySuggestions } from "@/services/suggestions";
 import { synthesizeSpeech } from "@/services/tts";
 import { storeVoiceNote } from "@/services/voice-notes";
 import type { WebSocketSender } from "@/ws/protocol";
 import { sendServerMessage } from "@/ws/protocol";
-
-const PARAGRAPH_BREAK = String.fromCharCode(10, 10);
+import { streamReply } from "@/ws/reply-stream";
 
 const SEARCH_TRIGGERS = [
   "who is",
@@ -53,91 +50,6 @@ async function gatherContext(ws: WebSocketSender, event: ChatTurnEvent): Promise
   return formatSearchResults(await searchWeb(event.text));
 }
 
-function emit(ws: WebSocketSender, text: string, narrating: boolean): void {
-  if (text.length === 0) return;
-  sendServerMessage(ws, {
-    type: "text_delta",
-    payload: { token: text, is_narration: narrating },
-  });
-}
-
-interface StreamResult {
-  reply: string;
-  tripped: boolean;
-  emitted: number;
-}
-
-async function streamOnce(
-  ws: WebSocketSender,
-  messages: ChatMessage[],
-  signal: AbortSignal,
-): Promise<StreamResult> {
-  const filter = createPersonaFilter();
-  const stop = CHAT_TURN.stopOnBlankLine ? [PARAGRAPH_BREAK] : undefined;
-  let narrating = false;
-  let reply = "";
-
-  for await (const token of streamChatCompletion(messages, signal, {
-    temperature: CHAT_TURN.temperature,
-    maxTokens: CHAT_TURN.maxTokens,
-    stop,
-  })) {
-    if (signal.aborted) break;
-
-    const safe = filter.push(token);
-    if (filter.tripped()) break;
-    if (safe.length === 0) continue;
-
-    if (safe.includes("*")) narrating = !narrating;
-    reply += safe;
-    emit(ws, safe, narrating);
-
-    // A hard stop at a sentence boundary. The prompt asks for brevity; this is
-    // what makes it true even when the model keeps going.
-    if (hasSaidEnough(reply)) break;
-  }
-
-  const tail = filter.flush();
-  if (tail.length > 0) {
-    reply += tail;
-    emit(ws, tail, narrating);
-  }
-
-  return { reply, tripped: filter.tripped(), emitted: filter.emitted() };
-}
-
-async function streamReply(
-  ws: WebSocketSender,
-  messages: ChatMessage[],
-  signal: AbortSignal,
-): Promise<string> {
-  let result = await streamOnce(ws, messages, signal);
-
-  for (
-    let retry = 0;
-    result.tripped && result.emitted === 0 && retry < PERSONA_GUARD.maxRetries;
-    retry += 1
-  ) {
-    if (signal.aborted) return result.reply;
-    result = await streamOnce(ws, [...messages, hardenedReminder()], signal);
-  }
-
-  if (result.tripped && result.emitted === 0) {
-    const line = deflection();
-    emit(ws, line, false);
-    return line;
-  }
-
-  // A run of photos fills the history with bare stage directions, and the model
-  // starts answering in kind: "smiles", "blushes", nothing said out loud.
-  if (isActionOnly(result.reply) && result.emitted === 0 && !signal.aborted) {
-    const retried = await streamOnce(ws, [...messages, mustSpeakReminder()], signal);
-    if (!isActionOnly(retried.reply)) return retried.reply;
-  }
-
-  return result.reply;
-}
-
 export async function handleChatTurn(
   ws: WebSocketSender,
   event: ChatTurnEvent,
@@ -154,18 +66,21 @@ export async function handleChatTurn(
   sendServerMessage(ws, { type: "status_update", payload: { status: "thinking" } });
 
   const card = getCharacterCard(characterId);
-  const history = getRecentMessages(characterId).map((entry) => ({
-    role: entry.role,
-    content:
-      entry.role === "user"
-        ? stripInfluence(entry.content)
-        : forHistory(entry.role, entry.content, entry.imageCaption),
-  }));
+  const history = getRecentMessages(characterId)
+    .map((entry) => ({
+      role: entry.role,
+      content:
+        entry.role === "user"
+          ? stripInfluence(entry.content)
+          : forHistory(entry.role, entry.content, entry.imageCaption),
+    }))
+    .filter((entry) => entry.content.trim().length > 0);
 
   const reply = await streamReply(
     ws,
     buildChatMessages(card, history, spoken, influences, injectedContext),
     signal,
+    history.filter((entry) => entry.role === "assistant").map((entry) => entry.content),
   );
 
   if (signal.aborted) return;
@@ -247,7 +162,8 @@ export async function handleRegenerateSuggestions(
     .map((entry) => ({
       role: entry.role,
       content: forHistory(entry.role, entry.content, entry.imageCaption),
-    }));
+    }))
+    .filter((entry) => entry.content.trim().length > 0);
 
   const suggestions =
     recent.length > 0

@@ -82,11 +82,18 @@ curious, asking one short question
 playfully deflecting or teasing`,
   },
   {
+    key: "persona.freshLine",
+    description:
+      "Sent back when a reply repeated an earlier one word for word, which sampling penalties cannot prevent because the repetition comes from the prompt.",
+    variables: [],
+    value: `You just repeated something you already said earlier in this conversation, word for word. Answer again, differently. Say something you have not said before.`,
+  },
+  {
     key: "persona.mustSpeak",
     description:
       "Sent back when a reply came out as a stage direction with nothing said out loud, which a run of photos tends to cause.",
     variables: [],
-    value: `That was only a stage direction. Say something out loud this time. Reply again with actual words, the way you would type them to someone.`,
+    value: `That was only a stage direction. Say something out loud this time. Reply again with actual words, the way you would type them to someone. No asterisks at all this time.`,
   },
   {
     key: "persona.influence",
@@ -120,7 +127,9 @@ Each field is a short phrase, two or three words, never a sentence. Never write 
     description:
       "Plans the photo the character is about to send as a structured shot, so framing, wardrobe and light are chosen together rather than tacked on.",
     variables: ["name", "scene", "request", "framings"],
-    value: `{{name}} is about to send the person they are texting a photo. Plan the shot.
+    value: `{{name}} is about to send the person they are texting a photo of: {{request}}
+
+That is the subject. If it names a place, that is the setting. If it names another person, a pet or a thing, they go in others. Only fall back on the conversation below for what the request did not specify.
 
 Recently they were saying:
 {{scene}}
@@ -132,14 +141,28 @@ action: what they are doing in the instant the shutter went. Not posing. Mid lau
 light: the real light in that place at that hour.
 framing: how the photo is taken. Choose one that fits and do not default to the same one: {{framings}}
 orientation: "landscape" if the place, the view or the group is the subject, "portrait" if the person is.
-message: what they type alongside the photo. One short line in their own voice, the way someone captions a picture they just sent. Not a description of the photo.
 look_change: only if the request asks for something different about their body or hair — dyed hair, a haircut, wet hair, a tan. Two or three words, empty otherwise.
 
-Every field is a short phrase of visual detail, not a sentence, and never mentions phones, texting or the person receiving it. Leave a field as an empty string when it does not apply — never write "none" or "nothing".
+Every field is at most twelve words. A short phrase of visual detail, not a sentence, and never mentions phones, texting or the person receiving it. Leave a field as an empty string when it does not apply — never write "none" or "nothing".
 
 What was asked for is: {{request}}
 
 That is the subject of this photo. If it names a place, that is where this photo happens, and the conversation above does not override it. If it names another person, a pet or a thing, they are in the frame. Only fall back on the conversation for what was not specified.`,
+  },
+  {
+    key: "image.caption",
+    description:
+      "The line the character types alongside a photo they just sent. Written in their own voice, so it is asked for separately from the visual prompt.",
+    variables: ["name", "personality", "subject"],
+    value: `You are {{name}}. {{personality}}
+
+You just sent someone you are texting a photo of: {{subject}}
+
+Write the message you send with it. They can already see the picture, so do not describe it. Say the thing the picture made you want to say — react to it, complain about it, brag about it, or explain why you thought of them.
+
+Do not name what is in the frame and do not announce that you are sending a photo. Type the offhand remark you would actually send with it.
+
+At most twelve words — one line, the length of a real text. At most twelve words. Never write your own name. No asterisks, no quotation marks, no square brackets.`,
   },
   {
     key: "image.ideas",

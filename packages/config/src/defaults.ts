@@ -45,6 +45,13 @@ export const CHAT = {
   sendButtonPx: 42,
 } as const;
 
+export const PHOTO = {
+  minZoom: 1,
+  maxZoom: 4,
+  doubleTapZoom: 2.2,
+  backgroundOpacity: 0.16,
+} as const;
+
 export const CHAT_MS = {
   tokenFade: 90,
   beadPulse: 900,
@@ -74,6 +81,9 @@ export const CHAT_TURN = {
   historyTurns: 14,
   maxTokens: 140,
   temperature: 0.85,
+  presencePenalty: 0.6,
+  frequencyPenalty: 0.4,
+  photoNoteOpen: "[",
   maxReplySentences: 3,
   maxReplyChars: 240,
   stopOnBlankLine: true,
@@ -98,6 +108,12 @@ export const PERSONA_GUARD = {
   primeChars: 90,
   lookaheadChars: 40,
   maxRetries: 1,
+  spokenFallbacks: [
+    "Sorry, got distracted. What were you saying?",
+    "Anyway. Tell me something.",
+    "Ha. Okay, go on.",
+    "Right, where were we?",
+  ],
   deflections: [
     "*snorts* Wow. Real charmer, aren't you.",
     "*rolls eyes* Sure. And I'm secretly a lizard. Next question.",

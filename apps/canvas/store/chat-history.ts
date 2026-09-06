@@ -15,13 +15,14 @@ export async function loadHistory(host: string, characterId: string): Promise<vo
   useChatStore.setState({ isLoadingHistory: true, lastError: null });
 
   try {
-    const { messages, mind } = await fetchTranscript(host, characterId);
+    const { messages, mind, look } = await fetchTranscript(host, characterId);
     useChatStore.setState((state) => ({
       activeCharacterId: characterId,
       // A turn that landed while this was in flight wins; the socket is more
       // current than the page of history we asked for.
       messages: state.messages.length > messages.length ? state.messages : messages,
       mind: mind ?? state.mind,
+      characterLook: look,
       isLoadingHistory: false,
     }));
   } catch (err) {

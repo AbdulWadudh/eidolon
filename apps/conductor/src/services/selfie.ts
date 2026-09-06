@@ -5,7 +5,7 @@ import { getPrompt } from "@/prompts/store";
 import type { Orientation } from "@/services/comfy-workflow";
 import { generateImage, uploadFaceReference } from "@/services/comfyui";
 import { composeAppearance, describeAppearance, forgetLook, oneLine } from "@/services/photo-look";
-import { ask } from "@/services/prompt-writer";
+import { ask, askInVoice } from "@/services/prompt-writer";
 import { uploadImage } from "@/services/storage";
 import { safeJsonParse } from "@/utils/json";
 export interface SelfieRequest {
@@ -34,7 +34,6 @@ interface Shot {
   framing: string;
   orientation: "portrait" | "landscape";
   look_change: string;
-  message: string;
 }
 
 const SHOT_SCHEMA = {
@@ -48,9 +47,8 @@ const SHOT_SCHEMA = {
       action: { type: "string" },
       light: { type: "string" },
       framing: { type: "string" },
-      orientation: { type: "string", enum: ["portrait", "landscape"] },
       look_change: { type: "string" },
-      message: { type: "string" },
+      orientation: { type: "string", enum: ["portrait", "landscape"] },
     },
     required: [
       "setting",
@@ -59,9 +57,8 @@ const SHOT_SCHEMA = {
       "action",
       "light",
       "framing",
-      "orientation",
       "look_change",
-      "message",
+      "orientation",
     ],
   },
 } as const;
@@ -113,7 +110,6 @@ async function composeShot(request: SelfieRequest, signal?: AbortSignal): Promis
     framing: oneLine(parsed.framing ?? "") || sample(IMAGE.framings),
     orientation: parsed.orientation === "landscape" ? "landscape" : "portrait",
     look_change: oneLine(parsed.look_change ?? ""),
-    message: (parsed.message ?? "").replace(/\s+/g, " ").trim(),
   };
 }
 
@@ -155,6 +151,7 @@ export async function paintSelfie(
     .map(oneLine)
     .filter((part) => part.length > 0)
     .join(", ");
+  const subject = captionFor(shot, request.request);
   const image = await generateImage(promptUsed, faceName, {
     orientation,
     onProgress,
@@ -170,8 +167,8 @@ export async function paintSelfie(
     imageUrl,
     promptUsed,
     orientation,
-    caption: captionFor(shot, request.request),
-    message: shot?.message ?? "",
+    caption: subject,
+    message: await captionLine(request, subject, signal),
   };
 }
 
@@ -179,6 +176,55 @@ const WIDE_WORDS = new RegExp(`\\b(${IMAGE.wideWords.join("|")})\\b`, "i");
 
 export function inferOrientation(text: string): Orientation {
   return WIDE_WORDS.test(text) ? "landscape" : "portrait";
+}
+
+// A small roleplay model asked for a photo caption will often answer as the
+// person receiving it, narrate the frame, or hand back the planner's own
+// bracketed notes. None of that is worth showing, and a photo with no caption
+// is perfectly ordinary — so anything that fails these checks is dropped.
+const NOT_A_CAPTION = [
+  /[[\]{}*]/,
+  /^(the |this |that |here('s| is) )?(a |an |my |our )?(photo|picture|image|pic|shot|snap)\b/i,
+  /\b(is |are )?attached\b/i,
+  /\b(you sent|you send|why did you|what am i supposed|wish you were here)\b/i,
+  /\bsends? a photo\b/i,
+  /\b(here (is|are)|i might send|a message i|caption)\b/i,
+];
+
+export function usableCaption(line: string, name: string): boolean {
+  const words = line.split(/\s+/).filter((word) => /[a-z]/i.test(word));
+  if (words.length < IMAGE.captionMinWords || words.length > IMAGE.captionMaxWords) return false;
+  if (new RegExp(`\\b${name}\\b`, "i").test(line)) return false;
+  return !NOT_A_CAPTION.some((pattern) => pattern.test(line));
+}
+
+function shorten(line: string, limit: number): string {
+  if (line.length <= limit) return line;
+  const cut = line.slice(0, limit);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${(lastSpace > limit / 2 ? cut.slice(0, lastSpace) : cut).replace(/[,;:\s]+$/, "")}…`;
+}
+
+async function captionLine(
+  request: SelfieRequest,
+  subject: string,
+  signal?: AbortSignal,
+): Promise<string> {
+  const raw = await askInVoice(
+    render(getPrompt("image.caption"), {
+      name: request.name,
+      personality: request.personality,
+      subject,
+    }),
+    signal,
+  );
+
+  const first = raw
+    .split(/\s*\n+\s*/)
+    .map((line) => line.replace(/^["'`]+|["'`]+$/g, "").trim())
+    .find((line) => usableCaption(line, request.name));
+
+  return first ? shorten(first, IMAGE.captionMaxChars) : "";
 }
 
 function captionFor(shot: Shot | null, request: string): string {

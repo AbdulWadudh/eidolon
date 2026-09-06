@@ -13,13 +13,21 @@ interface TranscriptRow {
 }
 
 interface TranscriptResponse {
-  character?: { name?: string; score?: number; tier?: string; mood?: string };
+  character?: {
+    name?: string;
+    score?: number;
+    tier?: string;
+    mood?: string;
+    avatarUrl?: string | null;
+    backgroundUrl?: string | null;
+  };
   messages?: TranscriptRow[];
 }
 
 export interface Transcript {
   messages: ChatMessage[];
   mind: MindState | null;
+  look: { avatarUrl: string | null; backgroundUrl: string | null };
 }
 
 function toMessage(row: TranscriptRow, characterId: string): ChatMessage {
@@ -52,6 +60,10 @@ export async function fetchTranscript(host: string, characterId: string): Promis
   return {
     messages: (body.messages ?? []).map((row) => toMessage(row, characterId)),
     mind: toMind(body.character),
+    look: {
+      avatarUrl: body.character?.avatarUrl ?? null,
+      backgroundUrl: body.character?.backgroundUrl ?? null,
+    },
   };
 }
 
@@ -60,6 +72,10 @@ export async function forgetCharacter(host: string, characterId: string): Promis
   return {
     messages: (body.messages ?? []).map((row) => toMessage(row, characterId)),
     mind: toMind(body.character),
+    look: {
+      avatarUrl: body.character?.avatarUrl ?? null,
+      backgroundUrl: body.character?.backgroundUrl ?? null,
+    },
   };
 }
 

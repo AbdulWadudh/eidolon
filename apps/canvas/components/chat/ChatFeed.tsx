@@ -6,6 +6,7 @@ import { nextLiveEdge } from "@/lib/feed-scroll";
 import type { ChatMessage } from "@/store/chat-messages";
 import { JumpToLatest } from "./JumpToLatest";
 import { MessageCard } from "./MessageCard";
+import { PaintingCard } from "./PaintingCard";
 import { StreamingMessageCard } from "./StreamingMessageCard";
 
 const STATUS_COPY: Record<string, string> = {
@@ -24,6 +25,10 @@ export interface ChatFeedProps {
   characterId: string;
   characterName: string;
   isSynthesizingAudio?: boolean;
+  isPainting?: boolean;
+  paintingStep?: number;
+  paintingTotal?: number;
+  onOpenPhoto?: (message: ChatMessage) => void;
 }
 
 function keyExtractor(item: ChatMessage): string {
@@ -58,6 +63,10 @@ export function ChatFeed({
   characterId,
   characterName,
   isSynthesizingAudio = false,
+  isPainting = false,
+  paintingStep = 0,
+  paintingTotal = 0,
+  onOpenPhoto,
 }: ChatFeedProps) {
   const listRef = React.useRef<FlashListRef<ChatMessage>>(null);
   const liveEdgeRef = React.useRef(true);
@@ -136,11 +145,21 @@ export function ChatFeed({
   }, [followTail]);
 
   const renderItem = React.useCallback(
-    ({ item }: { item: ChatMessage }) => <MessageCard message={item} />,
-    [],
+    ({ item }: { item: ChatMessage }) => <MessageCard message={item} onOpenPhoto={onOpenPhoto} />,
+    [onOpenPhoto],
   );
 
   const footer = React.useMemo(() => {
+    if (isPainting) {
+      return (
+        <PaintingCard
+          step={paintingStep}
+          total={paintingTotal}
+          detail={statusDetail}
+          characterId={characterId}
+        />
+      );
+    }
     if (!isStreaming) return null;
     return (
       <StreamingMessageCard
@@ -150,11 +169,21 @@ export function ChatFeed({
         isSynthesizingAudio={isSynthesizingAudio}
       />
     );
-  }, [isStreaming, streamingText, statusDetail, activeStatus, characterId, isSynthesizingAudio]);
+  }, [
+    isPainting,
+    paintingStep,
+    paintingTotal,
+    isStreaming,
+    streamingText,
+    statusDetail,
+    activeStatus,
+    characterId,
+    isSynthesizingAudio,
+  ]);
 
   const empty = React.useMemo(
-    () => (isStreaming ? null : <EmptyStage characterName={characterName} />),
-    [isStreaming, characterName],
+    () => (isStreaming || isPainting ? null : <EmptyStage characterName={characterName} />),
+    [isStreaming, isPainting, characterName],
   );
 
   return (

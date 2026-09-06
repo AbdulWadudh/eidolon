@@ -43,6 +43,14 @@ export function createMessageId(role: ChatRole): string {
   return `${role}-${Date.now().toString(36)}-${sequence}`;
 }
 
+const PHOTO_MARKER = /^\*sends a photo(?: of [^*]+)?\*$/i;
+
+export function visibleText(message: { text: string; imageUrl: string | null }): string {
+  const text = message.text.trim();
+  if (text.length === 0) return "";
+  return message.imageUrl && PHOTO_MARKER.test(text) ? "" : text;
+}
+
 export function createMessage(input: NewMessage): ChatMessage {
   return {
     id: createMessageId(input.role),

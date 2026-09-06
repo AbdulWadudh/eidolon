@@ -78,6 +78,12 @@ export const ImagePreviewSchema = z.object({
     .optional(),
 });
 
+export const TextReplaceSchema = z.object({
+  type: z.literal("text_replace"),
+  text: z.string(),
+  payload: z.object({ text: z.string() }).optional(),
+});
+
 export const ImageFailedSchema = z.object({
   type: z.literal("image_failed"),
   reason: z.string(),
@@ -159,6 +165,7 @@ export const PongSchema = z.object({
 export const ServerMessageSchema = z.discriminatedUnion("type", [
   StatusUpdateSchema,
   TextDeltaSchema,
+  TextReplaceSchema,
   AudioChunkSchema,
   StageShiftSchema,
   ImagePreviewSchema,
@@ -176,6 +183,7 @@ export type AudioFormat = z.infer<typeof AudioFormatEnum>;
 export type ImageAspectRatio = z.infer<typeof ImageAspectRatioEnum>;
 export type StatusUpdateEvent = z.infer<typeof StatusUpdateSchema>;
 export type TextDeltaEvent = z.infer<typeof TextDeltaSchema>;
+export type TextReplaceEvent = z.infer<typeof TextReplaceSchema>;
 export type AudioChunkEvent = z.infer<typeof AudioChunkSchema>;
 export type StageShiftEvent = z.infer<typeof StageShiftSchema>;
 export type ImagePreviewEvent = z.infer<typeof ImagePreviewSchema>;

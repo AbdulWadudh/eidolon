@@ -1,18 +1,20 @@
 import { CHAT } from "@eidolon/config";
 import * as React from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { AudioNotePill } from "@/components/audio/AudioNotePill";
 import { cn } from "@/lib/utils";
-import type { ChatMessage } from "@/store/chat-messages";
+import { type ChatMessage, visibleText } from "@/store/chat-messages";
 import { MessageImage } from "./MessageImage";
 import { RoleplayText } from "./RoleplayText";
 
 export interface MessageCardProps {
   message: ChatMessage;
+  onOpenPhoto?: (message: ChatMessage) => void;
 }
 
-function MessageCardBase({ message }: MessageCardProps) {
+function MessageCardBase({ message, onOpenPhoto }: MessageCardProps) {
   const isUser = message.role === "user";
+  const body = visibleText(message);
 
   return (
     <View className={cn("my-1.5 items-start", isUser ? "ml-10" : "mr-10")}>
@@ -34,10 +36,16 @@ function MessageCardBase({ message }: MessageCardProps) {
         )}
       >
         {message.imageUrl ? (
-          <MessageImage uri={message.imageUrl} characterId={message.characterId} />
+          <Pressable
+            accessibilityRole="imagebutton"
+            accessibilityLabel="Open photo"
+            onPress={() => onOpenPhoto?.(message)}
+          >
+            <MessageImage uri={message.imageUrl} characterId={message.characterId} />
+          </Pressable>
         ) : null}
 
-        <RoleplayText text={message.text} />
+        {body.length > 0 ? <RoleplayText text={body} /> : null}
 
         <View className="mt-2.5 flex-row items-center justify-end gap-1.5">
           {isUser ? <View className="h-1 w-1 rounded-full bg-success" /> : null}

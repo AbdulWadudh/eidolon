@@ -32,3 +32,27 @@ export async function ask(
   }
   return raw;
 }
+
+export async function askInVoice(
+  prompt: string,
+  signal?: AbortSignal,
+  responseSchema?: { name: string; schema: unknown },
+): Promise<string> {
+  let raw = "";
+  try {
+    for await (const token of streamChatCompletion([{ role: "user", content: prompt }], signal, {
+      temperature: IMAGE.captionTemperature,
+      maxTokens: IMAGE.captionMaxTokens,
+      responseSchema,
+      presencePenalty: IMAGE.captionPresencePenalty,
+      frequencyPenalty: IMAGE.captionFrequencyPenalty,
+      allowMockFallback: false,
+    })) {
+      raw += token;
+      if (raw.length > IMAGE.captionMaxChars * 3) break;
+    }
+  } catch {
+    return "";
+  }
+  return raw;
+}

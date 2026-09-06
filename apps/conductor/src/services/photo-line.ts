@@ -1,3 +1,5 @@
+import { isActionOnly } from "@/services/reply-length";
+
 const PHOTO_LINE = /^\*sends a photo(?: of ([^*]+))?\*$/i;
 
 export const SENT_A_PHOTO = "*sends a photo*";
@@ -21,7 +23,12 @@ export function forHistory(role: string, content: string, imageCaption?: string 
   if (role !== "assistant") return content;
 
   const note = imageCaption ? `[photo attached: ${imageCaption}]` : "";
-  const spoken = asPhotoNote(content);
+  const spoken = isPhotoLine(content) ? "" : content;
+
+  // An assistant turn that is nothing but a stage direction is the pattern the
+  // model copies until every reply is "smiles". It is dropped from history
+  // rather than fed back, so it cannot compound.
+  if (spoken.length > 0 && isActionOnly(spoken)) return note;
   if (note.length === 0) return spoken;
-  return spoken.length > 0 && !isPhotoLine(content) ? `${spoken} ${note}` : note;
+  return spoken.length > 0 ? `${spoken} ${note}` : note;
 }

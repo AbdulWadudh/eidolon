@@ -51,10 +51,16 @@ and publishes it as the GitHub release notes.
   lightning icon in the tool bar, not on every reply. The icon fills while the
   options are showing and tapping it again puts them away, so a turn you meant
   to type costs no extra model calls.
-- **Selfies.** Ask for a photo from the tool bar and the character sends one
-  back, generated locally through ComfyUI. The first request builds their face
-  from their written persona and keeps it, so every later photo is recognisably
-  the same person wherever they are. About five seconds once warm.
+- **Photos.** Ask for one from the tool bar and she sends it back, generated
+  locally. The button opens a sheet that asks how it should be framed and what
+  it should be of, with ideas drawn from the conversation. Not only selfies —
+  wide shots of where she is, someone else in frame, the dog, the view. The
+  first request builds her face and keeps it, so every later photo is
+  recognisably the same person. About five seconds once warm, with a live
+  progress bar while it paints.
+- **Photos you can do something with.** Tap to open full screen, pinch to zoom.
+  Set one as her profile picture or as the chat background, regenerate it, or
+  delete it.
 - **Voice note tabs.** A `▶ 4"` chip riding above any message that carries
   audio, merged into the bubble, swapping the play arrow for a moving waveform
   while it plays.

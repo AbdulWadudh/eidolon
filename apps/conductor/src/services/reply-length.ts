@@ -52,3 +52,17 @@ export function isActionOnly(reply: string): boolean {
   if (trimmed.length === 0) return false;
   return !/[a-z]/i.test(spokenWords(trimmed));
 }
+
+function normalise(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+export function repeatsHistory(reply: string, previous: string[]): boolean {
+  const candidate = normalise(reply);
+  if (candidate.length < 12) return false;
+  return previous.some((entry) => normalise(entry) === candidate);
+}
