@@ -5,11 +5,14 @@ import { PressableScale } from "@/components/common/pressable-scale";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft01Icon, Call02Icon, MoreVerticalIcon } from "@/lib/icons";
 import type { MindState } from "@/store/chat-messages";
+import type { AvatarCropRect } from "@/store/chat-photos";
 import { useResolvedTheme } from "@/store/theme-store";
 
 export interface ChatTopBarProps {
   characterName: string;
   avatarUrl?: string | null;
+  avatarCrop?: AvatarCropRect | null;
+  onAvatarPress?: () => void;
   characterId: string;
   statusLabel: string;
   statusColor: string;
@@ -19,9 +22,13 @@ export interface ChatTopBarProps {
   onOverflow: () => void;
 }
 
+const AVATAR_PX = 38;
+
 export function ChatTopBar({
   characterName,
   avatarUrl,
+  avatarCrop,
+  onAvatarPress,
   characterId,
   statusLabel,
   statusColor,
@@ -45,21 +52,38 @@ export function ChatTopBar({
         <AppIcon icon={ArrowLeft01Icon} size={20} color={theme.textPrimary} />
       </PressableScale>
 
-      <Avatar size={38} className="overflow-hidden border-2 border-primary">
-        {avatarUrl ? (
-          <Image
-            source={{ uri: avatarUrl }}
-            contentFit="cover"
-            cachePolicy="disk"
-            accessibilityLabel={`${characterName}'s picture`}
-            style={{ width: "100%", height: "100%" }}
-          />
-        ) : (
-          <AvatarFallback textClassName="font-main-bold text-xs text-primary">
-            {initials}
-          </AvatarFallback>
-        )}
-      </Avatar>
+      <PressableScale
+        accessibilityRole="imagebutton"
+        accessibilityLabel={`${characterName}'s profile picture`}
+        disabled={!avatarUrl}
+        onPress={onAvatarPress}
+      >
+        <Avatar size={AVATAR_PX} className="overflow-hidden border-2 border-primary">
+          {avatarUrl ? (
+            <Image
+              source={{ uri: avatarUrl }}
+              contentFit="cover"
+              cachePolicy="disk"
+              accessibilityLabel={`${characterName}'s picture`}
+              style={{
+                width: "100%",
+                height: "100%",
+                transform: avatarCrop
+                  ? [
+                      { translateX: avatarCrop.offsetX * AVATAR_PX },
+                      { translateY: avatarCrop.offsetY * AVATAR_PX },
+                      { scale: avatarCrop.zoom },
+                    ]
+                  : undefined,
+              }}
+            />
+          ) : (
+            <AvatarFallback textClassName="font-main-bold text-xs text-primary">
+              {initials}
+            </AvatarFallback>
+          )}
+        </Avatar>
+      </PressableScale>
 
       <View className="flex-1 pl-0.5">
         <Text className="font-main-bold text-base text-text-primary" numberOfLines={1}>

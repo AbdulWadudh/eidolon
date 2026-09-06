@@ -8,12 +8,15 @@ import {
   deleteMessage,
   forgetCharacter,
   getCharacterCard,
-  getCharacterLook,
   getCharacterMind,
   getTranscript,
-  setCharacterAvatar,
-  setCharacterBackground,
 } from "@/db";
+import {
+  getCharacterLook,
+  setCharacterAvatar,
+  setCharacterAvatarCrop,
+  setCharacterBackground,
+} from "@/db/look";
 import { renderPairingPage } from "@/pairing/page";
 import { describePrompt, listPrompts, resetPrompt, setPrompt } from "@/prompts/store";
 import { checkCacheHealth } from "@/services/cache";
@@ -151,12 +154,16 @@ v1.patch(`${API_ROUTES.characters}/:id/look`, async (c) => {
   const characterId = c.req.param("id");
   const body = (await c.req.json().catch(() => ({}))) as {
     avatarUrl?: string | null;
+    avatarCrop?: unknown;
     backgroundUrl?: string | null;
   };
 
   if (typeof body.avatarUrl === "string" && body.avatarUrl.length > 0) {
     setCharacterAvatar(characterId, body.avatarUrl);
     forgetFace(characterId);
+  }
+  if (body.avatarCrop !== undefined) {
+    setCharacterAvatarCrop(characterId, body.avatarCrop ?? null);
   }
   if (body.backgroundUrl !== undefined) {
     setCharacterBackground(characterId, body.backgroundUrl || null);

@@ -1,5 +1,6 @@
 import { IMAGE, render } from "@eidolon/config";
-import { getCharacterAppearance, setCharacterAppearance } from "@/db";
+import { getCharacterAppearance, setCharacterAppearance } from "@/db/look";
+
 import { getPrompt } from "@/prompts/store";
 import { ask, isPromptLike } from "@/services/prompt-writer";
 import { safeJsonParse } from "@/utils/json";

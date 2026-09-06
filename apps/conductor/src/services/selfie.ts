@@ -1,6 +1,7 @@
 import { IMAGE, render } from "@eidolon/config";
 import { sample } from "es-toolkit";
-import { getCharacterAvatar, setCharacterAvatar } from "@/db";
+import { getCharacterAvatar, setCharacterAvatar } from "@/db/look";
+
 import { getPrompt } from "@/prompts/store";
 import type { Orientation } from "@/services/comfy-workflow";
 import { generateImage, uploadFaceReference } from "@/services/comfyui";

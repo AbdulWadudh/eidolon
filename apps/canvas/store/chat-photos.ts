@@ -3,13 +3,21 @@ import { useChatStore } from "./chat-store";
 
 export type PhotoOrientation = "portrait" | "landscape";
 
+export interface AvatarCropRect {
+  zoom: number;
+  offsetX: number;
+  offsetY: number;
+}
+
 export interface CharacterLook {
   avatarUrl: string | null;
+  avatarCrop: AvatarCropRect | null;
   backgroundUrl: string | null;
 }
 
 export interface LookPatch {
   avatarUrl?: string | null;
+  avatarCrop?: AvatarCropRect | null;
   backgroundUrl?: string | null;
 }
 
@@ -31,6 +39,7 @@ export async function saveLook(host: string, characterId: string, patch: LookPat
       useChatStore.setState({
         characterLook: {
           avatarUrl: body.character.avatarUrl ?? null,
+          avatarCrop: body.character.avatarCrop ?? null,
           backgroundUrl: body.character.backgroundUrl ?? null,
         },
       });

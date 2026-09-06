@@ -1,6 +1,7 @@
 import { characterMemoryUrl, characterMessagesUrl, TIMEOUTS_MS } from "@eidolon/config";
 import { formatClockTime } from "@/lib/format";
 import type { ChatMessage, MindState } from "./chat-messages";
+import type { CharacterLook } from "./chat-photos";
 
 interface TranscriptRow {
   id: string;
@@ -19,6 +20,7 @@ interface TranscriptResponse {
     tier?: string;
     mood?: string;
     avatarUrl?: string | null;
+    avatarCrop?: { zoom: number; offsetX: number; offsetY: number } | null;
     backgroundUrl?: string | null;
   };
   messages?: TranscriptRow[];
@@ -27,7 +29,7 @@ interface TranscriptResponse {
 export interface Transcript {
   messages: ChatMessage[];
   mind: MindState | null;
-  look: { avatarUrl: string | null; backgroundUrl: string | null };
+  look: CharacterLook;
 }
 
 function toMessage(row: TranscriptRow, characterId: string): ChatMessage {
@@ -62,6 +64,7 @@ export async function fetchTranscript(host: string, characterId: string): Promis
     mind: toMind(body.character),
     look: {
       avatarUrl: body.character?.avatarUrl ?? null,
+      avatarCrop: body.character?.avatarCrop ?? null,
       backgroundUrl: body.character?.backgroundUrl ?? null,
     },
   };
@@ -74,6 +77,7 @@ export async function forgetCharacter(host: string, characterId: string): Promis
     mind: toMind(body.character),
     look: {
       avatarUrl: body.character?.avatarUrl ?? null,
+      avatarCrop: body.character?.avatarCrop ?? null,
       backgroundUrl: body.character?.backgroundUrl ?? null,
     },
   };

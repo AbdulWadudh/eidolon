@@ -21,6 +21,8 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "build:apk": "bun --cwd apps/canvas build:apk",
+    "stack:up": "bun scripts/stack.ts up",
+    "stack:status": "bun scripts/stack.ts status",
     "release": "bun scripts/release.ts",
     "release:dry": "bun scripts/release.ts --dry-run",
     "storage:up": "docker compose -f docker-compose.dev.yml up -d --wait && bun scripts/storage-env.ts",

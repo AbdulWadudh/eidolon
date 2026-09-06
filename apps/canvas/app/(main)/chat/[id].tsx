@@ -1,4 +1,3 @@
-import { PHOTO } from "@eidolon/config";
 import { capitalize, isString } from "es-toolkit";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -154,7 +153,6 @@ export default function ChatScreen() {
             left: 0,
             right: 0,
             bottom: 0,
-            opacity: PHOTO.backgroundOpacity,
           }}
         />
       ) : null}
@@ -162,6 +160,8 @@ export default function ChatScreen() {
       <ChatTopBar
         characterName={characterName}
         avatarUrl={chat.characterLook.avatarUrl}
+        avatarCrop={chat.characterLook.avatarCrop}
+        onAvatarPress={() => photos.viewAvatar(chat.characterLook.avatarUrl)}
         characterId={characterId}
         statusLabel={statusLabel}
         statusColor={statusColor}
@@ -234,6 +234,16 @@ export default function ChatScreen() {
         characterId={characterId}
         onClose={photos.closeViewer}
         onAction={photos.act}
+        onCrop={photos.crop}
+      />
+
+      <PhotoViewer
+        uri={photos.avatarUri}
+        characterId={characterId}
+        showActions={false}
+        onClose={photos.closeAvatar}
+        onAction={photos.act}
+        onCrop={photos.crop}
       />
 
       <ActionsSheet

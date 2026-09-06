@@ -1,7 +1,12 @@
 import * as React from "react";
 import type { PhotoAction } from "@/components/chat/PhotoViewer";
 import type { ChatMessage } from "@/store/chat-messages";
-import { deletePhoto, type PhotoOrientation, saveLook } from "@/store/chat-photos";
+import {
+  type AvatarCropRect,
+  deletePhoto,
+  type PhotoOrientation,
+  saveLook,
+} from "@/store/chat-photos";
 import { useChatStore } from "@/store/chat-store";
 
 export interface PhotoFlow {
@@ -13,16 +18,23 @@ export interface PhotoFlow {
   view: (message: ChatMessage) => void;
   closeViewer: () => void;
   act: (action: PhotoAction) => void;
+  crop: (rect: AvatarCropRect) => void;
+  avatarUri: string | null;
+  viewAvatar: (uri: string | null) => void;
+  closeAvatar: () => void;
 }
 
 export function usePhotoFlow(characterId: string, serverHost: string): PhotoFlow {
   const requestImage = useChatStore((state) => state.requestImage);
   const [isSheetOpen, setSheetOpen] = React.useState(false);
   const [viewing, setViewing] = React.useState<ChatMessage | null>(null);
+  const [avatarUri, setAvatarUri] = React.useState<string | null>(null);
 
   const openSheet = React.useCallback(() => setSheetOpen(true), []);
   const closeSheet = React.useCallback(() => setSheetOpen(false), []);
   const closeViewer = React.useCallback(() => setViewing(null), []);
+  const viewAvatar = React.useCallback((uri: string | null) => setAvatarUri(uri), []);
+  const closeAvatar = React.useCallback(() => setAvatarUri(null), []);
   const view = React.useCallback((message: ChatMessage) => setViewing(message), []);
 
   const submit = React.useCallback(
@@ -37,11 +49,6 @@ export function usePhotoFlow(characterId: string, serverHost: string): PhotoFlow
       const target = viewing;
       if (!target?.imageUrl) return;
 
-      if (action === "avatar") {
-        void saveLook(serverHost, characterId, { avatarUrl: target.imageUrl });
-        setViewing(null);
-        return;
-      }
       if (action === "background") {
         void saveLook(serverHost, characterId, { backgroundUrl: target.imageUrl });
         setViewing(null);
@@ -59,5 +66,28 @@ export function usePhotoFlow(characterId: string, serverHost: string): PhotoFlow
     [viewing, serverHost, characterId],
   );
 
-  return { isSheetOpen, openSheet, closeSheet, submit, viewing, view, closeViewer, act };
+  const crop = React.useCallback(
+    (rect: AvatarCropRect) => {
+      const target = viewing;
+      if (!target?.imageUrl) return;
+      void saveLook(serverHost, characterId, { avatarUrl: target.imageUrl, avatarCrop: rect });
+      setViewing(null);
+    },
+    [viewing, serverHost, characterId],
+  );
+
+  return {
+    isSheetOpen,
+    openSheet,
+    closeSheet,
+    submit,
+    viewing,
+    view,
+    closeViewer,
+    act,
+    crop,
+    avatarUri,
+    viewAvatar,
+    closeAvatar,
+  };
 }

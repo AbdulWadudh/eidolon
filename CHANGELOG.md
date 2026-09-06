@@ -59,8 +59,12 @@ and publishes it as the GitHub release notes.
   recognisably the same person. About five seconds once warm, with a live
   progress bar while it paints.
 - **Photos you can do something with.** Tap to open full screen, pinch to zoom.
-  Set one as her profile picture or as the chat background, regenerate it, or
-  delete it.
+  Set one as her profile picture — dragging and pinching to choose which part of
+  it to use — or as the chat background, regenerate it, or delete it. Tapping her
+  profile picture opens it full screen.
+- **`bun run stack:up`.** Starts the language model, voice, image server and
+  conductor, and waits for each to answer before moving on. `stack:status`
+  prints what is up.
 - **Voice note tabs.** A `▶ 4"` chip riding above any message that carries
   audio, merged into the bubble, swapping the play arrow for a moving waveform
   while it plays.

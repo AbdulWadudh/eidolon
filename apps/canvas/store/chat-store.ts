@@ -85,7 +85,7 @@ export const INITIAL_CHAT = {
   paintingTotal: 0,
   photoIdeas: [] as string[],
   areIdeasLoading: false,
-  characterLook: { avatarUrl: null, backgroundUrl: null } as CharacterLook,
+  characterLook: { avatarUrl: null, avatarCrop: null, backgroundUrl: null } as CharacterLook,
   autoPlayMessageId: null as string | null,
   isLoadingHistory: false,
   lastError: null as string | null,

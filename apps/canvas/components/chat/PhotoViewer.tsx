@@ -10,9 +10,11 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { AvatarCrop } from "@/components/chat/AvatarCrop";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Cancel01Icon, Image01Icon, RefreshIcon, SmileIcon } from "@/lib/icons";
+import type { AvatarCropRect } from "@/store/chat-photos";
 import { useResolvedTheme } from "@/store/theme-store";
 
 export type PhotoAction = "avatar" | "background" | "regenerate" | "delete";
@@ -22,6 +24,8 @@ export interface PhotoViewerProps {
   characterId: string;
   onClose: () => void;
   onAction: (action: PhotoAction) => void;
+  onCrop: (crop: AvatarCropRect) => void;
+  showActions?: boolean;
 }
 
 const ACTIONS: { action: PhotoAction; label: string; destructive?: boolean }[] = [
@@ -31,7 +35,15 @@ const ACTIONS: { action: PhotoAction; label: string; destructive?: boolean }[] =
   { action: "delete", label: "Delete", destructive: true },
 ];
 
-export function PhotoViewer({ uri, characterId, onClose, onAction }: PhotoViewerProps) {
+export function PhotoViewer({
+  uri,
+  characterId,
+  onClose,
+  onAction,
+  onCrop,
+  showActions = true,
+}: PhotoViewerProps) {
+  const [isFraming, setFraming] = React.useState(false);
   const theme = useResolvedTheme(characterId);
   const reduced = useReducedMotion();
 
@@ -52,7 +64,10 @@ export function PhotoViewer({ uri, characterId, onClose, onAction }: PhotoViewer
   }, [scale, savedScale, offsetX, offsetY, savedX, savedY]);
 
   React.useEffect(() => {
-    if (!uri) reset();
+    if (!uri) {
+      reset();
+      setFraming(false);
+    }
   }, [uri, reset]);
 
   const pinch = Gesture.Pinch()
@@ -114,63 +129,79 @@ export function PhotoViewer({ uri, characterId, onClose, onAction }: PhotoViewer
         className="flex-1"
         style={{ backgroundColor: "rgba(0,0,0,0.94)" }}
       >
-        <View className="flex-row justify-end px-4 pt-14">
-          <PressableScale
-            accessibilityRole="button"
-            accessibilityLabel="Close photo"
-            onPress={onClose}
-            className="h-11 w-11 items-center justify-center"
-          >
-            <AppIcon icon={Cancel01Icon} size={22} color={theme.textPrimary} strokeWidth={2} />
-          </PressableScale>
-        </View>
-
-        <GestureDetector gesture={gesture}>
-          <Animated.View className="flex-1 items-center justify-center">
-            {uri ? (
-              <Animated.View style={[{ width: "100%", height: "80%" }, imageStyle]}>
-                <Image
-                  source={{ uri }}
-                  contentFit="contain"
-                  cachePolicy="disk"
-                  accessibilityRole="image"
-                  accessibilityLabel="Photo, pinch to zoom"
-                  style={{ width: "100%", height: "100%" }}
-                />
-              </Animated.View>
-            ) : null}
-          </Animated.View>
-        </GestureDetector>
-
-        <View className="flex-row flex-wrap justify-center gap-2 px-4 pb-12">
-          {ACTIONS.map((entry) => (
-            <PressableScale
-              key={entry.action}
-              accessibilityRole="button"
-              accessibilityLabel={entry.label}
-              onPress={() => onAction(entry.action)}
-              className="flex-row items-center gap-2 border px-3 py-2"
-              style={{
-                borderRadius: theme.radius,
-                borderColor: entry.destructive ? theme.danger : theme.cardBorder,
-                backgroundColor: theme.card,
-              }}
-            >
-              <AppIcon
-                icon={iconFor(entry.action)}
-                size={16}
-                color={entry.destructive ? theme.danger : theme.textMuted}
-                strokeWidth={2}
-              />
-              <Text
-                className="font-ui text-xs"
-                style={{ color: entry.destructive ? theme.danger : theme.textPrimary }}
+        {isFraming && uri ? (
+          <AvatarCrop
+            uri={uri}
+            characterId={characterId}
+            onCancel={() => setFraming(false)}
+            onConfirm={(crop) => {
+              setFraming(false);
+              onCrop(crop);
+            }}
+          />
+        ) : (
+          <>
+            <View className="flex-row justify-end px-4 pt-14">
+              <PressableScale
+                accessibilityRole="button"
+                accessibilityLabel="Close photo"
+                onPress={onClose}
+                className="h-11 w-11 items-center justify-center"
               >
-                {entry.label}
-              </Text>
-            </PressableScale>
-          ))}
-        </View>
+                <AppIcon icon={Cancel01Icon} size={22} color={theme.textPrimary} strokeWidth={2} />
+              </PressableScale>
+            </View>
+
+            <GestureDetector gesture={gesture}>
+              <Animated.View className="flex-1 items-center justify-center">
+                {uri ? (
+                  <Animated.View style={[{ width: "100%", height: "80%" }, imageStyle]}>
+                    <Image
+                      source={{ uri }}
+                      contentFit="contain"
+                      cachePolicy="disk"
+                      accessibilityRole="image"
+                      accessibilityLabel="Photo, pinch to zoom"
+                      style={{ width: "100%", height: "100%" }}
+                    />
+                  </Animated.View>
+                ) : null}
+              </Animated.View>
+            </GestureDetector>
+
+            <View className="flex-row flex-wrap justify-center gap-2 px-4 pb-12">
+              {(showActions ? ACTIONS : []).map((entry) => (
+                <PressableScale
+                  key={entry.action}
+                  accessibilityRole="button"
+                  accessibilityLabel={entry.label}
+                  onPress={() =>
+                    entry.action === "avatar" ? setFraming(true) : onAction(entry.action)
+                  }
+                  className="flex-row items-center gap-2 border px-3 py-2"
+                  style={{
+                    borderRadius: theme.radius,
+                    borderColor: entry.destructive ? theme.danger : theme.cardBorder,
+                    backgroundColor: theme.card,
+                  }}
+                >
+                  <AppIcon
+                    icon={iconFor(entry.action)}
+                    size={16}
+                    color={entry.destructive ? theme.danger : theme.textMuted}
+                    strokeWidth={2}
+                  />
+                  <Text
+                    className="font-ui text-xs"
+                    style={{ color: entry.destructive ? theme.danger : theme.textPrimary }}
+                  >
+                    {entry.label}
+                  </Text>
+                </PressableScale>
+              ))}
+            </View>
+          </>
+        )}
 
         <Pressable
           accessibilityLabel="Close photo"
