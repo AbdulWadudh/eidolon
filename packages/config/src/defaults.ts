@@ -50,6 +50,7 @@ export const PHOTO = {
   maxZoom: 4,
   doubleTapZoom: 2.2,
   avatarFrameFraction: 0.72,
+  cropDimOpacity: 0.3,
 } as const;
 
 export const CHAT_MS = {

@@ -51,44 +51,51 @@ export function usePhotoFlow(characterId: string, serverHost: string): PhotoFlow
     [requestImage, characterId],
   );
 
+  // The profile picture is viewed without a message behind it, so actions read
+  // the message's photo when there is one and the avatar otherwise.
+  const activeUri = viewing?.imageUrl ?? avatarUri;
+
+  const dismiss = React.useCallback(() => {
+    setViewing(null);
+    setAvatarUri(null);
+  }, []);
+
   const act = React.useCallback(
     (action: PhotoAction) => {
-      const target = viewing;
-      if (!target?.imageUrl) return;
+      if (!activeUri) return;
 
       if (action === "save") {
-        void savePhotoToDevice(target.imageUrl).then((result) => {
+        void savePhotoToDevice(activeUri).then((result) => {
           if (result === "saved") return;
           useChatStore.setState({ lastError: SAVE_ERRORS[result] });
         });
-        setViewing(null);
+        dismiss();
         return;
       }
       if (action === "background") {
-        void saveLook(serverHost, characterId, { backgroundUrl: target.imageUrl });
-        setViewing(null);
+        void saveLook(serverHost, characterId, { backgroundUrl: activeUri });
+        dismiss();
         return;
       }
       if (action === "delete") {
-        void deletePhoto(serverHost, characterId, target.id);
-        setViewing(null);
+        if (viewing) void deletePhoto(serverHost, characterId, viewing.id);
+        dismiss();
         return;
       }
 
-      setViewing(null);
+      dismiss();
       setSheetOpen(true);
     },
-    [viewing, serverHost, characterId],
+    [activeUri, viewing, dismiss, serverHost, characterId],
   );
 
   const crop = React.useCallback(
     (rect: AvatarCropRect) => {
-      const target = viewing;
-      if (!target?.imageUrl) return;
-      void saveLook(serverHost, characterId, { avatarUrl: target.imageUrl, avatarCrop: rect });
-      setViewing(null);
+      if (!activeUri) return;
+      void saveLook(serverHost, characterId, { avatarUrl: activeUri, avatarCrop: rect });
+      dismiss();
     },
-    [viewing, serverHost, characterId],
+    [activeUri, dismiss, serverHost, characterId],
   );
 
   return {

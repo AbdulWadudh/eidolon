@@ -17,7 +17,7 @@ import { Cancel01Icon, Download01Icon, Image01Icon, RefreshIcon, SmileIcon } fro
 import type { AvatarCropRect } from "@/store/chat-photos";
 import { useResolvedTheme } from "@/store/theme-store";
 
-export type PhotoAction = "avatar" | "background" | "save" | "regenerate" | "delete";
+export type PhotoAction = "avatar" | "adjust" | "background" | "save" | "regenerate" | "delete";
 
 export interface PhotoViewerProps {
   uri: string | null;
@@ -25,16 +25,23 @@ export interface PhotoViewerProps {
   onClose: () => void;
   onAction: (action: PhotoAction) => void;
   onCrop: (crop: AvatarCropRect) => void;
-  showActions?: boolean;
+  actions?: PhotoAction[];
 }
 
-const ACTIONS: { action: PhotoAction; label: string; destructive?: boolean }[] = [
-  { action: "avatar", label: "Profile picture" },
-  { action: "background", label: "Chat background" },
-  { action: "save", label: "Save to device" },
-  { action: "regenerate", label: "Regenerate" },
-  { action: "delete", label: "Delete", destructive: true },
-];
+const LABELS: Record<PhotoAction, string> = {
+  avatar: "Profile picture",
+  adjust: "Adjust framing",
+  background: "Chat background",
+  save: "Save to device",
+  regenerate: "Regenerate",
+  delete: "Delete",
+};
+
+const PHOTO_ACTIONS: PhotoAction[] = ["avatar", "background", "save", "regenerate", "delete"];
+
+// Cropping is what "avatar" and "adjust" both mean; they differ only in whether
+// the picture being framed is already the profile picture.
+const FRAMES_THE_AVATAR: PhotoAction[] = ["avatar", "adjust"];
 
 export function PhotoViewer({
   uri,
@@ -42,7 +49,7 @@ export function PhotoViewer({
   onClose,
   onAction,
   onCrop,
-  showActions = true,
+  actions = PHOTO_ACTIONS,
 }: PhotoViewerProps) {
   const [isFraming, setFraming] = React.useState(false);
   const theme = useResolvedTheme(characterId);
@@ -180,32 +187,32 @@ export function PhotoViewer({
               </GestureDetector>
 
               <View className="flex-row flex-wrap justify-center gap-2 px-4 pb-12">
-                {(showActions ? ACTIONS : []).map((entry) => (
+                {actions.map((action) => (
                   <PressableScale
-                    key={entry.action}
+                    key={action}
                     accessibilityRole="button"
-                    accessibilityLabel={entry.label}
+                    accessibilityLabel={LABELS[action]}
                     onPress={() =>
-                      entry.action === "avatar" ? setFraming(true) : onAction(entry.action)
+                      FRAMES_THE_AVATAR.includes(action) ? setFraming(true) : onAction(action)
                     }
                     className="flex-row items-center gap-2 border px-3 py-2"
                     style={{
                       borderRadius: theme.radius,
-                      borderColor: entry.destructive ? theme.danger : theme.cardBorder,
+                      borderColor: action === "delete" ? theme.danger : theme.cardBorder,
                       backgroundColor: theme.card,
                     }}
                   >
                     <AppIcon
-                      icon={iconFor(entry.action)}
+                      icon={iconFor(action)}
                       size={16}
-                      color={entry.destructive ? theme.danger : theme.textMuted}
+                      color={action === "delete" ? theme.danger : theme.textMuted}
                       strokeWidth={2}
                     />
                     <Text
                       className="font-ui text-xs"
-                      style={{ color: entry.destructive ? theme.danger : theme.textPrimary }}
+                      style={{ color: action === "delete" ? theme.danger : theme.textPrimary }}
                     >
-                      {entry.label}
+                      {LABELS[action]}
                     </Text>
                   </PressableScale>
                 ))}
@@ -225,7 +232,7 @@ export function PhotoViewer({
 }
 
 function iconFor(action: PhotoAction) {
-  if (action === "avatar") return SmileIcon;
+  if (action === "avatar" || action === "adjust") return SmileIcon;
   if (action === "background") return Image01Icon;
   if (action === "save") return Download01Icon;
   if (action === "regenerate") return RefreshIcon;

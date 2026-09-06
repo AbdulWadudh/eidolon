@@ -10,7 +10,7 @@ import { ChatFeed } from "@/components/chat/ChatFeed";
 import { ChatTopBar } from "@/components/chat/ChatTopBar";
 import { InputDock } from "@/components/chat/InputDock";
 import { PhotoRequestSheet } from "@/components/chat/PhotoRequestSheet";
-import { PhotoViewer } from "@/components/chat/PhotoViewer";
+import { type PhotoAction, PhotoViewer } from "@/components/chat/PhotoViewer";
 import { SuggestionTray } from "@/components/chat/SuggestionTray";
 import { useChatSocket } from "@/hooks/use-chat-socket";
 import { usePhotoFlow } from "@/hooks/use-photo-flow";
@@ -20,6 +20,8 @@ import { isSuggestionTrayVisible } from "@/store/chat-selectors";
 import { useChatStore } from "@/store/chat-store";
 import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme, useThemeStore } from "@/store/theme-store";
+
+const AVATAR_ACTIONS: PhotoAction[] = ["adjust", "save"];
 
 const CONNECTION_LABEL = {
   connected: "Active now",
@@ -241,7 +243,7 @@ export default function ChatScreen() {
       <PhotoViewer
         uri={photos.avatarUri}
         characterId={characterId}
-        showActions={false}
+        actions={AVATAR_ACTIONS}
         onClose={photos.closeAvatar}
         onAction={photos.act}
         onCrop={photos.crop}
