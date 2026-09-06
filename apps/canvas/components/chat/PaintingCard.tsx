@@ -51,35 +51,45 @@ export function PaintingCard({ step, total, detail, preview, characterId }: Pain
           }
         />
 
-        <View className="flex-1 items-center justify-center gap-3 px-6">
-          <Text
-            accessibilityLiveRegion="polite"
-            className="font-ui text-text-muted text-xs uppercase tracking-wider"
-          >
-            {detail ?? "Taking the photo"}
-          </Text>
-
+        {/* Along the bottom rather than across the middle: the point of the
+            preview is watching the picture arrive, and a centred label sits on
+            top of the part worth looking at. */}
+        <View className="flex-1 justify-end">
           <View
-            className="h-1 w-full overflow-hidden bg-border"
-            style={{ borderRadius: CHAT.waveformBarRadiusPx }}
+            className="gap-2 px-3 pt-6 pb-3"
+            style={{ backgroundColor: preview ? "rgba(0,0,0,0.45)" : "transparent" }}
           >
             <View
-              style={{
-                width: `${Math.round(progress * 100)}%`,
-                height: "100%",
-                backgroundColor: theme.primary,
-              }}
-            />
-          </View>
-
-          {total > 0 ? (
-            <Text
-              className="font-ui text-text-muted text-xs"
-              style={{ fontVariant: ["tabular-nums"] }}
+              className="h-1 w-full overflow-hidden bg-border"
+              style={{ borderRadius: CHAT.waveformBarRadiusPx }}
             >
-              {step} / {total}
-            </Text>
-          ) : null}
+              <View
+                style={{
+                  width: `${Math.round(progress * 100)}%`,
+                  height: "100%",
+                  backgroundColor: theme.primary,
+                }}
+              />
+            </View>
+
+            <View className="flex-row items-center justify-between">
+              <Text
+                accessibilityLiveRegion="polite"
+                className="font-ui text-text-muted text-xs uppercase tracking-wider"
+              >
+                {detail ?? "Taking the photo"}
+              </Text>
+
+              {total > 0 ? (
+                <Text
+                  className="font-ui text-text-muted text-xs"
+                  style={{ fontVariant: ["tabular-nums"] }}
+                >
+                  {step} / {total}
+                </Text>
+              ) : null}
+            </View>
+          </View>
         </View>
       </View>
     </View>
