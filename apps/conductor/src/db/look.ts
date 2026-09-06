@@ -4,19 +4,26 @@ export interface CharacterLook {
   avatarUrl: string | null;
   avatarCrop: unknown | null;
   backgroundUrl: string | null;
+  faceUrl: string | null;
 }
 
 export function getCharacterLook(characterId: string): CharacterLook {
   const row = db
-    .query("SELECT avatar_url, avatar_crop, background_url FROM characters WHERE id = ?")
+    .query("SELECT avatar_url, avatar_crop, background_url, face_url FROM characters WHERE id = ?")
     .get(characterId) as
-    | { avatar_url: string | null; avatar_crop: string | null; background_url: string | null }
+    | {
+        avatar_url: string | null;
+        avatar_crop: string | null;
+        background_url: string | null;
+        face_url: string | null;
+      }
     | undefined;
 
   return {
     avatarUrl: row?.avatar_url ?? null,
     avatarCrop: row?.avatar_crop ? JSON.parse(row.avatar_crop) : null,
     backgroundUrl: row?.background_url ?? null,
+    faceUrl: row?.face_url ?? null,
   };
 }
 
@@ -25,6 +32,10 @@ export function setCharacterAvatarCrop(characterId: string, crop: unknown | null
     crop === null ? null : JSON.stringify(crop),
     characterId,
   );
+}
+
+export function setCharacterFace(characterId: string, faceUrl: string | null): void {
+  db.query("UPDATE characters SET face_url = ?1 WHERE id = ?2").run(faceUrl, characterId);
 }
 
 export function setCharacterBackground(characterId: string, backgroundUrl: string | null): void {

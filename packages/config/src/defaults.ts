@@ -172,8 +172,9 @@ export const SEARCH = {
 
 export const STORAGE = {
   defaultRegion: "us-east-1",
-  imagePrefix: "images/characters",
-  audioPrefix: "audio",
+  characterPrefix: "characters",
+  imageFolder: "images",
+  audioFolder: "audio",
   imageContentType: "image/webp",
   audioContentType: "audio/mpeg",
   requiredEnv: ["S3_ENDPOINT", "S3_BUCKET", "S3_ACCESS_KEY", "S3_SECRET_KEY"],

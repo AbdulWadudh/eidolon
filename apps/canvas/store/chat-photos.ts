@@ -18,12 +18,14 @@ export interface CharacterLook {
   avatarUrl: string | null;
   avatarCrop: AvatarCropRect | null;
   backgroundUrl: string | null;
+  faceUrl: string | null;
 }
 
 export interface LookPatch {
   avatarUrl?: string | null;
   avatarCrop?: AvatarCropRect | null;
   backgroundUrl?: string | null;
+  faceUrl?: string | null;
 }
 
 export async function saveLook(host: string, characterId: string, patch: LookPatch): Promise<void> {
@@ -46,6 +48,7 @@ export async function saveLook(host: string, characterId: string, patch: LookPat
           avatarUrl: body.character.avatarUrl ?? null,
           avatarCrop: body.character.avatarCrop ?? null,
           backgroundUrl: body.character.backgroundUrl ?? null,
+          faceUrl: body.character.faceUrl ?? null,
         },
       });
     }

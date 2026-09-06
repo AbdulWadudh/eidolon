@@ -1,6 +1,6 @@
 import { IMAGE, render, TIMEOUTS_MS } from "@eidolon/config";
 import { sample } from "es-toolkit";
-import { getCharacterAvatar, setCharacterAvatar } from "@/db/look";
+import { getCharacterAvatar, getCharacterLook, setCharacterAvatar } from "@/db/look";
 
 import { getPrompt } from "@/prompts/store";
 import type { Orientation } from "@/services/comfy-workflow";
@@ -85,7 +85,10 @@ async function ensureFaceReference(request: SelfieRequest, appearance: string): 
   const cached = faceNames.get(request.characterId);
   if (cached) return cached;
 
-  const stored = getCharacterAvatar(request.characterId);
+  // A face chosen by the reader wins over the avatar: the profile picture is
+  // whatever looks good small, which is not always the clearest look at a face.
+  const stored =
+    getCharacterLook(request.characterId).faceUrl ?? getCharacterAvatar(request.characterId);
   const existing = stored ? await readStoredFace(stored) : null;
 
   const bytes =
@@ -175,12 +178,19 @@ export async function paintSelfie(
     .filter((part) => part.length > 0)
     .join(", ");
   const subject = captionFor(shot, request.request);
-  const image = await generateImage(promptUsed, faceName, {
-    orientation,
-    onProgress: hooks.onProgress,
-    onPreview: hooks.onPreview,
-    signal,
-  });
+
+  // The caption only needs the subject, which is known before the first step is
+  // sampled. Asking for it afterwards left the card sitting at 6 of 6 through
+  // three language model calls with the picture already finished behind it.
+  const [image, message] = await Promise.all([
+    generateImage(promptUsed, faceName, {
+      orientation,
+      onProgress: hooks.onProgress,
+      onPreview: hooks.onPreview,
+      signal,
+    }),
+    captionLine(request, subject, signal),
+  ]);
   const imageUrl = await uploadImage(
     request.characterId,
     `${crypto.randomUUID()}.png`,
@@ -192,7 +202,7 @@ export async function paintSelfie(
     promptUsed,
     orientation,
     caption: subject,
-    message: await captionLine(request, subject, signal),
+    message,
   };
 }
 

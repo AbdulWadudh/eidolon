@@ -22,6 +22,7 @@ interface TranscriptResponse {
     avatarUrl?: string | null;
     avatarCrop?: AvatarCropRect | null;
     backgroundUrl?: string | null;
+    faceUrl?: string | null;
   };
   messages?: TranscriptRow[];
 }
@@ -76,6 +77,7 @@ export async function fetchTranscript(host: string, characterId: string): Promis
       avatarUrl: body.character?.avatarUrl ?? null,
       avatarCrop: usableCrop(body.character?.avatarCrop),
       backgroundUrl: body.character?.backgroundUrl ?? null,
+      faceUrl: body.character?.faceUrl ?? null,
     },
   };
 }
@@ -89,6 +91,7 @@ export async function forgetCharacter(host: string, characterId: string): Promis
       avatarUrl: body.character?.avatarUrl ?? null,
       avatarCrop: usableCrop(body.character?.avatarCrop),
       backgroundUrl: body.character?.backgroundUrl ?? null,
+      faceUrl: body.character?.faceUrl ?? null,
     },
   };
 }

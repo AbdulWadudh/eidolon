@@ -11,12 +11,18 @@ import { getStorageConfig, missingStorageConfig, type StorageConfig } from "@eid
 
 export { getStorageConfig, missingStorageConfig, type StorageConfig };
 
+// Everything a character owns lives under one prefix, so a character's media
+// can be listed or removed in one sweep rather than chased across two trees.
+export function characterKey(characterId: string, folder: string, filename: string): string {
+  return `${STORAGE.characterPrefix}/${characterId}/${folder}/${filename}`;
+}
+
 export function imageKey(characterId: string, filename: string): string {
-  return `${STORAGE.imagePrefix}/${characterId}/${filename}`;
+  return characterKey(characterId, STORAGE.imageFolder, filename);
 }
 
 export function audioKey(characterId: string, filename: string): string {
-  return `${STORAGE.audioPrefix}/${characterId}/${filename}`;
+  return characterKey(characterId, STORAGE.audioFolder, filename);
 }
 
 export function publicUrl(key: string): string {

@@ -16,7 +16,15 @@ import {
 import { cn } from "@/lib/utils";
 import { useResolvedTheme } from "@/store/theme-store";
 
-export type ChatAction = "reset" | "call" | "image" | "lorebook" | "outfit" | "moment" | "replies";
+export type ChatAction =
+  | "refresh"
+  | "reset"
+  | "call"
+  | "image"
+  | "lorebook"
+  | "outfit"
+  | "moment"
+  | "replies";
 
 interface ActionSpec {
   action: ChatAction;
@@ -28,6 +36,7 @@ interface ActionSpec {
 }
 
 const ACTIONS: ActionSpec[] = [
+  { action: "refresh", icon: RefreshIcon, label: "Refresh", ready: true },
   { action: "reset", icon: RefreshIcon, label: "Reset", ready: true, destructive: true },
   { action: "replies", icon: SparklesIcon, label: "Replies", ready: true },
   { action: "call", icon: Call02Icon, label: "Voice call", badge: "Soon", ready: false },

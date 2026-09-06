@@ -17,7 +17,14 @@ import { Cancel01Icon, Download01Icon, Image01Icon, RefreshIcon, SmileIcon } fro
 import type { AvatarCropRect } from "@/store/chat-photos";
 import { useResolvedTheme } from "@/store/theme-store";
 
-export type PhotoAction = "avatar" | "adjust" | "background" | "save" | "regenerate" | "delete";
+export type PhotoAction =
+  | "avatar"
+  | "adjust"
+  | "face"
+  | "background"
+  | "save"
+  | "regenerate"
+  | "delete";
 
 export interface PhotoViewerProps {
   uri: string | null;
@@ -31,13 +38,21 @@ export interface PhotoViewerProps {
 const LABELS: Record<PhotoAction, string> = {
   avatar: "Profile picture",
   adjust: "Adjust framing",
+  face: "Use as her face",
   background: "Chat background",
   save: "Save to device",
   regenerate: "Regenerate",
   delete: "Delete",
 };
 
-const PHOTO_ACTIONS: PhotoAction[] = ["avatar", "background", "save", "regenerate", "delete"];
+const PHOTO_ACTIONS: PhotoAction[] = [
+  "avatar",
+  "face",
+  "background",
+  "save",
+  "regenerate",
+  "delete",
+];
 
 // Cropping is what "avatar" and "adjust" both mean; they differ only in whether
 // the picture being framed is already the profile picture.
@@ -232,7 +247,7 @@ export function PhotoViewer({
 }
 
 function iconFor(action: PhotoAction) {
-  if (action === "avatar" || action === "adjust") return SmileIcon;
+  if (action === "avatar" || action === "adjust" || action === "face") return SmileIcon;
   if (action === "background") return Image01Icon;
   if (action === "save") return Download01Icon;
   if (action === "regenerate") return RefreshIcon;

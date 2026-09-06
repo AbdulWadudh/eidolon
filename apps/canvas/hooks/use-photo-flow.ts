@@ -72,6 +72,11 @@ export function usePhotoFlow(characterId: string, serverHost: string): PhotoFlow
         dismiss();
         return;
       }
+      if (action === "face") {
+        void saveLook(serverHost, characterId, { faceUrl: activeUri });
+        dismiss();
+        return;
+      }
       if (action === "background") {
         void saveLook(serverHost, characterId, { backgroundUrl: activeUri });
         dismiss();

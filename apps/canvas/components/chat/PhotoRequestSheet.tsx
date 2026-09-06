@@ -1,6 +1,7 @@
 import { CHAT, UI_MS } from "@eidolon/config";
 import * as React from "react";
 import { Modal, Pressable, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
@@ -67,55 +68,60 @@ export function PhotoRequestSheet({
         className="flex-1 justify-end"
         style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
       >
-        <Pressable accessibilityLabel="Close" className="flex-1" onPress={onClose} />
+        {/* The sheet lives in a Modal, which sits outside the provider wrapping
+            the chat screen, so it has to do its own keyboard avoidance or the
+            description field opens underneath the keyboard. */}
+        <KeyboardAvoidingView behavior="padding" automaticOffset style={{ flex: 1 }}>
+          <Pressable accessibilityLabel="Close" className="flex-1" onPress={onClose} />
 
-        <Animated.View
-          entering={reduced ? undefined : FadeInDown.duration(UI_MS.disclosure)}
-          className="rounded-t-card border-border border-t bg-card px-4 pt-4 pb-8"
-        >
-          <View className="mb-4 flex-row items-center gap-2">
-            <AppIcon icon={Image01Icon} size={18} color={theme.primary} strokeWidth={2} />
-            <Text className="font-ui-bold text-sm text-text-primary">
-              {orientation ? "What of?" : `Ask ${characterName} for a photo`}
-            </Text>
-          </View>
-
-          {orientation ? (
-            <Situation
-              characterId={characterId}
-              value={situation}
-              ideas={ideas}
-              areIdeasLoading={areIdeasLoading}
-              onChange={setSituation}
-              onReroll={onRequestIdeas}
-              onSend={send}
-            />
-          ) : (
-            <View className="flex-row gap-3">
-              {ORIENTATIONS.map((option) => (
-                <PressableScale
-                  key={option.value}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${option.label}. ${option.hint}`}
-                  onPress={() => chooseOrientation(option.value)}
-                  className="flex-1 items-center gap-2 border border-border bg-input p-3"
-                  style={{ borderRadius: theme.radius }}
-                >
-                  <View
-                    className="border border-primary/40 bg-card"
-                    style={{
-                      width: 44 * Math.min(1, option.ratio),
-                      height: 44 / Math.max(1, option.ratio),
-                      borderRadius: theme.radius / 2,
-                    }}
-                  />
-                  <Text className="font-ui-bold text-sm text-text-primary">{option.label}</Text>
-                  <Text className="font-ui text-text-muted text-xs">{option.hint}</Text>
-                </PressableScale>
-              ))}
+          <Animated.View
+            entering={reduced ? undefined : FadeInDown.duration(UI_MS.disclosure)}
+            className="rounded-t-card border-border border-t bg-card px-4 pt-4 pb-8"
+          >
+            <View className="mb-4 flex-row items-center gap-2">
+              <AppIcon icon={Image01Icon} size={18} color={theme.primary} strokeWidth={2} />
+              <Text className="font-ui-bold text-sm text-text-primary">
+                {orientation ? "What of?" : `Ask ${characterName} for a photo`}
+              </Text>
             </View>
-          )}
-        </Animated.View>
+
+            {orientation ? (
+              <Situation
+                characterId={characterId}
+                value={situation}
+                ideas={ideas}
+                areIdeasLoading={areIdeasLoading}
+                onChange={setSituation}
+                onReroll={onRequestIdeas}
+                onSend={send}
+              />
+            ) : (
+              <View className="flex-row gap-3">
+                {ORIENTATIONS.map((option) => (
+                  <PressableScale
+                    key={option.value}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${option.label}. ${option.hint}`}
+                    onPress={() => chooseOrientation(option.value)}
+                    className="flex-1 items-center gap-2 border border-border bg-input p-3"
+                    style={{ borderRadius: theme.radius }}
+                  >
+                    <View
+                      className="border border-primary/40 bg-card"
+                      style={{
+                        width: 44 * Math.min(1, option.ratio),
+                        height: 44 / Math.max(1, option.ratio),
+                        borderRadius: theme.radius / 2,
+                      }}
+                    />
+                    <Text className="font-ui-bold text-sm text-text-primary">{option.label}</Text>
+                    <Text className="font-ui text-text-muted text-xs">{option.hint}</Text>
+                  </PressableScale>
+                ))}
+              </View>
+            )}
+          </Animated.View>
+        </KeyboardAvoidingView>
       </Animated.View>
     </Modal>
   );

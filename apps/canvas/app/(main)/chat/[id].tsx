@@ -2,7 +2,7 @@ import { capitalize, isString } from "es-toolkit";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as React from "react";
-import type { TextInput } from "react-native";
+import { type TextInput, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ActionsSheet, type ChatAction } from "@/components/chat/ActionsSheet";
@@ -129,6 +129,7 @@ export default function ChatScreen() {
   const handleAction = React.useCallback(
     (action: ChatAction) => {
       setActionsOpen(false);
+      if (action === "refresh") loadHistory(serverHost, characterId);
       if (action === "reset") forgetCharacter(serverHost, characterId);
       if (action === "replies") chat.setSuggestionsHidden(!chat.areSuggestionsHidden);
     },
@@ -141,24 +142,6 @@ export default function ChatScreen() {
       style={{ flex: 1, backgroundColor: theme.canvas }}
       className="flex-1 bg-canvas"
     >
-      {chat.characterLook.backgroundUrl ? (
-        <Image
-          source={{ uri: chat.characterLook.backgroundUrl }}
-          contentFit="cover"
-          cachePolicy="disk"
-          pointerEvents="none"
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-          }}
-        />
-      ) : null}
-
       <ChatTopBar
         characterName={characterName}
         avatarUrl={chat.characterLook.avatarUrl}
@@ -175,21 +158,35 @@ export default function ChatScreen() {
 
       <KeyboardAvoidingView behavior="padding" automaticOffset style={{ flex: 1 }}>
         <VoiceNotesProvider autoPlay={autoPlay} onAutoPlayed={chat.clearAutoPlay}>
-          <ChatFeed
-            messages={chat.messages}
-            isStreaming={chat.isStreaming}
-            streamingText={chat.streamingText}
-            activeStatus={chat.activeStatus}
-            statusDetail={chat.statusDetail}
-            characterId={characterId}
-            characterName={characterName}
-            isSynthesizingAudio={chat.isSynthesizingAudio}
-            isPainting={chat.isPainting}
-            paintingStep={chat.paintingStep}
-            paintingTotal={chat.paintingTotal}
-            paintingPreview={chat.paintingPreview}
-            onOpenPhoto={photos.view}
-          />
+          <View className="flex-1">
+            {chat.characterLook.backgroundUrl ? (
+              <Image
+                source={{ uri: chat.characterLook.backgroundUrl }}
+                contentFit="cover"
+                cachePolicy="disk"
+                pointerEvents="none"
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+                style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+              />
+            ) : null}
+
+            <ChatFeed
+              messages={chat.messages}
+              isStreaming={chat.isStreaming}
+              streamingText={chat.streamingText}
+              activeStatus={chat.activeStatus}
+              statusDetail={chat.statusDetail}
+              characterId={characterId}
+              characterName={characterName}
+              isSynthesizingAudio={chat.isSynthesizingAudio}
+              isPainting={chat.isPainting}
+              paintingStep={chat.paintingStep}
+              paintingTotal={chat.paintingTotal}
+              paintingPreview={chat.paintingPreview}
+              onOpenPhoto={photos.view}
+            />
+          </View>
 
           {trayVisible ? (
             <SuggestionTray

@@ -16,6 +16,7 @@ import {
   setCharacterAvatar,
   setCharacterAvatarCrop,
   setCharacterBackground,
+  setCharacterFace,
 } from "@/db/look";
 import { renderPairingPage } from "@/pairing/page";
 import { describePrompt, listPrompts, resetPrompt, setPrompt } from "@/prompts/store";
@@ -156,6 +157,7 @@ v1.patch(`${API_ROUTES.characters}/:id/look`, async (c) => {
     avatarUrl?: string | null;
     avatarCrop?: unknown;
     backgroundUrl?: string | null;
+    faceUrl?: string | null;
   };
 
   if (typeof body.avatarUrl === "string" && body.avatarUrl.length > 0) {
@@ -164,6 +166,10 @@ v1.patch(`${API_ROUTES.characters}/:id/look`, async (c) => {
   }
   if (body.avatarCrop !== undefined) {
     setCharacterAvatarCrop(characterId, body.avatarCrop ?? null);
+  }
+  if (body.faceUrl !== undefined) {
+    setCharacterFace(characterId, body.faceUrl || null);
+    forgetFace(characterId);
   }
   if (body.backgroundUrl !== undefined) {
     setCharacterBackground(characterId, body.backgroundUrl || null);

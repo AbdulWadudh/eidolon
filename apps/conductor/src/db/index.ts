@@ -61,6 +61,7 @@ addColumnIfMissing("messages", "image_caption", "TEXT");
 addColumnIfMissing("characters", "appearance", "TEXT");
 addColumnIfMissing("characters", "background_url", "TEXT");
 addColumnIfMissing("characters", "avatar_crop", "TEXT");
+addColumnIfMissing("characters", "face_url", "TEXT");
 
 /**
  * Health check helper for the SQLite database.

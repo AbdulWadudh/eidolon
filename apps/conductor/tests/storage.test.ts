@@ -103,19 +103,19 @@ describe("Persistent OS data paths", () => {
 
 describe("Object storage keys and URLs", () => {
   it("namespaces images by character", () => {
-    expect(imageKey("char-42", "portrait.webp")).toBe("images/characters/char-42/portrait.webp");
+    expect(imageKey("char-42", "portrait.webp")).toBe("characters/char-42/images/portrait.webp");
   });
 
   it("namespaces audio by character", () => {
-    expect(audioKey("char-42", "line-001.mp3")).toBe("audio/char-42/line-001.mp3");
+    expect(audioKey("char-42", "line-001.mp3")).toBe("characters/char-42/audio/line-001.mp3");
   });
 
   it("derives the public base from the endpoint and bucket when S3_PUBLIC_URL is unset", () => {
     expect(publicUrl(imageKey("char-42", "portrait.webp"))).toBe(
-      `${TEST_CONFIG.S3_ENDPOINT}/${TEST_CONFIG.S3_BUCKET}/images/characters/char-42/portrait.webp`,
+      `${TEST_CONFIG.S3_ENDPOINT}/${TEST_CONFIG.S3_BUCKET}/characters/char-42/images/portrait.webp`,
     );
     expect(publicUrl(audioKey("char-42", "line-001.mp3"))).toBe(
-      `${TEST_CONFIG.S3_ENDPOINT}/${TEST_CONFIG.S3_BUCKET}/audio/char-42/line-001.mp3`,
+      `${TEST_CONFIG.S3_ENDPOINT}/${TEST_CONFIG.S3_BUCKET}/characters/char-42/audio/line-001.mp3`,
     );
   });
 
@@ -124,7 +124,7 @@ describe("Object storage keys and URLs", () => {
 
     try {
       expect(publicUrl(audioKey("char-42", "line-001.mp3"))).toBe(
-        "https://cdn.example.com/media/audio/char-42/line-001.mp3",
+        "https://cdn.example.com/media/characters/char-42/audio/line-001.mp3",
       );
     } finally {
       delete process.env.S3_PUBLIC_URL;
