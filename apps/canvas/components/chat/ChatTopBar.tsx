@@ -6,7 +6,8 @@ import { AffinityToast } from "@/components/chat/AffinityToast";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft01Icon, Call02Icon, MoreVerticalIcon } from "@/lib/icons";
+import { croppedStyle } from "@/lib/avatar-crop";
+import { ArrowLeft01Icon, MoreVerticalIcon } from "@/lib/icons";
 import { useAffinityStore } from "@/store/affinity-store";
 import type { MindState } from "@/store/chat-messages";
 import type { AvatarCropRect } from "@/store/chat-photos";
@@ -17,48 +18,32 @@ export interface ChatTopBarProps {
   avatarUrl?: string | null;
   avatarCrop?: AvatarCropRect | null;
   onAvatarPress?: () => void;
+  onOpenProfile?: () => void;
   characterId: string;
   statusLabel: string;
   statusColor: string;
   isBusy: boolean;
   mind: MindState | null;
   onBack: () => void;
-  onCall: () => void;
   onOverflow: () => void;
 }
 
 const AVATAR_PX = 38;
 
 // The crop names a circle inside the photo. Rebuilding it is arithmetic rather
-// than a transform: draw the photo at the size that makes that circle exactly
-// the avatar's width, then move it so the circle's centre lands in the middle.
-// Because both ratios come from the same picture, the box keeps its aspect and
-// "fill" does not distort.
-function croppedStyle(crop: AvatarCropRect) {
-  const width = AVATAR_PX * crop.widthRatio;
-  const height = AVATAR_PX * crop.heightRatio;
-
-  return {
-    position: "absolute" as const,
-    width,
-    height,
-    left: AVATAR_PX / 2 - crop.cx * width,
-    top: AVATAR_PX / 2 - crop.cy * height,
-  };
-}
 
 export function ChatTopBar({
   characterName,
   avatarUrl,
   avatarCrop,
   onAvatarPress,
+  onOpenProfile,
   characterId,
   statusLabel,
   statusColor,
   isBusy,
   mind,
   onBack,
-  onCall,
   onOverflow,
 }: ChatTopBarProps) {
   const theme = useResolvedTheme(characterId);
@@ -108,7 +93,11 @@ export function ChatTopBar({
                 contentFit={avatarCrop ? "fill" : "cover"}
                 cachePolicy="disk"
                 accessibilityLabel={`${characterName}'s picture`}
-                style={avatarCrop ? croppedStyle(avatarCrop) : { width: "100%", height: "100%" }}
+                style={
+                  avatarCrop
+                    ? croppedStyle(avatarCrop, AVATAR_PX)
+                    : { width: "100%", height: "100%" }
+                }
               />
             ) : (
               <AvatarFallback textClassName="font-main-bold text-xs text-primary">
@@ -120,7 +109,13 @@ export function ChatTopBar({
         <AffinityToast characterId={characterId} />
       </PressableScale>
 
-      <View className="flex-1 pl-0.5">
+      <PressableScale
+        accessibilityRole="button"
+        accessibilityLabel={`${characterName}'s profile and pictures`}
+        disabled={!onOpenProfile}
+        onPress={onOpenProfile}
+        className="flex-1 pl-0.5"
+      >
         <Text className="font-main-bold text-base text-text-primary" numberOfLines={1}>
           {characterName}
         </Text>
@@ -148,16 +143,6 @@ export function ChatTopBar({
             {subtitle}
           </Animated.Text>
         </View>
-      </View>
-
-      <PressableScale
-        accessibilityRole="button"
-        accessibilityLabel={`Call ${characterName}`}
-        hitSlop={8}
-        onPress={onCall}
-        className="h-10 w-10 items-center justify-center rounded-button border border-border bg-card"
-      >
-        <AppIcon icon={Call02Icon} size={19} color={theme.primary} />
       </PressableScale>
 
       <PressableScale

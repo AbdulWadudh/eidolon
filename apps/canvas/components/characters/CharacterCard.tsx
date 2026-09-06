@@ -4,6 +4,7 @@ import { Text, View } from "react-native";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { croppedStyle, usableCrop } from "@/lib/avatar-crop";
 import { useAffinityStore } from "@/store/affinity-store";
 import type { CharacterSummary } from "@/store/character-api";
 
@@ -18,6 +19,7 @@ export interface CharacterCardProps {
 export function CharacterRosterCard({ character, onOpen, onEdit }: CharacterCardProps) {
   const insight = useAffinityStore((state) => state.isInsightModeEnabled);
   const initials = character.name.slice(0, 2).toUpperCase();
+  const crop = usableCrop(character.avatarCrop);
 
   const subtitle =
     insight && character.tier
@@ -36,10 +38,10 @@ export function CharacterRosterCard({ character, onOpen, onEdit }: CharacterCard
           {character.avatarUrl ? (
             <Image
               source={{ uri: character.avatarUrl }}
-              contentFit="cover"
+              contentFit={crop ? "fill" : "cover"}
               cachePolicy="disk"
               accessibilityLabel={`${character.name}'s picture`}
-              style={{ width: "100%", height: "100%" }}
+              style={crop ? croppedStyle(crop, AVATAR_PX) : { width: "100%", height: "100%" }}
             />
           ) : (
             <AvatarFallback textClassName="font-main-bold text-lg text-primary">

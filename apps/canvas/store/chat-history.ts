@@ -12,37 +12,51 @@ import { INITIAL_CHAT, useChatStore } from "./chat-store";
  */
 export async function loadHistory(host: string, characterId: string): Promise<void> {
   if (!host) return;
-  useChatStore.setState({ isLoadingHistory: true, lastError: null });
+
+  // The store is bound to this character before the fetch, not after it. Doing
+  // it after meant a screen had no claim on the store while its own history was
+  // loading, so a failed fetch left it showing a placeholder for a character it
+  // never admitted to being — and no error, because nothing ever cleared it.
+  useChatStore.setState((state) => {
+    if (state.activeCharacterId === characterId) {
+      return { isLoadingHistory: true, lastError: null };
+    }
+
+    return {
+      ...INITIAL_CHAT,
+      areSuggestionsHidden: state.areSuggestionsHidden,
+      activeCharacterId: characterId,
+      isLoadingHistory: true,
+      lastError: null,
+    };
+  });
 
   try {
     const { messages, mind, look } = await fetchTranscript(host, characterId);
+
     useChatStore.setState((state) => {
-      // Opening a different character replaces everything. Keeping the longer
-      // list is only ever right for the character already on screen: switching
-      // from someone with a long history to someone with none used to leave the
-      // first one's conversation sitting under the second one's name.
-      const sameCharacter = state.activeCharacterId === characterId;
+      // Two fetches can be in flight when a reader moves quickly, and the
+      // slower one must not overwrite the character now on screen.
+      if (state.activeCharacterId !== characterId) return {};
 
       return {
-        activeCharacterId: characterId,
         // A turn that landed while this was in flight wins; the socket is more
         // current than the page of history we asked for.
-        messages:
-          sameCharacter && state.messages.length > messages.length ? state.messages : messages,
-        mind: sameCharacter ? (mind ?? state.mind) : mind,
-        streamingText: sameCharacter ? state.streamingText : "",
-        isStreaming: sameCharacter ? state.isStreaming : false,
-        suggestions: sameCharacter ? state.suggestions : [],
-        enhanceHistory: sameCharacter ? state.enhanceHistory : [],
-        inputText: sameCharacter ? state.inputText : "",
+        messages: state.messages.length > messages.length ? state.messages : messages,
+        mind: mind ?? state.mind,
         characterLook: look,
         isLoadingHistory: false,
+        lastError: null,
       };
     });
   } catch (err) {
-    useChatStore.setState({
-      isLoadingHistory: false,
-      lastError: err instanceof Error ? err.message : "Could not load the conversation.",
+    useChatStore.setState((state) => {
+      if (state.activeCharacterId !== characterId) return {};
+
+      return {
+        isLoadingHistory: false,
+        lastError: err instanceof Error ? err.message : "Could not load the conversation.",
+      };
     });
   }
 }

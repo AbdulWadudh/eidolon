@@ -22,7 +22,8 @@
         "backgroundColor": "#0D0E11"
       },
       "package": "com.eidolon.canvas",
-      "versionCode": 1
+      "versionCode": 1,
+      "backgroundColor": "#0D0E11"
     },
     "web": {
       "favicon": "../../public/logo_192x192.png"
@@ -44,6 +45,7 @@
         }
       ],
       "./plugins/with-android-build-optimizations",
+      "./plugins/with-dark-system-chrome",
       "expo-audio",
       "expo-image",
       [
@@ -54,6 +56,7 @@
           }
         }
       ]
-    ]
+    ],
+    "backgroundColor": "#0D0E11"
   }
 }

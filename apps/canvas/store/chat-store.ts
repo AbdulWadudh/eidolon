@@ -53,6 +53,7 @@ export const INITIAL_CHAT = {
     faceUrl: null,
   } as CharacterLook,
   autoPlayMessageId: null as string | null,
+  focusMessageId: null as string | null,
   isLoadingHistory: false,
   lastError: null as string | null,
 };
@@ -62,7 +63,28 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   areSuggestionsHidden: appStorage.getBoolean(SUGGESTIONS_HIDDEN_KEY) ?? false,
 
-  setActiveCharacter: (characterId) => set({ activeCharacterId: characterId }),
+  /**
+   * Who the store is holding, and therefore what it is holding.
+   *
+   * These two used to be able to disagree. The socket hook set the id on mount
+   * while the conversation still belonged to whoever was open before, and
+   * `loadHistory` then read "same character" and kept the longer of the two
+   * lists — the old one. The screen filters by id, so those messages vanished
+   * and the reader was told the stage was set on a chat they had been having
+   * for a week. It only happened when the character they came from had more
+   * messages than the one they opened, which is what made it look random.
+   */
+  setActiveCharacter: (characterId) =>
+    set((state) =>
+      state.activeCharacterId === characterId
+        ? state
+        : {
+            ...INITIAL_CHAT,
+            areSuggestionsHidden: state.areSuggestionsHidden,
+            activeCharacterId: characterId,
+            isLoadingHistory: true,
+          },
+    ),
 
   dismissSuggestions: () => set({ isTrayOpen: false }),
 
@@ -177,6 +199,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   clearAutoPlay: () => set({ autoPlayMessageId: null }),
+
+  // Set from the gallery, read once by the feed, then cleared. Opening a photo
+  // from her profile has to land on the message it belongs to, not the tail.
+  focusMessage: (messageId) => set({ focusMessageId: messageId }),
+
+  clearFocus: () => set({ focusMessageId: null }),
 
   resetChat: () => set({ ...INITIAL_CHAT, areSuggestionsHidden: get().areSuggestionsHidden }),
 }));

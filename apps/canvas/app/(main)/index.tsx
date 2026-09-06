@@ -1,4 +1,4 @@
-import { CHARACTER_COPY, CONNECTION_COPY, HOME_COPY, UI_MS } from "@eidolon/config";
+import { CHARACTER_COPY, CONNECTION_COPY, GALLERY_COPY, HOME_COPY, UI_MS } from "@eidolon/config";
 import { useFocusEffect, useRouter } from "expo-router";
 import * as React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
@@ -6,6 +6,7 @@ import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-rea
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CharacterRosterCard } from "@/components/characters/CharacterCard";
 import { AppIcon } from "@/components/common/icon";
+import { LoadingState } from "@/components/common/loading-state";
 import { ThemeStudioSheet } from "@/components/theme/ThemeStudioSheet";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -28,12 +29,23 @@ export default function MainCharactersScreen() {
   const [showSettings, setShowSettings] = React.useState(false);
   const [showThemeStudio, setShowThemeStudio] = React.useState(false);
   const [roster, setRoster] = React.useState<CharacterSummary[]>([]);
+  const [isLoadingRoster, setLoadingRoster] = React.useState(true);
 
   // The roster is re-read whenever this screen regains focus, so a portrait
   // rendered in the background appears without the reader doing anything.
   useFocusEffect(
     React.useCallback(() => {
-      void fetchCharacters(serverHost).then(setRoster);
+      let live = true;
+
+      void fetchCharacters(serverHost).then((next) => {
+        if (!live) return;
+        setRoster(next);
+        setLoadingRoster(false);
+      });
+
+      return () => {
+        live = false;
+      };
     }, [serverHost]),
   );
 
@@ -115,7 +127,9 @@ export default function MainCharactersScreen() {
           </Text>
         </View>
 
-        {roster.length === 0 ? (
+        {isLoadingRoster && roster.length === 0 ? (
+          <LoadingState label={GALLERY_COPY.loadingRoster} fill={false} />
+        ) : roster.length === 0 ? (
           <Animated.View entering={revealAt(0)}>
             <Card className="border-border bg-card p-5">
               <Text className="font-main text-sm text-text-muted leading-5">
@@ -129,7 +143,7 @@ export default function MainCharactersScreen() {
               <CharacterRosterCard
                 character={character}
                 onOpen={() => router.push(`/chat/${character.id}`)}
-                onEdit={() => router.push(`/chat/${character.id}`)}
+                onEdit={() => router.push(`/characters/${character.id}`)}
               />
             </Animated.View>
           ))

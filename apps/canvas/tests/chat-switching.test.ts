@@ -139,3 +139,48 @@ describe("reopening the same character", () => {
     expect(useChatStore.getState().inputText).toBe("still writing");
   });
 });
+
+describe("arriving from a character with a longer history", () => {
+  it("shows the new character's messages, not nothing", async () => {
+    // The reported failure exactly: Char-123 has 37 messages, Ines has 12, and
+    // opening Ines showed an empty stage on a week-old conversation.
+    transcripts.set("char-123", transcript("char-123", 37, "Warm"));
+    transcripts.set("ines-vaz", transcript("ines-vaz", 12, "Vulnerable"));
+
+    await loadHistory("host", "char-123");
+    expect(useChatStore.getState().messages).toHaveLength(37);
+
+    // The socket hook claims the store on mount, before the fetch is asked for.
+    useChatStore.getState().setActiveCharacter("ines-vaz");
+    await loadHistory("host", "ines-vaz");
+
+    const state = useChatStore.getState();
+    expect(state.activeCharacterId).toBe("ines-vaz");
+    expect(state.messages).toHaveLength(12);
+    expect(state.messages.every((message) => message.characterId === "ines-vaz")).toBe(true);
+  });
+
+  it("leaves nothing of the last character behind when the id is claimed", () => {
+    useChatStore.setState({
+      activeCharacterId: "char-123",
+      messages: transcript("char-123", 37, "Warm").messages,
+    });
+
+    useChatStore.getState().setActiveCharacter("ines-vaz");
+
+    const state = useChatStore.getState();
+    expect(state.messages).toHaveLength(0);
+    expect(state.isLoadingHistory).toBe(true);
+  });
+
+  it("does not throw away a conversation when the same id is claimed twice", () => {
+    useChatStore.setState({
+      activeCharacterId: "ines-vaz",
+      messages: transcript("ines-vaz", 12, "Vulnerable").messages,
+    });
+
+    useChatStore.getState().setActiveCharacter("ines-vaz");
+
+    expect(useChatStore.getState().messages).toHaveLength(12);
+  });
+});

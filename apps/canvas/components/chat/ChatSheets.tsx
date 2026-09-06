@@ -1,10 +1,13 @@
 import { CharacterSettingsSheet } from "@/components/chat/CharacterSettingsSheet";
 import { MindDrawer } from "@/components/chat/MindDrawer";
 import { ThemeStudioSheet } from "@/components/theme/ThemeStudioSheet";
+import type { AvatarCropRect } from "@/store/chat-photos";
 
 export interface ChatSheetsProps {
   characterId: string;
   characterName: string;
+  avatarUrl: string | null;
+  avatarCrop: AvatarCropRect | null;
   serverHost: string;
   settingsOpen: boolean;
   themeOpen: boolean;
@@ -23,6 +26,8 @@ export interface ChatSheetsProps {
 export function ChatSheets({
   characterId,
   characterName,
+  avatarUrl,
+  avatarCrop,
   serverHost,
   settingsOpen,
   themeOpen,
@@ -38,6 +43,8 @@ export function ChatSheets({
       <CharacterSettingsSheet
         isOpen={settingsOpen}
         characterId={characterId}
+        avatarUrl={avatarUrl}
+        avatarCrop={avatarCrop}
         onClose={onCloseSettings}
         onOpenTheme={onOpenTheme}
         onForked={onForked}
@@ -47,6 +54,7 @@ export function ChatSheets({
         isOpen={themeOpen}
         characterId={characterId}
         characterName={characterName}
+        lockToCharacter
         onClose={onCloseTheme}
       />
 

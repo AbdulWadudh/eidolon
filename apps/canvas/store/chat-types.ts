@@ -28,6 +28,7 @@ export interface ChatStore {
   pendingAudio: AudioAttachment | null;
   isSynthesizingAudio: boolean;
   autoPlayMessageId: string | null;
+  focusMessageId: string | null;
   lastError: string | null;
   setActiveCharacter: (characterId: string) => void;
   dismissSuggestions: () => void;
@@ -56,5 +57,7 @@ export interface ChatStore {
   interrupt: (characterId: string) => void;
   resetChat: () => void;
   clearAutoPlay: () => void;
+  focusMessage: (messageId: string) => void;
+  clearFocus: () => void;
   isLoadingHistory: boolean;
 }

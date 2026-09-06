@@ -1,4 +1,5 @@
 import { characterPortraitUrl, charactersUrl, characterUrl, TIMEOUTS_MS } from "@eidolon/config";
+import type { AvatarCropRect } from "@/store/chat-photos";
 
 export interface CharacterCard {
   id: string;
@@ -18,6 +19,7 @@ export interface CharacterCard {
 
 export interface CharacterSummary extends CharacterCard {
   avatarUrl: string | null;
+  avatarCrop: AvatarCropRect | null;
   affinity: number;
   tier: string;
   mood: string;
@@ -160,12 +162,25 @@ export async function publishCharacter(
   }
 }
 
-export async function fetchCharacter(host: string, id: string): Promise<CharacterCard | null> {
+export interface FetchedCharacter {
+  card: CharacterCard;
+  /** Whether saving an edit changes this character or forks it. */
+  isMine: boolean;
+}
+
+export async function fetchCharacter(
+  host: string,
+  id: string,
+  token?: string,
+): Promise<FetchedCharacter | null> {
   try {
-    const res = await fetch(characterUrl(host, id), { signal: signal() });
+    const res = await fetch(characterUrl(host, id), {
+      signal: signal(),
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
     if (!res.ok) return null;
-    const body = (await res.json()) as { character: CharacterCard };
-    return body.character;
+    const body = (await res.json()) as { character: CharacterCard; isMine?: boolean };
+    return { card: body.character, isMine: body.isMine === true };
   } catch {
     return null;
   }

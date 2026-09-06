@@ -100,7 +100,10 @@ async function requestJson(url: string, method: "GET" | "DELETE"): Promise<Trans
   const response = await fetch(url, {
     method,
     headers: { Accept: "application/json" },
-    signal: AbortSignal.timeout(TIMEOUTS_MS.clientRequest),
+    // A long transcript over a LAN is not a small read, and six seconds was
+    // enough to fail on a big history while succeeding on a short one — which
+    // is what made loading look random.
+    signal: AbortSignal.timeout(TIMEOUTS_MS.transcript),
   });
 
   if (!response.ok) throw new Error(`Conductor returned HTTP ${response.status}.`);

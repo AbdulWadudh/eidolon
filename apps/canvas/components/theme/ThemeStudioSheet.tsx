@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AppIcon } from "@/components/common/icon";
 import { ColorPickerModal } from "@/components/theme/ColorPickerModal";
 import { ColorField } from "@/components/theme/color-field";
+import { ThemeScopeSelector } from "@/components/theme/ThemeScopeSelector";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -29,6 +30,12 @@ export interface ThemeStudioSheetProps {
   onClose: () => void;
   characterId?: string;
   characterName?: string;
+  /**
+   * Opened from a character's own settings, the studio is about that character
+   * and nothing else. Offering "everyone" there and defaulting to it meant two
+   * taps of scope-picking before you could change the colour you came for.
+   */
+  lockToCharacter?: boolean;
 }
 
 const RADIUS_PRESETS = [0, 8, 10, 14, 22];
@@ -56,6 +63,7 @@ export function ThemeStudioSheet({
   onClose,
   characterId = "emma",
   characterName = "Emma",
+  lockToCharacter = false,
 }: ThemeStudioSheetProps) {
   const updateGlobalToken = useThemeStore((state) => state.updateGlobalToken);
   const updateCharacterToken = useThemeStore((state) => state.updateCharacterToken);
@@ -64,7 +72,13 @@ export function ThemeStudioSheet({
   const resetGlobalTheme = useThemeStore((state) => state.resetGlobalTheme);
   const setColorMode = useThemeStore((state) => state.setColorMode);
 
-  const [scope, setScope] = React.useState<"global" | "character">("global");
+  const [scope, setScope] = React.useState<"global" | "character">(
+    lockToCharacter ? "character" : "global",
+  );
+
+  React.useEffect(() => {
+    if (lockToCharacter) setScope("character");
+  }, [lockToCharacter]);
   // Accordion, collapsed by default, so the live preview stays on screen while
   // editing instead of being pushed off by the full control list.
   const [expandedSection, setExpandedSection] = React.useState<string | null>(null);
@@ -192,9 +206,16 @@ export function ThemeStudioSheet({
         <SafeAreaView style={sheetStyle} className="flex-1 bg-canvas">
           {/* Header Bar */}
           <View className="flex-row items-center justify-between border-b border-border px-4 py-3">
-            <View className="flex-row items-center gap-2">
+            <View className="flex-1 flex-row items-center gap-2">
               <AppIcon icon={PaintBoardIcon} size={20} color={resolvedTheme.primary} />
-              <Text className="font-main-bold text-lg text-text-primary">Theme Studio</Text>
+              <View className="flex-1">
+                <Text className="font-main-bold text-lg text-text-primary">Theme Studio</Text>
+                {lockToCharacter ? (
+                  <Text className="font-ui text-[11px] text-text-muted" numberOfLines={1}>
+                    {characterName}
+                  </Text>
+                ) : null}
+              </View>
             </View>
             <Pressable
               className="h-9 w-9 items-center justify-center rounded-button border border-border bg-card active:bg-border"
@@ -205,63 +226,17 @@ export function ThemeStudioSheet({
           </View>
 
           <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-            {/* A. Scope Selector */}
-            <CollapsibleSection
-              sectionKey="scope"
-              title={THEME_COPY.appliesTo}
-              badge={
-                <Text className="font-ui-bold text-[11px] text-text-primary">
-                  {scope === "global" ? THEME_COPY.everyone : characterName}
-                </Text>
-              }
-              expanded={expandedSection === "scope"}
-              onToggle={toggleSection}
-              chevronColor={resolvedTheme.textMuted}
-              className="rounded-card border border-border bg-card p-3"
-            >
-              <View className="flex-row gap-2">
-                <Pressable
-                  className={`flex-1 items-center rounded-button border py-2 ${
-                    scope === "global" ? "bg-primary" : "border-border bg-input"
-                  }`}
-                  onPress={() => setScope("global")}
-                >
-                  <Text
-                    className={`font-ui-medium text-xs ${
-                      scope === "global" ? "text-primary-foreground font-bold" : "text-text-muted"
-                    }`}
-                  >
-                    Global Master Default
-                  </Text>
-                </Pressable>
-
-                <Pressable
-                  className={`flex-1 items-center rounded-button border py-2 ${
-                    scope === "character" ? "bg-primary" : "border-border bg-input"
-                  }`}
-                  onPress={() => setScope("character")}
-                >
-                  <Text
-                    className={`font-ui-medium text-xs ${
-                      scope === "character"
-                        ? "text-primary-foreground font-bold"
-                        : "text-text-muted"
-                    }`}
-                  >
-                    {characterName} Override
-                  </Text>
-                </Pressable>
-              </View>
-
-              {scope === "character" && (
-                <View className="mt-3 flex-row items-center justify-between border-t border-border pt-2">
-                  <Text className="font-ui text-xs text-text-muted">Status</Text>
-                  <Badge variant={characterHasOverrides ? "warning" : "muted"}>
-                    {characterHasOverrides ? THEME_COPY.ownLook : THEME_COPY.sameAsEveryone}
-                  </Badge>
-                </View>
-              )}
-            </CollapsibleSection>
+            {lockToCharacter ? null : (
+              <ThemeScopeSelector
+                scope={scope}
+                characterName={characterName}
+                characterHasOverrides={characterHasOverrides}
+                expanded={expandedSection === "scope"}
+                chevronColor={resolvedTheme.textMuted}
+                onToggle={toggleSection}
+                onChange={setScope}
+              />
+            )}
 
             {/* B. Color Appearance Mode (Dark / Light) */}
             {/* Binary choice, so an inline segmented toggle rather than a section. */}

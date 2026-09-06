@@ -18,9 +18,45 @@ and publishes it as the GitHub release notes.
   does not know instead of inventing a winner, a score or a date.
 - Answers built from a live search sound like her again — "RCB took it this year,
   they beat Gujarat in the final" rather than an encyclopedia entry.
-- Opening a different character no longer shows you the last one's conversation.
+- She no longer writes your lines. Replies came back labelled "PLAYER:" because
+  the example dialogue is a transcript and the model copied whichever label it
+  saw last; she also carried on past her own turn and wrote your reply for you.
+- Moving between a chat and a character's profile no longer piles up screens, so
+  the back gesture goes where you expect instead of walking through everywhere
+  you have been. The phone button in the chat header is gone — it had no call
+  behind it and pushed a copy of the screen you were already on. Voice call is
+  still listed as coming, under the + menu.
+- Scrolling up quickly no longer snaps you back to the bottom, and rows no
+  longer come up blank when you scroll fast.
+- The roster shows her face framed the way you cropped it, instead of the whole
+  picture squeezed into a circle. The chat header always did; nothing else did.
+- She no longer writes stage directions in square brackets, which read as a film
+  script rather than as her.
+- A photo she sends is no longer captioned "with None, just me at the kitchen".
+- Opening a different character no longer shows you the last one's conversation,
+  and going back to one you had open no longer leaves the other one's messages
+  under her name.
+- Her theme, opened from her own settings, now adjusts her — not everyone. It
+  used to start on the global palette and make you pick her out of a list first.
 
 ### Added
+
+- Help writing a character. Every field on her card has a sparkle that writes it
+  from whatever else you have filled in, and a wand that improves what you typed.
+  An undo beside them walks back one version per press.
+- Her portrait can be generated again whenever you like, from her settings, with
+  an optional line of your own about clothing, setting or mood.
+- Pictures in her gallery can now be used: as her profile picture, her face, or
+  the chat background, saved to your phone, deleted, or opened back at the exact
+  message they arrived in. Pinch to zoom, drag to pan, double tap to fill.
+- Every portrait she has ever had stays in her gallery. Generating a new one no
+  longer destroys the old, so you can go back to an earlier face whenever you
+  like, and nothing is removed unless you remove it.
+
+- A profile page for every character, behind her name in the chat or the ⋯ on
+  her card. Her portrait, how much history you have together, and every picture
+  ever made for her — the photos she sent, her portrait, her backdrops — in a
+  grid you can open and swipe through, caption and all, and save any of them.
 
 - Characters you write yourself. A roster with a create screen covering name,
   personality, system prompt, scenario, rules, example dialogue, greeting and
@@ -28,10 +64,13 @@ and publishes it as the GitHub release notes.
   flirty, guarded, driven and whimsical — each with her own lorebook.
 - A voice picker that plays a line before you commit to it, grouped by language
   and marked by quality.
-- The three-dot button in a chat now opens that character's settings: every
-  field editable in place, a paint icon through to her theme, and a switch to
-  publish her for others. Editing a character somebody else wrote saves a copy
-  under your name and leaves theirs alone; editing your own edits your own.
+- The three-dot button in a chat opens her settings full screen: Identity, Mind,
+  Voice and Sharing rather than one long form, her portrait and name in the
+  header, a dark-mode switch and a way through to her theme. A bar slides up when
+  you have changed something, telling you how much and offering to throw it away.
+  Editing a character somebody else wrote saves a copy under your name and leaves
+  theirs alone; editing your own edits your own, and the screen says which is
+  about to happen.
 
 - A wand button next to the message box rewrites what you have typed. Press it
   again to rework the rewrite, as many times as you like, and the undo button

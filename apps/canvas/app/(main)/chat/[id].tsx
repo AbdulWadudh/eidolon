@@ -1,6 +1,6 @@
 import { CONNECTION_COPY, MIND_COPY, STATUS_COPY } from "@eidolon/config";
 import { capitalize, isString } from "es-toolkit";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import * as React from "react";
 import type { TextInput } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -15,11 +15,12 @@ import { PhotoRequestSheet } from "@/components/chat/PhotoRequestSheet";
 import { type PhotoAction, PhotoViewer } from "@/components/chat/PhotoViewer";
 import { SuggestionTray } from "@/components/chat/SuggestionTray";
 import { useChatSocket } from "@/hooks/use-chat-socket";
+import { useChatView } from "@/hooks/use-chat-view";
 import { usePhotoFlow } from "@/hooks/use-photo-flow";
+import { useSuggestions } from "@/hooks/use-suggestions";
 import { VoiceNotesProvider } from "@/hooks/use-voice-notes";
 import { useAffinityStore } from "@/store/affinity-store";
 import { forgetCharacter, loadHistory } from "@/store/chat-history";
-import { isSuggestionTrayVisible } from "@/store/chat-selectors";
 import { useChatStore } from "@/store/chat-store";
 import { useConnectionStore } from "@/store/connection";
 import { fetchMind } from "@/store/mind-api";
@@ -46,6 +47,7 @@ export default function ChatScreen() {
 
   const socket = useChatSocket(characterId);
   const chat = useChatStore();
+  const view = useChatView(characterId);
   const serverHost = useConnectionStore((state) => state.serverHost);
   const [actionsOpen, setActionsOpen] = React.useState(false);
   const [mindOpen, setMindOpen] = React.useState(false);
@@ -54,7 +56,7 @@ export default function ChatScreen() {
   const applyMindUpdate = useAffinityStore((state) => state.applyMindUpdate);
   const resetAffinity = useAffinityStore((state) => state.reset);
   const photos = usePhotoFlow(characterId, serverHost);
-  const trayVisible = isSuggestionTrayVisible(chat);
+  const replies = useSuggestions(characterId, view, inputRef);
 
   React.useEffect(() => {
     setActiveCharacter(characterId);
@@ -63,86 +65,46 @@ export default function ChatScreen() {
     };
   }, [characterId, setActiveCharacter]);
 
-  React.useEffect(() => {
-    loadHistory(serverHost, characterId);
-    void fetchMind(serverHost, characterId);
-    return () => {
-      resetAffinity();
-    };
-  }, [serverHost, characterId, resetAffinity]);
+  useFocusEffect(
+    React.useCallback(() => {
+      loadHistory(serverHost, characterId);
+      void fetchMind(serverHost, characterId);
+      return () => {
+        resetAffinity();
+      };
+    }, [serverHost, characterId, resetAffinity]),
+  );
 
   // The socket already carries mind_update into the chat store. Mirroring it
   // here is what raises the toast and the haptic, and only in Insight Mode.
   React.useEffect(() => {
-    const mind = chat.mind;
+    const mind = view.mind;
     if (!mind) return;
     applyMindUpdate(mind.affinityDelta, mind.affinity, mind.tier, mind.mood);
-  }, [chat.mind, applyMindUpdate]);
+  }, [view.mind, applyMindUpdate]);
 
   const statusColor = socket.isConnected
-    ? chat.activeStatus === "idle"
+    ? view.activeStatus === "idle"
       ? theme.success
       : theme.primary
     : theme.textMuted;
 
-  const isBusy = chat.activeStatus !== "idle";
+  const isBusy = view.activeStatus !== "idle";
 
   const statusLabel = socket.isConnected
     ? isBusy
-      ? (STATUS_LABEL[chat.activeStatus] ?? MIND_COPY.organicStatus)
-      : `${MIND_COPY.organicStatus} • ${chat.mind?.mood ?? "Here"}`
+      ? (STATUS_LABEL[view.activeStatus] ?? MIND_COPY.organicStatus)
+      : `${MIND_COPY.organicStatus} • ${view.mind?.mood ?? "Here"}`
     : CONNECTION_COPY[socket.status];
 
   const autoPlay = React.useMemo(() => {
-    const target = chat.messages.find((entry) => entry.id === chat.autoPlayMessageId);
+    const target = view.messages.find((entry) => entry.id === view.autoPlayMessageId);
     return target?.audioUrl ? { id: target.id, url: target.audioUrl } : null;
-  }, [chat.autoPlayMessageId, chat.messages]);
+  }, [view.autoPlayMessageId, view.messages]);
 
   const handleSend = React.useCallback(() => {
-    chat.sendUserMessage(chat.inputText, characterId);
-  }, [chat.sendUserMessage, chat.inputText, characterId]);
-
-  const handleEditSuggestion = React.useCallback(
-    (text: string) => {
-      chat.selectSuggestion(text);
-      inputRef.current?.focus();
-    },
-    [chat.selectSuggestion],
-  );
-
-  const handleSendSuggestion = React.useCallback(
-    (text: string) => {
-      chat.sendUserMessage(text, characterId);
-    },
-    [chat.sendUserMessage, characterId],
-  );
-
-  const handleReroll = React.useCallback(() => {
-    chat.rerollSuggestions(characterId);
-  }, [chat.rerollSuggestions, characterId]);
-
-  const handleHideSuggestions = React.useCallback(() => {
-    chat.dismissSuggestions();
-  }, [chat.dismissSuggestions]);
-
-  const toggleSuggestions = React.useCallback(() => {
-    if (chat.isTrayOpen) {
-      chat.dismissSuggestions();
-      return;
-    }
-    chat.revealSuggestions();
-    if (chat.suggestions.length === 0 && !chat.isSuggestionsLoading) {
-      chat.rerollSuggestions(characterId);
-    }
-  }, [
-    chat.isTrayOpen,
-    chat.dismissSuggestions,
-    chat.revealSuggestions,
-    chat.rerollSuggestions,
-    chat.suggestions.length,
-    chat.isSuggestionsLoading,
-    characterId,
-  ]);
+    chat.sendUserMessage(view.inputText, characterId);
+  }, [chat.sendUserMessage, view.inputText, characterId]);
 
   const handleAction = React.useCallback(
     (action: ChatAction) => {
@@ -163,16 +125,16 @@ export default function ChatScreen() {
     >
       <ChatTopBar
         characterName={characterName}
-        avatarUrl={chat.characterLook.avatarUrl}
-        avatarCrop={chat.characterLook.avatarCrop}
-        onAvatarPress={() => photos.viewAvatar(chat.characterLook.avatarUrl)}
+        avatarUrl={view.characterLook.avatarUrl}
+        avatarCrop={view.characterLook.avatarCrop}
+        onAvatarPress={() => photos.viewAvatar(view.characterLook.avatarUrl)}
+        onOpenProfile={() => router.push(`/characters/${characterId}`)}
         characterId={characterId}
         statusLabel={statusLabel}
         statusColor={statusColor}
         isBusy={isBusy}
-        mind={chat.mind}
+        mind={view.mind}
         onBack={() => router.back()}
-        onCall={() => router.push(`/chat/${characterId}`)}
         onOverflow={() => setSettingsOpen(true)}
       />
 
@@ -180,53 +142,56 @@ export default function ChatScreen() {
           not behind the bar itself, which carries the name, mood and affinity
           and has to stay readable whatever picture was chosen. */}
       <KeyboardAvoidingView behavior="padding" automaticOffset style={{ flex: 1 }}>
-        <ChatBackdrop uri={chat.characterLook.backgroundUrl} characterId={characterId} />
+        <ChatBackdrop uri={view.characterLook.backgroundUrl} characterId={characterId} />
 
         <VoiceNotesProvider autoPlay={autoPlay} onAutoPlayed={chat.clearAutoPlay}>
           <ChatFeed
-            messages={chat.messages}
-            isStreaming={chat.isStreaming}
-            streamingText={chat.streamingText}
-            activeStatus={chat.activeStatus}
-            statusDetail={chat.statusDetail}
+            messages={view.messages}
+            isStreaming={view.isStreaming}
+            streamingText={view.streamingText}
+            activeStatus={view.activeStatus}
+            statusDetail={view.statusDetail}
             characterId={characterId}
             characterName={characterName}
-            isSynthesizingAudio={chat.isSynthesizingAudio}
-            isPainting={chat.isPainting}
-            paintingStep={chat.paintingStep}
-            paintingTotal={chat.paintingTotal}
+            isSynthesizingAudio={view.isSynthesizingAudio}
+            isPainting={view.isPainting}
+            isLoadingHistory={view.isLoadingHistory}
+            loadError={view.loadError}
+            onRetryLoad={() => loadHistory(serverHost, characterId)}
+            paintingStep={view.paintingStep}
+            paintingTotal={view.paintingTotal}
             onOpenPhoto={photos.view}
           />
 
-          {trayVisible ? (
+          {replies.isTrayVisible ? (
             <SuggestionTray
-              suggestions={chat.suggestions}
-              isLoading={chat.isSuggestionsLoading}
+              suggestions={view.suggestions}
+              isLoading={view.isSuggestionsLoading}
               characterId={characterId}
-              onSend={handleSendSuggestion}
-              onEdit={handleEditSuggestion}
-              onReroll={handleReroll}
-              onHide={handleHideSuggestions}
+              onSend={replies.send}
+              onEdit={replies.edit}
+              onReroll={replies.reroll}
+              onHide={replies.hide}
             />
           ) : null}
 
           <InputDock
-            value={chat.inputText}
-            isStreaming={chat.isStreaming}
-            isEnhancing={chat.isEnhancing}
-            revertSteps={chat.enhanceHistory.length}
+            value={view.inputText}
+            isStreaming={view.isStreaming}
+            isEnhancing={view.isEnhancing}
+            revertSteps={view.revertSteps}
             characterId={characterId}
             inputRef={inputRef}
             onChangeText={chat.setInputText}
             onSend={handleSend}
             onInterrupt={() => chat.interrupt(characterId)}
-            suggestionsOpen={trayVisible}
+            suggestionsOpen={replies.isTrayVisible}
             onAction={(action) => {
               if (action === "more") setActionsOpen(true);
               if (action === "lorebook") setMindOpen(true);
               if (action === "enhance") chat.enhanceInput(characterId);
               if (action === "revert") chat.revertEnhance();
-              if (action === "suggestions") toggleSuggestions();
+              if (action === "suggestions") replies.toggle();
               if (action === "gallery") photos.openSheet();
             }}
           />
@@ -237,8 +202,8 @@ export default function ChatScreen() {
         isOpen={photos.isSheetOpen}
         characterId={characterId}
         characterName={characterName}
-        ideas={chat.photoIdeas}
-        areIdeasLoading={chat.areIdeasLoading}
+        ideas={view.photoIdeas}
+        areIdeasLoading={view.areIdeasLoading}
         onRequestIdeas={() => chat.requestPhotoIdeas(characterId)}
         editing={photos.editing}
         onClose={photos.closeSheet}
@@ -265,6 +230,8 @@ export default function ChatScreen() {
       <ChatSheets
         characterId={characterId}
         characterName={characterName}
+        avatarUrl={view.characterLook.avatarUrl}
+        avatarCrop={view.characterLook.avatarCrop}
         serverHost={serverHost}
         settingsOpen={settingsOpen}
         themeOpen={themeOpen}

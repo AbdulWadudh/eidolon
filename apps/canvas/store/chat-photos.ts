@@ -28,6 +28,24 @@ export interface LookPatch {
   faceUrl?: string | null;
 }
 
+/** Reads her look without touching the chat store, for screens outside the chat. */
+export async function fetchLook(host: string, characterId: string): Promise<CharacterLook | null> {
+  if (!host) return null;
+
+  try {
+    const response = await fetch(characterLookUrl(host, characterId), {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(TIMEOUTS_MS.clientRequest),
+    });
+    if (!response.ok) return null;
+
+    const body = (await response.json()) as { character?: CharacterLook };
+    return body.character ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function saveLook(host: string, characterId: string, patch: LookPatch): Promise<void> {
   useChatStore.setState((state) => ({ characterLook: { ...state.characterLook, ...patch } }));
   if (!host) return;
