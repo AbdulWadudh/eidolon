@@ -17,11 +17,21 @@ export interface AvatarCropProps {
 
 export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCropProps) {
   const theme = useResolvedTheme(characterId);
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
 
   const side = width;
   const circle = Math.round(width * PHOTO.avatarFrameFraction);
-  const inset = (side - circle) / 2;
+  const imageTop = (height - side) / 2;
+
+  // The dimming is one view with a circular hole rather than a second copy of
+  // the image clipped to a circle. Android does not reliably clip a transformed
+  // child to a rounded parent — the clipped copy renders in full, over
+  // everything — so the picture is drawn once and masked instead.
+  //
+  // A border thicker than the screen, on a box with a fully round radius,
+  // leaves a transparent disc in the middle and covers everything outside it.
+  const ring = Math.max(width, height);
+  const holeBox = circle + ring * 2;
 
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
@@ -57,14 +67,9 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
     ],
   }));
 
-  // The circle is a window onto the same image, not a separate copy of it. Both
-  // layers are `side` wide and share one transform, and the clipped one is
-  // pulled back by the inset so their centres land on the same point — so they
-  // scale and pan as one picture.
-  //
-  // The saved crop is expressed against the circle rather than this screen:
-  // zoom carries side/circle so the avatar, which fills its whole container,
-  // shows exactly the part that was inside the ring here.
+  // The crop is saved against the circle, not the screen. The avatar fills its
+  // container edge to edge while the ring only ever framed part of a picture
+  // drawn `side` wide, so zoom carries that ratio.
   const confirm = React.useCallback(() => {
     onConfirm({
       zoom: (side / circle) * savedScale.get(),
@@ -74,21 +79,20 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
   }, [side, circle, onConfirm, savedScale, savedX, savedY]);
 
   return (
-    <View className="flex-1 items-center justify-center gap-6">
-      <Text className="font-ui text-text-muted text-xs uppercase tracking-wider">
-        Drag and pinch to frame it
-      </Text>
-
+    <View className="flex-1">
       <GestureDetector gesture={Gesture.Simultaneous(pinch, pan)}>
-        <View style={{ width: side, height: side }}>
+        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
           <Animated.View
-            pointerEvents="none"
-            style={[{ width: side, height: side, opacity: PHOTO.cropDimOpacity }, imageStyle]}
+            style={[
+              { position: "absolute", top: imageTop, left: 0, width: side, height: side },
+              imageStyle,
+            ]}
           >
             <Image
               source={{ uri }}
               contentFit="cover"
               cachePolicy="disk"
+              accessibilityLabel="Drag and pinch to choose the part of the photo to use"
               style={{ width: "100%", height: "100%" }}
             />
           </Animated.View>
@@ -97,59 +101,67 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
             pointerEvents="none"
             style={{
               position: "absolute",
-              left: inset,
-              top: inset,
+              left: (width - holeBox) / 2,
+              top: (height - holeBox) / 2,
+              width: holeBox,
+              height: holeBox,
+              borderRadius: holeBox / 2,
+              borderWidth: ring,
+              borderColor: "rgba(0,0,0,0.72)",
+            }}
+          />
+
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: (width - circle) / 2,
+              top: (height - circle) / 2,
               width: circle,
               height: circle,
               borderRadius: circle / 2,
               borderWidth: 2,
               borderColor: theme.primary,
-              overflow: "hidden",
             }}
-          >
-            <Animated.View
-              style={[
-                { position: "absolute", left: -inset, top: -inset, width: side, height: side },
-                imageStyle,
-              ]}
-            >
-              <Image
-                source={{ uri }}
-                contentFit="cover"
-                cachePolicy="disk"
-                accessibilityLabel="Choose the part of the photo to use"
-                style={{ width: "100%", height: "100%" }}
-              />
-            </Animated.View>
-          </View>
+          />
         </View>
       </GestureDetector>
 
-      <View className="flex-row gap-3">
-        <PressableScale
-          accessibilityRole="button"
-          accessibilityLabel="Cancel"
-          onPress={onCancel}
-          className="border border-border px-4 py-2"
-          style={{ borderRadius: theme.radius, backgroundColor: theme.card }}
-        >
-          <Text className="font-ui text-sm text-text-primary">Cancel</Text>
-        </PressableScale>
-
-        <PressableScale
-          accessibilityRole="button"
-          accessibilityLabel="Use this as the profile picture"
-          onPress={confirm}
-          className="px-4 py-2"
-          style={{ borderRadius: theme.radius, backgroundColor: theme.primary }}
-        >
-          <Text className="font-ui-bold text-sm" style={{ color: theme.primaryForeground }}>
-            Use this
-          </Text>
-        </PressableScale>
+      <View className="items-center pt-16" pointerEvents="none">
+        <Text className="font-ui text-text-primary text-xs uppercase tracking-wider">
+          Drag and pinch to frame it
+        </Text>
       </View>
 
-      <Text className="font-ui text-text-muted text-xs">Only the circle is used</Text>
+      <View className="flex-1" pointerEvents="box-none" />
+
+      <View className="items-center gap-3 pb-12">
+        <View className="flex-row gap-3">
+          <PressableScale
+            accessibilityRole="button"
+            accessibilityLabel="Cancel"
+            onPress={onCancel}
+            className="border border-border px-5 py-2.5"
+            style={{ borderRadius: theme.radius, backgroundColor: theme.card }}
+          >
+            <Text className="font-ui text-sm text-text-primary">Cancel</Text>
+          </PressableScale>
+
+          <PressableScale
+            accessibilityRole="button"
+            accessibilityLabel="Use this as the profile picture"
+            onPress={confirm}
+            className="px-5 py-2.5"
+            style={{ borderRadius: theme.radius, backgroundColor: theme.primary }}
+          >
+            <Text className="font-ui-bold text-sm" style={{ color: theme.primaryForeground }}>
+              Use this
+            </Text>
+          </PressableScale>
+        </View>
+
+        <Text className="font-ui text-text-muted text-xs">Only the circle is used</Text>
+      </View>
     </View>
   );
 }
