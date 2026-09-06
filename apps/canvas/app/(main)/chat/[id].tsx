@@ -156,21 +156,24 @@ export default function ChatScreen() {
         onOverflow={() => router.push("/demo")}
       />
 
-      <KeyboardAvoidingView behavior="padding" automaticOffset style={{ flex: 1 }}>
-        <VoiceNotesProvider autoPlay={autoPlay} onAutoPlayed={chat.clearAutoPlay}>
-          <View className="flex-1">
-            {chat.characterLook.backgroundUrl ? (
-              <Image
-                source={{ uri: chat.characterLook.backgroundUrl }}
-                contentFit="cover"
-                cachePolicy="disk"
-                pointerEvents="none"
-                accessibilityElementsHidden
-                importantForAccessibility="no-hide-descendants"
-                style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-              />
-            ) : null}
+      {/* Behind everything below the top bar — the messages and the dock — but
+          not behind the bar itself, which carries the name, mood and affinity
+          and has to stay readable whatever picture was chosen. */}
+      <View className="flex-1">
+        {chat.characterLook.backgroundUrl ? (
+          <Image
+            source={{ uri: chat.characterLook.backgroundUrl }}
+            contentFit="cover"
+            cachePolicy="disk"
+            pointerEvents="none"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+          />
+        ) : null}
 
+        <KeyboardAvoidingView behavior="padding" automaticOffset style={{ flex: 1 }}>
+          <VoiceNotesProvider autoPlay={autoPlay} onAutoPlayed={chat.clearAutoPlay}>
             <ChatFeed
               messages={chat.messages}
               isStreaming={chat.isStreaming}
@@ -186,37 +189,37 @@ export default function ChatScreen() {
               paintingPreview={chat.paintingPreview}
               onOpenPhoto={photos.view}
             />
-          </View>
 
-          {trayVisible ? (
-            <SuggestionTray
-              suggestions={chat.suggestions}
-              isLoading={chat.isSuggestionsLoading}
+            {trayVisible ? (
+              <SuggestionTray
+                suggestions={chat.suggestions}
+                isLoading={chat.isSuggestionsLoading}
+                characterId={characterId}
+                onSend={handleSendSuggestion}
+                onEdit={handleEditSuggestion}
+                onReroll={handleReroll}
+                onHide={handleHideSuggestions}
+              />
+            ) : null}
+
+            <InputDock
+              value={chat.inputText}
+              isStreaming={chat.isStreaming}
               characterId={characterId}
-              onSend={handleSendSuggestion}
-              onEdit={handleEditSuggestion}
-              onReroll={handleReroll}
-              onHide={handleHideSuggestions}
+              inputRef={inputRef}
+              onChangeText={chat.setInputText}
+              onSend={handleSend}
+              onInterrupt={() => chat.interrupt(characterId)}
+              suggestionsOpen={trayVisible}
+              onAction={(action) => {
+                if (action === "more") setActionsOpen(true);
+                if (action === "suggestions") toggleSuggestions();
+                if (action === "gallery") photos.openSheet();
+              }}
             />
-          ) : null}
-
-          <InputDock
-            value={chat.inputText}
-            isStreaming={chat.isStreaming}
-            characterId={characterId}
-            inputRef={inputRef}
-            onChangeText={chat.setInputText}
-            onSend={handleSend}
-            onInterrupt={() => chat.interrupt(characterId)}
-            suggestionsOpen={trayVisible}
-            onAction={(action) => {
-              if (action === "more") setActionsOpen(true);
-              if (action === "suggestions") toggleSuggestions();
-              if (action === "gallery") photos.openSheet();
-            }}
-          />
-        </VoiceNotesProvider>
-      </KeyboardAvoidingView>
+          </VoiceNotesProvider>
+        </KeyboardAvoidingView>
+      </View>
 
       <PhotoRequestSheet
         isOpen={photos.isSheetOpen}
