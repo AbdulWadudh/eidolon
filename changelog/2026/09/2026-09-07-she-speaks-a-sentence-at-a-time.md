@@ -288,6 +288,37 @@ without its own recogniser keeps tap-to-talk.
 tap-to-talk, and `endpointSilenceMs` is the one number worth tuning against a
 real room.
 
+## The gate opened while she was still talking
+
+Reported from the device: her reply cleared itself the moment it appeared, and
+turns broke mid-sentence with "That did not come through" printed underneath the
+words that had plainly come through.
+
+Both came from the gate, and the first is the interesting one. `status_update:
+idle` set the phase from `queue.length`, but a sentence leaves the queue when the
+player *starts* it, not when it finishes. The conductor finishes a turn long
+before the audio does, so the queue emptied, the phase fell to `listening`, and
+the microphone opened over the top of her own voice. The recogniser heard her,
+`speechstart` fired, and `beginTurn()` wiped the reply that was still being
+spoken. The gate now reads `audio.isPlaying` as well as the phase, which is the
+only thing that actually knows whether sound is coming out.
+
+`beginTurn()` has also moved from `speechstart` to the commit. Clearing the pair
+the instant a microphone hears *something* means any noise in the room deletes
+her answer; clearing it when a turn is genuinely sent does not.
+
+The breakage mid-sentence was `settle(false)` in the error path, which discards
+the accumulated text. Android reports `no-speech` on a pause it did not like, and
+that discarded a half-spoken turn; the endpoint timer then committed the empty
+session that followed and reported nothing came through. A benign `no-speech` or
+`aborted` now ends the session while keeping what it heard, and `begin()` carries
+that text into the session auto-listen reopens, so a hiccup mid-sentence costs a
+few hundred milliseconds instead of the turn.
+
+**Interim results are confirmed working on device.** The screenshot showed a
+partial mid-sentence fragment, which settles the question the previous three
+rounds could not: on-device recognition is being selected and it streams.
+
 ## Follow-ups
 
 - **Nothing here has run on a device.** The Aqueous Pool's feel, the interrupt

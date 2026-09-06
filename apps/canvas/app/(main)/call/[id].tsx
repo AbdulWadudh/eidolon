@@ -35,7 +35,7 @@ export default function CallScreen() {
   const canTranscribeOnServer = useServerCapability(serverHost, "stt");
 
   const isSpeaking = call.phase === "speaking";
-  const isBusy = isSpeaking || call.phase === "thinking";
+  const isBusy = isSpeaking || call.phase === "thinking" || audio.isPlaying;
 
   const speech = useCallSpeech({
     characterId,

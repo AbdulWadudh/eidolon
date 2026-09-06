@@ -44,6 +44,7 @@ export function useDeviceSpeech(handlers: SpeechHandlers): SpeechCapture {
   const phase = React.useRef<Phase>("idle");
   const onDevice = React.useRef(SPEECH.preferOnDevice && supportsOnDevice());
   const granted = React.useRef(false);
+  const carry = React.useRef(false);
   const watchdog = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const bound = React.useRef(handlers);
   const launch = React.useRef<() => void>(() => undefined);
@@ -63,6 +64,7 @@ export function useDeviceSpeech(handlers: SpeechHandlers): SpeechCapture {
 
       const spoken = joinSpoken(text.current.settled, text.current.partial);
       text.current = { settled: "", partial: "" };
+      carry.current = false;
       if (!deliver) return;
 
       if (spoken.length < SPEECH.minCommitChars) {
@@ -109,6 +111,14 @@ export function useDeviceSpeech(handlers: SpeechHandlers): SpeechCapture {
         }
       }
 
+      if (event.error === "no-speech" || event.error === "aborted") {
+        clearWatchdog();
+        phase.current = "idle";
+        carry.current = joinSpoken(text.current.settled, text.current.partial).length > 0;
+        setListening(false);
+        return;
+      }
+
       const message = describe(event.error);
       if (message) setError(message);
       settle(false);
@@ -133,7 +143,7 @@ export function useDeviceSpeech(handlers: SpeechHandlers): SpeechCapture {
       onError.remove();
       onEnd.remove();
     };
-  }, [settle]);
+  }, [settle, clearWatchdog]);
 
   const launchSession = React.useCallback(() => {
     const speech = speechModule();
@@ -170,8 +180,11 @@ export function useDeviceSpeech(handlers: SpeechHandlers): SpeechCapture {
 
     clearWatchdog();
     setError(null);
-    text.current = { settled: "", partial: "" };
-    setHeard("");
+    if (!carry.current) {
+      text.current = { settled: "", partial: "" };
+      setHeard("");
+    }
+    carry.current = false;
     phase.current = "starting";
     setListening(true);
 

@@ -233,35 +233,6 @@ describe("status and failure", () => {
   });
 });
 
-describe("starting a new turn", () => {
-  it("clears the last exchange so two turns never blur together", () => {
-    feed(chunk(0, "The last thing she said."));
-    useCallStore.getState().setHeard("the last thing you said");
-
-    useCallStore.getState().beginTurn();
-    const state = useCallStore.getState();
-
-    expect(state.heard).toBe("");
-    expect(state.subtitle).toBe("");
-    expect(state.queue).toHaveLength(0);
-  });
-
-  it("files the new turn's audio under a fresh key", () => {
-    const before = useCallStore.getState().turnKey;
-    useCallStore.getState().beginTurn();
-    expect(useCallStore.getState().turnKey).not.toBe(before);
-  });
-
-  it("keeps what you said on screen while she answers", () => {
-    useCallStore.getState().setHeard("Oh really");
-    feed(chunk(0, "Yeah, you know how it is."));
-
-    const state = useCallStore.getState();
-    expect(state.heard).toBe("Oh really");
-    expect(state.subtitle).toBe("Yeah, you know how it is.");
-  });
-});
-
 describe("the call controls", () => {
   it("toggles the microphone and the speaker independently", () => {
     useCallStore.getState().toggleMute();

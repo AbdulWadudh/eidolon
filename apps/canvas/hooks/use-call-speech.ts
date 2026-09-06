@@ -34,16 +34,16 @@ export function useCallSpeech({
 
   const onCommit = React.useCallback(
     (text: string) => {
+      beginTurn();
       setHeard(text);
       commitTyped(text, characterId);
     },
-    [commitTyped, characterId, setHeard],
+    [beginTurn, commitTyped, characterId, setHeard],
   );
 
   const onSpeechStart = React.useCallback(() => {
-    beginTurn();
     boundary.current.start();
-  }, [beginTurn]);
+  }, []);
 
   const onSpeechEnd = React.useCallback(() => {
     boundary.current.end();
