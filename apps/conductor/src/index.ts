@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { API_PREFIX, apiPath, HEALTH_ALIAS_PATH, STATIC_ROUTES } from "@eidolon/config";
 import {
+  getPairingHost,
   getPublicAssetDir,
   getServerConfig,
   hasPairingSecret,
@@ -64,7 +65,7 @@ if (!isTestEnv()) {
   console.log("  EIDOLON CONDUCTOR GATEWAY ACTIVE");
   console.log(`  Listening on: http://${host}:${port}`);
   console.log(`  API base:     ${API_PREFIX}`);
-  console.log(`  Server:  ${getLocalIp()}:${port}`);
+  console.log(`  Server:  ${getPairingHost()}`);
   console.log(`  Token:   ${PAIRING_SECRET}`);
   console.log(`  Pairing: ${pairingPayload}`);
   console.log("========================================\n");

@@ -34,9 +34,12 @@ describe("Authentication & Pairing", () => {
     process.env.PUBLIC_URL = "https://eidolon.example.com";
 
     try {
-      expect(generatePairingPayload()).toStartWith(
-        "eidolon://pair?server=https://eidolon.example.com&token=",
-      );
+      const payload = generatePairingPayload();
+      expect(payload).toStartWith("eidolon://pair?server=");
+
+      const params = new URLSearchParams(payload.split("?")[1]);
+      expect(params.get("server")).toBe("https://eidolon.example.com");
+      expect(params.get("token")).toBe(PAIRING_SECRET);
     } finally {
       if (previous === undefined) delete process.env.PUBLIC_URL;
       else process.env.PUBLIC_URL = previous;

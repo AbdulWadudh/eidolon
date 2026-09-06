@@ -319,3 +319,17 @@ UI motion stays under 300ms. Entrances and exits use `ease-out`; **never
 
 Feel is judged in a **release build on the slowest device supported** — not in
 Expo Go, not in the simulator. Say so plainly when that check has not been done.
+
+---
+
+## 19. Never build the APK unprompted
+
+`bun run build:apk` takes several minutes and locks `apps/canvas/android`, which
+blocks everything else in the workspace while it runs. That cost belongs to
+whoever asked for it.
+
+When a change looks ready to ship to a device, **say so and stop**. Ask whether
+to build. Build only on an explicit yes.
+
+The same applies to anything else with a multi-minute, exclusive hold on the
+tree — a prebuild, a clean Gradle run, an `expo prebuild --clean`.

@@ -35,7 +35,8 @@ export const auth = betterAuth({
  * Format: eidolon://pair?server=<local-ip>:<port>&token=<PAIRING_SECRET>
  */
 export function generatePairingPayload(): string {
-  return `${PAIRING.uriScheme}?server=${getPairingHost()}&token=${PAIRING_SECRET}`;
+  const server = encodeURIComponent(getPairingHost());
+  return `${PAIRING.uriScheme}?server=${server}&token=${encodeURIComponent(PAIRING_SECRET)}`;
 }
 
 /**

@@ -1,8 +1,8 @@
 import { API_ROUTES, API_VERSION, TRANSCRIPT } from "@eidolon/config";
-import { getServerConfig, SQLITE_DB_PATH } from "@eidolon/config/server";
+import { getPairingHost, SQLITE_DB_PATH } from "@eidolon/config/server";
 import { COLORS } from "@eidolon/tokens";
 import { Hono } from "hono";
-import { generatePairingPayload, getLocalIp, PAIRING_SECRET, validateToken } from "@/auth";
+import { generatePairingPayload, PAIRING_SECRET, validateToken } from "@/auth";
 import {
   checkDatabaseHealth,
   deleteMessage,
@@ -76,12 +76,10 @@ export async function buildHealthReport() {
 v1.get(API_ROUTES.health, async (c) => c.json(await buildHealthReport()));
 
 v1.get(API_ROUTES.pairing, (c) => {
-  const { port } = getServerConfig();
-
   return c.json({
     pairing_url: generatePairingPayload(),
     secret: PAIRING_SECRET,
-    server: `${getLocalIp()}:${port}`,
+    server: getPairingHost(),
   });
 });
 
@@ -96,15 +94,14 @@ v1.get(API_ROUTES.pairVerify, (c) => {
     ok: true,
     service: "eidolon-conductor",
     version: API_VERSION,
-    server: `${getLocalIp()}:${getServerConfig().port}`,
+    server: getPairingHost(),
   });
 });
 
 v1.get(API_ROUTES.pairingQr, (c) => {
-  const { port } = getServerConfig();
   const payload = generatePairingPayload();
 
-  return c.html(renderPairingPage(payload, `${getLocalIp()}:${port}`, PAIRING_SECRET));
+  return c.html(renderPairingPage(payload, getPairingHost(), PAIRING_SECRET));
 });
 
 v1.get(API_ROUTES.pairingStatus, (c) => c.json({ devices: getConnectedDeviceCount() }));

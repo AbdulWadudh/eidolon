@@ -200,3 +200,47 @@ deployed origin yields `https`/`wss`, a LAN address still yields `http`/`ws`.
 
 This mattered less than it looks for pairing (the proxy answers on both) but
 would have broken the chat socket over any HTTPS-only origin.
+
+---
+
+## Third follow-up: the deployed conductor is not the one that matters
+
+`PUBLIC_URL` first went on the Coolify instance, which was the wrong target.
+That instance has no LLM, TTS or ComfyUI configured — it is a shell. The
+conductor that actually serves chat runs on the dev machine, with all three
+backends on `127.0.0.1`, and is reached from outside through a tunnel at
+`https://3000.k79.quest`. Both hosts return byte-identical pairing payloads,
+which is what gave it away.
+
+So `PUBLIC_URL="https://3000.k79.quest"` belongs in the local
+`apps/conductor/.env`, and that is where it now is.
+
+- `generatePairingPayload` percent-encodes both fields. The host is a full URL
+  now, so `server=https://...` sat unencoded in a query string; it round-trips
+  today and would have broken the moment a host carried a path or a port with
+  characters worth escaping.
+- `GET /api/v1/pairing`, the QR page and the boot banner advertised
+  `getLocalIp():port` directly, so the QR pointed at the tunnel while the
+  address printed next to it still read `192.168.1.39:3000`. All three read
+  `getPairingHost()` now.
+
+Verified against the running instance through the tunnel:
+
+```
+GET /api/v1/pairing
+  {"pairing_url":"eidolon://pair?server=https%3A%2F%2F3000.k79.quest&token=k79",
+   "server":"https://3000.k79.quest"}
+
+GET /api/v1/pair/verify   Authorization: Bearer k79
+  200 {"ok":true,...}
+```
+
+The Coolify `PUBLIC_URL` is left set to its own domain — harmless, and correct
+for that instance if it is ever given backends.
+
+## Also: no more unprompted APK builds
+
+RULES.md §19. `bun run build:apk` takes minutes and holds an exclusive lock on
+`apps/canvas/android` — a second run fails with `EBUSY` and blocks the
+workspace. Report that a change is ready for a device and stop; build only when
+asked.
