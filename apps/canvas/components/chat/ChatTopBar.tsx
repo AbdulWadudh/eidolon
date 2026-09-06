@@ -62,7 +62,7 @@ export function ChatTopBar({
           {avatarUrl ? (
             <Image
               source={{ uri: avatarUrl }}
-              contentFit="cover"
+              contentFit={avatarCrop ? "contain" : "cover"}
               cachePolicy="disk"
               accessibilityLabel={`${characterName}'s picture`}
               style={{

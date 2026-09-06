@@ -23,13 +23,11 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
   const circle = Math.round(width * PHOTO.avatarFrameFraction);
   const imageTop = (height - side) / 2;
 
-  // The dimming is one view with a circular hole rather than a second copy of
-  // the image clipped to a circle. Android does not reliably clip a transformed
-  // child to a rounded parent — the clipped copy renders in full, over
-  // everything — so the picture is drawn once and masked instead.
-  //
-  // A border thicker than the screen, on a box with a fully round radius,
-  // leaves a transparent disc in the middle and covers everything outside it.
+  // A border thicker than the screen on a fully round box leaves a transparent
+  // disc and covers everything outside it. The alternative — a second copy of
+  // the image clipped to a circle — does not work: Android ignores
+  // overflow:hidden on a rounded parent once the child has a transform, and the
+  // clipped copy renders in full over everything.
   const ring = Math.max(width, height);
   const holeBox = circle + ring * 2;
 
@@ -40,24 +38,36 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
   const savedX = useSharedValue(0);
   const savedY = useSharedValue(0);
 
-  const pinch = Gesture.Pinch()
-    .onUpdate((event) => {
-      scale.set(Math.min(PHOTO.maxZoom, Math.max(PHOTO.minZoom, savedScale.get() * event.scale)));
-    })
-    .onEnd(() => {
-      savedScale.set(scale.get());
-    });
+  const pinch = React.useMemo(
+    () =>
+      Gesture.Pinch()
+        .onUpdate((event) => {
+          scale.set(
+            Math.min(PHOTO.maxZoom, Math.max(PHOTO.minZoom, savedScale.get() * event.scale)),
+          );
+        })
+        .onEnd(() => {
+          savedScale.set(scale.get());
+        }),
+    [scale, savedScale],
+  );
 
-  const pan = Gesture.Pan()
-    .averageTouches(true)
-    .onUpdate((event) => {
-      offsetX.set(savedX.get() + event.translationX);
-      offsetY.set(savedY.get() + event.translationY);
-    })
-    .onEnd(() => {
-      savedX.set(offsetX.get());
-      savedY.set(offsetY.get());
-    });
+  const pan = React.useMemo(
+    () =>
+      Gesture.Pan()
+        .averageTouches(true)
+        .onUpdate((event) => {
+          offsetX.set(savedX.get() + event.translationX);
+          offsetY.set(savedY.get() + event.translationY);
+        })
+        .onEnd(() => {
+          savedX.set(offsetX.get());
+          savedY.set(offsetY.get());
+        }),
+    [offsetX, offsetY, savedX, savedY],
+  );
+
+  const gesture = React.useMemo(() => Gesture.Simultaneous(pinch, pan), [pinch, pan]);
 
   const imageStyle = useAnimatedStyle(() => ({
     transform: [
@@ -67,9 +77,9 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
     ],
   }));
 
-  // The crop is saved against the circle, not the screen. The avatar fills its
-  // container edge to edge while the ring only ever framed part of a picture
-  // drawn `side` wide, so zoom carries that ratio.
+  // The crop is saved against the circle rather than the screen, so it survives
+  // a different device: the avatar fills its container edge to edge while the
+  // ring only framed part of a picture laid out `side` wide.
   const confirm = React.useCallback(() => {
     onConfirm({
       zoom: (side / circle) * savedScale.get(),
@@ -80,8 +90,8 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
 
   return (
     <View className="flex-1">
-      <GestureDetector gesture={Gesture.Simultaneous(pinch, pan)}>
-        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
+      <GestureDetector gesture={gesture}>
+        <View style={{ flex: 1 }} collapsable={false}>
           <Animated.View
             style={[
               { position: "absolute", top: imageTop, left: 0, width: side, height: side },
@@ -90,7 +100,7 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
           >
             <Image
               source={{ uri }}
-              contentFit="cover"
+              contentFit="contain"
               cachePolicy="disk"
               accessibilityLabel="Drag and pinch to choose the part of the photo to use"
               style={{ width: "100%", height: "100%" }}
@@ -127,15 +137,21 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
         </View>
       </GestureDetector>
 
-      <View className="items-center pt-16" pointerEvents="none">
+      <View
+        pointerEvents="box-none"
+        style={{ position: "absolute", top: 0, left: 0, right: 0, alignItems: "center" }}
+        className="pt-16"
+      >
         <Text className="font-ui text-text-primary text-xs uppercase tracking-wider">
           Drag and pinch to frame it
         </Text>
       </View>
 
-      <View className="flex-1" pointerEvents="box-none" />
-
-      <View className="items-center gap-3 pb-12">
+      <View
+        pointerEvents="box-none"
+        style={{ position: "absolute", bottom: 0, left: 0, right: 0, alignItems: "center" }}
+        className="gap-3 pb-12"
+      >
         <View className="flex-row gap-3">
           <PressableScale
             accessibilityRole="button"
