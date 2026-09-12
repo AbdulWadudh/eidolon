@@ -37,11 +37,6 @@ export interface GalleryActionsProps {
   onAction: (action: GalleryAction) => void;
 }
 
-/**
- * The same set the chat's photo viewer offers, plus a way back to the message
- * the picture arrived in. Laid out as a scrolling row because six labelled
- * controls do not fit across a phone.
- */
 export function GalleryActions({ characterId, actions, onAction }: GalleryActionsProps) {
   const theme = useResolvedTheme(characterId);
 

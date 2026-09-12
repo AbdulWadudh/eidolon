@@ -6,9 +6,6 @@ import {
   characterMessageUrl,
 } from "../src/api";
 
-// Every one of these was hand written, and two of them dropped the "://" —
-// which fetch reports only as "unable to connect", behind an optimistic update
-// that made the app look like it had saved.
 describe("character urls", () => {
   const plain = "192.168.1.39:3000";
   const secure = "https://3000.example.com";

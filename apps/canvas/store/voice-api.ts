@@ -28,11 +28,6 @@ export async function fetchVoices(host: string): Promise<VoiceCatalogue | null> 
   }
 }
 
-/**
- * The sample arrives as base64 rather than a URL because it is generated on
- * demand and never stored. A data URI hands it straight to the player without a
- * round trip through the filesystem.
- */
 export async function fetchVoicePreview(host: string, voiceId: string): Promise<string | null> {
   if (!host) return null;
 

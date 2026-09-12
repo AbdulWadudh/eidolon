@@ -68,10 +68,6 @@ export function ChatFeed({
   const focusingRef = React.useRef(false);
   const [isAtLiveEdge, setIsAtLiveEdge] = React.useState(true);
 
-  // Opening a photo from her profile asks the feed to land on the message it
-  // came from. FlashList cannot scroll to an index it has not measured, and a
-  // screen that has just mounted has measured almost nothing, so this keeps
-  // asking for a short while rather than firing once and hoping.
   const focusMessageId = useChatStore((state) => state.focusMessageId);
   const clearFocus = useChatStore((state) => state.clearFocus);
   const focusIndex = React.useMemo(
@@ -82,13 +78,6 @@ export function ChatFeed({
   React.useEffect(() => {
     if (!focusMessageId || focusIndex < 0) return;
 
-    // Landing on an older message means leaving the live edge, or the next
-    // content change would pull the reader straight back to the bottom.
-    //
-    // The jump also has to be shielded from its own scroll events. It starts at
-    // the bottom, so the first frames of the animation are still inside the live
-    // edge; reading those re-armed the follow, and the reader was carried back
-    // down a moment after arriving.
     focusingRef.current = true;
     liveEdgeRef.current = false;
     setIsAtLiveEdge(false);
@@ -104,8 +93,6 @@ export function ChatFeed({
       clearInterval(timer);
       clearFocus();
 
-      // Released a beat after the last jump, so the tail of the animation is
-      // not read as the reader choosing to be at the bottom.
       release = setTimeout(() => {
         focusingRef.current = false;
       }, CHAT.focusSettleMs);
@@ -122,20 +109,11 @@ export function ChatFeed({
     listRef.current?.scrollToEnd({ animated });
   }, []);
 
-  // The one hook that fires whenever the content actually grows: a new message,
-  // and every token of a reply as it is written. Following here means the tail
-  // stays on screen while it streams instead of jumping once at the end.
-  // Gated on the live edge, so a reader who scrolled up is never yanked back —
-  // not when they send, and not while the reply is being written.
   const handleContentSizeChange = React.useCallback(() => {
     if (!liveEdgeRef.current) return;
     followTail(false);
   }, [followTail]);
 
-  // The reply is rendered by ListFooterComponent, not by a data row, and a
-  // growing footer does not reliably raise onContentSizeChange. Following the
-  // text itself is the only signal that is guaranteed to arrive on every token.
-  // Deferred a frame so the footer has been laid out at its new height.
   // biome-ignore lint/correctness/useExhaustiveDependencies: streamingText is the trigger
   React.useEffect(() => {
     if (!isStreaming || !liveEdgeRef.current) return;
@@ -145,10 +123,6 @@ export function ChatFeed({
     return () => cancelAnimationFrame(frame);
   }, [streamingText, isStreaming, followTail]);
 
-  // The keyboard shrinks the viewport without changing the content, so
-  // onContentSizeChange never fires and the last message ends up hidden behind
-  // the dock. Layout is the event that does fire, on every resize. Deferred a
-  // frame because the list has not re-measured at the moment layout reports.
   const handleLayout = React.useCallback(() => {
     if (!liveEdgeRef.current) return;
     requestAnimationFrame(() => {
@@ -156,10 +130,6 @@ export function ChatFeed({
     });
   }, [followTail]);
 
-  // Only a real gesture takes the reader off the live edge. A reply that grows
-  // faster than the list can scroll also reports a large distance from the
-  // bottom, and reading that as "scrolled up" is what silently ended the follow
-  // partway through a long reply.
   const handleScroll = React.useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
     const frame = {
@@ -178,12 +148,6 @@ export function ChatFeed({
     setIsAtLiveEdge(next);
   }, []);
 
-  // Leaving the live edge here rather than waiting for the next onScroll. A
-  // fast flick renders more rows, which raises onContentSizeChange before the
-  // throttled scroll event has arrived; the follow then read the edge as still
-  // live and yanked the reader back to the bottom mid-gesture. A drag that ends
-  // up near the bottom anyway restores it on the very next frame, because
-  // nextLiveEdge returns true whenever the frame is within the threshold.
   const handleScrollBeginDrag = React.useCallback(() => {
     draggingRef.current = true;
     if (!liveEdgeRef.current) return;
@@ -239,9 +203,6 @@ export function ChatFeed({
     isSynthesizingAudio,
   ]);
 
-  // A transcript that has not arrived is not an empty one, and the difference
-  // matters: the empty stage invites the reader to start a conversation they
-  // may already have had.
   const empty = React.useMemo(
     () =>
       isStreaming || isPainting ? null : (
@@ -271,9 +232,6 @@ export function ChatFeed({
           paddingHorizontal: 16,
           paddingTop: 8,
           paddingBottom: 16,
-          // Only while empty, so the placeholder can be given the list's height
-          // and sit at the bottom where the conversation will appear. Applied
-          // unconditionally it would change how a real transcript lays out.
           ...(messages.length === 0 ? { flexGrow: 1 } : {}),
         }}
         keyboardDismissMode="interactive"

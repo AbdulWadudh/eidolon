@@ -1,7 +1,5 @@
 import { describe, expect, it } from "bun:test";
 
-// What the cropper writes down, given a photo laid out `shown` big on screen,
-// a circle of `circle` at the screen centre, and a drag and pinch.
 function crop(
   shown: { width: number; height: number },
   circle: number,
@@ -19,8 +17,6 @@ function crop(
   };
 }
 
-// What the avatar draws from it: the photo's box, and where its top left corner
-// goes, inside a container of `avatar` px.
 function rebuild(rect: ReturnType<typeof crop>, avatar: number) {
   const width = avatar * rect.widthRatio;
   const height = avatar * rect.heightRatio;
@@ -61,7 +57,6 @@ describe("what the ring framed is what the avatar shows", () => {
     const rect = crop(PHOTO, CIRCLE, 1, dragX, 0);
     const drawn = rebuild(rect, 38);
 
-    // The point of the photo under the ring, expressed 0..1 across the photo.
     const framed = rect.cx;
     expect(drawn.left + framed * drawn.width).toBeCloseTo(19, 5);
   });

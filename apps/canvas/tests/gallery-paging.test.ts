@@ -20,8 +20,6 @@ describe("appending a page of pictures", () => {
   });
 
   it("drops one that arrived twice", () => {
-    // A photo landing between two requests shifts the offset, so the next page
-    // can start with something already on screen.
     const merged = mergePage([image("a"), image("b")], [image("b"), image("c")]);
     expect(merged.map((entry) => entry.id)).toEqual(["a", "b", "c"]);
   });

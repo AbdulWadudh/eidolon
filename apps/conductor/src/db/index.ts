@@ -10,7 +10,6 @@ console.log(`[Database] SQLite: ${SQLITE_DB_PATH}`);
 
 export const db = new Database(SQLITE_DB_PATH, { create: true });
 
-// Enable Write-Ahead Logging for high concurrency and performance
 db.exec("PRAGMA journal_mode = WAL;");
 db.exec("PRAGMA foreign_keys = ON;");
 
@@ -18,9 +17,6 @@ rebuildChronicles(db);
 
 applySchema(db);
 
-/**
- * Health check helper for the SQLite database.
- */
 export function checkDatabaseHealth(): boolean {
   try {
     const result = db.query<{ result: number }, []>("SELECT 1 as result").get();

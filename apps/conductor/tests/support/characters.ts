@@ -10,7 +10,6 @@ export const AUTHED = {
 
 const MADE = new Set<string>();
 
-/** Registers a character for teardown, so a failing test cannot leak rows. */
 export function remember<T extends { id: string }>(character: T): T {
   MADE.add(character.id);
   return character;

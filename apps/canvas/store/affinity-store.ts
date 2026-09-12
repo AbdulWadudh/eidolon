@@ -47,9 +47,6 @@ const INITIAL = {
   toast: null as AffinityToast | null,
 };
 
-// A wall-clock id collides when two updates land in the same millisecond, and a
-// colliding key means React never remounts the pill: no exit, no re-entrance,
-// and no fresh announcement for a screen reader.
 let toastSequence = 0;
 
 export function nextToastId(): string {
@@ -85,8 +82,6 @@ export const useAffinityStore = create<AffinityState>((set, get) => ({
       affinityScore: score,
       affinityTier: tier,
       currentMood: mood,
-      // A second update replaces the first rather than queueing behind it, so
-      // the pill always shows where the relationship actually stands now.
       toast: shouldAnnounce ? { id: nextToastId(), delta, score, tier } : null,
     });
 

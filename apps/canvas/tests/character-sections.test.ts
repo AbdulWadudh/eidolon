@@ -11,7 +11,6 @@ const grouped = Object.values(SECTIONS).flatMap((spec) => spec.fields);
 
 describe("grouping the card into sections", () => {
   it("reaches every editable field", () => {
-    // `voice` has its own picker rather than a text field.
     const editable = (Object.keys(EMPTY_DRAFT) as (keyof typeof EMPTY_DRAFT)[]).filter(
       (key): key is FieldKey => key !== "voice",
     );

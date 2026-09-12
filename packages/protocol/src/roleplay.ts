@@ -1,12 +1,6 @@
 export const INFLUENCE_OPEN = "<";
 export const INFLUENCE_CLOSE = ">";
 
-/**
- * Angle brackets around a short direction, with no padding space inside.
- * Nobody types "< be shy >", so requiring the run to begin and end on a
- * non-space keeps an ordinary comparison like "5 < 10 and 20 > 15" from
- * swallowing half a sentence. It must carry a letter too.
- */
 const INFLUENCE_BLOCK = /<(\S|\S[^<>\r\n]{0,158}\S)>/g;
 const HAS_LETTER = /[a-z]/i;
 

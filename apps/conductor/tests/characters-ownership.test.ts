@@ -68,7 +68,6 @@ describe("ownership", () => {
     expect(body.character.rules).toBe("Changed");
     expect(body.character.forkedFrom).toBe(created.id);
 
-    // The original is untouched, and the fork carries her lore.
     expect(getCharacter(created.id)?.rules).toBe("Original");
     expect(getLoreEntries(body.character.id)).toHaveLength(1);
   });
@@ -86,9 +85,7 @@ describe("ownership", () => {
 
     expect((await read(mine.id, AUTHED)).isMine).toBe(true);
     expect((await read(theirs.id, AUTHED)).isMine).toBe(false);
-    // Nobody has claimed her, so the first person to edit adopts her.
     expect((await read(unclaimed.id, AUTHED)).isMine).toBe(true);
-    // Without a token there is no owner to compare against.
     expect((await read(mine.id)).isMine).toBe(false);
   });
 
@@ -109,8 +106,6 @@ describe("ownership", () => {
     remember(fork.character);
 
     expect(fork.forked).toBe(true);
-    // Anyone may edit what they can see, but the copy starts private whatever
-    // the original's visibility was.
     expect(fork.character.isPublic).toBe(false);
     expect(getCharacter(theirs.id)?.isPublic).toBe(true);
 

@@ -1,12 +1,5 @@
 import { mock } from "bun:test";
 
-/**
- * Native module stubs shared by the theme suites.
- *
- * `mock.module` has to run before the store is imported, so every suite imports
- * this module first and then `await import`s the store.
- */
-// Mock react-native and react-native-mmkv
 mock.module("react-native", () => ({
   Platform: { OS: "ios" },
 }));

@@ -16,11 +16,6 @@ export interface PortraitStudioProps {
   onPortrait: (url: string) => void;
 }
 
-/**
- * The same render that runs when a character is first created, offered again on
- * demand. The request only queues the job — it is minutes of GPU time — so the
- * new face is picked up by polling her look rather than awaited.
- */
 export function PortraitStudio({
   characterId,
   serverHost,

@@ -44,8 +44,6 @@ export function AffinitySection({
     [trackWidth, onScoreChange],
   );
 
-  // A drag is not the only way in: WCAG 2.2 requires a single-pointer
-  // alternative, and the stepper doubles as the screen reader path.
   const step = React.useCallback(
     (direction: 1 | -1) => {
       const next = clamp(score + direction * AFFINITY_HUD.sliderStepPercent);

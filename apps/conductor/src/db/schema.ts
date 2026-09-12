@@ -1,11 +1,5 @@
 import type { Database } from "bun:sqlite";
 
-/**
- * A portrait used to live in `characters.avatar_url` alone, so generating a new
- * one destroyed the old. Every render is a row now, and the column just points
- * at whichever is currently in use. The ones already on disk are adopted here so
- * a reader does not lose the face they have been talking to.
- */
 function adoptExistingPortraits(db: Database): void {
   db.exec(`
     INSERT OR IGNORE INTO character_portraits (id, character_id, url, prompt, created_at)

@@ -24,12 +24,6 @@ export interface ChatFeedEmptyProps {
   onRetryLoad?: (() => void) | undefined;
 }
 
-/**
- * Three different nothings, and telling them apart is the whole point: still
- * arriving, could not arrive, and genuinely nothing yet. Only the last is an
- * invitation to start talking — showing it for the other two told a reader
- * their history was gone when it was merely late.
- */
 export function ChatFeedEmpty({
   characterId,
   characterName,

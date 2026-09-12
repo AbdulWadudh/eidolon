@@ -70,9 +70,6 @@ export function CharacterSettingsSheet({
   onForked,
 }: CharacterSettingsSheetProps) {
   const reduced = useReducedMotion();
-  // A Modal mounts in its own native view hierarchy, so the theme variables set
-  // at the app root never reach it. Without this the whole screen falls back to
-  // defaults and renders white on white.
   const cssVars = useThemeCssVars(characterId);
   const theme = useResolvedTheme(characterId);
   const serverHost = useConnectionStore((state) => state.serverHost);
@@ -126,8 +123,6 @@ export function CharacterSettingsSheet({
 
     tap("success");
 
-    // A fork is a different character, so the chat has to follow it rather than
-    // keep showing the one that was left untouched.
     if (result.forked) {
       onForked(result.character.id);
       return;
@@ -201,10 +196,6 @@ export function CharacterSettingsSheet({
 
             <KeyboardAvoidingView behavior="padding" automaticOffset style={{ flex: 1 }}>
               <ScrollView
-                // Horizontal padding belongs on the content, not the frame: on
-                // a ScrollView the frame's inset does not travel with the
-                // scrolled content, which is what left the fields against the
-                // edge of the screen.
                 contentContainerStyle={{
                   paddingHorizontal: SETTINGS_PADDING_PX,
                   paddingTop: 16,

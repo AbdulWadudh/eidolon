@@ -1,8 +1,3 @@
-/**
- * A Kokoro voice id encodes where the voice is from and who it sounds like:
- * the first letter is the language, the second the gender, then the name.
- * "af_heart" is American, female, Heart.
- */
 export const VOICE_LANGUAGES: Record<string, string> = {
   a: "American English",
   b: "British English",
@@ -25,8 +20,6 @@ export const VOICE = {
   previewLine: "Hey. It's me. This is what I sound like.",
   previewMaxChars: 120,
   catalogueTtlMs: 30 * 60 * 1000,
-  // The grades Kokoro publishes. Anything at or above this is offered first,
-  // because most of the catalogue is markedly worse than the handful at the top.
   preferredGrades: ["A", "A-", "B+", "B", "B-"],
   unknownLanguage: "Other",
   unknownGender: "Voice",

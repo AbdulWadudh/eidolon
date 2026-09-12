@@ -20,11 +20,6 @@ export interface GalleryGridProps {
   onOpen: (index: number) => void;
 }
 
-/**
- * Laid out by hand rather than with FlatList numColumns: the page this sits on
- * is already a scroll view, and nesting a second vertical scroller there breaks
- * momentum on Android.
- */
 export function GalleryGrid({
   images,
   characterId,

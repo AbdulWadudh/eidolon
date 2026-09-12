@@ -21,28 +21,17 @@ function normalizeServerMessage(raw: unknown): unknown {
   return raw;
 }
 
-/**
- * Validates and parses an unknown incoming client message against the ClientMessageSchema.
- * Throws a ZodError if validation fails.
- */
 export function parseClientMessage(raw: unknown): ClientMessage {
   const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
   return ClientMessageSchema.parse(parsed);
 }
 
-/**
- * Validates and parses an unknown incoming server message against the ServerMessageSchema.
- * Throws a ZodError if validation fails.
- */
 export function parseServerMessage(raw: unknown): ServerMessage {
   const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
   const normalized = normalizeServerMessage(parsed);
   return ServerMessageSchema.parse(normalized);
 }
 
-/**
- * Safely attempts to validate and parse a client message.
- */
 export function safeParseClientMessage(raw: unknown) {
   try {
     const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
@@ -55,9 +44,6 @@ export function safeParseClientMessage(raw: unknown) {
   }
 }
 
-/**
- * Safely attempts to validate and parse a server message.
- */
 export function safeParseServerMessage(raw: unknown) {
   try {
     const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;

@@ -88,8 +88,6 @@ characters.post("/presets/:key", async (c) => {
     });
   }
 
-  // The portrait is minutes of GPU time, so it is queued rather than awaited.
-  // The character is usable the moment this returns; her face arrives later.
   const portraitJob = await enqueueGpuJob(
     QUEUE_JOBS.generatePortrait,
     { characterId: created.id, prompt: preset.portraitPrompt },
@@ -122,8 +120,6 @@ characters.get("/:id", async (c) => {
   const character = getCharacter(id);
   if (!character) return c.json({ error: "No such character." }, 404);
 
-  // Whether editing this will change it or fork it is the server's answer, not
-  // something the client can work out from an owner id it never sees.
   const owner = await requireOwner(c);
   return c.json({ character, isMine: owner ? ownsCharacter(id, owner.id) : false });
 });
@@ -143,8 +139,6 @@ characters.patch("/:id", async (c) => {
   const owner = await requireOwner(c);
   if (!owner) return c.json({ error: "Sign in to change a character." }, 401);
 
-  // Editing something you wrote changes it. Editing someone else's, or a preset
-  // you were given, makes it yours instead and leaves theirs alone.
   if (!ownsCharacter(id, owner.id)) {
     const fork = forkCharacter(existing, owner.id, draft);
     for (const entry of getLoreEntries(id)) {
@@ -242,9 +236,6 @@ characters.post("/:id/portrait", async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as { prompt?: unknown };
   const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
 
-  // The render is minutes of GPU time, so the request only queues it. The
-  // client learns the portrait landed through the look endpoint, the same way
-  // it learns about every other picture.
   const jobId = await enqueueGpuJob(
     QUEUE_JOBS.generatePortrait,
     { characterId, prompt },

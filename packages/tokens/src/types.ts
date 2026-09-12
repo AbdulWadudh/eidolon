@@ -1,34 +1,27 @@
 export interface ThemeTokens {
-  // Theme Mode
   mode: "dark" | "light";
 
-  // Surface Colors
   canvas: string;
   card: string;
   cardBorder: string;
   inputSurface: string;
   audioPillBg: string;
 
-  // Text Colors
   textPrimary: string;
   textMuted: string;
 
-  // Brand / Accent
   primary: string;
   primaryForeground: string;
   secondary: string;
   secondaryForeground: string;
 
-  // Semantic Feedback Colors
   success: string;
   warning: string;
   danger: string;
 
-  // Geometry
   radius: number;
   borderWidth: number;
 
-  // Typography
   fontMain: string;
   fontUI: string;
   fontScale: number;

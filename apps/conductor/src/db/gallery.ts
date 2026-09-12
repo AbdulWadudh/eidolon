@@ -8,7 +8,6 @@ export interface GalleryImage {
   caption: string | null;
   kind: GalleryKind;
   createdAt: number;
-  /** True for the portrait currently in use as her profile picture. */
   isAvatar: boolean;
 }
 
@@ -21,16 +20,6 @@ interface Row {
   seq: number;
 }
 
-/**
- * Everything ever rendered for a character: the photos she sent in chat, every
- * portrait she has ever had, and her stage backdrops.
- *
- * Portraits come from `character_portraits` rather than `characters.avatar_url`,
- * so generating a new one adds to her history instead of replacing it and an
- * older face can be picked again. Backdrops carry no timestamp of their own —
- * `stages` never had one — so they borrow the character's, which puts them at
- * the beginning of her history rather than at an arbitrary point in it.
- */
 const SOURCES = `
   SELECT m.id AS id, m.image_url AS url, m.image_caption AS caption,
          'photo' AS kind, m.created_at AS created_at, m.rowid AS seq

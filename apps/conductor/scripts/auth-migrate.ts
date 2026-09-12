@@ -1,12 +1,3 @@
-/**
- * Creates Better Auth's tables.
- *
- * The official CLI cannot do this here: it loads the config through jiti, which
- * runs on Node and cannot resolve `bun:sqlite`, so it dies importing the
- * database. The migration planner is a plain function, so it is called directly
- * from Bun instead, which keeps the schema exactly what this version expects
- * rather than a hand-written copy that drifts.
- */
 import { getMigrations } from "better-auth/db/migration";
 import { authOptions } from "@/auth/options";
 import { db } from "@/db";

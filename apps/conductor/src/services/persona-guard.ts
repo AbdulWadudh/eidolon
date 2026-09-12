@@ -56,12 +56,6 @@ function opening(text: string, words: number): string {
   return normalizeForEcho(text).split(" ").slice(0, words).join(" ");
 }
 
-/**
- * A reminder is sent to the model as a system turn, and a small model sometimes
- * answers by repeating it rather than obeying it. The reader must never see one:
- * "That was only a stage direction. Say something out loud this time." is not
- * something a character says.
- */
 export function leaksInstruction(reply: string): boolean {
   const spoken = normalizeForEcho(reply);
   if (spoken.length === 0) return false;
@@ -76,9 +70,6 @@ export function leaksInstruction(reply: string): boolean {
   });
 }
 
-/**
- * Longest suffix of `text` that could still grow into a tell.
- */
 function unsafeSuffixLength(text: string): number {
   const window = Math.min(text.length, PERSONA_GUARD.lookaheadChars);
   for (let length = window; length > 0; length -= 1) {

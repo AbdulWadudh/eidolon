@@ -97,8 +97,6 @@ export async function handleChatTurn(
 
   sendServerMessage(ws, { type: "status_update", payload: { status: "speaking" } });
 
-  // Reply options cost three model calls, and most turns are answered by typing.
-  // They are generated when the reader asks for them, not on every turn.
   const [audio, suggestions] = await Promise.all([
     voice ? Promise.resolve(null) : synthesizeSpeech(reply, voiceId, signal),
     SUGGESTIONS.autoGenerate

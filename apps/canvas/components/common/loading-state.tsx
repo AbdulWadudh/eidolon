@@ -7,18 +7,9 @@ import { useResolvedTheme } from "@/store/theme-store";
 export interface LoadingStateProps {
   label: string;
   characterId?: string;
-  /** Fills its parent and centres, for a whole screen or an empty list. */
   fill?: boolean;
 }
 
-/**
- * One way of saying "this is on its way".
- *
- * A placeholder shaped like the content it becomes only helps when the shape is
- * right; message bubbles vary too much in size and side for a guess at them to
- * be anything but wrong twice over. A spinner claims nothing about what is
- * coming.
- */
 export function LoadingState({ label, characterId, fill = true }: LoadingStateProps) {
   const theme = useResolvedTheme(characterId);
   const reduced = useReducedMotion();
@@ -45,11 +36,6 @@ export interface LoadFailedProps {
   onRetry: () => void;
 }
 
-/**
- * The other half of a loading state, and the half that was missing: a load that
- * failed used to end on the same empty view as a chat that had never been
- * started, which told the reader their history was gone.
- */
 export function LoadFailed({ message, retryLabel, characterId, onRetry }: LoadFailedProps) {
   const theme = useResolvedTheme(characterId);
   const reduced = useReducedMotion();

@@ -15,11 +15,6 @@ interface SectionSpec {
   fields: FieldKey[];
 }
 
-/**
- * Nine fields in one scroll is what made the sheet read as a form dump. They
- * are grouped by what you would come here to change: her name and opening line,
- * the writing that shapes her, how she sounds, and who else can meet her.
- */
 export const SECTIONS: Record<SectionKey, SectionSpec> = {
   identity: { fields: ["name", "tagline", "greeting"] },
   mind: { fields: ["personality", "scenario", "rules", "exampleDialogue", "systemPrompt"] },

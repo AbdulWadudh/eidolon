@@ -5,7 +5,6 @@ import { appStorage } from "@/store/storage";
 
 const CUSTOM_FONTS_KEY = "eidolon.fonts.custom";
 
-/** registered face name -> remote url, grouped by the family base name. */
 type InstalledFonts = Record<string, Record<string, string>>;
 
 interface FontDefinition {
@@ -59,9 +58,7 @@ function writeInstalledFonts(fonts: InstalledFonts): void {
 }
 
 export interface InstalledFontFamily {
-  /** Display name, e.g. "Poppins". */
   family: string;
-  /** Value stored in the theme, e.g. "Poppins-Regular". */
   value: string;
 }
 
@@ -72,13 +69,6 @@ export function getInstalledFontFamilies(): InstalledFontFamily[] {
   }));
 }
 
-/**
- * The theme stores one family name per slot and derives -Bold/-Italic/-Medium
- * from it (see fontVariant in the theme store). A Google family may not publish
- * every one of those weights, so missing faces are aliased to the regular file.
- * Without that, picking a display face would silently drop every `font-*-bold`
- * element back to the system font.
- */
 function faceUrlsFor(files: GoogleFontFamily["files"], base: string): Record<string, string> {
   const regular = files.regular ?? files["400"] ?? Object.values(files)[0];
   if (!regular) return {};
@@ -94,14 +84,6 @@ export function familyBaseName(family: string): string {
   return family.replace(/[^a-zA-Z0-9]/g, "");
 }
 
-/**
- * Downloads every face this theme can reference, registers them, and records the
- * family so it is re-registered on the next launch. Returns the value to store
- * in the theme (e.g. "PlayfairDisplay-Regular").
- *
- * Throws with the underlying reason on failure so the caller can show something
- * more useful than "could not download".
- */
 export async function installGoogleFont(entry: GoogleFontFamily): Promise<string | null> {
   const base = familyBaseName(entry.family);
   if (!base) return null;
@@ -129,13 +111,6 @@ async function restoreInstalledFonts(): Promise<void> {
   }
 }
 
-/**
- * The theme derives -Bold/-Italic/-Medium face names from the base family, but
- * the bundled families do not publish every one of them. Registering the gaps as
- * aliases of the regular file keeps every derivable name resolvable; otherwise
- * choosing Public Sans for dialogue, or Nunito Sans for the interface, silently
- * dropped those runs back to the system font.
- */
 const BUNDLED_FONT_ALIASES: Record<string, string> = {
   "NunitoSans-Medium": "NunitoSans-Regular",
   "PublicSans-Italic": "PublicSans-Regular",
@@ -145,10 +120,6 @@ function requiredFontByName(name: string): FontDefinition | undefined {
   return REQUIRED_FONTS.find((font) => font.name === name);
 }
 
-/**
- * Initializes and registers Nunito Sans and Public Sans fonts via OTA CDN caching,
- * then re-registers any fonts installed from the Google Fonts browser.
- */
 export async function initializeFonts(): Promise<void> {
   try {
     const fontsToLoad: Record<string, number> = {};
@@ -173,11 +144,6 @@ export async function initializeFonts(): Promise<void> {
   await restoreInstalledFonts();
 }
 
-/**
- * Dynamically downloads, caches, and registers an arbitrary font OTA at runtime.
- * Once loaded, switch to it via the theme store (updateGlobalToken('fontMain', fontName));
- * the root VariableContextProvider publishes it as --font-main.
- */
 export async function loadDynamicFont(name: string, url: string): Promise<boolean> {
   try {
     await loadDynamicFonts({ [name]: url });
@@ -188,30 +154,17 @@ export async function loadDynamicFont(name: string, url: string): Promise<boolea
   }
 }
 
-/**
- * Google serves plenty of families as .otf (every CJK Noto face, for one), and
- * expo-font will not load a file whose extension does not match its format, so
- * the extension is taken from the URL rather than assumed.
- */
 function fileExtensionFor(url: string): string {
   const match = /\.(ttf|otf|woff2?)(?:[?#]|$)/i.exec(url);
   return match ? match[1].toLowerCase() : "ttf";
 }
 
-/**
- * Registers several faces at once, downloading each distinct URL only once.
- * Aliased faces (a family with no bold, say) all point at the same file, and a
- * CJK family can be 10MB+ per face, so downloading per name wasted both time
- * and disk.
- */
 export async function loadDynamicFonts(faces: Record<string, string>): Promise<void> {
   const pending = Object.entries(faces).filter(([name]) => !Font.isLoaded(name));
   if (pending.length === 0) return;
 
   const baseDir = FileSystem.documentDirectory;
   if (!baseDir) {
-    // Web has no document directory, but expo-font registers a remote URL
-    // directly there, so caching to disk is neither possible nor needed.
     await Font.loadAsync(Object.fromEntries(pending));
     return;
   }

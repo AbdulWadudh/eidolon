@@ -15,11 +15,6 @@ export interface FieldAuthor {
 
 type History = Partial<Record<AuthorField, string[]>>;
 
-/**
- * Each field keeps its own stack of what was there before, so reverting walks
- * back one version at a time to whatever the author originally typed — the same
- * contract the message rework button already has.
- */
 export function useFieldAuthor(
   serverHost: string,
   draft: Draft,
@@ -29,8 +24,6 @@ export function useFieldAuthor(
   const [error, setError] = React.useState<string | null>(null);
   const history = React.useRef<History>({});
 
-  // Read inside the callback rather than closed over, so a suggestion always
-  // sees what is on screen now rather than what was there when it was bound.
   const latest = React.useRef(draft);
   latest.current = draft;
 

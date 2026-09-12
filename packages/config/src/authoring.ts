@@ -12,7 +12,6 @@ export type AuthorMode = "suggest" | "enhance";
 
 export interface AuthorFieldSpec {
   label: string;
-  /** Told to the model. What this field is for and what shape it takes. */
   guidance: string;
   maxTokens: number;
   maxChars: number;
@@ -87,21 +86,10 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
 };
 
 export const AUTHORING = {
-  /** How much of the rest of the card the model is shown as context. */
   maxContextChars: 900,
   maxDraftChars: 1200,
-  // Writing something new wants some heat; rewriting what an author already
-  // meant does not. At 0.85 an enhance of "we live in the same building"
-  // invented a shared school year that was never in the draft.
-  // Three attempts, climbing. A rejected answer is usually a copy of a worked
-  // example, and retrying at nearly the same temperature reproduces the copy.
   suggestTemperatures: [0.8, 1.0, 1.15],
   enhanceTemperatures: [0.35, 0.6, 0.9],
-  /**
-   * How far a rewrite may grow past the draft before it is treated as invention
-   * rather than rewriting. The floor lets a very short draft become a proper
-   * sentence without tripping the check.
-   */
   enhanceGrowthRatio: 3,
   enhanceGrowthFloorChars: 220,
   contextLabel: "The character so far:",

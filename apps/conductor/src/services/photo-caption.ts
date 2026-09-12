@@ -7,10 +7,6 @@ export interface CaptionRequest {
   personality: string;
 }
 
-// A small roleplay model asked for a photo caption will often answer as the
-// person receiving it, narrate the frame, or hand back the planner's own
-// bracketed notes. None of that is worth showing, and a photo with no caption
-// is perfectly ordinary — so anything that fails these checks is dropped.
 const NOT_A_CAPTION = [
   /[[\]{}*]/,
   /^(the |this |that |here('s| is) )?(a |an |my |our )?(photo|picture|image|pic|shot|snap)\b/i,
@@ -27,10 +23,6 @@ export function usableCaption(line: string, name: string): boolean {
   return !NOT_A_CAPTION.some((pattern) => pattern.test(line));
 }
 
-// The reply is a paragraph that the token budget cuts off partway through, so
-// judging it line by line meant judging a mangled tail — a caption was thrown
-// away for words the model never finished writing. Whole sentences are taken
-// instead, up to the word budget, and a truncated last one is dropped.
 export function firstCaption(raw: string, maxWords: number): string {
   const text = raw
     .replace(/^["'`]+|["'`]+$/g, "")
@@ -64,11 +56,6 @@ function shorten(line: string, limit: number): string {
   return `${(lastSpace > limit / 2 ? cut.slice(0, lastSpace) : cut).replace(/[,;:\s]+$/, "")}…`;
 }
 
-// A small roleplay model gets this right well under half the time — it
-// monologues, answers as the person receiving the photo, or narrates the frame.
-// Asking again costs a few dozen tokens and turns a coin flip into a good bet.
-// A photo with no caption is still an ordinary thing to send if every attempt
-// comes back unusable.
 export async function captionLine(
   request: CaptionRequest,
   subject: string,

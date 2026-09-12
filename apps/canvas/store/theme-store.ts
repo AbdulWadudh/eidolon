@@ -26,11 +26,6 @@ const STORAGE_KEYS = {
   CHARACTER_THEMES: "eidolon.theme.characters",
 } as const;
 
-/**
- * MMKV writes are synchronous JSI calls, so doing one inside every `set()` put a
- * native write plus a full JSON.stringify on the JS thread for every keystroke
- * and every slider frame. Writes are coalesced here instead.
- */
 const pendingWrites = new Map<string, string>();
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -64,14 +59,8 @@ function schedulePersist(key: string, value: unknown): void {
   }, UI_MS.themePersistDebounce);
 }
 
-/**
- * Referential-stability caches: the resolved theme and its CSS-variable map are
- * read during render by every themed component, so a fresh object per call
- * defeats memoization and makes react-native-css rebuild its rule set.
- */
 const resolvedCache = new WeakMap<ThemePalettes, WeakMap<object, ThemeTokens>>();
 const cssVarsCache = new WeakMap<ThemeTokens, Record<string, string>>();
-/** Stand-in key for "no overrides", so that case is cached too. */
 const NO_OVERRIDES = Object.freeze({});
 
 function resolveTheme(
@@ -165,10 +154,6 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
 
   getDynamicCssVars: (characterId?: string) => cssVarsFor(get().getResolvedTheme(characterId)),
 
-  /**
-   * Switching mode only changes which palette is read. It copies nothing, so a
-   * colour chosen in one mode can never be overwritten by the other.
-   */
   setColorMode: (mode) => {
     set((state) => {
       if (state.palettes.mode === mode) return state;
@@ -182,7 +167,6 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     get().setColorMode(get().palettes.mode === "light" ? "dark" : "light");
   },
 
-  /** Colours land in the active mode's palette; shared tokens apply to both. */
   updateGlobalToken: (key, value) => {
     set((state) => {
       const slot: "shared" | ThemeMode = isSharedToken(key) ? "shared" : state.palettes.mode;
@@ -209,11 +193,6 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     });
   },
 
-  /**
-   * Global scope restores the factory value for the active mode; character scope
-   * drops the override so the token inherits from global again. Either way only
-   * the active mode is touched.
-   */
   resetToken: (key, characterId) => {
     if (characterId) {
       set((state) => {
@@ -254,7 +233,6 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     });
   },
 
-  /** Folds a character's overrides into global, for both modes at once. */
   promoteCharacterToGlobal: (characterId) => {
     set((state) => {
       const overrides = state.characterThemes[characterId] ?? {};
@@ -273,7 +251,6 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     });
   },
 
-  /** Resets the active mode's colours and the shared tokens; the other mode keeps its own. */
   resetGlobalTheme: () => {
     set((state) => {
       const { mode } = state.palettes;
@@ -297,11 +274,6 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
 const selectPalettes = (state: ThemeStore) => state.palettes;
 const selectActiveCharacterId = (state: ThemeStore) => state.activeCharacterId;
 
-/**
- * Subscribes only to the slices that can change the answer. Consumers reading
- * the whole store re-render on every unrelated field, which is what made a
- * single Theme Studio keystroke re-render the entire navigation tree.
- */
 export function useResolvedTheme(characterId?: string): ThemeTokens {
   const palettes = useThemeStore(selectPalettes);
   const activeCharacterId = useThemeStore(selectActiveCharacterId);

@@ -66,7 +66,6 @@ describe("who else is in the frame", () => {
   });
 
   it("says nobody when the planner qualifies it", () => {
-    // A reader saw "with None, just me at the kitchen of my home" before this.
     expect(whoElse("None, just me")).toBe("");
     expect(whoElse("Nobody, she is alone")).toBe("");
     expect(whoElse("no one, it is only her")).toBe("");

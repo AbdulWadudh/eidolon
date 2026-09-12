@@ -1,10 +1,6 @@
 import { AFFINITY } from "@eidolon/config";
 import { clamp } from "es-toolkit";
 
-/**
- * The score-to-tier maths, kept free of prompts, the LLM and the database so
- * anything can ask "what tier is this score" without dragging the world in.
- */
 export function clampScore(score: number): number {
   if (!Number.isFinite(score)) return AFFINITY.start;
   return clamp(Math.round(score), AFFINITY.min, AFFINITY.max);

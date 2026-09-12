@@ -13,11 +13,6 @@ export interface SuggestionActions {
   toggle: () => void;
 }
 
-/**
- * The reply tray's behaviour, kept off the chat screen so that file stays about
- * the conversation. Visibility is derived from the screen's own scoped view, so
- * a chat sitting behind another one never shows its suggestions.
- */
 export function useSuggestions(
   characterId: string,
   view: ChatView,

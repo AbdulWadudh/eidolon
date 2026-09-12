@@ -19,19 +19,9 @@ export interface FontFamilyPickerProps {
 function displayNameFor(value: string): string {
   const preset = FONT_FAMILY_PRESETS.find((entry) => entry.family === value);
   if (preset) return preset.name;
-  // Installed families are stored as "<Family>-Regular".
   return value.replace(/-Regular$/, "");
 }
 
-/**
- * One picker per font token. The theme carries both `fontMain` (dialogue) and
- * `fontUI` (interface chrome), and the bold/italic/medium variants are derived
- * from them, so exposing only one left half the type scale unreachable.
- *
- * Collapsed to a single row showing the current face rendered in itself, rather
- * than a stack of cards per family — with two slots on screen the list form cost
- * most of the section's height and still could not preview anything.
- */
 export function FontFamilyPicker({
   label,
   value,

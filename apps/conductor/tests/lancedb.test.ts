@@ -16,7 +16,6 @@ describe("LanceDB Vector Memory Engine", () => {
     expect(v1.length).toBe(memoryDimensions());
     expect(v1).toEqual(v2);
 
-    // Verify L2 norm is ~1.0
     let sumSq = 0;
     for (const val of v1) {
       sumSq += val * val;
@@ -42,7 +41,6 @@ describe("LanceDB Vector Memory Engine", () => {
 
     await insertMemory(characterId, memoryText, vector, metadata);
 
-    // Search with identical vector
     const results = await searchMemories(characterId, vector, 3);
     expect(results.length).toBeGreaterThan(0);
 

@@ -244,10 +244,6 @@ describe("chat-store actions", () => {
   });
 
   it("rerollSuggestions marks loading and emits regenerate_suggestions", () => {
-    // The screen claims the character on mount and messages arrive afterwards,
-    // which is the order that matters now: claiming a different character
-    // clears the conversation, because the store's identity and its contents
-    // have to change together.
     useChatStore.getState().setActiveCharacter("emma");
     feed(delta("Hello."), IDLE);
     const lastId = useChatStore.getState().messages[0].id;

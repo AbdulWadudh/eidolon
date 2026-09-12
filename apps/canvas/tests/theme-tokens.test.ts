@@ -15,7 +15,6 @@ describe("Theme tokens -> CSS variables", () => {
     it("maps default tokens to standard CSS variables and Tailwind v4 aliases", () => {
       const cssVars = tokensToCssVars(DEFAULT_THEME_TOKENS);
 
-      // Surfaces
       expect(cssVars["--canvas"]).toBe(DEFAULT_THEME_TOKENS.canvas);
       expect(cssVars["--color-canvas"]).toBe(DEFAULT_THEME_TOKENS.canvas);
       expect(cssVars["--card"]).toBe(DEFAULT_THEME_TOKENS.card);
@@ -27,7 +26,6 @@ describe("Theme tokens -> CSS variables", () => {
       expect(cssVars["--input"]).toBe(DEFAULT_THEME_TOKENS.inputSurface);
       expect(cssVars["--color-input"]).toBe(DEFAULT_THEME_TOKENS.inputSurface);
 
-      // Text & Brand
       expect(cssVars["--text-primary"]).toBe(DEFAULT_THEME_TOKENS.textPrimary);
       expect(cssVars["--primary"]).toBe(DEFAULT_THEME_TOKENS.primary);
       expect(cssVars["--color-primary"]).toBe(DEFAULT_THEME_TOKENS.primary);
@@ -38,12 +36,10 @@ describe("Theme tokens -> CSS variables", () => {
         DEFAULT_THEME_TOKENS.secondaryForeground,
       );
 
-      // Semantics
       expect(cssVars["--success"]).toBe(DEFAULT_THEME_TOKENS.success);
       expect(cssVars["--warning"]).toBe(DEFAULT_THEME_TOKENS.warning);
       expect(cssVars["--danger"]).toBe(DEFAULT_THEME_TOKENS.danger);
 
-      // Geometry
       expect(cssVars["--radius"]).toBe(`${DEFAULT_THEME_TOKENS.radius}px`);
       expect(cssVars["--radius-card"]).toBe(`${DEFAULT_THEME_TOKENS.radius}px`);
       expect(cssVars["--radius-button"]).toBe(`${DEFAULT_THEME_TOKENS.radius}px`);
@@ -88,7 +84,6 @@ describe("Theme tokens -> CSS variables", () => {
       });
       expect(cssVars["--font-main-bold"]).toBe("PlayfairDisplay-Bold");
       expect(cssVars["--font-main-italic"]).toBe("PlayfairDisplay-Italic");
-      // platform families have no variant suffix, so they pass through unchanged
       expect(cssVars["--font-ui-bold"]).toBe("monospace");
     });
   });

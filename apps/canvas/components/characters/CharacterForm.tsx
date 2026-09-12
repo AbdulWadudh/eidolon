@@ -27,11 +27,6 @@ export interface CharacterFormProps {
   onChange: (patch: Partial<Draft>) => void;
 }
 
-/**
- * The whole card at once, for writing a character from nothing. Editing an
- * existing one goes through the settings screen instead, which shows the same
- * fields a section at a time.
- */
 export function CharacterForm({ draft, serverHost, onChange }: CharacterFormProps) {
   const author = useFieldAuthor(serverHost, draft, onChange);
 

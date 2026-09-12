@@ -15,7 +15,6 @@ export const EMPTY_DRAFT: Draft = {
   voice: VOICE.defaultId,
 };
 
-/** Everything with a text field. `voice` is chosen from a list instead. */
 export type FieldKey = Exclude<keyof Draft, "voice">;
 
 export interface FieldSpec {

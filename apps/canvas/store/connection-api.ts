@@ -1,12 +1,5 @@
 import { apiUrl, healthUrl, PAIRING_COPY, TIMEOUTS_MS } from "@eidolon/config";
 
-/**
- * Confirms the token is actually accepted by this conductor.
- *
- * /health is unauthenticated, so pinging it only proved the host was reachable:
- * a stale QR code or a mistyped token paired "successfully" and then failed at
- * the WebSocket upgrade with nothing to explain why.
- */
 export async function verifyPairing(host: string, token: string): Promise<void> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUTS_MS.clientRequest);
@@ -62,8 +55,3 @@ export async function pingHealth(host: string, token?: string): Promise<boolean>
     throw new Error(PAIRING_COPY.unreachable);
   }
 }
-
-/**
- * Socket lifecycle lives outside the store: it is imperative, must survive
- * re-renders, and must never be duplicated by a second subscriber.
- */

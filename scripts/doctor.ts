@@ -1,16 +1,4 @@
 #!/usr/bin/env bun
-/**
- * Preflight check for the Eidolon toolchain.
- *
- * Installs what can be installed safely and non-interactively (workspace
- * packages, Android SDK components via sdkmanager). A JDK or the Android SDK
- * itself is reported with the exact fix rather than installed, because putting
- * a multi-gigabyte SDK or a second JVM on someone's machine is not a decision a
- * build script should make.
- *
- *   bun run doctor          check, and install what is safe
- *   bun run doctor:check    report only, never install (use in CI)
- */
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
@@ -36,10 +24,6 @@ function record(status: Status, name: string, detail?: string, fix?: string): vo
 
 const decode = (bytes: Uint8Array): string => new TextDecoder().decode(bytes);
 
-/**
- * Bun.spawnSync takes an argv array and never goes through a shell, so paths
- * like "C:\Program Files\..." need no quoting and cannot be word-split.
- */
 function exec(argv: string[]): { code: number; out: string } {
   try {
     const result = Bun.spawnSync(argv, { stdout: "pipe", stderr: "pipe" });
@@ -63,7 +47,6 @@ function majorVersion(value: string | null): number {
   return match?.[1] ? Number(match[1]) : 0;
 }
 
-// ---------------------------------------------------------------- runtimes
 function checkBun(): void {
   const version = Bun.version;
   record(
@@ -89,10 +72,8 @@ function checkNode(): void {
   );
 }
 
-// ------------------------------------------------------------------- java
 function resolveJavaHome(): string | null {
   if (process.env.JAVA_HOME && existsSync(process.env.JAVA_HOME)) return process.env.JAVA_HOME;
-  // Android Studio bundles a JBR that Gradle is happy with.
   const candidates = IS_WINDOWS
     ? [
         join(process.env.ProgramFiles ?? "C:\\Program Files", "Android", "Android Studio", "jbr"),
@@ -121,7 +102,6 @@ function checkJava(): void {
     return;
   }
 
-  // `openjdk version "21.0.10" ...` - read the number inside the quotes.
   const major = majorVersion(/"([^"]+)"/.exec(version)?.[1] ?? version);
   record(
     major >= 17 ? "ok" : "fail",
@@ -135,7 +115,6 @@ function checkJava(): void {
   }
 }
 
-// ---------------------------------------------------------------- android
 function androidSdkRoot(): string | null {
   const explicit = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
   if (explicit && existsSync(explicit)) return explicit;
@@ -186,8 +165,6 @@ function checkAndroid(): void {
 
   record(platforms.length ? "ok" : "fail", "SDK platforms", platforms.join(", ") || "none");
   record(buildTools.length ? "ok" : "warn", "Build tools", buildTools.join(", ") || "none");
-  // Reanimated, Nitro/MMKV, screens and worklets all compile from source, so a
-  // missing NDK surfaces as an opaque CMake failure deep in the Gradle log.
   record(ndks.length ? "ok" : "fail", "NDK", ndks.join(", ") || "none (native modules need it)");
   record(cmakes.length ? "ok" : "fail", "CMake", cmakes.join(", ") || "none");
 
@@ -224,7 +201,6 @@ function checkAndroid(): void {
   );
 }
 
-// -------------------------------------------------------------- workspace
 function checkWorkspaceInstall(): void {
   if (existsSync(join(process.cwd(), "node_modules"))) {
     record("ok", "Workspace packages", "node_modules present");
@@ -244,7 +220,6 @@ function checkWorkspaceInstall(): void {
   );
 }
 
-// -------------------------------------------------------------- reporting
 checkBun();
 checkNode();
 checkWorkspaceInstall();

@@ -42,9 +42,6 @@ if (!(await source.exists())) {
   process.exit(1);
 }
 
-// Gradle always writes the same filename, so builds overwrite each other and
-// there is no telling which commit one came from. Every build is kept here
-// under its version and commit instead.
 mkdirSync(OUT_DIR, { recursive: true });
 const name = `eidolon-v${await version()}-${shortSha()}.apk`;
 const target = join(OUT_DIR, name);

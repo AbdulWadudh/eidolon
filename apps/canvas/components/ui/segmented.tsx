@@ -21,11 +21,6 @@ export interface SegmentedProps<T extends string> {
   accessibilityLabel: string;
 }
 
-/**
- * The pill is absolutely positioned and has no children, so animating its width
- * and offset costs no layout pass on the labels and keeps the corner radius
- * that a scaleX would smear. The labels themselves only change colour.
- */
 export function Segmented<T extends string>({
   options,
   value,

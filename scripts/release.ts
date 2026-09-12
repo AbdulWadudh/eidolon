@@ -1,19 +1,4 @@
 #!/usr/bin/env bun
-/**
- * Bumps the version, promotes the CHANGELOG "Unreleased" notes, builds a release
- * APK named `eidolon-v<version>.apk`, and publishes it to GitHub Releases.
- *
- *   bun run release                 patch bump  (1.0.0 -> 1.0.1)
- *   bun run release --minor         minor bump  (1.0.0 -> 1.1.0)
- *   bun run release --major         major bump  (1.0.0 -> 2.0.0)
- *   bun run release --version 2.3.0 explicit
- *   bun run release --dry-run       print what would happen, change nothing
- *   bun run release --skip-build    reuse an APK that is already built
- *
- * Order matters: the version is written *before* the build, because prebuild
- * bakes it into the APK. Files are only committed once the build succeeds, so a
- * failed build never leaves a pushed version bump behind.
- */
 import { $ } from "bun";
 
 const argv = process.argv.slice(2);
@@ -38,7 +23,6 @@ async function capture(command: Promise<{ exitCode: number; stdout: Buffer }>): 
   return result.exitCode === 0 ? result.stdout.toString().trim() : "";
 }
 
-// --------------------------------------------------------------- version
 function nextVersion(current: string): string {
   const explicitIndex = argv.indexOf("--version");
   if (explicitIndex !== -1) {
@@ -67,14 +51,11 @@ const version = nextVersion(currentVersion);
 const tag = `v${version}`;
 const apkName = `eidolon-${tag}.apk`;
 const apkPath = `${DIST_DIR}/${apkName}`;
-// Android refuses to install over an existing app with the same versionCode, so
-// every published build needs a higher one regardless of the semver bump.
 const versionCode: number = Number(appConfig?.expo?.android?.versionCode ?? 0) + 1;
 
 console.log(`\n${currentVersion} -> ${version}  (versionCode ${versionCode})`);
 console.log(`Artifact: ${apkName}\n`);
 
-// ------------------------------------------------------------- preflight
 const remote = await capture($`git remote get-url origin`.nothrow().quiet());
 if (!remote && !DRY_RUN) {
   fail(
@@ -98,11 +79,8 @@ if (!DRY_RUN) {
   }
 }
 
-// ------------------------------------------------------------- changelog
-/** git log field delimiter (%x1f), safe inside commit subjects. */
 const UNIT_SEPARATOR = String.fromCharCode(31);
 
-/** Conventional-commit type -> changelog heading, in the order they render. */
 const TYPE_HEADINGS: [RegExp, string][] = [
   [/^feat/, "### Added"],
   [/^fix/, "### Fixed"],
@@ -118,7 +96,6 @@ function headingFor(subject: string): string {
   return TYPE_HEADINGS.find(([pattern]) => pattern.test(type))?.[1] ?? "### Other";
 }
 
-/** Drops the `type(scope):` prefix and capitalises what is left. */
 function describe(subject: string): string {
   const body = subject.replace(/^[a-z]+(\([^)]*\))?!?:\s*/i, "").trim();
   return body.charAt(0).toUpperCase() + body.slice(1);
@@ -136,7 +113,6 @@ async function generateNotes(): Promise<string> {
   for (const line of log.split("\n")) {
     const [hash, subject] = line.split(UNIT_SEPARATOR);
     if (!hash || !subject) continue;
-    // A previous release commit is bookkeeping, not a change.
     if (/^chore\(release\)/i.test(subject)) continue;
     const heading = headingFor(subject);
     const entries = grouped.get(heading) ?? [];
@@ -153,11 +129,8 @@ async function generateNotes(): Promise<string> {
 }
 
 const changelog = await Bun.file(CHANGELOG).text();
-// `$` would mean end-of-line under the m flag and stop the lazy match at the
-// first newline; `(?![\s\S])` is end-of-input.
 const unreleased = /^## \[Unreleased\][^\n]*\n([\s\S]*?)(?=\n## \[|(?![\s\S]))/m.exec(changelog);
 const handWritten = unreleased?.[1]?.trim() ?? "";
-// The placeholder a previous release leaves behind is not release notes.
 const manual = /^nothing yet\.?$/i.test(handWritten) ? "" : handWritten;
 
 const notes = manual || (await generateNotes());
@@ -184,13 +157,11 @@ if (DRY_RUN) {
   process.exit(0);
 }
 
-// ------------------------------------------------------------ write bump
 appConfig.expo.version = version;
 appConfig.expo.android = { ...appConfig.expo.android, versionCode };
 await Bun.write(APP_CONFIG, `${JSON.stringify(appConfig, null, 2)}\n`);
 await Bun.write(CHANGELOG, promoted);
 
-// Long-form dated entry, so changelog/ stays current without anyone remembering.
 const [year, month] = today.split("-");
 const entryPath = `changelog/${year}/${month}/${today}-release-${tag}.md`;
 await Bun.write(
@@ -200,7 +171,6 @@ await Bun.write(
 );
 console.log(`Wrote ${APP_CONFIG}, ${CHANGELOG} and ${entryPath}\n`);
 
-// ----------------------------------------------------------------- build
 if (SKIP_BUILD) {
   console.log("Skipping build (--skip-build)\n");
 } else {
@@ -220,7 +190,6 @@ await $`mkdir -p ${DIST_DIR}`.nothrow().quiet();
 await Bun.write(apkPath, built);
 console.log(`Packaged ${apkPath}  (${(Bun.file(apkPath).size / 1024 / 1024).toFixed(1)} MB)\n`);
 
-// --------------------------------------------------------------- publish
 await $`git add ${APP_CONFIG} ${CHANGELOG} ${entryPath}`;
 await $`git commit -m ${`chore(release): ${tag}`}`;
 if ((await $`git push`.nothrow()).exitCode !== 0) {

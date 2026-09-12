@@ -33,11 +33,6 @@ export function keepOneAction(text: string): string {
     .trim();
 }
 
-/**
- * A stage direction is only ever offered on a draft that has none already, and
- * never on a question: asked to open a question with an action, the model
- * answers the question instead of rewriting it.
- */
 export function canAddAction(draft: string): boolean {
   return !hasAction(draft) && !isQuestion(draft);
 }
@@ -95,9 +90,6 @@ export async function enhanceMessage(draft: string, options: EnhanceOptions = {}
     throw new EnhanceUnavailableError("There is nothing written to rework yet.");
   }
 
-  // A nudge is the reader's instruction to the character, not part of the line
-  // being reworked. It is lifted out before the model sees it and put back
-  // afterwards, because a prompt asking the model to preserve it does not.
   const { spoken, influences } = splitInfluence(normalized);
   if (spoken.length === 0) {
     throw new EnhanceUnavailableError("There is nothing written to rework yet.");

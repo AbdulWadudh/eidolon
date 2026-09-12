@@ -5,16 +5,10 @@ import { SwitchRow } from "@/components/ui/switch";
 export interface CharacterSharingSectionProps {
   characterId: string;
   isPublic: boolean;
-  /** False when somebody else wrote her, which is what makes saving fork. */
   isMine: boolean;
   onPublish: (isPublic: boolean) => void;
 }
 
-/**
- * Anyone who can see a character may edit her. What changes with authorship is
- * only what saving does, and who may publish — so this section explains that
- * rather than locking the fields.
- */
 export function CharacterSharingSection({
   characterId,
   isPublic,

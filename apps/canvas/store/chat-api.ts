@@ -47,9 +47,6 @@ function toMessage(row: TranscriptRow, characterId: string): ChatMessage {
   };
 }
 
-// Crops written before the format changed carry zoom and offsets rather than a
-// region, and reading them would put the avatar somewhere arbitrary. They are
-// dropped, which falls back to filling the circle.
 function usableCrop(crop: AvatarCropRect | null | undefined): AvatarCropRect | null {
   if (!crop || typeof crop.widthRatio !== "number" || typeof crop.heightRatio !== "number") {
     return null;
@@ -100,9 +97,6 @@ async function requestJson(url: string, method: "GET" | "DELETE"): Promise<Trans
   const response = await fetch(url, {
     method,
     headers: { Accept: "application/json" },
-    // A long transcript over a LAN is not a small read, and six seconds was
-    // enough to fail on a big history while succeeding on a short one — which
-    // is what made loading look random.
     signal: AbortSignal.timeout(TIMEOUTS_MS.transcript),
   });
 

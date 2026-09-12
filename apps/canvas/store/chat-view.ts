@@ -40,16 +40,6 @@ export interface ChatView {
   revertSteps: number;
 }
 
-/**
- * There is one chat store and, thanks to `router.push`, more than one chat
- * screen alive at a time. The screen you left is still mounted and still
- * subscribed, so without this it re-renders with whoever was opened after it —
- * which is how every character came to show the same conversation.
- *
- * A screen sees the store only while the store is holding its character.
- * Messages are additionally filtered by the id they were stored with, so a turn
- * that arrives for someone else can never land in this transcript.
- */
 export function projectChat(state: ChatStore, characterId: string): ChatView {
   const isShowing = state.activeCharacterId === characterId;
 

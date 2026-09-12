@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import { PAIRING_COPY } from "@eidolon/config";
 
-// Mock react-native and react-native-mmkv before loading store
 mock.module("react-native", () => ({
   Platform: { OS: "ios" },
 }));
@@ -30,7 +29,6 @@ mock.module("react-native-mmkv", () => ({
   }),
 }));
 
-// Now import after mocking
 const { parsePairingUri, useConnectionStore } = await import("../store/connection");
 
 describe("Connection Store & Pairing Engine", () => {
@@ -102,7 +100,6 @@ describe("Connection Store & Pairing Engine", () => {
       expect(state.isPaired).toBe(true);
       expect(state.serverHost).toBe("192.168.1.39:3000");
       expect(state.pairingToken).toBe("secret_abc");
-      // Credentials are accepted; the socket decides when it becomes "connected".
       expect(state.connectionState).toBe("connecting");
     });
 
@@ -163,7 +160,6 @@ describe("Connection Store & Pairing Engine", () => {
       expect(state.isPaired).toBe(true);
       expect(state.serverHost).toBe("localhost:3000");
       expect(state.pairingToken).toBe("manual_token_xyz");
-      // Credentials are accepted; the socket decides when it becomes "connected".
       expect(state.connectionState).toBe("connecting");
     });
   });

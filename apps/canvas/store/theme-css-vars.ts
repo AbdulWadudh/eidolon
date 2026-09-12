@@ -1,29 +1,11 @@
 import type { ThemeTokens } from "@eidolon/tokens";
 
-/**
- * Derives a sibling family name, e.g. NunitoSans-Regular -> NunitoSans-Bold.
- *
- * The theme only stores `fontMain`/`fontUI`, but the utilities in global.css also
- * read --font-main-bold, --font-main-italic, --font-ui-medium and --font-ui-bold.
- * Those were never emitted, so they always resolved to the :root defaults and
- * every `font-*-bold` element kept the original font after a font switch.
- *
- * Platform families ("serif", "monospace", "System") have no variant suffix, so
- * they are returned unchanged and the platform synthesises the weight.
- */
 function fontVariant(base: string, variant: "Bold" | "Italic" | "Medium"): string {
   const separator = base.lastIndexOf("-");
   if (separator <= 0) return base;
   return `${base.slice(0, separator)}-${variant}`;
 }
 
-/**
- * Tailwind's text sizes are rem-based and react-native-css resolves rem against
- * a single `__rn-css-rem` variable (default 14). Scaling that would resize
- * spacing too, since --spacing is also rem-based, so the type scale is published
- * as explicit pixel values instead. These bases are the current computed sizes
- * at rem 14, so a scale of 1 renders exactly as before.
- */
 const TEXT_SCALE_BASE_PX = {
   "--text-xs": 10.5,
   "--text-sm": 12.25,

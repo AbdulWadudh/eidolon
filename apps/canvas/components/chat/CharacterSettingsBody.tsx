@@ -23,10 +23,6 @@ export interface CharacterSettingsBodyProps {
   onPortrait: (url: string) => void;
 }
 
-/**
- * Whichever section is on screen. Crossfaded rather than slid: the four are
- * peers, and sliding would imply a depth that is not there.
- */
 export function CharacterSettingsBody({
   section,
   characterId,

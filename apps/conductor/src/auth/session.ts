@@ -8,13 +8,6 @@ export interface Owner {
   email: string;
 }
 
-/**
- * The conductor is paired with a device, not signed into by a person, and a
- * character still has to belong to someone. The first boot after auth exists
- * provisions one local account and the paired device acts as it, so the single
- * user keeps working exactly as before while characters gain a real owner.
- * A second person signing up gets their own account and their own roster.
- */
 let localOwner: Owner | null = null;
 
 export async function ensureLocalOwner(): Promise<Owner | null> {
@@ -35,7 +28,6 @@ export async function ensureLocalOwner(): Promise<Owner | null> {
     await auth.api.signUpEmail({
       body: {
         email: AUTH.localOwnerEmail,
-        // The device already holds this secret; it is not an extra credential.
         password: PAIRING_SECRET.padEnd(AUTH.minPasswordLength, "0"),
         name: AUTH.localOwnerName,
       },
@@ -81,10 +73,6 @@ export function bearer(header: string | undefined | null): string {
   return value.startsWith("Bearer ") ? value.slice(7).trim() : value;
 }
 
-/**
- * A request carries either a real session token or the pairing secret. The
- * second is the paired device, which acts as the local owner.
- */
 export async function ownerFor(token: string | null | undefined): Promise<Owner | null> {
   const clean = bearer(token);
   if (clean.length === 0) return null;

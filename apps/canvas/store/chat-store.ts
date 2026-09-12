@@ -64,17 +64,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   areSuggestionsHidden: appStorage.getBoolean(SUGGESTIONS_HIDDEN_KEY) ?? false,
 
-  /**
-   * Who the store is holding, and therefore what it is holding.
-   *
-   * These two used to be able to disagree. The socket hook set the id on mount
-   * while the conversation still belonged to whoever was open before, and
-   * `loadHistory` then read "same character" and kept the longer of the two
-   * lists — the old one. The screen filters by id, so those messages vanished
-   * and the reader was told the stage was set on a chat they had been having
-   * for a week. It only happened when the character they came from had more
-   * messages than the one they opened, which is what made it look random.
-   */
   setActiveCharacter: (characterId) =>
     set((state) =>
       state.activeCharacterId === characterId
@@ -102,8 +91,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     const draft = get().inputText;
     if (draft.trim().length === 0 || get().isEnhancing) return;
 
-    // The draft is banked before the request leaves, so revert has something to
-    // return to whatever the conductor says next.
     set((state) => ({
       isEnhancing: true,
       enhanceHistory: [...state.enhanceHistory, draft],
@@ -179,8 +166,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   handleServerMessage: (msg) => reduceServerMessage(msg, set, commitStreamingTurn),
 
   rerollSuggestions: (characterId) => {
-    // A fresh chat has nothing to anchor to; the conductor reads its own history
-    // anyway, so this only has to satisfy the schema.
     const lastMessageId =
       findLastAssistantId(get().messages) ?? last(get().messages)?.id ?? NEW_CHAT_ANCHOR;
 
@@ -202,8 +187,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   clearAutoPlay: () => set({ autoPlayMessageId: null }),
 
-  // Set from the gallery, read once by the feed, then cleared. Opening a photo
-  // from her profile has to land on the message it belongs to, not the tail.
   focusMessage: (messageId) => set({ focusMessageId: messageId }),
 
   clearFocus: () => set({ focusMessageId: null }),

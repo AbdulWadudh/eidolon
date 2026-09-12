@@ -11,25 +11,11 @@ export interface ZoomableImageProps {
   uri: string;
   width: number;
   accessibilityLabel: string;
-  /**
-   * The pager's own scroll gesture. Without declaring simultaneity with it the
-   * list claims the touch first and the pinch never activates, which is why
-   * zooming did nothing even once the callbacks were worklets.
-   */
   pager: NativeGesture;
-  /** True while this page is the one on screen; a page scrolled away resets. */
   isActive: boolean;
   onZoomChange: (isZoomed: boolean) => void;
 }
 
-/**
- * Pinch to zoom, drag to pan, double tap to toggle.
- *
- * Every callback is a worklet and every value is a shared value, so no frame of
- * the gesture reaches React. The only thing that crosses back is whether the
- * picture is zoomed, which the pager needs in order to stop claiming horizontal
- * swipes — and that is scheduled once per gesture end, never per frame.
- */
 export function ZoomableImage({
   uri,
   width,
@@ -54,7 +40,6 @@ export function ZoomableImage({
     [onZoomChange],
   );
 
-  // Swiping to another picture puts this one back the way it was found.
   React.useEffect(() => {
     if (isActive || !isZoomed) return;
 

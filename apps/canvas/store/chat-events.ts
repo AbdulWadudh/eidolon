@@ -7,9 +7,6 @@ import {
 } from "./chat-messages";
 import { type ChatSetter, HEARTBEAT_DETAIL } from "./chat-types";
 
-// The commit is handed in rather than imported: reading it from the store here
-// would close a require cycle, and Metro warns that the value can be
-// uninitialised when it does.
 export function reduceServerMessage(
   msg: ServerMessage,
   set: ChatSetter,
@@ -31,8 +28,6 @@ export function reduceServerMessage(
       set((state) => ({
         suggestions: msg.payload?.suggestions ?? msg.suggestions,
         isSuggestionsLoading: false,
-        // A reroll the reader asked for keeps the tray open under them.
-        // Anything else arrives folded away behind the chip.
         isTrayOpen: state.isSuggestionsLoading ? state.isTrayOpen : false,
       }));
       break;
@@ -155,8 +150,6 @@ export function reduceServerMessage(
         statusDetail: failedToEnhance ? state.statusDetail : null,
         isSuggestionsLoading: failedToEnhance ? state.isSuggestionsLoading : false,
         isEnhancing: false,
-        // A rework that never landed must not leave a step on the stack, or
-        // revert would appear to do nothing the first time it is pressed.
         enhanceHistory: failedToEnhance ? state.enhanceHistory.slice(0, -1) : state.enhanceHistory,
         lastError: source.message,
       }));

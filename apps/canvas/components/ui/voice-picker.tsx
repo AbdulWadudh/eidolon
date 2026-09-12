@@ -112,8 +112,6 @@ export function VoicePicker({ serverHost, characterId, value, onChange }: VoiceP
     };
   }, [serverHost]);
 
-  // The sample is generated on demand, so the button stays busy until audio
-  // actually arrives rather than pretending it played instantly.
   React.useEffect(() => {
     if (!status.playing && previewingId !== null && !loadingId) setPreviewingId(null);
   }, [status.playing, previewingId, loadingId]);

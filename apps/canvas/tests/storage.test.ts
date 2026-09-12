@@ -5,7 +5,6 @@ import type { FallbackFile } from "../store/storage";
 
 const { FallbackStorage } = await import("../store/storage");
 
-/** Stands in for the on-device JSON file, shared between two "launches". */
 function fakeFile(): FallbackFile & { contents: string | null } {
   return {
     contents: null as string | null,

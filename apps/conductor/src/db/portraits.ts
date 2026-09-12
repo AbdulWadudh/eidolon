@@ -7,11 +7,6 @@ export interface Portrait {
   createdAt: number;
 }
 
-/**
- * Records a render. Every portrait a character has ever had is kept, so setting
- * a new profile picture never destroys the one it replaced and an older face can
- * be chosen again from her gallery.
- */
 export function addPortrait(characterId: string, url: string, prompt: string | null): string {
   const id = `portrait:${crypto.randomUUID()}`;
 

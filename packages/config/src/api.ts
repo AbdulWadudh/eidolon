@@ -44,11 +44,6 @@ export function apiPath(route: ApiRoute): string {
   return `${API_PREFIX}${API_ROUTES[route]}`;
 }
 
-/**
- * A host written with a TLS scheme keeps it. Everything else stays plain, so a
- * LAN address like 192.168.1.39:3000 is unaffected while a deployed origin like
- * https://3000.example.com reaches the socket over wss rather than failing.
- */
 export function isSecureHost(host: string): boolean {
   return /^(https|wss):\/\//i.test(host.trim());
 }

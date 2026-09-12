@@ -9,8 +9,6 @@ interface Service {
   optional?: boolean;
 }
 
-// The batch files ship with the repo. Where the servers themselves live is
-// their business, through EIDOLON_AI_ROOT — see stack/README.md.
 const START = resolve(import.meta.dir, "..", "stack");
 
 const SERVICES: Service[] = [
@@ -64,9 +62,6 @@ async function waitFor(service: Service): Promise<boolean> {
   return false;
 }
 
-// `cmd /c start` returns as soon as it has handed the batch file to a new
-// console, so the child here is the launcher rather than the server. Unref so
-// this script can exit without waiting on it either way.
 function launch(service: Service): void {
   if (!service.launch) return;
   const child = Bun.spawn([service.launch.command, ...service.launch.args], {
@@ -133,8 +128,6 @@ async function up(): Promise<void> {
   process.exit(failures === 0 ? 0 : 1);
 }
 
-// `panes` opens a window and must not be waited on; `down` has to finish before
-// this process exits or nothing is killed.
 function runBatch(name: string, wait: boolean): void {
   const argv = ["cmd", "/c", join(START, name)];
   if (wait) {

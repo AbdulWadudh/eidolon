@@ -1,16 +1,8 @@
 import qrcode from "qrcode-terminal";
 
 const ESC = String.fromCharCode(27);
-/** Built at runtime so no literal control character appears in the source. */
 const MODULE_PATTERN = new RegExp(`${ESC}\\[(40|47)m {2}`, "g");
 
-/**
- * Recovers the QR module matrix from qrcode-terminal's rendered output.
- *
- * The package exposes no matrix API, but its non-small renderer emits exactly
- * one `ESC[40m  ` (dark) or `ESC[47m  ` (light) run per module, which is a
- * stable, parseable contract and avoids pulling in a second QR encoder.
- */
 export function buildQrMatrix(payload: string): boolean[][] {
   let raw = "";
   qrcode.generate(payload, { small: false }, (out: string) => {
@@ -23,14 +15,6 @@ export function buildQrMatrix(payload: string): boolean[][] {
     .filter((row) => row.length > 0);
 }
 
-/**
- * Renders the matrix as an SVG with the 4-module quiet zone the spec requires.
- *
- * A terminal cannot do this for a payload this size: at two columns per module
- * the code alone needs 78 columns, and a correct quiet zone would need 94, so
- * on a standard 80-column terminal the code is emitted with effectively no
- * margin and many scanners reject it.
- */
 export function renderQrSvg(matrix: boolean[][], moduleSize = 10, quietModules = 4): string {
   const size = matrix.length;
   const total = (size + quietModules * 2) * moduleSize;
@@ -67,16 +51,10 @@ export function escapeHtml(value: string): string {
 const CELL_LIGHT = "\u001b[47m  \u001b[0m";
 const CELL_DARK = "\u001b[40m  \u001b[0m";
 
-/** Columns a matrix needs at two terminal cells per module. */
 export function qrTerminalColumns(matrix: boolean[][], quietModules = 0): number {
   return (matrix.length + quietModules * 2) * 2;
 }
 
-/**
- * Renders the code with as much extra quiet zone as the terminal width allows.
- * qrcode-terminal only emits a single module of margin, which many scanners
- * reject against a dark terminal background.
- */
 export function renderQrTerminal(matrix: boolean[][], extraQuietModules: number): string {
   const width = matrix.length + extraQuietModules * 2;
   const blankRow = CELL_LIGHT.repeat(width);

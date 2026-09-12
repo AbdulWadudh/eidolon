@@ -43,11 +43,6 @@ const FALLBACK_LOOK: Look = {
 
 const EMPTY_WORDS = new Set<string>(IMAGE.emptyWords);
 
-/**
- * The planner answers "who else is in the frame" with "None, just me" as often
- * as with "None", and an exact-match check let the first form through into
- * "with None, just me at the kitchen". The leading phrase decides.
- */
 export function meansNobody(text: string): boolean {
   const lead = (text.split(",")[0] ?? "")
     .trim()
@@ -98,9 +93,6 @@ function withNoun(value: string, noun: string): string {
 export function composeAppearance(look: Look, rawLookChange: string): string {
   const lookChange = usableLookChange(rawLookChange);
   const changesHair = replacesHair(lookChange);
-  // Each detail is labelled with what it describes. Bare fragments read as loose
-  // colour to an image model — a stored "bright green" meant for her eyes came
-  // back as green trousers.
   return [
     look.age,
     withNoun(look.face, "face"),

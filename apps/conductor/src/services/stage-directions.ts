@@ -20,12 +20,6 @@ export interface ActionGate {
   flush(): string;
 }
 
-/**
- * Holds back anything between asterisks until it closes, then lets it through
- * only if it is still a beat: short, and the first one in the reply. A model
- * that answers with a paragraph of prose in asterisks gets it dropped as it
- * arrives, so nothing long enough to read as narration ever reaches the reader.
- */
 export function createActionGate(): ActionGate {
   let inside = false;
   let body = "";

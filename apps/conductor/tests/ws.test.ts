@@ -10,7 +10,6 @@ describe("Conductor WebSocket Router", () => {
   let wsUrl: string;
 
   beforeAll(() => {
-    // Start ephemeral server for WebSocket integration tests
     server = Bun.serve({
       port: 0,
       fetch: app.fetch,
@@ -85,7 +84,6 @@ describe("Conductor WebSocket Router", () => {
           const parsed = parseServerMessage(String(event.data));
           receivedMessages.push(parsed);
 
-          // Once mind_update is received, the chat turn is complete
           if (parsed.type === "mind_update") {
             clearTimeout(timer);
             resolve();
@@ -106,7 +104,6 @@ describe("Conductor WebSocket Router", () => {
       ws.onopen = () => resolve();
     });
 
-    // Dispatch chat turn
     ws.send(
       JSON.stringify({
         type: "chat_turn",
@@ -123,8 +120,6 @@ describe("Conductor WebSocket Router", () => {
     expect(messageTypes).toContain("text_delta");
     expect(messageTypes).toContain("mind_update");
 
-    // Reply options cost three model calls and most turns are answered by
-    // typing, so they are only produced when the reader asks for them.
     expect(messageTypes).not.toContain("reply_suggestions");
 
     ws.close();

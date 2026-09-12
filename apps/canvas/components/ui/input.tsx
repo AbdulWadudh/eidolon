@@ -17,8 +17,6 @@ export const Input = React.forwardRef<React.ElementRef<typeof TextInput>, InputP
         placeholderTextColor={placeholderTextColor ?? theme.textMuted}
         cursorColor={cursorColor ?? theme.primary}
         selectionColor={selectionColor ?? theme.primary}
-        // Android adds font padding on top of the line box and centres by
-        // baseline, which clips custom-font glyphs inside a fixed-height field.
         style={[
           { paddingVertical: 0, includeFontPadding: false, textAlignVertical: "center" },
           props.style,

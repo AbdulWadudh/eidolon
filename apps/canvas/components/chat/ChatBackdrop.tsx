@@ -16,10 +16,6 @@ function withAlpha(hex: string, alpha: number): string {
   return `${hex}${value}`;
 }
 
-// The picture runs edge to edge and the canvas colour is washed back into it at
-// the top and bottom. Without that, message bubbles and the dock sit on a
-// photograph and the whole screen reads as busy; with it, the picture is still
-// there but the ends of the screen settle into the theme.
 export function ChatBackdrop({ uri, characterId }: ChatBackdropProps) {
   const theme = useResolvedTheme(characterId);
   if (!uri) return null;

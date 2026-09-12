@@ -1,9 +1,5 @@
 import type { ChatStore } from "./chat-store";
 
-/**
- * Only the fields the tray actually depends on, so a screen can ask about its
- * own scoped view rather than about the whole shared store.
- */
 export interface TrayState {
   areSuggestionsHidden: boolean;
   isTrayOpen: boolean;

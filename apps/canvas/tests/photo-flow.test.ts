@@ -106,7 +106,6 @@ describe("asking for a photo", () => {
     useChatStore.getState().requestImage("emma", "", "portrait");
     expect(useChatStore.getState().isPainting).toBe(true);
 
-    // What the hook does on any status that is not "connected".
     useChatStore.setState({
       isPainting: false,
       paintingStep: 0,

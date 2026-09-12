@@ -8,7 +8,6 @@ export interface AuthorResult {
   error: string | null;
 }
 
-/** Everything except the field being written, and never the voice id. */
 export function contextFrom(draft: Draft, exclude: AuthorField): AuthorContext {
   const { voice: _voice, ...rest } = draft;
   const context: AuthorContext = {};
@@ -37,8 +36,6 @@ export async function authorField(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ field, mode, draft, context }),
-      // Writing a long field on a local GPU takes a good deal longer than a
-      // normal request, so this deliberately does not use the client timeout.
       signal: AbortSignal.timeout(TIMEOUTS_MS.generation),
     });
 

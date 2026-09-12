@@ -19,8 +19,6 @@ const FALLBACK_IDEAS = [
   "the sky right now",
 ];
 
-// A model handed an example copies it. These are the phrases earlier versions of
-// the prompt offered, and they came back verbatim whatever the conversation was.
 const PARROTS = ["me and the dog on the sofa", "the view from the top", "hey just got home"];
 
 const BANNED =
@@ -35,11 +33,6 @@ function onlyStrings(value: unknown): string[] {
     : [];
 }
 
-/**
- * Reads every bracketed group rather than the span from the first bracket to the
- * last. A local model asked for one array sometimes answers with three, and the
- * span between them is prose that repairs into nothing.
- */
 export function extractIdeas(raw: string): string[] {
   const groups = raw.match(ARRAY_GROUP) ?? [];
   const parsed = groups.flatMap((group) => onlyStrings(safeJsonParse<unknown>(group, null)));
@@ -108,11 +101,6 @@ function subject(idea: string): Set<string> {
   return new Set(words(idea).filter((word) => !FILLER_WORDS.has(word)));
 }
 
-/**
- * Two ideas built from the same handful of words are one idea. A model asked for
- * four distinct photos happily returns "third coffee, quiet office" four times
- * in a different order, and four chips saying the same thing read as a bug.
- */
 export function echoes(left: string, right: string): boolean {
   const one = subject(left);
   const two = subject(right);

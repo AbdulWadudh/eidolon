@@ -66,10 +66,6 @@ export async function fetchPresets(host: string): Promise<Preset[]> {
   }
 }
 
-/**
- * The portrait is queued rather than rendered here, so this returns as soon as
- * the character exists. Her face arrives on the roster a minute or so later.
- */
 export async function createFromPreset(
   host: string,
   key: string,
@@ -114,11 +110,6 @@ export interface SaveResult {
   forked: boolean;
 }
 
-/**
- * The conductor decides whether this is an edit or a fork: editing a character
- * somebody else authored leaves theirs alone and hands back a copy that is
- * yours. The caller is told which happened so it can say so.
- */
 export async function saveCharacter(
   host: string,
   id: string,
@@ -164,7 +155,6 @@ export async function publishCharacter(
 
 export interface FetchedCharacter {
   card: CharacterCard;
-  /** Whether saving an edit changes this character or forks it. */
   isMine: boolean;
 }
 

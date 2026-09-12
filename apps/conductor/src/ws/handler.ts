@@ -6,9 +6,6 @@ import { handleImageRequest, handlePhotoIdeas } from "@/ws/image-turn";
 import { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
 import { bindCharacter } from "@/ws/registry";
 import { handleVoiceInput } from "@/ws/voice-input";
-/**
- * Manages per-connection streaming tasks and abort handles.
- */
 export class ClientSessionManager {
   private abortControllers = new Map<WebSocketSender, AbortController>();
 
@@ -36,9 +33,6 @@ export const sessionManager = new ClientSessionManager();
 
 export { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
 
-/**
- * Dispatches parsed client events and handles streaming lifecycles.
- */
 export async function handleClientMessage(
   ws: WebSocketSender,
   rawMessage: WSMessageReceive,

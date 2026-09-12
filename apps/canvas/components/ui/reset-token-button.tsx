@@ -4,7 +4,6 @@ import { ArrowReloadHorizontalIcon } from "@/lib/icons";
 
 export interface ResetTokenButtonProps {
   onPress: () => void;
-  /** Dimmed and inert when the token already holds its default value. */
   isDefault: boolean;
   color: string;
   accessibilityLabel: string;

@@ -23,9 +23,6 @@ export function resetEmbeddingProbe(): void {
   remoteAvailable = null;
 }
 
-// The width is whatever the endpoint returns rather than a number fixed here.
-// A 384-wide MiniLM and a 4096-wide chat model are both valid; the memory table
-// is rebuilt to match on the first call.
 function isUsableVector(value: unknown): value is number[] {
   return (
     Array.isArray(value) &&
@@ -53,8 +50,6 @@ async function fromRemote(text: string): Promise<number[] | null> {
 }
 
 export async function embed(text: string): Promise<Embedding> {
-  // Tests never reach for a model. Without this, every suite that runs a turn
-  // waits on a real embedding call.
   if (isTestEnv()) {
     return { vector: generateMockEmbedding(text), source: "deterministic" };
   }

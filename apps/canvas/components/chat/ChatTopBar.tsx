@@ -31,8 +31,6 @@ export interface ChatTopBarProps {
 
 const AVATAR_PX = 38;
 
-// The crop names a circle inside the photo. Rebuilding it is arithmetic rather
-
 export function ChatTopBar({
   characterName,
   avatarUrl,
@@ -53,9 +51,6 @@ export function ChatTopBar({
   const insight = useAffinityStore((state) => state.isInsightModeEnabled);
   const initials = characterName.slice(0, 2).toUpperCase();
 
-  // Insight mode replaces the mood line with the numbers rather than stacking a
-  // second row under it. A turn in progress still wins: what she is doing right
-  // now matters more than where the relationship stands.
   const showsAffinity = insight && !isBusy && mind !== null;
   const subtitle = showsAffinity && mind ? affinityLabel(mind.tier, mind.affinity) : statusLabel;
 

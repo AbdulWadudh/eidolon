@@ -1,11 +1,5 @@
 import type { PromptDefinition } from "../prompts-shared";
 
-/**
- * Every worked example carries the context it was derived from, not just an
- * answer. Shown bare answers, the model copied them: asked for a name with a
- * Portuguese cellist in context it still returned the example's name. Shown the
- * mapping, it has to do the same work on the context it was actually given.
- */
 export const AUTHORING_PROMPTS: PromptDefinition[] = [
   {
     key: "authoring.suggest",

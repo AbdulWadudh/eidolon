@@ -30,7 +30,6 @@ import { useResolvedTheme } from "@/store/theme-store";
 
 export const FONT_PREVIEW_SAMPLE = "Aa Bb Cc — 0123";
 
-/** Already registered, so it can be rendered in its own face. */
 interface LocalRow {
   kind: "local";
   key: string;
@@ -38,7 +37,6 @@ interface LocalRow {
   value: string;
 }
 
-/** Not downloaded yet, so only its metadata can be shown. */
 interface RemoteRow {
   kind: "remote";
   key: string;
@@ -74,14 +72,9 @@ export function FontPickerModal({
   const [installing, setInstalling] = React.useState<string | null>(null);
   const [installedVersion, setInstalledVersion] = React.useState(0);
 
-  // A non-transparent RN Modal falls back to the system window background, which
-  // is white on a light-themed device. Every other modal here paints the canvas
-  // inline rather than relying on the class resolving inside the modal root.
   const theme = useResolvedTheme();
   const [previews, setPreviews] = React.useState<Record<string, PreviewState>>({});
 
-  // One request for ~1800 families, so typing filters in memory and never
-  // touches the network.
   React.useEffect(() => {
     if (!isOpen || catalogue) return;
     let cancelled = false;
@@ -109,7 +102,6 @@ export function FontPickerModal({
   }, [query]);
 
   const localRows = React.useMemo<LocalRow[]>(() => {
-    // installedVersion is the dependency: a fresh install changes the list.
     void installedVersion;
     const bundled = FONT_FAMILY_PRESETS.map((preset) => ({
       kind: "local" as const,
@@ -147,8 +139,6 @@ export function FontPickerModal({
     return [...locals, ...remote];
   }, [localRows, catalogue, debouncedQuery]);
 
-  // Only the rows on screen are fetched, so scrolling fills previews in as you
-  // go rather than downloading the whole catalogue up front.
   const requestPreviews = React.useCallback((items: ViewToken[]) => {
     for (const token of items) {
       const row = token.item as Row | undefined;
@@ -162,7 +152,6 @@ export function FontPickerModal({
     }
   }, []);
 
-  // FlatList requires these to keep a stable identity for its lifetime.
   const requestPreviewsRef = React.useRef(requestPreviews);
   requestPreviewsRef.current = requestPreviews;
   const viewabilityConfig = React.useRef({ itemVisiblePercentThreshold: 40 }).current;

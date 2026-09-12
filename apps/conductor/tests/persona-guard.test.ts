@@ -177,8 +177,6 @@ describe("the label the transcript uses for the reader", () => {
 
 describe("a reply already recorded with the reader's label", () => {
   it("is cleaned when read back, with no character name to go on", () => {
-    // workingHistory has the row but not the card, so the reader label has to
-    // come off without knowing whose turn it was.
     expect(stripSpeakerLabel("PLAYER: *smiles* Absolutely.", "")).toBe("*smiles* Absolutely.");
   });
 });

@@ -56,8 +56,6 @@ export function usePhotoFlow(characterId: string, serverHost: string): PhotoFlow
     [requestImage, characterId, editing],
   );
 
-  // The profile picture is viewed without a message behind it, so actions read
-  // the message's photo when there is one and the avatar otherwise.
   const activeUri = viewing?.imageUrl ?? avatarUri;
 
   const dismiss = React.useCallback(() => {
@@ -93,8 +91,6 @@ export function usePhotoFlow(characterId: string, serverHost: string): PhotoFlow
         return;
       }
 
-      // Regenerate keeps the photo you were looking at, so what comes back is a
-      // change to it rather than an unrelated picture of the same person.
       setEditing(activeUri);
       dismiss();
       setSheetOpen(true);

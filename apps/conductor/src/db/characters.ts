@@ -96,7 +96,6 @@ export function getCharacter(id: string): CharacterCard | null {
 }
 
 export function listCharacters(ownerId?: string): CharacterSummary[] {
-  // Yours, anything published, and anything from before ownership existed.
   const rows = ownerId
     ? db
         .query<CharacterRow, [string]>(
@@ -119,8 +118,6 @@ export function listCharacters(ownerId?: string): CharacterSummary[] {
     return {
       ...toCard(row),
       avatarUrl: row.avatar_url,
-      // The chat header framed her correctly while the roster showed the whole
-      // uncropped picture squeezed into a circle. The crop travels with her.
       avatarCrop: row.avatar_crop ? safeJsonParse<unknown>(row.avatar_crop, null) : null,
       affinity: row.affinity_score ?? 0,
       tier: row.affinity_tier ?? "",
@@ -165,8 +162,6 @@ export function createCharacter(draft: CharacterDraft): CharacterCard {
 
 type EditableField = keyof Omit<CharacterCard, "id" | "ownerId" | "forkedFrom">;
 
-// Ownership is never editable through a patch body. It is set when a character
-// is created or forked and changed only by the publish endpoint.
 const EDITABLE: Record<EditableField, string> = {
   name: "name",
   tagline: "tagline",
@@ -203,8 +198,6 @@ export function ownsCharacter(id: string, ownerId: string): boolean {
     .query<{ owner_id: string | null }, [string]>("SELECT owner_id FROM characters WHERE id = ?")
     .get(id);
 
-  // A character from before ownership existed has no owner. The first person to
-  // reach for it adopts it rather than being locked out of their own roster.
   return row !== null && (row.owner_id === null || row.owner_id === ownerId);
 }
 
@@ -221,11 +214,6 @@ export function setPublic(id: string, isPublic: boolean): CharacterCard | null {
   return getCharacter(id);
 }
 
-/**
- * Forking is what happens when someone edits a character they did not author:
- * their version is theirs, the original is untouched, and the lore comes with it
- * because a character without her secrets is not the same character.
- */
 export function forkCharacter(
   source: CharacterCard,
   ownerId: string,

@@ -94,9 +94,6 @@ export function CharacterFields({
               selectionColor={theme.primary}
               textAlignVertical={field.lines > 1 ? "top" : "center"}
               className="rounded-button border border-border bg-input font-main text-[15px] text-text-primary leading-6"
-              // Set here rather than through classes: a multiline TextInput on
-              // Android carries its own padding, which overrode the class and
-              // left the text against the edge of the box.
               style={{
                 minHeight: Math.max(CHAT.minTouchTargetPx + 8, field.lines * 24 + 30),
                 paddingHorizontal: FIELD_PADDING.horizontal,

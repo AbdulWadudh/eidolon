@@ -11,14 +11,6 @@ export interface VoiceNotes {
 
 const VoiceNotesContext = React.createContext<VoiceNotes | null>(null);
 
-/**
- * One player for the whole screen.
- *
- * A player owned by a message card dies the moment FlashList recycles that
- * cell, which is what stopped playback as soon as you scrolled. Hoisting it
- * above the list makes playback survive scrolling, and makes "one voice note at
- * a time" true by construction rather than by bookkeeping.
- */
 export function VoiceNotesProvider({
   autoPlay,
   onAutoPlayed,

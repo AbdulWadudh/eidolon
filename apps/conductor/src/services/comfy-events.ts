@@ -58,9 +58,6 @@ function handleText(raw: string): void {
   }
 }
 
-// Preview frames carry no prompt id. They are an eight byte header — event type
-// then image format — followed by the bytes, and they belong to whichever prompt
-// last said it was executing.
 function handleBinary(buffer: ArrayBuffer): void {
   if (!executingPromptId || buffer.byteLength <= PREVIEW_HEADER_BYTES) return;
 

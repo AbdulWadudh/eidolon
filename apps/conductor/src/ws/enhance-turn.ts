@@ -9,8 +9,6 @@ export async function handleEnhanceMessage(ws: WebSocketSender, draft: string): 
       payload: { text, original: draft },
     });
   } catch (error) {
-    // The draft is never touched on this path: the client keeps what the reader
-    // typed and only hears that the rework did not happen.
     sendServerMessage(ws, {
       type: "error",
       payload: {

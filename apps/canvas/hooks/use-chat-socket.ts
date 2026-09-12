@@ -13,9 +13,6 @@ export function useChatSocket(characterId: string) {
 
   React.useEffect(() => onServerMessage(handleServerMessage), [handleServerMessage]);
 
-  // A photo and a reply both end with an event from the conductor, so if the
-  // socket drops while one is in flight that event never arrives and the card
-  // sits there for good. Losing the connection is the end of the turn.
   React.useEffect(
     () =>
       onSocketStatus((status) => {

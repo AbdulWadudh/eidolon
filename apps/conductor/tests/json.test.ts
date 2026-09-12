@@ -18,7 +18,6 @@ describe("Safe JSON Parser", () => {
   });
 
   it("repairs malformed JSON with unquoted keys and trailing commas", () => {
-    // Malformed JSON common from local LLM outputs
     const malformed = "{ name: 'Eidolon', items: [1, 2, 3, ], active: true, }";
     const parsed = safeJsonParse<{ name: string; items: number[]; active: boolean }>(malformed);
     expect(parsed.name).toBe("Eidolon");

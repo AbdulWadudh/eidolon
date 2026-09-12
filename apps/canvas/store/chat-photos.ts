@@ -3,10 +3,6 @@ import { useChatStore } from "./chat-store";
 
 export type PhotoOrientation = "portrait" | "landscape";
 
-// The circle expressed in the photo's own coordinates: where its centre sits
-// (0..1 of the image), and how many circle-widths the whole image spans. That
-// is all the avatar needs to lay the image out, and it does not depend on the
-// screen it was chosen on.
 export interface AvatarCropRect {
   cx: number;
   cy: number;
@@ -28,7 +24,6 @@ export interface LookPatch {
   faceUrl?: string | null;
 }
 
-/** Reads her look without touching the chat store, for screens outside the chat. */
 export async function fetchLook(host: string, characterId: string): Promise<CharacterLook | null> {
   if (!host) return null;
 

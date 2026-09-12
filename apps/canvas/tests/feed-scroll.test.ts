@@ -37,8 +37,6 @@ describe("following new content while a jump is in flight", () => {
   const wayUp = { contentHeight: 4000, viewportHeight: 800, offsetY: 400 };
 
   it("ignores the opening frames of a jump, which start at the bottom", () => {
-    // Without this the follow re-armed and carried the reader back down a
-    // moment after arriving at the message they asked for.
     expect(trackLiveEdge(atBottom, { isDragging: false, isFocusing: true, current: false })).toBe(
       false,
     );

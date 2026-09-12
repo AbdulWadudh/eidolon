@@ -5,7 +5,6 @@ import { mockMemory } from "./support/mock-native";
 const { useThemeStore, defaultTokenValue } = await import("../store/theme-store");
 const { createDefaultPalettes, migratePalettes } = await import("../store/theme-modes");
 
-/** The palette currently being edited. */
 const activePalette = () => {
   const { palettes } = useThemeStore.getState();
   return palettes[palettes.mode];
@@ -33,18 +32,15 @@ describe("Theme store", () => {
       store.updateCharacterToken("char_1", "primary", "#06B6D4");
       store.updateCharacterToken("char_1", "radius", 18);
 
-      // Before setting active character
       const unselected = store.getResolvedTheme();
       expect(unselected.primary).toBe(DEFAULT_THEME_TOKENS.primary);
       expect(unselected.radius).toBe(DEFAULT_THEME_TOKENS.radius);
 
-      // Resolving specifically for char_1
       const charResolved = store.getResolvedTheme("char_1");
       expect(charResolved.primary).toBe("#06B6D4");
       expect(charResolved.radius).toBe(18);
       expect(charResolved.canvas).toBe(DEFAULT_THEME_TOKENS.canvas);
 
-      // After setting active character
       store.setActiveCharacter("char_1");
       const activeResolved = useThemeStore.getState().getResolvedTheme();
       expect(activeResolved.primary).toBe("#06B6D4");
@@ -108,7 +104,6 @@ describe("Theme store", () => {
       store.resetToken("primary");
 
       expect(activePalette().primary).toBe(DEFAULT_THEME_TOKENS.primary);
-      // untouched tokens survive a single-token reset
       expect(useThemeStore.getState().palettes.shared.radius).toBe(30);
     });
 
@@ -141,7 +136,6 @@ describe("Theme store", () => {
       store.updateGlobalToken("radius", 30);
 
       store.resetGlobalTheme();
-      // the resolved theme is the full token set; activePalette() is colours only
       expect(useThemeStore.getState().getResolvedTheme()).toEqual(DEFAULT_THEME_TOKENS);
     });
     it("shares geometry and typography across both modes", () => {
@@ -154,7 +148,6 @@ describe("Theme store", () => {
       expect(light.radius).toBe(22);
       expect(light.fontMain).toBe("serif");
 
-      // editing them in light mode changes them for dark too
       useThemeStore.getState().updateGlobalToken("radius", 4);
       useThemeStore.getState().setColorMode("dark");
       expect(useThemeStore.getState().getResolvedTheme().radius).toBe(4);
@@ -165,7 +158,6 @@ describe("Theme store", () => {
       store.updateGlobalToken("card", "#111111");
 
       useThemeStore.getState().setColorMode("light");
-      // the light palette is untouched by the dark edit
       expect(activePalette().card).toBe("#FFFFFF");
 
       useThemeStore.getState().updateGlobalToken("card", "#EEEEEE");
@@ -196,7 +188,6 @@ describe("Theme store", () => {
       store.updateCharacterToken("char_m", "card", "#0A0A0A");
 
       useThemeStore.getState().setColorMode("light");
-      // no light override yet, so the character inherits the light global
       expect(useThemeStore.getState().getResolvedTheme("char_m").card).toBe("#FFFFFF");
 
       useThemeStore.getState().updateCharacterToken("char_m", "card", "#FAFAFA");
@@ -228,7 +219,6 @@ describe("Theme store", () => {
       expect(migrated.mode).toBe("light");
       expect(migrated.light.canvas).toBe("#ABCDEF");
       expect(migrated.light.primary).toBe("#123456");
-      // the untouched slot starts from the factory palette
       expect(migrated.dark.canvas).toBe(DEFAULT_THEME_TOKENS.canvas);
     });
 

@@ -37,7 +37,6 @@ const STORAGE_KEYS = {
   IS_PAIRED: "eidolon.is_paired",
 } as const;
 
-/** Keeps a TLS scheme so the socket knows to use wss, drops anything else. */
 export function normalizeHost(host: string): string {
   const trimmed = host.trim().replace(/\/+$/, "");
   return isSecureHost(trimmed) ? `https://${stripAuthority(trimmed)}` : stripAuthority(trimmed);

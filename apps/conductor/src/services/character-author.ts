@@ -14,11 +14,6 @@ export class AuthorUnavailableError extends Error {}
 
 export type AuthorContext = Partial<Record<AuthorField, string>>;
 
-/**
- * Everything the worked examples in the prompt answered with. Asked for a name
- * with nothing else written yet, the model returned "Ines Vaz" — the example
- * itself — so an answer that only repeats one is not an answer.
- */
 export function exampleAnswers(template: string): Set<string> {
   const answers = new Set<string>();
   const lines = template.split(LINE_BREAK);
@@ -49,15 +44,6 @@ export function exampleAnswers(template: string): Set<string> {
 const EXAMPLE_START = /^(The character so far:|Field:)/;
 const FIELD_LINE = /^Field:\s*(.+?)\s*$/;
 
-/**
- * The worked examples, minus any that answered the field being asked for.
- *
- * Asked to rewrite "she is a radio host at night" the model returned the
- * prompt's own tagline example at every temperature, because "she is X and Y"
- * matched the example's "Current" line more strongly than anything else in
- * scope. With no same-field answer in front of it, it has to write one; the
- * remaining examples still establish the format.
- */
 export function withoutFieldExamples(template: string, label: string): string {
   const lines = template.split(LINE_BREAK);
   const chunks: string[][] = [];
@@ -91,11 +77,6 @@ export function withoutFieldExamples(template: string, label: string): string {
     .join(`${NEWLINE}${NEWLINE}`);
 }
 
-/**
- * The rest of the card, so a suggestion for one field agrees with the others.
- * The field being written is left out: showing the model its own draft twice
- * made it echo the draft back unchanged.
- */
 export function buildContext(context: AuthorContext, exclude: AuthorField): string {
   const lines: string[] = [];
 
@@ -127,10 +108,6 @@ export function buildAuthorPrompt(
     spec.label,
   );
 
-  // The context goes above the field, and the field name is repeated on the
-  // write cue. Asked for a tagline with a greeting as the last worked example,
-  // the model wrote a greeting: whatever sits nearest the cue wins, so the
-  // field being asked for has to be the last thing said.
   const parts = [template];
 
   if (context.length > 0) parts.push("", AUTHORING.contextLabel, context);
@@ -160,11 +137,6 @@ export function shapeAuthored(field: AuthorField, raw: string): string {
   return unquoted.length > spec.maxChars ? unquoted.slice(0, spec.maxChars).trimEnd() : unquoted;
 }
 
-/**
- * Whole-block rejection is not enough for a field written a line at a time.
- * Asked for rules, the model returned two lines lifted from the example and one
- * of its own, which the block check passed.
- */
 export function stripExampleLines(written: string, examples: Set<string>): string {
   return written
     .split(LINE_BREAK)
@@ -173,10 +145,6 @@ export function stripExampleLines(written: string, examples: Set<string>): strin
     .trim();
 }
 
-/**
- * A rewrite that runs out of tokens mid-thought reads worse than the draft it
- * replaced, so an unfinished last sentence is dropped rather than shown.
- */
 export function trimToCompleteSentence(text: string): string {
   const trimmed = text.trimEnd();
   if (trimmed.length === 0 || /[.!?…"'*)\]]$/.test(trimmed)) return trimmed;
@@ -189,11 +157,6 @@ export function trimToCompleteSentence(text: string): string {
   return cut > 0 ? trimmed.slice(0, cut + 1) : trimmed;
 }
 
-/**
- * Told to rewrite ten words without inventing anything, the model returned four
- * sentences including a father who cleans an office. Length is the tell, and it
- * is the only part of "did not invent" that can be checked deterministically.
- */
 export function isOverblown(draft: string, written: string): boolean {
   const allowed = Math.max(
     draft.trim().length * AUTHORING.enhanceGrowthRatio,

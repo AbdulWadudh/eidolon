@@ -106,7 +106,6 @@ describe("reopening the same character", () => {
   it("keeps a turn that landed while the fetch was in flight", async () => {
     await loadHistory("host", "chatty");
 
-    // A reply arrives before the second fetch resolves.
     useChatStore.setState((state) => ({
       messages: [
         ...state.messages,
@@ -142,15 +141,12 @@ describe("reopening the same character", () => {
 
 describe("arriving from a character with a longer history", () => {
   it("shows the new character's messages, not nothing", async () => {
-    // The reported failure exactly: Char-123 has 37 messages, Ines has 12, and
-    // opening Ines showed an empty stage on a week-old conversation.
     transcripts.set("char-123", transcript("char-123", 37, "Warm"));
     transcripts.set("ines-vaz", transcript("ines-vaz", 12, "Vulnerable"));
 
     await loadHistory("host", "char-123");
     expect(useChatStore.getState().messages).toHaveLength(37);
 
-    // The socket hook claims the store on mount, before the fetch is asked for.
     useChatStore.getState().setActiveCharacter("ines-vaz");
     await loadHistory("host", "ines-vaz");
 

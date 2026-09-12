@@ -2,7 +2,6 @@ import { Pressable, Text, View } from "react-native";
 import { RangeSlider } from "@/components/ui/range-slider";
 import { ResetTokenButton } from "@/components/ui/reset-token-button";
 
-/** Percent steps, kept in sync with the slider bounds below. */
 const SCALE_PRESETS = [
   { label: "S", scale: 0.9 },
   { label: "M", scale: 1 },
@@ -22,11 +21,6 @@ export interface TextSizeControlProps {
   mutedColor: string;
 }
 
-/**
- * Scales the whole type scale by publishing explicit `--text-*` pixel values
- * (see tokensToCssVars). The slider works in whole percent so it can reuse the
- * integer RangeSlider without introducing float drift.
- */
 export function TextSizeControl({
   value,
   onChange,

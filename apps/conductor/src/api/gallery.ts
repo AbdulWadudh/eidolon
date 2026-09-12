@@ -5,10 +5,6 @@ import { countGallery, listGallery } from "@/db/gallery";
 import { getCharacterLook, setCharacterAvatar } from "@/db/look";
 import { deletePortrait } from "@/db/portraits";
 
-/**
- * Everything ever rendered for a character, and the two things a reader can do
- * to it: make one her profile picture, or remove one for good.
- */
 export const gallery = new Hono();
 
 gallery.get("/:id/gallery", (c) => {
@@ -27,8 +23,6 @@ gallery.delete("/:id/gallery/:imageId", (c) => {
   const id = c.req.param("id");
   const imageId = c.req.param("imageId");
 
-  // Only a picture the reader asked to remove is ever removed. A portrait no
-  // longer in use stays in her gallery until it is deleted by hand.
   if (imageId.startsWith("portrait:") || imageId.startsWith("adopted-")) {
     return deletePortrait(id, imageId)
       ? c.json({ deleted: true })

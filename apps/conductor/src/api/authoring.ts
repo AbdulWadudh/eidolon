@@ -6,11 +6,6 @@ import {
   authorField,
 } from "@/services/character-author";
 
-/**
- * Writing and rewriting one field of a character card. Mounted under
- * /characters/author, apart from the CRUD routes because it is the only one
- * that spends GPU time.
- */
 export const authoring = new Hono();
 
 authoring.post("/", async (c) => {

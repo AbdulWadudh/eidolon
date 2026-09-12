@@ -8,7 +8,6 @@ export interface GalleryImage {
   caption: string | null;
   kind: GalleryKind;
   createdAt: number;
-  /** True for the portrait currently in use as her profile picture. */
   isAvatar: boolean;
 }
 
@@ -41,16 +40,11 @@ export async function fetchGallery(
   }
 }
 
-/**
- * Appends a page, dropping anything already held. The same image can arrive
- * twice when a new photo lands between two requests and shifts the offset.
- */
 export function mergePage(held: GalleryImage[], incoming: GalleryImage[]): GalleryImage[] {
   const seen = new Set(held.map((image) => image.id));
   return [...held, ...incoming.filter((image) => !seen.has(image.id))];
 }
 
-/** Puts an existing picture back in use as her profile picture. */
 export async function setAvatar(host: string, characterId: string, url: string): Promise<boolean> {
   if (!host) return false;
 
@@ -67,7 +61,6 @@ export async function setAvatar(host: string, characterId: string, url: string):
   }
 }
 
-/** Removes a portrait for good. Photos are removed from their conversation. */
 export async function deleteGalleryImage(
   host: string,
   characterId: string,

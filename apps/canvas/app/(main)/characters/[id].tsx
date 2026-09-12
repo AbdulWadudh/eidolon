@@ -35,9 +35,6 @@ export default function CharacterProfileScreen() {
   const [viewing, setViewing] = React.useState<number | null>(null);
   const [portraitOpen, setPortraitOpen] = React.useState(false);
 
-  // The profile is a detail of a conversation, not a step on the way to one, so
-  // opening the chat either returns to the one already below or takes the
-  // profile's place. Either way the back gesture reaches the roster next.
   const openChat = React.useCallback(() => {
     const routes = (navigation.getState()?.routes ?? []) as StackRoute[];
     const href = `/chat/${characterId}` as const;

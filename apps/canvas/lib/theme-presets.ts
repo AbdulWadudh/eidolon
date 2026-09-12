@@ -1,7 +1,3 @@
-/**
- * Shared control presets, so the Theme Studio sheet and the Theme & Font Lab
- * screen stay in sync instead of each carrying its own copy.
- */
 import { Moon02Icon, Sun02Icon } from "@/lib/icons";
 
 export const MODES = [
@@ -11,7 +7,6 @@ export const MODES = [
 
 export interface FontFamilyPreset {
   name: string;
-  /** Registered family name; variants are derived from it by the theme store. */
   family: string;
 }
 

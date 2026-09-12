@@ -1,8 +1,6 @@
 import * as FileSystem from "expo-file-system/legacy";
 
 const WEBFONTS_ENDPOINT = "https://www.googleapis.com/webfonts/v1/webfonts";
-// Bump when the cached shape changes; a stale file from an older shape would
-// otherwise be read back missing fields the UI now depends on.
 const CACHE_VERSION = 2;
 const CACHE_FILE = `google-fonts-catalogue.v${CACHE_VERSION}.json`;
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -11,9 +9,7 @@ export interface GoogleFontFamily {
   family: string;
   category: string;
   variants: string[];
-  /** Character sets the family covers; CJK subsets mean a very large file. */
   subsets: string[];
-  /** Weight/style key -> download URL, e.g. { regular: "...", "700": "...", italic: "..." } */
   files: Record<string, string>;
 }
 
@@ -28,10 +24,6 @@ export class GoogleFontsError extends Error {
   }
 }
 
-/**
- * Read at call time rather than module scope so a missing key surfaces as a
- * handled UI state instead of a crash during import.
- */
 function getApiKey(): string | undefined {
   const key = process.env.EXPO_PUBLIC_GOOGLE_FONTS_API_KEY;
   return key && key.length > 0 ? key : undefined;
@@ -41,7 +33,6 @@ export function hasGoogleFontsApiKey(): boolean {
   return getApiKey() !== undefined;
 }
 
-/** The API still returns http:// URLs; Android blocks cleartext traffic by default. */
 function toHttps(url: string): string {
   return url.startsWith("http://") ? `https://${url.slice("http://".length)}` : url;
 }
@@ -101,10 +92,6 @@ async function writeDiskCache(items: GoogleFontFamily[]): Promise<void> {
   }
 }
 
-/**
- * The whole catalogue arrives in one request (~1800 families), so searching is
- * done client-side. That keeps typing off the network entirely.
- */
 export async function fetchFontCatalogue(forceRefresh = false): Promise<GoogleFontFamily[]> {
   if (!forceRefresh && memoryCache) return memoryCache;
   if (inFlight) return inFlight;

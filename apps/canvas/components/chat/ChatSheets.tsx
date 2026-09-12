@@ -19,10 +19,6 @@ export interface ChatSheetsProps {
   onCloseMind: () => void;
 }
 
-/**
- * The three sheets the chat screen can raise. They are grouped here so the
- * screen itself stays about the conversation rather than about modals.
- */
 export function ChatSheets({
   characterId,
   characterName,

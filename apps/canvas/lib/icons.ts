@@ -1,15 +1,3 @@
-/**
- * Per-icon re-exports.
- *
- * `@hugeicons/core-free-icons` resolves its barrel entry to `dist/cjs/index.js`,
- * which re-exports all 6031 icons. Metro does not tree-shake, so importing from
- * the barrel shipped every one of them in the Hermes bundle regardless of how
- * few were referenced. The package exposes a `./*` subpath export, so each icon
- * is pulled in individually here and every call site imports from this module.
- *
- * Adding an icon: add a line below, then import it from "@/lib/icons".
- * Never import from "@hugeicons/core-free-icons" directly.
- */
 export { default as AddCircleIcon } from "@hugeicons/core-free-icons/AddCircleIcon";
 export { default as ArrowDown01Icon } from "@hugeicons/core-free-icons/ArrowDown01Icon";
 export { default as ArrowLeft01Icon } from "@hugeicons/core-free-icons/ArrowLeft01Icon";

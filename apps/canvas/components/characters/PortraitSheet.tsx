@@ -16,11 +16,6 @@ export interface PortraitSheetProps {
   onPortrait: (url: string) => void;
 }
 
-/**
- * The portrait generator, reachable from her profile rather than only from a
- * section of her settings. It is the page you are on when you decide her picture
- * is wrong, so it is the page that should offer to change it.
- */
 export function PortraitSheet({
   isOpen,
   characterId,

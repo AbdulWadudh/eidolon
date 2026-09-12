@@ -73,7 +73,6 @@ describe("what the gallery collects", () => {
     addPortrait(character.id, "https://media.test/first.png", "in a red coat");
     setCharacterAvatar(character.id, "https://media.test/first.png");
 
-    // A second render replaces which one is in use, not the first one itself.
     addPortrait(character.id, "https://media.test/second.png", null);
     setCharacterAvatar(character.id, "https://media.test/second.png");
 
