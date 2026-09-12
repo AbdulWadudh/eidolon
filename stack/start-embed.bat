@@ -19,7 +19,7 @@ if not exist "%EIDOLON_EMBED_MODEL%" (
 
 llama-server.exe ^
  -m "%EIDOLON_EMBED_MODEL%" ^
- --host 127.0.0.1 --port 8081 ^
+ --host 127.0.0.1 --port 8082 ^
  -ngl 99 -c 8192 ^
  --embeddings --pooling mean -a eidolon-embed
 pause

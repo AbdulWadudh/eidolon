@@ -99,8 +99,6 @@ export default function DynamicDemoScreen() {
   const resolvedTheme = useResolvedTheme();
   const cssVars = useThemeCssVars();
 
-  // All control sections start collapsed so the live preview stays on screen
-  // while editing, instead of being scrolled away by the full control list.
   const [expandedSection, setExpandedSection] = React.useState<string | null>(null);
   const toggleSection = React.useCallback((key: string) => {
     setExpandedSection((prev) => (prev === key ? null : key));
@@ -125,8 +123,6 @@ export default function DynamicDemoScreen() {
 
   const [showStudio, setShowStudio] = React.useState(false);
 
-  // Target is kept after closing so initialColor never flips to a fallback
-  // while the modal is still on screen.
   const [pickerOpen, setPickerOpen] = React.useState(false);
   const [pickerTarget, setPickerTarget] = React.useState<{
     title: string;
@@ -142,11 +138,6 @@ export default function DynamicDemoScreen() {
     [],
   );
 
-  // react-native-css 3.0.7 caches computed styles per rule-set hash and only
-  // rebuilds when a rule the element itself declares changes, so a descendant
-  // reading --color-primary could keep a stale value until some unrelated token
-  // (e.g. --card, which the Card itself declares) forced a rebuild. Remounting the
-  // preview on any token change guarantees it always shows the current theme.
   const previewKey = React.useMemo(
     () =>
       [
@@ -192,7 +183,7 @@ export default function DynamicDemoScreen() {
     <VariableContextProvider value={cssVars}>
       <View className="flex-1 bg-canvas" style={{ backgroundColor: resolvedTheme.canvas }}>
         <SafeAreaView style={{ flex: 1 }} className="flex-1">
-          {/* Top Header */}
+          {}
           <View className="flex-row items-center justify-between border-b border-border px-4 py-3">
             <Pressable
               className="h-10 w-10 items-center justify-center rounded-button border border-border bg-card active:bg-border"
@@ -239,8 +230,8 @@ export default function DynamicDemoScreen() {
           </View>
 
           <ScrollView contentContainerStyle={{ padding: 20, gap: 20 }}>
-            {/* Appearance Mode (Dark / Light) */}
-            {/* Binary choice, so an inline segmented toggle rather than a section. */}
+            {}
+            {}
             <View className="flex-row items-center justify-between rounded-card border border-border bg-card px-3 py-2.5">
               <Text className="font-ui-bold text-xs uppercase tracking-wider text-text-muted">
                 Appearance Mode

@@ -4,22 +4,51 @@ call "%~dp0_env.bat" || (pause & exit /b 1)
 
 cd /d "%EIDOLON_AI_ROOT%\LLAMA_CPP" || (echo llama.cpp not found in %EIDOLON_AI_ROOT% & pause & exit /b 1)
 
-if "%EIDOLON_LLM_MODEL%"=="" set "EIDOLON_LLM_MODEL=%EIDOLON_AI_ROOT%\MODELS\L3-8B-Stheno-v3.3-32K-NEO-V1-D_AU-Q5_K_M.gguf"
+rem Every model-specific value is a variable, so swapping models is editing this
+rem block rather than the command below. Keep these in step with the matching
+rem entry in packages/config/src/llm.ts, which is where the conductor reads the
+rem stop tokens, samplers and context budget from.
+if "%EIDOLON_LLM_MODEL%"=="" set "EIDOLON_LLM_MODEL=%EIDOLON_AI_ROOT%\MODELS\Qwen3.5-9B-heretic.Q6_K.gguf"
+if "%EIDOLON_LLM_NGL%"==""   set "EIDOLON_LLM_NGL=99"
+if "%EIDOLON_LLM_CTX%"==""   set "EIDOLON_LLM_CTX=32768"
+rem off for a model that thinks before it answers, auto for one that does not.
+if "%EIDOLON_LLM_REASONING%"=="" set "EIDOLON_LLM_REASONING=off"
+
+if not exist "%EIDOLON_LLM_MODEL%" (
+  echo.
+  echo   No chat model at:
+  echo     %EIDOLON_LLM_MODEL%
+  echo.
+  echo   stack\README.md has the download.
+  echo.
+  pause & exit /b 1
+)
 
 llama-server.exe ^
  -m "%EIDOLON_LLM_MODEL%" ^
  --host 127.0.0.1 --port 8080 ^
- -ngl 99 -c 16384 -fa on -ctk q8_0 -ctv q8_0 ^
- --jinja -a eidolon-llm ^
- --embeddings --pooling mean
+ -ngl %EIDOLON_LLM_NGL% ^
+ -c %EIDOLON_LLM_CTX% ^
+ -b 2048 -ub 1024 ^
+ -fa on ^
+ --cache-type-k q4_0 --cache-type-v q4_0 ^
+ --threads 8 --parallel 1 ^
+ --reasoning %EIDOLON_LLM_REASONING% ^
+ --jinja -a eidolon-llm
 
-rem --embeddings serves /v1/embeddings from the same server, which is what turns
-rem semantic recall on. Measured at 124-130 tok/s generate with it, the same as
-rem without, so it is free here.
+rem Measured on a 5070 Ti (16 GB), Qwen3.5-9B-heretic Q6_K at 32k:
+rem   7,987 MiB total GPU including the desktop, 87 tok/s generate, 456 prefill.
+rem That leaves ~8.3 GB for ComfyUI, which wants ~4.2 GB, so both stay resident
+rem and a render never waits for the chat model to get out of the way.
 rem
-rem If generation drops to ~12 tok/s it is not this flag, it is VRAM: the model
-rem wants ~9.7 GB and llama.cpp silently spills to CPU when ComfyUI is holding
-rem the card. Free it first:
-rem   curl -X POST http://127.0.0.1:8188/free -H "Content-Type: application/json" ^
-rem     -d "{\"unload_models\":true,\"free_memory\":true}"
+rem --reasoning off matters for any model whose template opens inside <think>:
+rem left on, it spends the whole reply budget reasoning and the reader gets
+rem nothing. Harmless on a model that does not think.
+rem
+rem A 27B does not fit this card. Fully offloaded it needs ~18.3 GB against
+rem 16.3 GB, and llama-bench measured prefill collapsing from 976 to 144 tok/s
+rem at -ngl 64 as it spilled over PCIe. 4.5 tok/s at -ngl 26.
+rem
+rem No --embeddings here on purpose: it forces n_batch down to n_ubatch (512)
+rem and prefill drops with it. Recall runs off start-embed.bat on 8081 instead.
 pause

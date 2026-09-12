@@ -49,9 +49,6 @@ export function PhotoRequestSheet({
     }
   }, [isOpen]);
 
-  // Asked for every time the sheet opens, not once a session. Ideas are drawn
-  // from where the conversation has got to, and holding the first set means
-  // seeing the same four chips an hour later.
   const chooseOrientation = React.useCallback(
     (value: PhotoOrientation) => {
       setOrientation(value);
@@ -73,9 +70,7 @@ export function PhotoRequestSheet({
         className="flex-1 justify-end"
         style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
       >
-        {/* The sheet lives in a Modal, which sits outside the provider wrapping
-            the chat screen, so it has to do its own keyboard avoidance or the
-            description field opens underneath the keyboard. */}
+        {}
         <KeyboardAvoidingView behavior="padding" automaticOffset style={{ flex: 1 }}>
           <Pressable accessibilityLabel="Close" className="flex-1" onPress={onClose} />
 

@@ -1,5 +1,6 @@
 import { IMAGE } from "@eidolon/config";
 import { type ChatMessage, streamChatCompletion } from "@/services/llm";
+import { thinkingBudget } from "@/services/llm-profile";
 
 const PROMPT_WRITER_SYSTEM =
   "You write prompts for an image generator. You are not a character and you never speak as one. You never use asterisks, quotation marks, questions or first person. You reply with one line of comma separated visual phrases and nothing else.";
@@ -23,7 +24,8 @@ export async function ask(
   let raw = "";
   for await (const token of streamChatCompletion(messages, signal, {
     temperature,
-    maxTokens: IMAGE.promptMaxTokens,
+    maxTokens: thinkingBudget(IMAGE.promptMaxTokens),
+    think: true,
     allowMockFallback: false,
     responseSchema,
   })) {

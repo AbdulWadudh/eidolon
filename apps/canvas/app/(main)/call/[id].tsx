@@ -13,6 +13,7 @@ import { useCallSpeech } from "@/hooks/use-call-speech";
 import { tap } from "@/services/haptics";
 import { onServerMessage, useConductorSocket } from "@/services/websocket";
 import { callElapsedSeconds, useCallStore } from "@/store/call-store";
+import { type CharacterCard, fetchCharacter } from "@/store/character-api";
 import { useChatStore } from "@/store/chat-store";
 import { useConnectionStore } from "@/store/connection";
 import { useServerCapability } from "@/store/health-api";
@@ -22,12 +23,22 @@ export default function CallScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const characterId = isString(id) ? id : "default";
-  const characterName = capitalize(characterId);
 
   const theme = useResolvedTheme(characterId);
   const setActiveCharacter = useThemeStore((state) => state.setActiveCharacter);
   const socket = useConductorSocket();
   const serverHost = useConnectionStore((state) => state.serverHost);
+  const pairingToken = useConnectionStore((state) => state.pairingToken);
+  const [card, setCard] = React.useState<CharacterCard | null>(null);
+
+  React.useEffect(() => {
+    if (!serverHost) return;
+    void fetchCharacter(serverHost, characterId, pairingToken).then((next) => {
+      if (next) setCard(next.card);
+    });
+  }, [serverHost, characterId, pairingToken]);
+
+  const characterName = card?.name.trim() || capitalize(characterId);
   const look = useChatStore((state) => state.characterLook);
 
   const call = useCallStore();

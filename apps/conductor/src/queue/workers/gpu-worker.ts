@@ -1,4 +1,11 @@
-import { PORTRAIT, QUEUE_CONCURRENCY, QUEUE_NAMES, QUEUE_PREFIXES, STAGE } from "@eidolon/config";
+import {
+  PORTRAIT,
+  QUEUE_CONCURRENCY,
+  QUEUE_LOCK,
+  QUEUE_NAMES,
+  QUEUE_PREFIXES,
+  STAGE,
+} from "@eidolon/config";
 import { Worker } from "bullmq";
 import { getCharacterCard } from "@/db";
 import { appendChronicle, nextChapterIndex } from "@/db/chronicles";
@@ -96,12 +103,8 @@ async function renderPortrait(data: PortraitJob): Promise<void> {
     image.bytes,
   );
 
-  // Kept as a row of its own before it is put into use, so the portrait it
-  // replaces stays in her gallery and can be chosen again.
   addPortrait(data.characterId, url, data.prompt.trim() || null);
 
-  // The same picture becomes both the avatar and the face reference, so every
-  // later selfie is recognisably the same person.
   setCharacterAvatar(data.characterId, url);
   setCharacterFace(data.characterId, url);
 }
@@ -127,6 +130,9 @@ export function createGpuWorker(): Worker<GpuJobData, void, GpuJobName> {
     connection: queueConnection(),
     prefix: QUEUE_PREFIXES.gpu,
     concurrency: QUEUE_CONCURRENCY.gpu,
+    lockDuration: QUEUE_LOCK.durationMs,
+    stalledInterval: QUEUE_LOCK.stalledIntervalMs,
+    maxStalledCount: QUEUE_LOCK.maxStalledCount,
   });
 
   worker.on("failed", (job, error) => {

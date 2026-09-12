@@ -24,10 +24,6 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
 
   const circle = Math.round(width * PHOTO.avatarFrameFraction);
 
-  // The photo is laid out at its own aspect ratio, as large as fits. Fitting it
-  // into a square instead is what put black inside the ring: a portrait photo
-  // letterboxed in a square is narrower than the circle, so the circle framed
-  // the letterbox as well as the picture.
   const fit = Math.min(width / ratio, height);
   const shown = { width: fit * ratio, height: fit };
   const left = (width - shown.width) / 2;
@@ -81,10 +77,6 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
     ],
   }));
 
-  // The circle sits at the centre of the screen and the photo is moved under it,
-  // so the offset from the photo's centre to the circle's is exactly minus the
-  // drag. Everything is written down relative to the photo and the circle, never
-  // to this screen, so the avatar can rebuild it at any size.
   const confirm = React.useCallback(() => {
     const s = savedScale.get();
     const drawnWidth = shown.width * s;
@@ -119,9 +111,7 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
             />
           </Animated.View>
 
-          {/* Four bands and four corner wedges, rather than one view with a
-              border thicker than the screen: Android renders that inconsistently
-              at this size and the dimming came out covering only part of it. */}
+          {}
           <View
             pointerEvents="none"
             style={{ position: "absolute", left: 0, right: 0, top: 0, height: circleTop }}

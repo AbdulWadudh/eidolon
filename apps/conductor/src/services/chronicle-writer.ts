@@ -1,6 +1,7 @@
 import { CHRONICLE, render } from "@eidolon/config";
 import { getPrompt } from "@/prompts/store";
 import { type ChatMessage, streamChatCompletion } from "@/services/llm";
+import { thinkingBudget } from "@/services/llm-profile";
 import { safeJsonParse } from "@/utils/json";
 
 interface ChronicleResponse {
@@ -93,7 +94,8 @@ export async function summarizeMessages(
     undefined,
     {
       temperature: CHRONICLE.temperature,
-      maxTokens: CHRONICLE.maxTokens,
+      maxTokens: thinkingBudget(CHRONICLE.maxTokens),
+      think: true,
       allowMockFallback: false,
       responseSchema: CHRONICLE_SCHEMA,
     },

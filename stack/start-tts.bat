@@ -5,9 +5,10 @@ call "%~dp0_env.bat" || (pause & exit /b 1)
 cd /d "%EIDOLON_AI_ROOT%\KOKORO_TTS" || (echo Kokoro not found in %EIDOLON_AI_ROOT% & pause & exit /b 1)
 
 set PYTHONUTF8=1
-set USE_GPU=true
+rem CPU on purpose: 0 MB VRAM, and synthesis measured 424 ms for a chat reply.
+set USE_GPU=false
 set PROJECT_ROOT=%CD%
-set PYTHONPATH=%CD%;%CD%pi
+set PYTHONPATH=%CD%;%CD%\api
 set MODEL_DIR=src/models
 set VOICES_DIR=src/voices/v1_0
 set WEB_PLAYER_PATH=%CD%\web

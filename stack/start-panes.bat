@@ -20,4 +20,4 @@ rem sub-commands must be escaped as ^; or cmd eats them as argument separators
 rem and only the first pane opens. And --title belongs to new-tab, not to wt
 rem itself: passing it globally makes wt reject the first command, so the tab
 rem opens with only the two split panes in it.
-wt new-tab --title Eidolon cmd /k "%HERE%\start-llm.bat" ^; split-pane -V cmd /k "%HERE%\start-comfy.bat" ^; split-pane -H cmd /k "%HERE%\start-tts.bat"
+wt new-tab --title Eidolon cmd /k "%HERE%\start-llm.bat" ^; split-pane -V cmd /k "%HERE%\start-comfy.bat" ^; split-pane -H cmd /k "%HERE%\start-tts.bat" ^; split-pane -V cmd /k "%HERE%\start-embed.bat"

@@ -12,9 +12,7 @@ export const TIMEOUTS_MS = {
   imageGeneration: 3000,
   search: 4000,
   clientRequest: 6000,
-  /** Reading a whole conversation back, which is far more than a status check. */
   transcript: 20000,
-  /** Anything the local GPU writes or renders, which is far slower than a read. */
   generation: 120000,
 } as const;
 
@@ -28,11 +26,6 @@ export const SOCKET = {
 export const CHAT = {
   suggestionCount: 3,
   waveformBars: 4,
-  /**
-   * How far past the viewport FlashList renders. At 480 a fast flick outran the
-   * renderer and left blank rows behind it; this is the cost of a few more
-   * mounted cards against rows that are actually there when you arrive.
-   */
   drawDistancePx: 1400,
   liveEdgeThresholdPx: 96,
   autoscrollBottomThreshold: 0.2,
@@ -49,11 +42,8 @@ export const CHAT = {
   imageAspectRatio: 832 / 1216,
   imageSweepWidthRatio: 0.45,
   imageSheenOpacity: 0.22,
-  /** Lets the list settle after mount before it is asked to jump. */
   focusScrollDelayMs: 250,
-  /** Retries, because a list that has just mounted cannot scroll to an index. */
   focusScrollAttempts: 6,
-  /** Grace after the last jump before scroll events count as the reader again. */
   focusSettleMs: 700,
   minTouchTargetPx: 44,
   toolButtonPx: 32,
@@ -104,19 +94,11 @@ export const STAGE_DIRECTIONS = {
 export const ENHANCE = {
   maxInputChars: 600,
   maxOutputChars: 400,
-  // Low, deliberately. At conversational temperatures the model stops rewriting
-  // the draft and starts answering it.
   temperature: 0.2,
-  // A second pass over an already-polished line comes back identical at a low
-  // temperature. Reworking again is the whole point of the button, so the retry
-  // is warmer rather than a refusal.
   retryTemperature: 0.75,
   maxTokens: 180,
   draftLabel: "Sentence:",
   rewriteLabel: "Rewrite:",
-  // How often a rework also opens the line with a stage direction. Only ever
-  // offered on a draft that has no action already and is not a question: asked
-  // to add an action to a question, the model answers the question instead.
   actionChance: 0.45,
 } as const;
 
@@ -127,20 +109,19 @@ export const TRANSCRIPT = {
 export const CHAT_TURN = {
   historyTurns: 14,
   maxTokens: 140,
-  temperature: 0.85,
-  presencePenalty: 0.6,
-  frequencyPenalty: 0.4,
   photoNoteStops: ["[photo", "[Photo"],
-  /**
-   * She was writing the reader's next turn as well as her own, because the
-   * example dialogue is a transcript and a transcript keeps going. Each of these
-   * needs the newline: a bare label would stop the very first token when she
-   * opened a reply with it, leaving nothing to say.
-   */
+
   readerTurnStops: ["\nPLAYER:", "\nPlayer:", "\nplayer:", "\nUSER:", "\nUser:"],
   maxReplySentences: 3,
   maxReplyChars: 240,
   stopOnBlankLine: true,
+} as const;
+
+export const OUTPUT_TAGS = {
+  speechOpen: "<speech>",
+  speechClose: "</speech>",
+  visualOpen: "<visual_prompt>",
+  visualClose: "</visual_prompt>",
 } as const;
 
 export const TTS = {
@@ -155,8 +136,6 @@ export const AUTH = {
   minPasswordLength: 8,
   sessionExpirySeconds: 60 * 60 * 24 * 30,
   sessionRefreshSeconds: 60 * 60 * 24,
-  // The account the paired device is signed in as when nobody has made one.
-  // A single-user conductor still needs an owner for a character to belong to.
   localOwnerEmail: "owner@eidolon.local",
   localOwnerName: "You",
 } as const;
@@ -171,12 +150,7 @@ export const CACHE = {
 
 export const PERSONA_GUARD = {
   primeChars: 90,
-  // How many opening words of an internal reminder count as the model having
-  // repeated it back instead of following it.
   echoWords: 6,
-  // Words that only exist inside this app's machinery. A character has no idea
-  // what a stage direction is, so saying the phrase at all gives the game away
-  // even when the reminder itself was not quoted.
   metaPhrases: [
     "stage direction",
     "system prompt",
@@ -236,9 +210,6 @@ export const AFFINITY = {
 } as const;
 
 export const MEMORY = {
-  // The fallback embedder's width. The real width is whatever the embedding
-  // endpoint returns, discovered on the first call, and the table is rebuilt
-  // when it changes.
   embeddingDimensions: 384,
   dimensionsFile: "dimensions.json",
   searchLimit: 5,
@@ -248,6 +219,13 @@ export const MEMORY = {
 export const SEARCH = {
   resultLimit: 3,
   cacheTtlMs: 60 * 60 * 1000,
+} as const;
+
+export const IMAGE_ENCODE = {
+  format: "webp",
+  extension: ".webp",
+  quality: 90,
+  effort: 5,
 } as const;
 
 export const STORAGE = {

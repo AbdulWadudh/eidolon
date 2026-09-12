@@ -62,8 +62,7 @@ export function ProfileHero({
           </View>
         )}
 
-        {/* A solid band rather than a gradient: the design system has no blur or
-            translucency, and the name has to stay readable over any portrait. */}
+        {}
         <View
           pointerEvents="none"
           className="absolute right-0 bottom-0 left-0 h-24"

@@ -4,8 +4,14 @@ const STAGE_DIRECTION = /\*[^*]*\*/g;
 const STRAY_ASTERISK = /\*/g;
 const COLLAPSE = /\s+/g;
 
+const EMOJI = /\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}]|\u{FE0F}|\u{200D}|\u{20E3}/gu;
+
+export function stripEmoji(raw: string): string {
+  return raw.replace(EMOJI, " ");
+}
+
 export function speakableSentence(raw: string): string {
-  return raw
+  return stripEmoji(raw)
     .replace(STAGE_DIRECTION, " ")
     .replace(STRAY_ASTERISK, " ")
     .replace(COLLAPSE, " ")

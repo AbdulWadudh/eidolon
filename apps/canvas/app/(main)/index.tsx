@@ -37,8 +37,6 @@ export default function MainCharactersScreen() {
     [serverHost],
   );
 
-  // The roster is re-read whenever this screen regains focus, so a portrait
-  // rendered in the background appears without the reader doing anything.
   useFocusEffect(
     React.useCallback(() => {
       let live = true;
@@ -55,8 +53,6 @@ export default function MainCharactersScreen() {
     }, [serverHost]),
   );
 
-  // The pill used to be hard-coded green, which said "connected" even while the
-  // socket was down. It now reflects the actual connection state.
   const status = {
     connected: { color: theme.success, label: serverHost || "connected" },
     connecting: { color: theme.warning, label: CONNECTION_COPY.connecting },
@@ -66,11 +62,11 @@ export default function MainCharactersScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.canvas }} className="flex-1 bg-canvas">
-      {/* Screen Header */}
+      {}
       <View className="flex-row items-center justify-between border-b border-border px-5 py-4">
         <Text className="font-main-bold text-2xl text-text-primary tracking-tight">Eidolon</Text>
 
-        {/* Connection Status Pill */}
+        {}
         <View className="flex-row items-center gap-2 rounded-full border border-border bg-audio-pill px-3 py-1.5">
           <View className="h-2 w-2 rounded-full" style={{ backgroundColor: status.color }} />
           <Text className="font-ui text-xs text-text-muted" numberOfLines={1}>
@@ -78,7 +74,7 @@ export default function MainCharactersScreen() {
           </Text>
         </View>
 
-        {/* Action Buttons */}
+        {}
         <View className="flex-row items-center gap-2">
           <Pressable
             className="rounded-full border border-border bg-card p-2 active:bg-border"
@@ -97,7 +93,7 @@ export default function MainCharactersScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
-        {/* Settings Dropdown/Drawer Card */}
+        {}
         {showSettings && (
           <Card className="border-primary/30 bg-card">
             <View className="flex-row items-center justify-between">
@@ -125,7 +121,7 @@ export default function MainCharactersScreen() {
           </Card>
         )}
 
-        {/* Section Heading */}
+        {}
         <View className="flex-row items-center gap-2">
           <AppIcon icon={SparklesIcon} size={16} color={theme.primary} />
           <Text className="font-ui-medium text-xs text-text-muted uppercase tracking-wider">

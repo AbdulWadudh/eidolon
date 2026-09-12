@@ -78,8 +78,10 @@ export {
   CHAT_TURN,
   DATA_FILES,
   ENHANCE,
+  IMAGE_ENCODE,
   MEMORY,
   MOCK,
+  OUTPUT_TAGS,
   PAIRING,
   PERSONA_GUARD,
   PHOTO,
@@ -101,7 +103,19 @@ export {
   affinityToastLabel,
   MIND_COPY,
 } from "./hud";
-export { IMAGE } from "./image";
+export {
+  composePrompt,
+  DEFAULT_IMAGE_PRESET,
+  IMAGE,
+  IMAGE_PRESETS,
+  type ImagePreset,
+  type ImagePresetKey,
+  isImagePresetKey,
+  negativePromptFor,
+  PROMPT_STYLES,
+  type PromptStyleKey,
+  promptStyleFor,
+} from "./image";
 export {
   CALL,
   CALL_COPY,
@@ -122,6 +136,13 @@ export {
   silentMp3FrameCount,
   TRANSCRIBE,
 } from "./live-voice";
+export {
+  DEFAULT_LLM_PROFILE,
+  isLlmProfileKey,
+  LLM_PROFILES,
+  type LlmProfile,
+  type LlmProfileKey,
+} from "./llm";
 export {
   CHRONICLE_CONTEXT,
   LOREBOOK,
@@ -161,6 +182,7 @@ export {
   PROACTIVE,
   QUEUE_CONCURRENCY,
   QUEUE_JOBS,
+  QUEUE_LOCK,
   QUEUE_NAMES,
   QUEUE_PREFIXES,
   QUEUE_PROACTIVE_RETRY,

@@ -54,8 +54,6 @@ const PHOTO_ACTIONS: PhotoAction[] = [
   "delete",
 ];
 
-// Cropping is what "avatar" and "adjust" both mean; they differ only in whether
-// the picture being framed is already the profile picture.
 const FRAMES_THE_AVATAR: PhotoAction[] = ["avatar", "adjust"];
 
 export function PhotoViewer({
@@ -147,9 +145,7 @@ export function PhotoViewer({
 
   return (
     <Modal visible={uri !== null} transparent animationType="none" onRequestClose={onClose}>
-      {/* Gestures do not reach into a React Native Modal on their own: the modal
-          is a separate native view hierarchy, outside the provider at the app
-          root. Without this, pinch and drag silently do nothing in here. */}
+      {}
       <GestureHandlerRootView style={{ flex: 1 }}>
         <Animated.View
           entering={reduced ? undefined : FadeIn.duration(UI_MS.disclosure)}

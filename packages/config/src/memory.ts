@@ -1,32 +1,12 @@
 export const WORKING_CONTEXT = {
-  windowSize: 20,
-  // A typed message has no length limit anywhere in the protocol, so counting
-  // messages does not bound anything. Twenty pasted paragraphs measured 20,698
-  // prompt tokens, which overruns even a 16k context. History is taken newest
-  // first until these characters are spent, and one message cannot eat them all.
-  maxHistoryChars: 6000,
   maxMessageChars: 1500,
 } as const;
 
 export const RECALL = {
-  // One, not two. A mean-pooled chat model separates a true match from an
-  // unrelated one by about 0.02, so the runner-up is noise rather than a second
-  // memory: on "what was your mum's name" it returned the mother 0.531 and an
-  // unrelated job 0.510. A purpose-built embedder earns the second slot back.
-  limit: 1,
-  // Cosine similarity, not the reciprocal of an L2 distance. On normalised
-  // vectors the old score topped out near 0.59, so a 0.65 gate could never open
-  // and recall was silent whatever the embedder returned.
-  //
-  // Calibrated against a mean-pooled chat model, whose similarities all crowd
-  // into 0.42-0.55: a true match measured 0.53 and an unrelated one 0.43. A
-  // purpose-built embedder separates those far more widely and wants this back
-  // near 0.65 - see stack/start-embed.bat.
+  limit: 2,
   relevanceThreshold: 0.5,
   header: "[Memories Recalled from Past Conversations]",
   maxSnippetChars: 220,
-  // Recall sits in front of the reply, so it gets a budget rather than the
-  // general client timeout. A slow embedder costs a memory, not a slow answer.
   timeoutMs: 1500,
 } as const;
 
@@ -46,12 +26,8 @@ export const WEB_CONTEXT = {
   header: "[Real-Time Web Reference Information]",
   searchingDetail: "Checking live web sources...",
   emptyHeader: "[No Reliable Web Result]",
-  // A word this long that never appears in the results means the results are
-  // about something else. Shorter words match too loosely to judge on.
   distinctiveMinLength: 7,
   commonQueryWords: [
-    // Generic nouns a page answers without ever using: a forecast reports
-    // "18C, light rain" and never says the word "weather".
     "weather",
     "forecast",
     "temperature",
@@ -115,19 +91,8 @@ export const MIND_UPDATE = {
 } as const;
 
 export const PROMPT_BUDGET = {
-  // The context llama-server is started with. The character ceiling below is
-  // derived from it rather than guessed, and a test fails if the two drift.
-  contextTokens: 8192,
-  // Measured against the real tokenizer at 12,000 characters: ordinary prose
-  // runs 4.5 chars/token, random letters 1.53, and arbitrary printable bytes
-  // 1.33. The budget has to survive the last of those, because a pasted hash
-  // dump or a block of minified code is exactly that.
   worstCharsPerToken: 1.33,
   charsPerToken: 4,
-  // The whole prompt, not just the system sections: persona, state, directive,
-  // the user's turn, and the history that fits after them.
-  // 10,000 / 1.33 = 7,519 tokens, plus the 200-token reply reserve, under 8,192.
-  maxChars: 10000,
   sectionOrder: ["persona", "state", "chronicle", "recall", "lore", "web", "directive"],
 } as const;
 

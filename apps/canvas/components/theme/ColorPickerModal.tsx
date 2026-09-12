@@ -16,7 +16,6 @@ export interface ColorPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  /** Must stay stable while the sheet is open (see note below). */
   initialColor: string;
   onSelectColor: (hex: string) => void;
 }
@@ -34,20 +33,6 @@ const DEFAULT_SWATCHES = [
   "#FFFFFF",
 ];
 
-/**
- * Stays mounted and is shown via `visible`, because on Android creating a nested
- * Dialog plus a GestureHandlerRootView and the Reanimated picker on demand costs
- * a visible freeze every single time the colour wheel is opened.
- *
- * Two things make that safe:
- *
- * 1. The picker is reset imperatively through `setColor` when it opens, so it
- *    always starts on the token being edited rather than the previous one.
- * 2. The live colour is tracked in a ref and never fed back through `value`.
- *    `ColorPicker` re-runs `setColor` with a 200ms `withTiming` whenever `value`
- *    changes, so echoing the gesture result back made the thumb animate away
- *    from the finger and re-rendered the modal on every frame.
- */
 export function ColorPickerModal({
   isOpen,
   onClose,
@@ -58,14 +43,12 @@ export function ColorPickerModal({
   const liveHex = React.useRef(initialColor);
   const pickerRef = React.useRef<ColorPickerRef>(null);
 
-  // Only drives the web <input type="color"> swatch; native never sets it.
   const [webHex, setWebHex] = React.useState(initialColor);
 
   React.useEffect(() => {
     if (!isOpen) return;
     liveHex.current = initialColor;
     if (Platform.OS === "web") setWebHex(initialColor);
-    // duration 0, so opening does not animate in from the previous token colour
     pickerRef.current?.setColor(initialColor, 0);
   }, [isOpen, initialColor]);
 
@@ -92,7 +75,7 @@ export function ColorPickerModal({
       <GestureHandlerRootView style={{ flex: 1 }}>
         <View className="flex-1 items-center justify-center bg-black/75 p-4">
           <View className="w-full max-w-sm rounded-card border border-card-border bg-card p-5 shadow-2xl">
-            {/* Header */}
+            {}
             <View className="mb-4 flex-row items-center justify-between">
               <Text className="font-ui-bold text-sm text-text-primary">{title}</Text>
               <Pressable
@@ -103,7 +86,7 @@ export function ColorPickerModal({
               </Pressable>
             </View>
 
-            {/* Native Browser Color Picker on Web */}
+            {}
             {Platform.OS === "web" && (
               <View className="mb-3 flex-row items-center justify-between rounded-button border border-border bg-input px-3 py-2">
                 <Text className="font-ui-medium text-xs text-text-primary">
@@ -126,7 +109,7 @@ export function ColorPickerModal({
               </View>
             )}
 
-            {/* Reanimated Color Picker */}
+            {}
             <ColorPicker
               ref={pickerRef}
               value={initialColor}
@@ -140,7 +123,7 @@ export function ColorPickerModal({
               <Swatches colors={DEFAULT_SWATCHES} style={{ marginTop: 4 }} />
             </ColorPicker>
 
-            {/* Footer Controls */}
+            {}
             <View className="mt-5 flex-row gap-2.5">
               <Button variant="secondary" className="flex-1" onPress={onClose}>
                 Cancel

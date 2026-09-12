@@ -1,13 +1,14 @@
 import { TTS } from "@eidolon/config";
 import { getServicesConfig } from "@eidolon/config/server";
 import { stripInfluence } from "@eidolon/protocol";
+import { stripEmoji } from "@/utils/sentence-buffer";
 
 export function ttsApiUrl(): string {
   return getServicesConfig().ttsApiUrl;
 }
 
 export function speakableText(reply: string): string {
-  return stripInfluence(reply)
+  return stripEmoji(stripInfluence(reply))
     .replace(/\*[^*]*\*/g, " ")
     .replace(/\s+/g, " ")
     .trim()

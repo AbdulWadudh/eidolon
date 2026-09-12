@@ -15,16 +15,16 @@ export interface CharacterCard {
   tier: string;
 }
 
-export function freshLineReminder(): ChatMessage {
-  return { role: "system", content: getPrompt("persona.freshLine") };
+export function freshLineReminder(): string {
+  return getPrompt("persona.freshLine");
 }
 
-export function mustSpeakReminder(): ChatMessage {
-  return { role: "system", content: getPrompt("persona.mustSpeak") };
+export function mustSpeakReminder(): string {
+  return getPrompt("persona.mustSpeak");
 }
 
-export function hardenedReminder(): ChatMessage {
-  return { role: "system", content: getPrompt("persona.hardenedReminder") };
+export function hardenedReminder(): string {
+  return getPrompt("persona.hardenedReminder");
 }
 
 function block(key: string, variable: string, value: string): string {

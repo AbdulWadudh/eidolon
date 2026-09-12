@@ -30,11 +30,6 @@ export interface ThemeStudioSheetProps {
   onClose: () => void;
   characterId?: string;
   characterName?: string;
-  /**
-   * Opened from a character's own settings, the studio is about that character
-   * and nothing else. Offering "everyone" there and defaulting to it meant two
-   * taps of scope-picking before you could change the colour you came for.
-   */
   lockToCharacter?: boolean;
 }
 
@@ -79,15 +74,11 @@ export function ThemeStudioSheet({
   React.useEffect(() => {
     if (lockToCharacter) setScope("character");
   }, [lockToCharacter]);
-  // Accordion, collapsed by default, so the live preview stays on screen while
-  // editing instead of being pushed off by the full control list.
   const [expandedSection, setExpandedSection] = React.useState<string | null>(null);
   const toggleSection = React.useCallback((key: string) => {
     setExpandedSection((prev) => (prev === key ? null : key));
   }, []);
 
-  // The target is deliberately kept after closing, so `initialColor` never flips
-  // to a fallback while the modal is still on screen.
   const [pickerOpen, setPickerOpen] = React.useState(false);
   const [pickerTarget, setPickerTarget] = React.useState<{
     title: string;
@@ -100,11 +91,6 @@ export function ThemeStudioSheet({
   const resolvedTheme = useResolvedTheme(scopedCharacterId);
   const previewCssVars = useThemeCssVars(scopedCharacterId);
 
-  // react-native-css 3.0.7 caches computed styles per rule-set hash and only
-  // rebuilds when a rule the element itself declares changes, so a descendant
-  // reading --color-primary could keep a stale value until some unrelated token
-  // (e.g. --card, which the Card itself declares) forced a rebuild. Remounting the
-  // preview on any token change guarantees it always shows the current theme.
   const previewKey = React.useMemo(
     () =>
       [
@@ -143,7 +129,6 @@ export function ThemeStudioSheet({
     [resolvedTheme.canvas],
   );
 
-  // Mode selects which palette is read, so it is global rather than per-scope.
   const handleSetColorMode = (mode: "dark" | "light") => {
     setColorMode(mode);
   };
@@ -159,7 +144,6 @@ export function ThemeStudioSheet({
     [scope, targetCharacterId, updateGlobalToken, updateCharacterToken],
   );
 
-  // Stable identities, so the memoised ColorFields are not invalidated every render.
   const handleColorChange = React.useCallback(
     (tokenKey: keyof ThemeTokens, val: string) => {
       updateToken(tokenKey, val as ThemeTokens[typeof tokenKey]);
@@ -176,7 +160,6 @@ export function ThemeStudioSheet({
     [resetToken, scopedCharacterId],
   );
 
-  // In character scope a token is "default" when it has no override at all.
   const isTokenDefault = React.useCallback(
     (tokenKey: keyof ThemeTokens) =>
       scope === "character"
@@ -204,7 +187,7 @@ export function ThemeStudioSheet({
     <Modal visible={isOpen} animationType="slide" transparent={false} onRequestClose={onClose}>
       <VariableContextProvider value={previewCssVars}>
         <SafeAreaView style={sheetStyle} className="flex-1 bg-canvas">
-          {/* Header Bar */}
+          {}
           <View className="flex-row items-center justify-between border-b border-border px-4 py-3">
             <View className="flex-1 flex-row items-center gap-2">
               <AppIcon icon={PaintBoardIcon} size={20} color={resolvedTheme.primary} />
@@ -238,8 +221,8 @@ export function ThemeStudioSheet({
               />
             )}
 
-            {/* B. Color Appearance Mode (Dark / Light) */}
-            {/* Binary choice, so an inline segmented toggle rather than a section. */}
+            {}
+            {}
             <View className="flex-row items-center justify-between rounded-card border border-border bg-card px-3 py-2.5">
               <Text className="font-ui-bold text-xs uppercase tracking-wider text-text-muted">
                 Appearance Mode

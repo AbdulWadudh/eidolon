@@ -6,13 +6,12 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { STORAGE } from "@eidolon/config";
+import { IMAGE_ENCODE, STORAGE } from "@eidolon/config";
 import { getStorageConfig, missingStorageConfig, type StorageConfig } from "@eidolon/config/server";
+import sharp from "sharp";
 
 export { getStorageConfig, missingStorageConfig, type StorageConfig };
 
-// Everything a character owns lives under one prefix, so a character's media
-// can be listed or removed in one sweep rather than chased across two trees.
 export function characterKey(characterId: string, folder: string, filename: string): string {
   return `${STORAGE.characterPrefix}/${characterId}/${folder}/${filename}`;
 }
@@ -171,12 +170,37 @@ export async function uploadFile(
   return publicUrl(key);
 }
 
+export async function toStoredImage(buffer: Buffer | Uint8Array): Promise<Buffer> {
+  const input = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
+
+  try {
+    const image = sharp(input);
+    const { format } = await image.metadata();
+    if (format === IMAGE_ENCODE.format) return input;
+
+    return await image
+      .webp({ quality: IMAGE_ENCODE.quality, effort: IMAGE_ENCODE.effort })
+      .toBuffer();
+  } catch (error) {
+    console.warn(
+      `[Storage] Could not re-encode an image, storing it as it came: ${describe(error)}`,
+    );
+    return input;
+  }
+}
+
+export function asWebpName(filename: string): string {
+  const base = filename.replace(/\.[^.]*$/, "");
+  return `${base || "image"}${IMAGE_ENCODE.extension}`;
+}
+
 export async function uploadImage(
   characterId: string,
   filename: string,
   buffer: Buffer | Uint8Array,
 ): Promise<string> {
-  return uploadFile(imageKey(characterId, filename), buffer, STORAGE.imageContentType);
+  const encoded = await toStoredImage(buffer);
+  return uploadFile(imageKey(characterId, asWebpName(filename)), encoded, STORAGE.imageContentType);
 }
 
 export async function uploadAudio(

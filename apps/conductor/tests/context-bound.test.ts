@@ -1,8 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
-import { CHAT_TURN, MIND_UPDATE, PROMPT_BUDGET, WORKING_CONTEXT } from "@eidolon/config";
+import {
+  CHAT_TURN,
+  LLM_PROFILES,
+  MIND_UPDATE,
+  PROMPT_BUDGET,
+  WORKING_CONTEXT,
+} from "@eidolon/config";
 import { appendMessage, db, ensureCharacter } from "@/db";
 import { assemblePrompt, clip, fitHistory } from "@/orchestrator/prompt-builder";
 import { loadPrompts } from "@/prompts/store";
+import { PROFILE } from "@/services/llm-profile";
 
 const CHARACTER_ID = "context-bound-test";
 
@@ -20,16 +27,22 @@ beforeEach(async () => {
 afterEach(wipe);
 
 describe("the prompt cannot overrun the context", () => {
-  it("fits the character budget into the context even at the worst tokenisation", () => {
-    const worstTokens = Math.ceil(PROMPT_BUDGET.maxChars / PROMPT_BUDGET.worstCharsPerToken);
-    const reserve = CHAT_TURN.maxTokens + MIND_UPDATE.extraTokens;
+  for (const [name, profile] of Object.entries(LLM_PROFILES)) {
+    it(`fits ${name}'s character budget into its context at the worst tokenisation`, () => {
+      const worstTokens = Math.ceil(profile.promptMaxChars / PROMPT_BUDGET.worstCharsPerToken);
+      const reserve = CHAT_TURN.maxTokens + MIND_UPDATE.extraTokens;
 
-    expect(worstTokens + reserve).toBeLessThanOrEqual(PROMPT_BUDGET.contextTokens);
-  });
+      expect(worstTokens + reserve).toBeLessThanOrEqual(profile.contextTokens);
+    });
+
+    it(`leaves ${name} room to finish the reply`, () => {
+      expect(profile.contextTokens).toBeGreaterThan(profile.promptMaxChars / 4);
+      expect(profile.historyMaxChars).toBeLessThanOrEqual(profile.promptMaxChars);
+    });
+  }
 
   it("leaves the reply room to finish", () => {
     expect(CHAT_TURN.maxTokens + MIND_UPDATE.extraTokens).toBeGreaterThan(0);
-    expect(PROMPT_BUDGET.contextTokens).toBeGreaterThan(PROMPT_BUDGET.maxChars / 4);
   });
 });
 
@@ -68,7 +81,7 @@ describe("bounding a pasted wall of text", () => {
   });
 
   it("keeps a real assembled prompt inside the character budget however long the paste", async () => {
-    for (let index = 0; index < WORKING_CONTEXT.windowSize; index += 1) {
+    for (let index = 0; index < PROFILE.historyTurns; index += 1) {
       appendMessage(CHARACTER_ID, index % 2 === 0 ? "user" : "assistant", "p".repeat(20_000));
     }
 
@@ -79,6 +92,6 @@ describe("bounding a pasted wall of text", () => {
     });
 
     const total = assembled.messages.reduce((sum, m) => sum + m.content.length, 0);
-    expect(total).toBeLessThanOrEqual(PROMPT_BUDGET.maxChars);
+    expect(total).toBeLessThanOrEqual(PROFILE.promptMaxChars);
   });
 });

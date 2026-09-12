@@ -74,9 +74,6 @@ const SHOT_SCHEMA = {
 
 const faceNames = new Map<string, string>();
 
-// A stored avatar can point anywhere — storage may be down, or the reader may
-// have set one from a photo that has since been deleted. Falling back to a
-// fresh portrait keeps one bad URL from breaking every photo from then on.
 async function readStoredFace(url: string): Promise<Uint8Array | null> {
   try {
     const response = await fetch(url, { signal: AbortSignal.timeout(TIMEOUTS_MS.clientRequest) });
@@ -92,8 +89,6 @@ async function ensureFaceReference(request: SelfieRequest, appearance: string): 
   const cached = faceNames.get(request.characterId);
   if (cached) return cached;
 
-  // A face chosen by the reader wins over the avatar: the profile picture is
-  // whatever looks good small, which is not always the clearest look at a face.
   const stored =
     getCharacterLook(request.characterId).faceUrl ?? getCharacterAvatar(request.characterId);
   const existing = stored ? await readStoredFace(stored) : null;
@@ -113,9 +108,6 @@ async function ensureFaceReference(request: SelfieRequest, appearance: string): 
   return name;
 }
 
-// Regenerating from a photo means handing that photo to ComfyUI as the starting
-// point. It is fetched from storage rather than trusted from the client, and a
-// failure falls back to a fresh photo instead of failing the request.
 async function stageSourceImage(request: SelfieRequest): Promise<string | null> {
   if (!request.referenceUrl) return null;
 
@@ -180,44 +172,17 @@ export async function paintSelfie(
 
   const sourceImageName = await stageSourceImage(request);
 
-  // An edit keeps the place, the pose and the light from the photo itself, so
-  // re-describing them only fights the source. What is asked for leads instead.
   const parts = sourceImageName
-    ? [
-        appearance,
-        request.request,
-        shot?.look_change ?? "",
-        shot?.outfit ?? "",
-        IMAGE.qualitySuffix,
-      ]
+    ? [appearance, request.request, shot?.look_change ?? "", shot?.outfit ?? ""]
     : shot
-      ? [
-          appearance,
-          shot.outfit,
-          shot.others,
-          shot.action,
-          shot.setting,
-          shot.light,
-          shot.framing,
-          IMAGE.qualitySuffix,
-        ]
-      : [
-          appearance,
-          request.request,
-          sample(IMAGE.framings),
-          sample(IMAGE.flourishes),
-          IMAGE.qualitySuffix,
-        ];
+      ? [appearance, shot.outfit, shot.others, shot.action, shot.setting, shot.light, shot.framing]
+      : [appearance, request.request, sample(IMAGE.framings), sample(IMAGE.flourishes)];
 
   const promptUsed = parts
     .map(oneLine)
     .filter((part) => part.length > 0)
     .join(", ");
   const subject = captionFor(shot, request.request);
-
-  // The caption only needs the subject, which is known before the first step is
-  // sampled. Asking for it afterwards left the card sitting at 6 of 6 through
-  // three language model calls with the picture already finished behind it.
   const [image, message] = await Promise.all([
     generateImage(promptUsed, faceName, {
       orientation,
@@ -251,19 +216,10 @@ export function inferOrientation(text: string): Orientation {
 
 const OTHERS_CLAUSE = new RegExp(`\\b(${IMAGE.othersClauseWords.join("|")})\\b`, "i");
 
-/**
- * The planner is asked for short phrases and returns whole clauses. Capping the
- * fields here is what keeps a caption readable, because the prompt does not.
- */
 export function sceneField(text: string): string {
   return oneLine(text).split(/\s+/).slice(0, IMAGE.sceneFieldMaxWords).join(" ");
 }
 
-/**
- * "others" names who else is in the frame. A clause describes the room instead,
- * and reading "with An empty glass jar on the counter" after the word "with" is
- * worse than saying nothing.
- */
 export function whoElse(text: string): string {
   const trimmed = oneLine(text);
   if (trimmed.length === 0 || OTHERS_CLAUSE.test(trimmed)) return "";

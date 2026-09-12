@@ -1,12 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
-import {
-  CHRONICLE_CONTEXT,
-  LOREBOOK,
-  PROMPT_BUDGET,
-  RECALL,
-  WEB_CONTEXT,
-  WORKING_CONTEXT,
-} from "@eidolon/config";
+import { CHRONICLE_CONTEXT, LOREBOOK, PROMPT_BUDGET, RECALL, WEB_CONTEXT } from "@eidolon/config";
 import { appendMessage, db, ensureCharacter, saveCharacterMind } from "@/db";
 import { appendChronicle } from "@/db/chronicles";
 import { upsertLoreEntry } from "@/db/lorebook";
@@ -21,6 +14,7 @@ import {
 } from "@/orchestrator/prompt-builder";
 import { hasTemporalMarker, shouldSearchWeb } from "@/orchestrator/search-trigger";
 import { loadPrompts } from "@/prompts/store";
+import { PROFILE } from "@/services/llm-profile";
 
 const CHARACTER_ID = "prompt-builder-test";
 const NEWLINE = String.fromCharCode(10);
@@ -145,8 +139,8 @@ describe("working context window", () => {
       appendMessage(CHARACTER_ID, index % 2 === 0 ? "user" : "assistant", `line ${index}`);
     }
 
-    const history = workingHistory(CHARACTER_ID, WORKING_CONTEXT.maxHistoryChars);
-    expect(history.length).toBeLessThanOrEqual(WORKING_CONTEXT.windowSize);
+    const history = workingHistory(CHARACTER_ID, PROFILE.historyMaxChars);
+    expect(history.length).toBeLessThanOrEqual(PROFILE.historyTurns);
     expect(history.at(-1)?.content).toBe("line 39");
   });
 
@@ -174,7 +168,7 @@ describe("token budget", () => {
   });
 
   it("sheds optional context rather than blowing the budget", () => {
-    const chunk = "x".repeat(Math.floor(PROMPT_BUDGET.maxChars / 3));
+    const chunk = "x".repeat(Math.floor(PROFILE.promptMaxChars / 3));
     const trimmed = trimToBudget({
       persona: chunk,
       state: "[Character State: ...]",
@@ -192,7 +186,7 @@ describe("token budget", () => {
   });
 
   it("sheds in reverse priority, so web goes before the chronicle", () => {
-    const chunk = "x".repeat(Math.floor(PROMPT_BUDGET.maxChars / 3));
+    const chunk = "x".repeat(Math.floor(PROFILE.promptMaxChars / 3));
     const trimmed = trimToBudget({
       persona: "short",
       state: "short",
@@ -208,7 +202,7 @@ describe("token budget", () => {
   });
 
   it("never silently truncates the persona, and says so instead", () => {
-    const oversized = "x".repeat(PROMPT_BUDGET.maxChars + 1);
+    const oversized = "x".repeat(PROFILE.promptMaxChars + 1);
     const trimmed = trimToBudget({
       persona: oversized,
       state: "s",
@@ -236,7 +230,7 @@ describe("token budget", () => {
 
     expect(withinBudget(assembled.sections)).toBe(true);
     expect(estimateTokens(assembled.messages[0]?.content ?? "")).toBeLessThanOrEqual(
-      PROMPT_BUDGET.maxChars / PROMPT_BUDGET.charsPerToken,
+      PROFILE.promptMaxChars / PROMPT_BUDGET.charsPerToken,
     );
   });
 });

@@ -57,13 +57,15 @@ export function memoryDimensions(): number {
   return activeDimensions;
 }
 
-/**
- * The table's vector width is fixed when it is created, so swapping embedders
- * means rebuilding it. The width in use is recorded beside the data; when the
- * two disagree the old table is dropped rather than left to reject every write.
- */
 export async function setMemoryDimensions(dimensions: number): Promise<void> {
-  if (dimensions <= 0 || dimensions === activeDimensions) return;
+  if (dimensions <= 0) return;
+  const recorded = readRecordedDimensions();
+  const current = recorded && recorded > 0 ? recorded : activeDimensions;
+  if (dimensions === current) {
+    activeDimensions = dimensions;
+    return;
+  }
+
   activeDimensions = dimensions;
 
   const { db } = await getLanceDb();
@@ -79,9 +81,6 @@ export async function setMemoryDimensions(dimensions: number): Promise<void> {
   await getLanceDb();
 }
 
-/**
- * Initializes and retrieves the LanceDB connection and character_memories table.
- */
 export async function getLanceDb(): Promise<{ db: lancedb.Connection; table: lancedb.Table }> {
   if (dbInstance && tableInstance) {
     return { db: dbInstance, table: tableInstance };
@@ -114,10 +113,6 @@ export async function getLanceDb(): Promise<{ db: lancedb.Connection; table: lan
   return { db: dbInstance, table: tableInstance };
 }
 
-/**
- * Generates a deterministic 384-dimensional normalized vector from text.
- * Used for dev/testing when external embedding models are offline.
- */
 export function generateMockEmbedding(
   text: string,
   dimensions: number = activeDimensions,
@@ -130,7 +125,6 @@ export function generateMockEmbedding(
     return vector;
   }
 
-  // Generate deterministic pseudo-random components based on char codes
   let hash = 0;
   for (let i = 0; i < text.length; i++) {
     hash = (hash << 5) - hash + text.charCodeAt(i);
@@ -138,13 +132,11 @@ export function generateMockEmbedding(
   }
 
   for (let i = 0; i < dims; i++) {
-    // Linear Congruential Generator step
     hash = Math.imul(hash, 1664525) + 1013904223;
     const charContribution = text.charCodeAt(i % text.length) / 255;
     vector[i] = (hash / 2147483648) * 0.7 + charContribution * 0.3;
   }
 
-  // Normalize to unit length (L2 norm)
   let norm = 0;
   for (let i = 0; i < dims; i++) {
     norm += vector[i] * vector[i];
@@ -159,9 +151,6 @@ export function generateMockEmbedding(
   return vector;
 }
 
-/**
- * Inserts a new memory vector record for a specific character.
- */
 export async function insertMemory(
   characterId: string,
   text: string,
@@ -182,15 +171,6 @@ export async function insertMemory(
   await table.add([record]);
 }
 
-/**
- * Searches memories for a given character using vector similarity.
- */
-/**
- * A table whose manifest points at fragments that are no longer on disk cannot
- * be read again, and a permanently broken table means recall never works for
- * this install. Memories enrich a reply rather than being the source of truth
- * for one, so the last resort is to rebuild empty and carry on.
- */
 export async function rebuildMemoryTable(): Promise<void> {
   const { db } = await getLanceDb();
   if ((await db.tableNames()).includes(TABLE_NAME)) {
@@ -236,8 +216,6 @@ export async function searchMemories(
 
     return results.map((row) => {
       const distance = typeof row._distance === "number" ? row._distance : 1;
-      // Cosine distance is 1 - cosine similarity, so the score reads directly as
-      // similarity on the 0..1 scale the relevance threshold is written against.
       const score = Math.max(0, Math.min(1, 1 - distance));
 
       const metadataStr = typeof row.metadata === "string" ? row.metadata : "{}";
@@ -254,9 +232,6 @@ export async function searchMemories(
   });
 }
 
-/**
- * Checks LanceDB service health.
- */
 export async function checkLanceDbHealth(): Promise<boolean> {
   try {
     const { table } = await getLanceDb();

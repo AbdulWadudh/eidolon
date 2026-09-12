@@ -1,5 +1,7 @@
 import { networkInterfaces } from "node:os";
 import { CACHE, SERVER_DEFAULTS, STORAGE } from "../defaults";
+import { DEFAULT_IMAGE_PRESET, type ImagePresetKey, isImagePresetKey } from "../image";
+import { DEFAULT_LLM_PROFILE, isLlmProfileKey, type LlmProfileKey } from "../llm";
 
 export interface ServerConfig {
   port: number;
@@ -113,6 +115,28 @@ export function getServicesConfig(): ServicesConfig {
     embeddingsApiUrl: process.env.EMBEDDINGS_API_URL ?? process.env.LLM_API_URL ?? "",
     embeddingsModel: process.env.EMBEDDINGS_MODEL ?? "",
   };
+}
+
+export function getImagePreset(): ImagePresetKey {
+  const name = (process.env.IMAGE_PRESET ?? "").trim();
+  if (name.length === 0) return DEFAULT_IMAGE_PRESET;
+  if (isImagePresetKey(name)) return name;
+
+  console.warn(
+    `[image] IMAGE_PRESET="${name}" is not a stack this knows. Falling back to ${DEFAULT_IMAGE_PRESET}.`,
+  );
+  return DEFAULT_IMAGE_PRESET;
+}
+
+export function getLlmProfile(): LlmProfileKey {
+  const name = (process.env.LLM_PROFILE ?? "").trim();
+  if (name.length === 0) return DEFAULT_LLM_PROFILE;
+  if (isLlmProfileKey(name)) return name;
+
+  console.warn(
+    `[llm] LLM_PROFILE="${name}" is not a model family this knows. Falling back to ${DEFAULT_LLM_PROFILE}.`,
+  );
+  return DEFAULT_LLM_PROFILE;
 }
 
 export function getMockBackdropUrl(): string {

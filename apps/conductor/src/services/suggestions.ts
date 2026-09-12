@@ -73,8 +73,6 @@ export function shapeSuggestion(raw: string): string {
     .replace(/^["'`]|["'`]$/g, "");
   if (collapsed.length === 0) return "";
 
-  // A paragraph in asterisks is narration, not an option anyone can send. The
-  // long ones go, and what the player actually says is what is left.
   const limited = limitActions(collapsed);
   if (spokenWords(limited).length === 0) return "";
 
@@ -91,11 +89,6 @@ export function hasStageDirection(text: string): boolean {
   return hasAction(text);
 }
 
-/**
- * An action is a garnish, never the dish. Past the budget the option keeps what
- * the player says and loses the asterisks, so a tray is never three stage
- * directions in a row.
- */
 export function capActions(options: string[]): string[] {
   let used = 0;
   return options.map((option) => {
@@ -137,9 +130,7 @@ export function extractCandidates(raw: string): string[] {
     try {
       const strict = onlyStrings(JSON.parse(block));
       if (strict.length > 0) return strict;
-    } catch {
-      // Unquoted or trailing-comma output is normal from small local models.
-    }
+    } catch {}
   }
 
   const body = bracketed ? raw.slice(opened + 1, closed) : raw;
@@ -165,8 +156,6 @@ export function normalizeSuggestions(candidates: unknown): string[] {
   }
 
   const options = take(uniq(capActions(filled)), SUGGESTIONS.count);
-  // Stripping an action can collide with an option already in the tray, so a
-  // spoken line tops the count back up.
   for (const spare of shuffle(FALLBACK_SPOKEN)) {
     if (options.length >= SUGGESTIONS.count) break;
     if (!options.includes(spare)) options.push(spare);

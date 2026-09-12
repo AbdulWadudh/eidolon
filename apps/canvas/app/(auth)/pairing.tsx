@@ -15,8 +15,6 @@ import { ArrowDown01Icon, ArrowUp01Icon, QrCodeIcon } from "@/lib/icons";
 import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme } from "@/store/theme-store";
 
-/** Baked in at build time so a release APK opens ready to connect. Empty is a
- * supported configuration: the field simply starts blank. */
 const DEFAULT_HOST = process.env.EXPO_PUBLIC_CONDUCTOR_HOST ?? "";
 
 function humanPairingError(err: unknown): string {
@@ -58,9 +56,7 @@ export default function PairingScreen() {
       setErrorMessage(msg);
       try {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      } catch {
-        // Haptics fallback
-      }
+      } catch {}
       setTimeout(() => {
         scanLock.current = false;
         setIsConnecting(false);
@@ -86,9 +82,7 @@ export default function PairingScreen() {
       setErrorMessage(msg);
       try {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      } catch {
-        // Haptics fallback
-      }
+      } catch {}
       setIsConnecting(false);
     }
   };
@@ -100,7 +94,7 @@ export default function PairingScreen() {
           contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingVertical: 24 }}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Header */}
+          {}
           <View className="mb-6 items-center">
             <Text className="font-main-bold text-2xl text-text-primary tracking-tight">
               {PAIRING_COPY.title}
@@ -110,7 +104,7 @@ export default function PairingScreen() {
             </Text>
           </View>
 
-          {/* Camera Viewfinder */}
+          {}
           <View className="items-center justify-center">
             <View className="h-72 w-72 overflow-hidden rounded-card border border-border bg-card">
               {permission?.granted && Platform.OS !== "web" ? (
@@ -122,7 +116,7 @@ export default function PairingScreen() {
                     }}
                     onBarcodeScanned={handleBarcodeScanned}
                   />
-                  {/* Viewfinder Target Border Overlay */}
+                  {}
                   <View className="pointer-events-none absolute inset-4 rounded-button border-2 border-primary" />
                   {isConnecting && (
                     <View className="absolute inset-0 items-center justify-center bg-canvas/80">
@@ -152,7 +146,7 @@ export default function PairingScreen() {
             </View>
           </View>
 
-          {/* Error Message Toast/Banner */}
+          {}
           {errorMessage && (
             <Animated.View
               entering={
@@ -170,7 +164,7 @@ export default function PairingScreen() {
             </Animated.View>
           )}
 
-          {/* Manual Connection Section */}
+          {}
           <View className="mt-6">
             <Pressable
               className="flex-row items-center justify-between rounded-button border border-border bg-card px-4 py-3"
@@ -226,7 +220,7 @@ export default function PairingScreen() {
               </Card>
             )}
 
-            {/* Quick Demo Access */}
+            {}
             <Pressable
               className="mt-6 items-center rounded-button border border-border bg-card p-3 active:bg-border"
               onPress={() => router.push("/demo")}

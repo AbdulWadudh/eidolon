@@ -1,4 +1,10 @@
-import { QUEUE_CONCURRENCY, QUEUE_JOBS, QUEUE_NAMES, QUEUE_PREFIXES } from "@eidolon/config";
+import {
+  QUEUE_CONCURRENCY,
+  QUEUE_JOBS,
+  QUEUE_LOCK,
+  QUEUE_NAMES,
+  QUEUE_PREFIXES,
+} from "@eidolon/config";
 import { Worker } from "bullmq";
 import { setMessageAudio, setMessageImage } from "@/db";
 import { queueConnection } from "@/queue/connection";
@@ -49,6 +55,9 @@ export function createS3Worker(): Worker<S3UploadJobData, string | null, S3Uploa
       connection: queueConnection(),
       prefix: QUEUE_PREFIXES.s3Upload,
       concurrency: QUEUE_CONCURRENCY.s3Upload,
+      lockDuration: QUEUE_LOCK.durationMs,
+      stalledInterval: QUEUE_LOCK.stalledIntervalMs,
+      maxStalledCount: QUEUE_LOCK.maxStalledCount,
     },
   );
 

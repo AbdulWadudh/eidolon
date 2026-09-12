@@ -38,6 +38,12 @@ export const QUEUE_PROACTIVE_RETRY = {
   backoffDelayMs: 5000,
 } as const;
 
+export const QUEUE_LOCK = {
+  durationMs: 120000,
+  stalledIntervalMs: 120000,
+  maxStalledCount: 1,
+} as const;
+
 export const QUEUE_CONCURRENCY = {
   gpu: 1,
   s3Upload: 4,

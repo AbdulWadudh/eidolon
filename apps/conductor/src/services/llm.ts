@@ -2,6 +2,7 @@ import { TIMEOUTS_MS } from "@eidolon/config";
 import { getServicesConfig } from "@eidolon/config/server";
 import { delay } from "es-toolkit";
 import { EventSourceParserStream } from "eventsource-parser/stream";
+import { canThink, STOP_TOKENS } from "@/services/llm-profile";
 import { safeJsonParse } from "@/utils/json";
 
 export interface ChatMessage {
@@ -11,12 +12,16 @@ export interface ChatMessage {
 
 export interface CompletionOptions {
   temperature?: number;
+  topP?: number;
+  minP?: number;
+  repeatPenalty?: number;
   maxTokens?: number;
   stop?: string[];
   presencePenalty?: number;
   frequencyPenalty?: number;
   allowMockFallback?: boolean;
   responseSchema?: { name: string; schema: unknown };
+  think?: boolean;
 }
 
 export class LlmUnavailableError extends Error {}
@@ -43,11 +48,24 @@ const MOCK_FALLBACK_TOKENS = [
   " you.",
 ];
 
-/**
- * Streams chat completion tokens from an OpenAI-compatible endpoint.
- * Gracefully falls back to mock roleplay tokens if the endpoint is offline or fails.
- */
 export async function* streamChatCompletion(
+  messages: ChatMessage[],
+  signal?: AbortSignal,
+  options?: CompletionOptions,
+): AsyncGenerator<string> {
+  let spoke = false;
+  for await (const token of streamOnce(messages, signal, options)) {
+    spoke = true;
+    yield token;
+  }
+
+  if (!spoke && options?.think === true && !signal?.aborted) {
+    console.warn("[LLM] The model thought itself into silence; asking again without it.");
+    yield* streamOnce(messages, signal, { ...options, think: false });
+  }
+}
+
+async function* streamOnce(
   messages: ChatMessage[],
   signal?: AbortSignal,
   options?: CompletionOptions,
@@ -63,6 +81,9 @@ export async function* streamChatCompletion(
         messages,
         stream: true,
         ...(options?.temperature === undefined ? {} : { temperature: options.temperature }),
+        ...(options?.topP === undefined ? {} : { top_p: options.topP }),
+        ...(options?.minP === undefined ? {} : { min_p: options.minP }),
+        ...(options?.repeatPenalty === undefined ? {} : { repeat_penalty: options.repeatPenalty }),
         ...(options?.maxTokens === undefined ? {} : { max_tokens: options.maxTokens }),
         ...(options?.stop === undefined ? {} : { stop: options.stop }),
         ...(options?.presencePenalty === undefined
@@ -71,6 +92,9 @@ export async function* streamChatCompletion(
         ...(options?.frequencyPenalty === undefined
           ? {}
           : { frequency_penalty: options.frequencyPenalty }),
+        ...(canThink()
+          ? { chat_template_kwargs: { enable_thinking: options?.think === true } }
+          : {}),
         ...(options?.responseSchema === undefined
           ? {}
           : {
@@ -129,16 +153,10 @@ export async function* streamChatCompletion(
   }
 }
 
-/**
- * Safely extracts typed structured JSON output from an LLM response string.
- */
 export function extractStructuredOutput<T>(raw: string, fallback: T): T {
   return safeJsonParse<T>(raw, fallback);
 }
 
-/**
- * Health check for the LLM endpoint.
- */
 export async function checkLlmHealth(): Promise<boolean> {
   try {
     const controller = new AbortController();
@@ -165,14 +183,6 @@ export interface CompletionRequest {
 
 export class CompletionUnsupportedError extends Error {}
 
-/**
- * The raw completion endpoint, without a chat template.
- *
- * A roleplay-tuned model reads any chat turn as something to answer, which makes
- * it useless for text-in/text-out work: asked to rewrite "did you get the job??"
- * it replies that it got the job. Completions carry no such frame, so the model
- * continues the pattern it is shown instead of joining a conversation.
- */
 export async function completeText(request: CompletionRequest): Promise<string> {
   let response: Response;
 
@@ -185,7 +195,7 @@ export async function completeText(request: CompletionRequest): Promise<string> 
         prompt: request.prompt,
         temperature: request.temperature,
         max_tokens: request.maxTokens,
-        ...(request.stop === undefined ? {} : { stop: request.stop }),
+        stop: [...STOP_TOKENS, ...(request.stop ?? [])],
       }),
       signal: request.signal,
     });

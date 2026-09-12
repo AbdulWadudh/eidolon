@@ -1,5 +1,5 @@
 export const STATUS_COPY = {
-  thinking: { label: "Thinking", line: "Thinking it over" },
+  thinking: { label: "Typing", line: "Typing…" },
   searching: { label: "Looking it up", line: "Checking what's happening out there" },
   painting: { label: "Taking a photo", line: "Capturing the moment" },
   speaking: { label: "Speaking", line: "Saying it out loud" },

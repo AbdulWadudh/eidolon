@@ -1,10 +1,18 @@
-import { PROACTIVE, QUEUE_CONCURRENCY, QUEUE_NAMES, QUEUE_PREFIXES, render } from "@eidolon/config";
+import {
+  PROACTIVE,
+  QUEUE_CONCURRENCY,
+  QUEUE_LOCK,
+  QUEUE_NAMES,
+  QUEUE_PREFIXES,
+  render,
+} from "@eidolon/config";
 import { Worker } from "bullmq";
 import { appendMessage, getCharacterCard } from "@/db";
 import { getPrompt } from "@/prompts/store";
 import { queueConnection } from "@/queue/connection";
 import type { ProactiveJob, ProactiveJobData, ProactiveJobName } from "@/queue/types";
 import { type ChatMessage, streamChatCompletion } from "@/services/llm";
+import { thinkingBudget } from "@/services/llm-profile";
 import { limitActions } from "@/services/stage-directions";
 import { broadcastToCharacter } from "@/ws/registry";
 
@@ -38,7 +46,8 @@ export async function processProactiveJob(job: ProactiveJob): Promise<void> {
   let raw = "";
   for await (const token of streamChatCompletion(messages, undefined, {
     temperature: PROACTIVE.temperature,
-    maxTokens: PROACTIVE.maxTokens,
+    maxTokens: thinkingBudget(PROACTIVE.maxTokens),
+    think: true,
     allowMockFallback: false,
   })) {
     raw += token;
@@ -72,6 +81,9 @@ export function createProactiveWorker(): Worker<ProactiveJobData, void, Proactiv
       connection: queueConnection(),
       prefix: QUEUE_PREFIXES.proactive,
       concurrency: QUEUE_CONCURRENCY.proactive,
+      lockDuration: QUEUE_LOCK.durationMs,
+      stalledInterval: QUEUE_LOCK.stalledIntervalMs,
+      maxStalledCount: QUEUE_LOCK.maxStalledCount,
     },
   );
 

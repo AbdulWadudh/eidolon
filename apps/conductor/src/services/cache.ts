@@ -39,9 +39,7 @@ export async function cacheSet(key: string, value: string, ttlSeconds: number): 
   if (!redis) return;
   try {
     await redis.set(key, value, "EX", ttlSeconds);
-  } catch {
-    // A cache miss is always survivable; SQLite remains the source of truth.
-  }
+  } catch {}
 }
 
 export async function cacheDelete(key: string): Promise<void> {
@@ -49,9 +47,7 @@ export async function cacheDelete(key: string): Promise<void> {
   if (!redis) return;
   try {
     await redis.del(key);
-  } catch {
-    // Nothing to do; the next read falls through to SQLite.
-  }
+  } catch {}
 }
 
 export async function checkCacheHealth(): Promise<boolean> {

@@ -97,8 +97,7 @@ export function CharacterSettingsHeader({
         }}
         className="h-11 w-11 items-center justify-center overflow-hidden rounded-button border border-border bg-input"
       >
-        {/* Both glyphs stay mounted and cross-rotate, so the swap reads as one
-            control turning rather than two icons replacing each other. */}
+        {}
         <Animated.View
           className="absolute"
           style={{

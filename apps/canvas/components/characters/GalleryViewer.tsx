@@ -47,11 +47,8 @@ export function GalleryViewer({
   const [width, setWidth] = React.useState(0);
   const [index, setIndex] = React.useState(startIndex);
   const [note, setNote] = React.useState<string | null>(null);
-  // The pager must let go of horizontal swipes while a picture is zoomed in.
   const [isZoomed, setZoomed] = React.useState(false);
 
-  // The list's own scroll, named so the pinch can declare it may run at the same
-  // time. Left undeclared the pager wins the touch and nothing zooms.
   const pager = React.useMemo(() => Gesture.Native(), []);
 
   React.useEffect(() => setIndex(startIndex), [startIndex]);
@@ -60,8 +57,6 @@ export function GalleryViewer({
     setWidth(event.nativeEvent.layout.width);
   }, []);
 
-  // Derived from the offset rather than from onViewableItemsChanged, which
-  // fires mid-swipe and made the counter flicker between two numbers.
   const onScroll = React.useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       if (width <= 0) return;
@@ -109,8 +104,6 @@ export function GalleryViewer({
         return;
       }
 
-      // Her profile picture is a pointer at one of these, not a copy of it, so
-      // choosing an older portrait is a change of pointer and destroys nothing.
       if (action === "avatar") {
         void setAvatar(serverHost, characterId, current.url).then((ok) => {
           if (!ok) return;
@@ -131,8 +124,6 @@ export function GalleryViewer({
     [current, serverHost, characterId, onOpenChat, onDeleted, onAvatarChanged],
   );
 
-  // Only a photo she sent lives in the transcript; a portrait or a backdrop has
-  // no message to go back to, and nothing to delete from one.
   const base: GalleryAction[] =
     current?.kind === "photo"
       ? ["chat", "avatar", "face", "background", "save", "delete"]
@@ -148,8 +139,7 @@ export function GalleryViewer({
       transparent
       onRequestClose={onClose}
     >
-      {/* Gesture handlers do not cross a Modal boundary: without a root of its
-          own inside the modal, every pinch and pan here was swallowed. */}
+      {}
       <GestureHandlerRootView style={{ flex: 1 }}>
         <View className="flex-1" style={{ backgroundColor: "#000" }} onLayout={onLayout}>
           {width > 0 ? (

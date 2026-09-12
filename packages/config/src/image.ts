@@ -1,21 +1,81 @@
+export const IMAGE_PRESETS = {
+  sd15FaceId: {
+    label: "CyberRealistic SD 1.5 + IPAdapter FaceID PlusV2",
+    promptStyle: "tags",
+    checkpoint: "cyberrealistic_final_pruned_fp16.safetensors",
+    widthPx: 512,
+    heightPx: 768,
+    landscapeWidthPx: 768,
+    landscapeHeightPx: 512,
+    squarePx: 512,
+    steps: 28,
+    cfg: 6,
+    sampler: "dpmpp_2m",
+    scheduler: "karras",
+    vaeTileSize: 512,
+    vaeTileOverlap: 64,
+    hiresScale: 2,
+    hiresSteps: 14,
+    hiresDenoise: 0.45,
+    hiresUpscaleMethod: "bislerp",
+    face: {
+      kind: "faceid",
+      adapterPreset: "FACEID PLUS V2",
+      loraStrength: 0.6,
+      provider: "CPU",
+      weight: 0.8,
+      weightV2: 1,
+      weightType: "linear",
+      combineEmbeds: "concat",
+      embedsScaling: "V only",
+      startAt: 0,
+      endAt: 1,
+    },
+  },
+  sdxlPulid: {
+    label: "RealVisXL V5 Lightning + PuLID",
+    promptStyle: "tags",
+    checkpoint: "RealVisXL_V5.0_Lightning_fp16.safetensors",
+    widthPx: 832,
+    heightPx: 1216,
+    landscapeWidthPx: 1216,
+    landscapeHeightPx: 832,
+    squarePx: 1024,
+    steps: 6,
+    cfg: 2,
+    sampler: "dpmpp_sde",
+    scheduler: "karras",
+    vaeTileSize: 512,
+    vaeTileOverlap: 64,
+    hiresScale: 1,
+    hiresSteps: 6,
+    hiresDenoise: 0.4,
+    hiresUpscaleMethod: "nearest-exact",
+    face: {
+      kind: "pulid",
+      model: "ip-adapter_pulid_sdxl_fp16.safetensors",
+      provider: "CUDA",
+      method: "fidelity",
+      weight: 0.75,
+      startAt: 0.12,
+      endAt: 1,
+    },
+  },
+} as const;
+
+export type ImagePresetKey = keyof typeof IMAGE_PRESETS;
+export type ImagePreset = (typeof IMAGE_PRESETS)[ImagePresetKey];
+
+export const DEFAULT_IMAGE_PRESET: ImagePresetKey = "sdxlPulid";
+
+export function isImagePresetKey(value: string): value is ImagePresetKey {
+  return Object.hasOwn(IMAGE_PRESETS, value);
+}
+
 export const IMAGE = {
-  checkpoint: "RealVisXL_V5.0_Lightning_fp16.safetensors",
-  pulidModel: "ip-adapter_pulid_sdxl_fp16.safetensors",
-  insightFaceProvider: "CUDA",
-  widthPx: 832,
-  heightPx: 1216,
-  landscapeWidthPx: 1216,
-  landscapeHeightPx: 832,
-  squarePx: 1024,
   sceneTurns: 6,
   lookFieldMaxWords: 4,
-  // The scene planner is told twelve words a field and does not obey it, so the
-  // cap is applied here instead. Without it "others" arrived as a whole clause
-  // and was pasted straight into a caption: "with Her cat, Luna, is curled up
-  // on the bed at Emma's bedroom, Emma is".
   sceneFieldMaxWords: 8,
-  // "others" is meant to name who else is in frame. A clause is a description of
-  // the room, not a person, and reads as nonsense after the word "with".
   othersClauseWords: ["is", "are", "was", "were", "hanging", "sitting on", "lying on"],
   emptyWords: [
     "none",
@@ -72,14 +132,6 @@ export const IMAGE = {
   ideaOverlap: 0.6,
   ideaTemperature: 0.95,
   editDenoise: 0.62,
-  steps: 6,
-  cfg: 2,
-  sampler: "dpmpp_sde",
-  scheduler: "karras",
-  pulidMethod: "fidelity",
-  pulidWeight: 0.75,
-  pulidStartAt: 0.12,
-  pulidEndAt: 1,
   framings: [
     "close selfie held at arm's length, looking into the lens",
     "selfie held high, looking up at the camera",
@@ -139,9 +191,10 @@ export const IMAGE = {
     "garden",
     "park",
   ],
-  qualitySuffix: "photorealistic, natural skin texture, sharp focus, shot on a phone camera",
+  qualitySuffix:
+    "photorealistic, natural skin texture, visible skin pores, subtle skin imperfections, sharp focus, shot on a phone camera",
   negativePrompt:
-    "blurry, low quality, distorted, bad anatomy, extra fingers, watermark, text, cgi, plastic skin",
+    "blurry, low quality, distorted, bad anatomy, deformed hands, mutated hands, malformed fingers, fused fingers, extra fingers, missing fingers, extra limbs, extra arms, disfigured, watermark, text, signature, cgi, 3d render, doll, airbrushed, waxy skin, plastic skin, smooth skin",
   appearanceFallback:
     "a woman in her late twenties, shoulder length dark hair, warm brown eyes, casual everyday clothes",
   captionMaxChars: 90,
@@ -159,3 +212,30 @@ export const IMAGE = {
   pollIntervalMs: 750,
   maxPollMs: 180000,
 } as const;
+
+export const PROMPT_STYLES = {
+  tags: {
+    label: "comma separated keywords, for CLIP text encoders (SD 1.5, SDXL)",
+    separator: ", ",
+    qualitySuffix: IMAGE.qualitySuffix,
+    negativePrompt: IMAGE.negativePrompt,
+    writerBrief: "Reply with one line of comma separated visual phrases and nothing else.",
+  },
+} as const;
+
+export type PromptStyleKey = keyof typeof PROMPT_STYLES;
+
+export function promptStyleFor(preset: ImagePreset) {
+  return PROMPT_STYLES[preset.promptStyle];
+}
+
+export function composePrompt(preset: ImagePreset, body: string): string {
+  const style = promptStyleFor(preset);
+  const trimmed = body.trim();
+  if (trimmed.length === 0) return style.qualitySuffix;
+  return `${trimmed}${style.separator}${style.qualitySuffix}`;
+}
+
+export function negativePromptFor(preset: ImagePreset): string {
+  return promptStyleFor(preset).negativePrompt;
+}

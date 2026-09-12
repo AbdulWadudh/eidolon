@@ -43,18 +43,6 @@ class MMKVStorageWrapper implements KeyValueStorage {
   }
 }
 
-/**
- * Used whenever MMKV is unavailable: Expo Go, the web bundle, and tests.
- *
- * It used to persist only through `window.localStorage`, which does not exist
- * in React Native — so on a device the fallback was pure memory and pairing was
- * lost on every reload. It now writes a small JSON file through `expo-file-system`.
- *
- * Two details that are easy to get wrong on SDK 57: the package publishes an
- * `exports` map with only `.` and `./legacy`, so the `expo-file-system/next`
- * subpath does not resolve at all, and `File.text()` returns a promise. The
- * synchronous reader is `textSync()`, which is what keeps KeyValueStorage sync.
- */
 export interface FallbackFile {
   textSync(): string;
   write(value: string): void;
@@ -82,9 +70,7 @@ export class FallbackStorage implements KeyValueStorage {
           for (const [key, value] of Object.entries(parsed)) this.map.set(key, value);
         }
         return;
-      } catch {
-        // A corrupt file is not worth failing a launch over; start empty.
-      }
+      } catch {}
     }
 
     if (typeof window === "undefined" || !window.localStorage) return;
@@ -95,9 +81,7 @@ export class FallbackStorage implements KeyValueStorage {
         const value = window.localStorage.getItem(key);
         if (value !== null) this.map.set(key, value);
       }
-    } catch {
-      // Private browsing and quota errors both land here.
-    }
+    } catch {}
   }
 
   private flush(): void {
@@ -105,18 +89,14 @@ export class FallbackStorage implements KeyValueStorage {
       try {
         if (!this.file.exists) this.file.create({ intermediates: true });
         this.file.write(JSON.stringify(Object.fromEntries(this.map)));
-      } catch {
-        // Out of space or a read-only sandbox; the in-memory copy still works.
-      }
+      } catch {}
       return;
     }
 
     if (typeof window === "undefined" || !window.localStorage) return;
     try {
       for (const [key, value] of this.map) window.localStorage.setItem(key, String(value));
-    } catch {
-      // Ignore quota.
-    }
+    } catch {}
   }
 
   getString(key: string): string | undefined {
@@ -146,16 +126,13 @@ export class FallbackStorage implements KeyValueStorage {
     if (typeof window !== "undefined" && window.localStorage) {
       try {
         window.localStorage.removeItem(key);
-      } catch {
-        // Ignore.
-      }
+      } catch {}
     }
   }
 }
 
 function openFallbackFile(): FallbackFile | null {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const fs = require("expo-file-system");
     if (typeof fs?.File !== "function" || !fs?.Paths?.document) return null;
     const file = new fs.File(fs.Paths.document, FALLBACK_FILE_NAME) as FallbackFile;
@@ -167,16 +144,12 @@ function openFallbackFile(): FallbackFile | null {
 
 function initStorage(): KeyValueStorage {
   try {
-    // Dynamic require so NitroModules does not crash module evaluation when running in Expo Go or web
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const mmkvModule = require("react-native-mmkv");
     if (typeof mmkvModule.createMMKV === "function") {
       const instance = mmkvModule.createMMKV({ id: "eidolon-canvas-store" });
       return new MMKVStorageWrapper(instance);
     }
-  } catch {
-    // NitroModules unavailable (Expo Go, web, test environment) -> fall back cleanly
-  }
+  } catch {}
   return new FallbackStorage();
 }
 

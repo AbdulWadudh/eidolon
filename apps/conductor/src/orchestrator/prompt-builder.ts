@@ -6,6 +6,7 @@ import { recallMemories } from "@/orchestrator/memory-manager";
 import { shouldSearchWeb } from "@/orchestrator/search-trigger";
 import { getPrompt } from "@/prompts/store";
 import { type ChatMessage, streamChatCompletion } from "@/services/llm";
+import { PROFILE } from "@/services/llm-profile";
 import { buildSystemPrompt } from "@/services/persona";
 import { leaksInstruction } from "@/services/persona-guard";
 import { forHistory } from "@/services/photo-line";
@@ -51,11 +52,6 @@ export function clip(text: string, limit: number): string {
   return text.length > limit ? `${text.slice(0, limit).trimEnd()}…` : text;
 }
 
-/**
- * Newest first until the character budget is spent, so a pasted wall of text
- * costs itself and the turns behind it rather than the whole context. Counting
- * messages alone bounds nothing: a typed message has no maximum length.
- */
 export function fitHistory(messages: ChatMessage[], budget: number): ChatMessage[] {
   const kept: ChatMessage[] = [];
   let spent = 0;
@@ -71,13 +67,9 @@ export function fitHistory(messages: ChatMessage[], budget: number): ChatMessage
 }
 
 export function workingHistory(characterId: string, budget: number): ChatMessage[] {
-  const recent = getRecentMessages(characterId, WORKING_CONTEXT.windowSize)
+  const recent = getRecentMessages(characterId, PROFILE.historyTurns)
     .map((entry) => ({
       role: entry.role,
-      // A reply that opened with the reader's own label is already recorded, and
-      // reading it back is what teaches the model to keep doing it. Stripped at
-      // read time as well as write time, so turns recorded before the guard
-      // existed stop compounding.
       content:
         entry.role === "assistant"
           ? stripSpeakerLabel(forHistory(entry.role, entry.content, entry.imageCaption), "")
@@ -104,7 +96,7 @@ export function orderedSections(sections: Record<string, string>): string[] {
 }
 
 export function withinBudget(sections: Record<string, string>): boolean {
-  return orderedSections(sections).join(SECTION_BREAK).length <= PROMPT_BUDGET.maxChars;
+  return orderedSections(sections).join(SECTION_BREAK).length <= PROFILE.promptMaxChars;
 }
 
 export function trimToBudget(sections: Record<string, string>): Record<string, string> {
@@ -139,9 +131,6 @@ async function gatherWeb(
   onStatus?.("searching", WEB_CONTEXT.searchingDetail || STATUS_COPY.searching.line);
   const results = await searchWeb(userText);
 
-  // A question about something current that the web could not answer is the
-  // exact case where the model invents a winner, a score or a date. Saying so
-  // is the answer, so the silence is made explicit rather than left as a gap.
   if (!answersQuery(userText, results)) {
     return { block: WEB_CONTEXT.emptyHeader, attempted: true, found: false };
   }
@@ -176,7 +165,7 @@ export async function assemblePrompt(options: AssembleOptions): Promise<Assemble
 
   if (budgetExceeded) {
     console.warn(
-      `[prompt] ${card.name}'s persona and directive alone run past ${PROMPT_BUDGET.maxChars} characters. Nothing optional is left to drop; shorten the character's system prompt.`,
+      `[prompt] ${card.name}'s persona and directive alone run past ${PROFILE.promptMaxChars} characters. Nothing optional is left to drop; shorten the character's system prompt.`,
     );
   }
 
@@ -188,10 +177,6 @@ export async function assemblePrompt(options: AssembleOptions): Promise<Assemble
         })
       : "";
 
-  // The facts arrive as encyclopedia prose and the model answers in whatever
-  // register it was just handed. Telling it how to speak buried in a long system
-  // blob does not survive that; the same words directly before the user's turn
-  // do, because recency is the only lever a small model reliably feels.
   const webVoice = web.attempted
     ? getPrompt(web.found ? "persona.webAnswerOnly" : "persona.noWebResult")
     : "";
@@ -199,21 +184,24 @@ export async function assemblePrompt(options: AssembleOptions): Promise<Assemble
   const system = orderedSections(budgeted).join(SECTION_BREAK);
   const spokenTurn = clip(userText, WORKING_CONTEXT.maxMessageChars);
 
-  // Everything mandatory is counted first. Whatever is left of the budget buys
-  // history, so the total prompt is bounded no matter what was pasted into it.
   const historyBudget = Math.max(
     0,
     Math.min(
-      WORKING_CONTEXT.maxHistoryChars,
-      PROMPT_BUDGET.maxChars - system.length - spokenTurn.length - influenceNote.length,
+      PROFILE.historyMaxChars,
+      PROFILE.promptMaxChars -
+        system.length -
+        spokenTurn.length -
+        influenceNote.length -
+        webVoice.length,
     ),
   );
 
   const messages: ChatMessage[] = [
-    { role: "system", content: system },
+    {
+      role: "system",
+      content: [system, influenceNote, webVoice].filter(Boolean).join(SECTION_BREAK),
+    },
     ...workingHistory(characterId, historyBudget),
-    ...(influenceNote ? [{ role: "system", content: influenceNote }] : []),
-    ...(webVoice ? [{ role: "system", content: webVoice }] : []),
     { role: "user", content: spokenTurn },
   ];
 

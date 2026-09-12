@@ -1,6 +1,8 @@
 export {
   getAuthBaseUrl,
   getCacheUrl,
+  getImagePreset,
+  getLlmProfile,
   getLocalIp,
   getMockBackdropUrl,
   getPairingHost,

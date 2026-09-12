@@ -20,6 +20,7 @@ import { usePhotoFlow } from "@/hooks/use-photo-flow";
 import { useSuggestions } from "@/hooks/use-suggestions";
 import { VoiceNotesProvider } from "@/hooks/use-voice-notes";
 import { useAffinityStore } from "@/store/affinity-store";
+import { type CharacterCard, fetchCharacter } from "@/store/character-api";
 import { forgetCharacter, loadHistory } from "@/store/chat-history";
 import { useChatStore } from "@/store/chat-store";
 import { useConnectionStore } from "@/store/connection";
@@ -41,7 +42,6 @@ export default function ChatScreen() {
   const setActiveCharacter = useThemeStore((state) => state.setActiveCharacter);
 
   const characterId = isString(id) ? id : "default";
-  const characterName = capitalize(characterId);
   const theme = useResolvedTheme(characterId);
   const inputRef = React.useRef<TextInput>(null);
 
@@ -49,6 +49,17 @@ export default function ChatScreen() {
   const chat = useChatStore();
   const view = useChatView(characterId);
   const serverHost = useConnectionStore((state) => state.serverHost);
+  const pairingToken = useConnectionStore((state) => state.pairingToken);
+  const [card, setCard] = React.useState<CharacterCard | null>(null);
+
+  const loadCard = React.useCallback(() => {
+    if (!serverHost) return;
+    void fetchCharacter(serverHost, characterId, pairingToken).then((next) => {
+      if (next) setCard(next.card);
+    });
+  }, [serverHost, characterId, pairingToken]);
+
+  const characterName = card?.name.trim() || capitalize(characterId);
   const [actionsOpen, setActionsOpen] = React.useState(false);
   const [mindOpen, setMindOpen] = React.useState(false);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
@@ -69,14 +80,13 @@ export default function ChatScreen() {
     React.useCallback(() => {
       loadHistory(serverHost, characterId);
       void fetchMind(serverHost, characterId);
+      loadCard();
       return () => {
         resetAffinity();
       };
-    }, [serverHost, characterId, resetAffinity]),
+    }, [serverHost, characterId, resetAffinity, loadCard]),
   );
 
-  // The socket already carries mind_update into the chat store. Mirroring it
-  // here is what raises the toast and the haptic, and only in Insight Mode.
   React.useEffect(() => {
     const mind = view.mind;
     if (!mind) return;
@@ -237,7 +247,10 @@ export default function ChatScreen() {
         settingsOpen={settingsOpen}
         themeOpen={themeOpen}
         mindOpen={mindOpen}
-        onCloseSettings={() => setSettingsOpen(false)}
+        onCloseSettings={() => {
+          setSettingsOpen(false);
+          loadCard();
+        }}
         onOpenTheme={() => {
           setSettingsOpen(false);
           setThemeOpen(true);
