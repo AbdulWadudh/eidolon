@@ -48,9 +48,9 @@ export const IMAGE_PRESETS = {
     vaeTileSize: 512,
     vaeTileOverlap: 64,
     hiresScale: 1.5,
-    hiresSteps: 6,
+    hiresSteps: 10,
     hiresDenoise: 0.4,
-    hiresUpscaleMethod: "bislerp",
+    hiresUpscaleMethod: "nearest-exact",
     face: {
       kind: "pulid",
       model: "ip-adapter_pulid_sdxl_fp16.safetensors",

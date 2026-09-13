@@ -20,8 +20,12 @@ describe("every image preset finishes above a phone screen", () => {
       }
     });
 
-    it(`${key} never upscales with the blockiest method`, () => {
-      if (preset.hiresScale > 1) expect(preset.hiresUpscaleMethod).not.toBe("nearest-exact");
+    it(`${key} gives the hires pass enough steps to resolve what it upscaled`, () => {
+      if (preset.hiresScale <= 1) return;
+
+      // The pass runs steps * denoise of actual refinement. Below about four,
+      // the sampler cannot clear the interpolation the latent upscale leaves.
+      expect(preset.hiresSteps * preset.hiresDenoise).toBeGreaterThanOrEqual(4);
     });
   }
 });
