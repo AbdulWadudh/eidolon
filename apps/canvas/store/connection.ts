@@ -1,4 +1,4 @@
-import { isSecureHost, PAIRING, PAIRING_COPY, SOCKET, stripAuthority } from "@eidolon/config";
+import { CONNECT_COPY, isSecureHost, SOCKET, stripAuthority } from "@eidolon/config";
 import { create } from "zustand";
 import {
   closeSocket,
@@ -9,56 +9,35 @@ import {
   resetSocketBackoff,
   type SocketStatus,
 } from "@/services/websocket";
-import { pingHealth, verifyPairing } from "./connection-api";
+import { pingHealth } from "./connection-api";
 import { appStorage } from "./storage";
 
-export { pingHealth, verifyPairing };
+export { pingHealth };
 
 export type ConnectionState = "disconnected" | "connecting" | "connected" | "error";
 
 export interface ConnectionStore {
   serverHost: string;
-  pairingToken: string;
-  isPaired: boolean;
+  sessionToken: string;
+  isSignedIn: boolean;
   connectionState: ConnectionState;
   lastError: string | null;
   isSocketOpen: boolean;
   initializeConnection: () => void;
-  pairFromUri: (uri: string) => Promise<boolean>;
-  setManualConnection: (host: string, token: string) => Promise<boolean>;
+  startSession: (host: string, token: string) => void;
   connect: () => void;
   disconnect: () => void;
-  unpair: () => void;
+  signOut: () => void;
 }
 
 const STORAGE_KEYS = {
   HOST: "eidolon.server_host",
-  TOKEN: "eidolon.pairing_token",
-  IS_PAIRED: "eidolon.is_paired",
+  TOKEN: "eidolon.session_token",
 } as const;
 
 export function normalizeHost(host: string): string {
   const trimmed = host.trim().replace(/\/+$/, "");
   return isSecureHost(trimmed) ? `https://${stripAuthority(trimmed)}` : stripAuthority(trimmed);
-}
-
-export function parsePairingUri(uri: string): { server: string; token: string } {
-  const cleanUri = uri.trim();
-  if (!cleanUri.startsWith(PAIRING.uriScheme)) {
-    throw new Error(PAIRING_COPY.notOurCode);
-  }
-
-  const queryPart = cleanUri.includes("?") ? cleanUri.split("?")[1] : "";
-  const params = new URLSearchParams(queryPart);
-
-  const server = params.get("server");
-  const token = params.get("token");
-
-  if (!server || !token) {
-    throw new Error(PAIRING_COPY.incompleteCode);
-  }
-
-  return { server: normalizeHost(server), token };
 }
 
 const SOCKET_STATE_MAP: Record<SocketStatus, ConnectionState> = {
@@ -70,8 +49,10 @@ const SOCKET_STATE_MAP: Record<SocketStatus, ConnectionState> = {
 
 export const useConnectionStore = create<ConnectionStore>((set, get) => ({
   serverHost: appStorage.getString(STORAGE_KEYS.HOST) ?? "",
-  pairingToken: appStorage.getString(STORAGE_KEYS.TOKEN) ?? "",
-  isPaired: appStorage.getBoolean(STORAGE_KEYS.IS_PAIRED) ?? false,
+  sessionToken: appStorage.getString(STORAGE_KEYS.TOKEN) ?? "",
+  isSignedIn: Boolean(
+    appStorage.getString(STORAGE_KEYS.HOST) && appStorage.getString(STORAGE_KEYS.TOKEN),
+  ),
   connectionState: "disconnected",
   lastError: null,
   isSocketOpen: false,
@@ -79,26 +60,22 @@ export const useConnectionStore = create<ConnectionStore>((set, get) => ({
   initializeConnection: () => {
     const host = appStorage.getString(STORAGE_KEYS.HOST) ?? "";
     const token = appStorage.getString(STORAGE_KEYS.TOKEN) ?? "";
-    const isPaired = appStorage.getBoolean(STORAGE_KEYS.IS_PAIRED) ?? false;
 
-    const paired = isPaired && Boolean(host) && Boolean(token);
     set({
       serverHost: host,
-      pairingToken: token,
-      isPaired: paired,
+      sessionToken: token,
+      isSignedIn: Boolean(host && token),
       connectionState: "disconnected",
       lastError: null,
     });
 
-    if (paired) {
-      get().connect();
-    }
+    if (host && token) get().connect();
   },
 
   connect: () => {
-    const { serverHost, pairingToken, isPaired } = get();
-    if (!isPaired || !serverHost || !pairingToken) return;
-    configureSocket({ host: serverHost, token: pairingToken });
+    const { serverHost, sessionToken } = get();
+    if (!serverHost || !sessionToken) return;
+    configureSocket({ host: serverHost, token: sessionToken });
     set({ connectionState: "connecting", lastError: null });
     openSocket();
   },
@@ -108,78 +85,35 @@ export const useConnectionStore = create<ConnectionStore>((set, get) => ({
     set({ connectionState: "disconnected", isSocketOpen: false });
   },
 
-  pairFromUri: async (uri: string): Promise<boolean> => {
-    set({ connectionState: "connecting", lastError: null });
-    try {
-      const { server, token } = parsePairingUri(uri);
-      await verifyPairing(server, token);
+  startSession: (host: string, token: string) => {
+    const cleanHost = normalizeHost(host);
+    const cleanToken = token.trim();
 
-      appStorage.set(STORAGE_KEYS.HOST, server);
-      appStorage.set(STORAGE_KEYS.TOKEN, token);
-      appStorage.set(STORAGE_KEYS.IS_PAIRED, true);
+    if (!cleanHost || !cleanToken) throw new Error(CONNECT_COPY.missingFields);
 
-      set({
-        serverHost: server,
-        pairingToken: token,
-        isPaired: true,
-        connectionState: "connecting",
-        lastError: null,
-      });
+    appStorage.set(STORAGE_KEYS.HOST, cleanHost);
+    appStorage.set(STORAGE_KEYS.TOKEN, cleanToken);
 
-      get().connect();
-      return true;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Pairing failed.";
-      set({ connectionState: "error", lastError: message });
-      throw err;
-    }
+    set({
+      serverHost: cleanHost,
+      sessionToken: cleanToken,
+      isSignedIn: true,
+      connectionState: "connecting",
+      lastError: null,
+    });
+
+    get().connect();
   },
 
-  setManualConnection: async (host: string, token: string): Promise<boolean> => {
-    set({ connectionState: "connecting", lastError: null });
-    try {
-      const cleanHost = normalizeHost(host);
-      const cleanToken = token.trim();
-
-      if (!cleanHost || !cleanToken) {
-        throw new Error(PAIRING_COPY.missingFields);
-      }
-
-      await verifyPairing(cleanHost, cleanToken);
-
-      appStorage.set(STORAGE_KEYS.HOST, cleanHost);
-      appStorage.set(STORAGE_KEYS.TOKEN, cleanToken);
-      appStorage.set(STORAGE_KEYS.IS_PAIRED, true);
-
-      set({
-        serverHost: cleanHost,
-        pairingToken: cleanToken,
-        isPaired: true,
-        connectionState: "connecting",
-        lastError: null,
-      });
-
-      get().connect();
-      return true;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Connection failed.";
-      set({ connectionState: "error", lastError: message });
-      throw err;
-    }
-  },
-
-  unpair: () => {
+  signOut: () => {
     closeSocket();
     configureSocket(null);
     resetSocketBackoff();
-    appStorage.delete(STORAGE_KEYS.HOST);
     appStorage.delete(STORAGE_KEYS.TOKEN);
-    appStorage.delete(STORAGE_KEYS.IS_PAIRED);
 
     set({
-      serverHost: "",
-      pairingToken: "",
-      isPaired: false,
+      sessionToken: "",
+      isSignedIn: false,
       connectionState: "disconnected",
       isSocketOpen: false,
       lastError: null,
@@ -187,9 +121,16 @@ export const useConnectionStore = create<ConnectionStore>((set, get) => ({
   },
 }));
 
+export function authedFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  const { sessionToken } = useConnectionStore.getState();
+  if (!sessionToken) return fetch(url, init);
+  return fetch(url, {
+    ...init,
+    headers: { ...init.headers, Authorization: `Bearer ${sessionToken}` },
+  });
+}
+
 onSocketStatus((status) => {
-  const { isPaired } = useConnectionStore.getState();
-  if (!isPaired && status !== "disconnected") return;
   useConnectionStore.setState({
     connectionState: SOCKET_STATE_MAP[status],
     isSocketOpen: status === "connected",
@@ -199,11 +140,10 @@ onSocketStatus((status) => {
 
 onSocketRetry((attempt) => {
   if (attempt !== SOCKET.reVerifyAfterAttempts) return;
-  const { serverHost, pairingToken } = useConnectionStore.getState();
-  if (!serverHost || !pairingToken) return;
-  verifyPairing(serverHost, pairingToken).catch((err: unknown) => {
+  const { serverHost, sessionToken } = useConnectionStore.getState();
+  if (!serverHost || !sessionToken) return;
+  pingHealth(serverHost, sessionToken).catch((err: unknown) => {
     const message = err instanceof Error ? err.message : String(err);
-    if (!message.includes("rejected")) return;
     closeSocket();
     useConnectionStore.setState({ connectionState: "error", lastError: message });
   });

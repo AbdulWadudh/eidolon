@@ -20,36 +20,25 @@ export const PHOTO_COPY = {
   didNotCome: "That photo did not come out",
 } as const;
 
-export const PAIRING_COPY = {
+export const CONNECT_COPY = {
   title: "Connect to your Eidolon",
-  subtitle: "Scan the code showing on your computer",
+  subtitle: "Point the app at your conductor, then sign in",
   connecting: "Connecting…",
-  cameraNeeded: "Let the camera see the code on your computer.",
-  allowCamera: "Allow camera",
-  manual: "Type it in instead",
   addressLabel: "Address",
-  passphraseLabel: "Passphrase",
-  passphraseHint: "The word shown on your computer",
+  addressHint: "The computer running your conductor",
   connect: "Connect",
-  cameraStop: "Turn the camera off",
-  cameraStart: "Turn the camera on",
-  cameraOffNote: "The camera is off. Turn it on to scan, or type the details in below.",
-  missingFields: "Fill in both the address and the passphrase.",
-  notOurCode: "That is not an Eidolon code. Scan the one showing on your computer.",
-  incompleteCode: "That code is incomplete. Show the full one on your computer and scan again.",
-  refused: "That passphrase was not accepted. Check it matches the one on your computer.",
+  missingFields: "Fill in the address before you sign in.",
+  refused: "That email and password were not accepted.",
   serverError: "Your Eidolon answered, but something went wrong at its end. Check it is running.",
   unreachable:
     "Could not reach that address. Check it matches your computer and that you are both on the same network.",
 } as const;
 
-export const PAIRING_MESSAGES: readonly string[] = [
-  PAIRING_COPY.missingFields,
-  PAIRING_COPY.notOurCode,
-  PAIRING_COPY.incompleteCode,
-  PAIRING_COPY.refused,
-  PAIRING_COPY.serverError,
-  PAIRING_COPY.unreachable,
+export const CONNECT_MESSAGES: readonly string[] = [
+  CONNECT_COPY.missingFields,
+  CONNECT_COPY.refused,
+  CONNECT_COPY.serverError,
+  CONNECT_COPY.unreachable,
 ];
 
 export const HOME_COPY = {
@@ -282,10 +271,9 @@ export const CONFIRM_COPY = {
   resetTheme: "Put the whole theme back?",
   resetThemeBody: "Every colour, corner and typeface you changed returns to what shipped.",
   resetThemeAction: "Put it back",
-  unpair: "Disconnect from this conductor?",
-  unpairBody:
-    "This device forgets the address and the passphrase. Nothing on the conductor is deleted.",
-  unpairAction: "Disconnect",
+  signOut: "Sign out of this conductor?",
+  signOutBody: "This device forgets your session. Nothing on the conductor is deleted.",
+  signOutAction: "Sign out",
   promoteTheme: "Make this the look for everyone?",
   promoteThemeBody: "This character's colours replace the shared ones.",
   promoteThemeAction: "Use everywhere",

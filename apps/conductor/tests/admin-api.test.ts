@@ -8,7 +8,6 @@ import {
 } from "@eidolon/protocol";
 import { DEFAULT_THEME_TOKENS } from "@eidolon/tokens";
 import { isLastOwner } from "@/api/admin/users";
-import { PAIRING_SECRET } from "@/auth";
 import { countOwners, deleteAccount } from "@/auth/roles";
 import { clearAudit } from "@/db/audit";
 import { getCharacter } from "@/db/characters";
@@ -16,11 +15,12 @@ import { removeOverridesUnder } from "@/db/overrides";
 import { app } from "@/index";
 import { loadPrompts } from "@/prompts/store";
 import { THEME_PREFIX } from "@/services/theme";
+import { TEST_TOKEN } from "./support/session";
 
 const MEMBER_EMAIL = "admin-api-member@eidolon.test";
 const MEMBER_PASSWORD = "admin-api-password";
 
-const OWNER = { "Content-Type": "application/json", Authorization: `Bearer ${PAIRING_SECRET}` };
+const OWNER = { "Content-Type": "application/json", Authorization: `Bearer ${TEST_TOKEN}` };
 
 let memberHeaders: Record<string, string> = {};
 const madeAccounts = new Set<string>();

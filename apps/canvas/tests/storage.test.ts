@@ -43,7 +43,7 @@ describe("credentials survive a reload", () => {
     expect(storage.getString("eidolon.server_host")).toBe("https://3000.k79.quest");
   });
 
-  it("round-trips the boolean that isPaired actually is", () => {
+  it("round-trips the boolean that isSignedIn actually is", () => {
     storage.set("eidolon.is_paired", true);
     expect(storage.getBoolean("eidolon.is_paired")).toBe(true);
 

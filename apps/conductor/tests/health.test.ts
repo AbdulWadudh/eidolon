@@ -1,7 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { apiPath, HEALTH_ALIAS_PATH } from "@eidolon/config";
 import { COLORS } from "@eidolon/tokens";
-import { PAIRING_SECRET } from "@/auth";
 import { app } from "@/index";
 
 describe("Conductor Health & REST Endpoints", () => {
@@ -40,25 +39,6 @@ describe("Conductor Health & REST Endpoints", () => {
     expect(body.themeAccent).toBe(COLORS.accentAmber);
   });
 
-  it("GET /api/pair/verify rejects a missing or wrong token with 401", async () => {
-    const missing = await app.request(apiPath("pairVerify"));
-    expect(missing.status).toBe(401);
-
-    const wrong = await app.request(apiPath("pairVerify"), {
-      headers: { Authorization: "Bearer not-the-pairing-secret" },
-    });
-    expect(wrong.status).toBe(401);
-    expect(await wrong.json()).toMatchObject({ ok: false });
-  });
-
-  it("GET /api/pair/verify accepts the pairing secret", async () => {
-    const res = await app.request(apiPath("pairVerify"), {
-      headers: { Authorization: `Bearer ${PAIRING_SECRET}` },
-    });
-    expect(res.status).toBe(200);
-    expect(await res.json()).toMatchObject({ ok: true, service: "eidolon-conductor" });
-  });
-
   it("serves health unversioned as well, for infrastructure probes", async () => {
     const res = await app.request(HEALTH_ALIAS_PATH);
     expect(res.status).toBe(200);
@@ -71,25 +51,14 @@ describe("Conductor Health & REST Endpoints", () => {
     }
   });
 
-  it("refuses the pairing secret to a caller with no credential", async () => {
-    expect((await app.request(apiPath("pairing"))).status).toBe(401);
-    expect((await app.request(apiPath("pairingQr"))).status).toBe(401);
-  });
-
-  it("GET /api/pairing returns pairing payload and secret", async () => {
-    const res = await app.request(apiPath("pairing"), {
-      headers: { Authorization: `Bearer ${PAIRING_SECRET}` },
-    });
-    expect(res.status).toBe(200);
-
-    const body = (await res.json()) as {
-      pairing_url: string;
-      secret: string;
-      server: string;
-    };
-
-    expect(body.pairing_url).toStartWith("eidolon://pair?server=");
-    expect(body.secret).toBeDefined();
-    expect(body.server).toBeDefined();
+  it("no longer answers any pairing route", async () => {
+    for (const dead of [
+      "/api/v1/pairing",
+      "/api/v1/pair/verify",
+      "/api/v1/pairing/qr",
+      "/api/v1/pairing/status",
+    ]) {
+      expect((await app.request(dead)).status).toBe(404);
+    }
   });
 });

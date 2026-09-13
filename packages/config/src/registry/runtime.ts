@@ -11,9 +11,7 @@ import {
   MEDIA_KINDS,
   MEDIA_TYPES,
   MEMORY,
-  MOCK,
   OUTPUT_TAGS,
-  PAIRING,
   PERSONA_GUARD,
   PRONOUN_SETS,
   REPLY_VARIANTS,
@@ -196,11 +194,6 @@ export const RUNTIME_GROUPS: ConfigGroup[] = [
       memberRole: { bucket: "structural", reason: REASONS.typeLevel },
       defaultRole: { bucket: "structural", reason: REASONS.typeLevel },
       roleField: { bucket: "structural", reason: REASONS.dbShape },
-      localOwnerEmail: {
-        bucket: "boot-bound",
-        reason:
-          "The account behind PAIRING_SECRET is found by this address. Changing it orphans it.",
-      },
     },
   },
   {
@@ -264,19 +257,5 @@ export const RUNTIME_GROUPS: ConfigGroup[] = [
     value: DEFAULT_PRONOUNS,
     bucket: "structural",
     reason: REASONS.typeLevel,
-  },
-  {
-    name: "PAIRING",
-    source: SOURCE,
-    value: PAIRING,
-    bucket: "structural",
-    reason: REASONS.deepLink,
-  },
-  {
-    name: "MOCK",
-    source: SOURCE,
-    value: MOCK,
-    bucket: "structural",
-    reason: "Nothing reads this in either app. It is dead and kept only until it is removed.",
   },
 ];

@@ -7,6 +7,7 @@ import {
   TIMEOUTS_MS,
 } from "@eidolon/config";
 import { useAffinityStore } from "@/store/affinity-store";
+import { authedFetch } from "@/store/connection";
 
 export interface LoreView {
   id: string;
@@ -48,7 +49,7 @@ export async function fetchMind(host: string, characterId: string): Promise<Mind
   if (!host) return null;
 
   try {
-    const res = await fetch(characterMindUrl(host, characterId), { signal: withTimeout() });
+    const res = await authedFetch(characterMindUrl(host, characterId), { signal: withTimeout() });
     if (!res.ok) return null;
 
     const view = (await res.json()) as MindView;
@@ -79,7 +80,7 @@ export async function patchAffinity(
   if (!host) return null;
 
   try {
-    const res = await fetch(characterAffinityUrl(host, characterId), {
+    const res = await authedFetch(characterAffinityUrl(host, characterId), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
@@ -103,7 +104,7 @@ export async function patchAffinity(
 
 async function mindMutation(url: string, method: string, body?: unknown): Promise<MindView | null> {
   try {
-    const res = await fetch(url, {
+    const res = await authedFetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),

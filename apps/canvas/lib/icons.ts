@@ -9,8 +9,6 @@ export { default as Book02Icon } from "@hugeicons/core-free-icons/Book02Icon";
 export { default as BookOpen01Icon } from "@hugeicons/core-free-icons/BookOpen01Icon";
 export { default as Call02Icon } from "@hugeicons/core-free-icons/Call02Icon";
 export { default as CallEnd01Icon } from "@hugeicons/core-free-icons/CallEnd01Icon";
-export { default as Camera01Icon } from "@hugeicons/core-free-icons/Camera01Icon";
-export { default as CameraOff01Icon } from "@hugeicons/core-free-icons/CameraOff01Icon";
 export { default as Cancel01Icon } from "@hugeicons/core-free-icons/Cancel01Icon";
 export { default as CheckmarkCircle01Icon } from "@hugeicons/core-free-icons/CheckmarkCircle01Icon";
 export { default as ClipboardIcon } from "@hugeicons/core-free-icons/ClipboardIcon";
@@ -39,7 +37,6 @@ export { default as PaintBoardIcon } from "@hugeicons/core-free-icons/PaintBoard
 export { default as PauseIcon } from "@hugeicons/core-free-icons/PauseIcon";
 export { default as PencilEdit02Icon } from "@hugeicons/core-free-icons/PencilEdit02Icon";
 export { default as PlayIcon } from "@hugeicons/core-free-icons/PlayIcon";
-export { default as QrCodeIcon } from "@hugeicons/core-free-icons/QrCodeIcon";
 export { default as Queue01Icon } from "@hugeicons/core-free-icons/Queue01Icon";
 export { default as RefreshIcon } from "@hugeicons/core-free-icons/RefreshIcon";
 export { default as Search01Icon } from "@hugeicons/core-free-icons/Search01Icon";

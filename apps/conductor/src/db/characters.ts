@@ -1,8 +1,8 @@
 import { DEFAULT_PRONOUNS, isPronounKey } from "@eidolon/config";
 import { kebabCase } from "es-toolkit";
 import { VOICE } from "@/config";
-import { db } from "@/db";
-import { safeJsonParse } from "@/utils";
+import { countMessages, db, getCharacterMind } from "@/db";
+import { safeJsonParse } from "@/utils/json";
 
 export interface CharacterCard {
   id: string;
@@ -99,6 +99,15 @@ export function getCharacter(id: string): CharacterCard | null {
   return row ? toCard(row) : null;
 }
 
+function countEveryMessage(characterId: string): number {
+  const row = db
+    .query<{ total: number }, [string]>(
+      "SELECT COUNT(*) as total FROM messages WHERE character_id = ?",
+    )
+    .get(characterId);
+  return row?.total ?? 0;
+}
+
 export function listCharacters(ownerId?: string): CharacterSummary[] {
   const rows = ownerId
     ? db
@@ -113,20 +122,16 @@ export function listCharacters(ownerId?: string): CharacterSummary[] {
         .all();
 
   return rows.map((row) => {
-    const counted = db
-      .query<{ total: number }, [string]>(
-        "SELECT COUNT(*) as total FROM messages WHERE character_id = ?",
-      )
-      .get(row.id);
+    const mind = getCharacterMind(row.id, ownerId ?? null);
 
     return {
       ...toCard(row),
       avatarUrl: row.avatar_url,
       avatarCrop: row.avatar_crop ? safeJsonParse<unknown>(row.avatar_crop, null) : null,
-      affinity: row.affinity_score ?? 0,
-      tier: row.affinity_tier ?? "",
-      mood: row.current_mood ?? "",
-      messageCount: counted?.total ?? 0,
+      affinity: mind.score,
+      tier: mind.tier,
+      mood: mind.mood,
+      messageCount: ownerId ? countMessages(row.id, ownerId) : countEveryMessage(row.id),
       createdAt: row.created_at,
     };
   });

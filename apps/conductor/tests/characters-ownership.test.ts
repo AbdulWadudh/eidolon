@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
-import { ensureLocalOwner } from "@/auth/session";
 import { createCharacter, getCharacter, listCharacters } from "@/db/characters";
 import { getLoreEntries, upsertLoreEntry } from "@/db/lorebook";
 import { app } from "@/index";
 import { loadPrompts } from "@/prompts/store";
 import { AUTHED, BASE, remember, wipe } from "./support/characters";
+import { TEST_OWNER_ID } from "./support/session";
 
 beforeEach(async () => {
   await loadPrompts();
@@ -26,7 +26,7 @@ describe("ownership", () => {
   });
 
   it("edits in place what the owner authored", async () => {
-    const owner = await ensureLocalOwner();
+    const owner = { id: TEST_OWNER_ID };
     const created = remember(createCharacter({ name: "Mine", ownerId: owner?.id ?? null }));
 
     const res = await app.request(`${BASE}/${created.id}`, {
@@ -73,7 +73,7 @@ describe("ownership", () => {
   });
 
   it("tells the caller whether an edit would change or fork a character", async () => {
-    const owner = await ensureLocalOwner();
+    const owner = { id: TEST_OWNER_ID };
     const mine = remember(createCharacter({ name: "Answer Mine", ownerId: owner?.id ?? null }));
     const theirs = remember(createCharacter({ name: "Answer Theirs", ownerId: "another-account" }));
     const unclaimed = remember(createCharacter({ name: "Answer Unclaimed" }));
@@ -120,7 +120,7 @@ describe("ownership", () => {
   });
 
   it("publishes only what the owner authored", async () => {
-    const owner = await ensureLocalOwner();
+    const owner = { id: TEST_OWNER_ID };
     const mine = remember(createCharacter({ name: "Publishable", ownerId: owner?.id ?? null }));
     const theirs = remember(createCharacter({ name: "Not Mine", ownerId: "another-account" }));
 
@@ -141,7 +141,7 @@ describe("ownership", () => {
   });
 
   it("shows the owner their own, anything published, and nothing else", async () => {
-    const owner = await ensureLocalOwner();
+    const owner = { id: TEST_OWNER_ID };
     const mine = remember(createCharacter({ name: "Roster Mine", ownerId: owner?.id ?? null }));
     const published = remember(
       createCharacter({ name: "Roster Public", ownerId: "another-account", isPublic: true }),

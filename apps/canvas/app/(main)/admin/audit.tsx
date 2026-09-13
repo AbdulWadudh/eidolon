@@ -27,7 +27,7 @@ function when(at: number): string {
 export default function AdminAuditScreen() {
   const theme = useResolvedTheme();
   const reduced = useReducedMotion();
-  const { serverHost, pairingToken } = useConnectionStore();
+  const { serverHost, sessionToken } = useConnectionStore();
   const confirmation = useConfirm();
 
   const [view, setView] = React.useState<AdminAuditView | null>(null);
@@ -36,7 +36,7 @@ export default function AdminAuditScreen() {
 
   const reload = React.useCallback(
     () =>
-      fetchAudit(serverHost, pairingToken)
+      fetchAudit(serverHost, sessionToken)
         .then((body) => {
           setView(body);
           setLoading(false);
@@ -46,7 +46,7 @@ export default function AdminAuditScreen() {
           setError(message.length > 0 ? message : DASHBOARD_COPY.failed);
           setLoading(false);
         }),
-    [pairingToken, serverHost],
+    [sessionToken, serverHost],
   );
 
   React.useEffect(() => {
@@ -59,10 +59,10 @@ export default function AdminAuditScreen() {
       body: CONFIRM_COPY.resetSettingBody,
       confirmLabel: DASHBOARD_COPY.auditClear,
       onConfirm: () => {
-        void clearAudit(serverHost, pairingToken).then(reload);
+        void clearAudit(serverHost, sessionToken).then(reload);
       },
     });
-  }, [confirmation.ask, pairingToken, reload, serverHost]);
+  }, [confirmation.ask, sessionToken, reload, serverHost]);
 
   const entries = view?.entries ?? [];
 

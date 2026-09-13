@@ -4,11 +4,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { AUTH, AUTH_ROUTES, apiPath } from "@eidolon/config";
 import { Hono } from "hono";
-import { PAIRING_SECRET, validateToken } from "@/auth";
 import { type OwnerEnv, requireOwner } from "@/auth/guard";
 import { deleteAccount, getUserRole, listAccounts, setUserRole } from "@/auth/roles";
 import { ownerFor } from "@/auth/session";
 import { app } from "@/index";
+import { TEST_OWNER_ID, TEST_TOKEN } from "./support/session";
 
 const MEMBER_EMAIL = "roles-test-member@eidolon.test";
 const MEMBER_PASSWORD = "roles-test-password";
@@ -53,12 +53,18 @@ afterAll(() => {
 });
 
 describe("roles", () => {
-  it("hands the pairing secret an owner account", async () => {
-    const account = await ownerFor(`Bearer ${PAIRING_SECRET}`);
+  it("resolves a live session token to its own account", async () => {
+    const account = await ownerFor(`Bearer ${TEST_TOKEN}`);
 
     expect(account).not.toBeNull();
-    expect(account?.email).toBe(AUTH.localOwnerEmail);
+    expect(account?.id).toBe(TEST_OWNER_ID);
     expect(account?.role).toBe(AUTH.ownerRole);
+  });
+
+  it("refuses a token that belongs to no session", async () => {
+    expect(await ownerFor("Bearer not-a-real-session")).toBeNull();
+    expect(await ownerFor("")).toBeNull();
+    expect(await ownerFor(null)).toBeNull();
   });
 
   it("makes a later account a member, not an owner", async () => {
@@ -75,7 +81,7 @@ describe("roles", () => {
     const anonymous = await guarded.request("/");
     const member = await guarded.request("/", { headers: { Authorization: `Bearer ${token}` } });
     const owner = await guarded.request("/", {
-      headers: { Authorization: `Bearer ${PAIRING_SECRET}` },
+      headers: { Authorization: `Bearer ${TEST_TOKEN}` },
     });
 
     expect(anonymous.status).toBe(401);
@@ -117,18 +123,10 @@ describe("roles", () => {
     expect(await response.json()).toEqual({ account: null });
   });
 
-  it("lets a session token stand in for the QR code on the socket and pair check", async () => {
+  it("opens the socket for a live session token", async () => {
     const token = await memberToken();
-
-    expect(validateToken(token)).toBe(true);
-    expect(validateToken(`Bearer ${token}`)).toBe(true);
-
-    const verified = await app.request(apiPath("pairVerify"), {
-      headers: { Authorization: `Bearer ${token}` },
-    });
     const socket = await app.request(`${apiPath("ws")}?token=${encodeURIComponent(token)}`);
 
-    expect(verified.status).toBe(200);
     expect(socket.status).not.toBe(401);
   });
 
@@ -140,7 +138,6 @@ describe("roles", () => {
     setUserRole(account?.id ?? "", AUTH.ownerRole);
 
     expect(await ownerFor(`Bearer ${token}`)).toBeNull();
-    expect(validateToken(token)).toBe(false);
 
     setUserRole(account?.id ?? "", before ?? AUTH.memberRole);
   });

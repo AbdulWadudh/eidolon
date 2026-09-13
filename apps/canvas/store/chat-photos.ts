@@ -1,4 +1,5 @@
 import { characterLookUrl, characterMessageUrl, TIMEOUTS_MS } from "@eidolon/config";
+import { authedFetch } from "@/store/connection";
 import { useChatStore } from "./chat-store";
 
 export type PhotoOrientation = "portrait" | "landscape";
@@ -28,7 +29,7 @@ export async function fetchLook(host: string, characterId: string): Promise<Char
   if (!host) return null;
 
   try {
-    const response = await fetch(characterLookUrl(host, characterId), {
+    const response = await authedFetch(characterLookUrl(host, characterId), {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(TIMEOUTS_MS.clientRequest),
     });
@@ -46,7 +47,7 @@ export async function saveLook(host: string, characterId: string, patch: LookPat
   if (!host) return;
 
   try {
-    const response = await fetch(characterLookUrl(host, characterId), {
+    const response = await authedFetch(characterLookUrl(host, characterId), {
       method: "PATCH",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify(patch),
@@ -83,7 +84,7 @@ export async function deletePhoto(
   if (!host) return;
 
   try {
-    await fetch(characterMessageUrl(host, characterId, messageId), {
+    await authedFetch(characterMessageUrl(host, characterId, messageId), {
       method: "DELETE",
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(TIMEOUTS_MS.clientRequest),

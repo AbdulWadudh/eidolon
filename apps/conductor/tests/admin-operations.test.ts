@@ -5,7 +5,6 @@ import {
   adminQueueJobPath,
   adminStorageSweepPath,
 } from "@eidolon/config";
-import { PAIRING_SECRET } from "@/auth";
 import { deleteAccount } from "@/auth/roles";
 import { clearAudit, listAudit } from "@/db/audit";
 import { app } from "@/index";
@@ -24,8 +23,9 @@ import {
   mediaKindForKey,
   normalisePrefix,
 } from "@/services/storage-browse";
+import { TEST_TOKEN } from "./support/session";
 
-const OWNER = { "Content-Type": "application/json", Authorization: `Bearer ${PAIRING_SECRET}` };
+const OWNER = { "Content-Type": "application/json", Authorization: `Bearer ${TEST_TOKEN}` };
 const MEMBER_EMAIL = "operations-test-member@eidolon.test";
 const MEMBER_PASSWORD = "operations-test-password";
 const made = new Set<string>();

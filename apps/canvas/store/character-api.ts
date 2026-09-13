@@ -1,5 +1,6 @@
 import { characterPortraitUrl, charactersUrl, characterUrl, TIMEOUTS_MS } from "@eidolon/config";
 import type { AvatarCropRect } from "@/store/chat-photos";
+import { authedFetch } from "@/store/connection";
 
 export interface CharacterCard {
   id: string;
@@ -46,7 +47,7 @@ export async function fetchCharacters(host: string): Promise<CharacterSummary[]>
   if (!host) return [];
 
   try {
-    const res = await fetch(charactersUrl(host), { signal: signal() });
+    const res = await authedFetch(charactersUrl(host), { signal: signal() });
     if (!res.ok) return [];
     const body = (await res.json()) as { characters: CharacterSummary[] };
     return body.characters;
@@ -59,7 +60,7 @@ export async function fetchPresets(host: string): Promise<Preset[]> {
   if (!host) return [];
 
   try {
-    const res = await fetch(`${charactersUrl(host)}/presets`, { signal: signal() });
+    const res = await authedFetch(`${charactersUrl(host)}/presets`, { signal: signal() });
     if (!res.ok) return [];
     const body = (await res.json()) as { presets: Preset[] };
     return body.presets;
@@ -74,7 +75,7 @@ export async function createFromPreset(
   name?: string,
 ): Promise<CharacterCard | null> {
   try {
-    const res = await fetch(`${charactersUrl(host)}/presets/${key}`, {
+    const res = await authedFetch(`${charactersUrl(host)}/presets/${key}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(name ? { name } : {}),
@@ -93,7 +94,7 @@ export async function createCharacter(
   draft: Partial<CharacterCard> & { name: string },
 ): Promise<CharacterCard | null> {
   try {
-    const res = await fetch(charactersUrl(host), {
+    const res = await authedFetch(charactersUrl(host), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(draft),
@@ -116,12 +117,11 @@ export async function saveCharacter(
   host: string,
   id: string,
   patch: Partial<CharacterCard>,
-  token: string,
 ): Promise<SaveResult | null> {
   try {
-    const res = await fetch(characterUrl(host, id), {
+    const res = await authedFetch(characterUrl(host, id), {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
       signal: signal(),
     });
@@ -138,12 +138,11 @@ export async function publishCharacter(
   host: string,
   id: string,
   isPublic: boolean,
-  token: string,
 ): Promise<CharacterCard | null> {
   try {
-    const res = await fetch(`${characterUrl(host, id)}/publish`, {
+    const res = await authedFetch(`${characterUrl(host, id)}/publish`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isPublic }),
       signal: signal(),
     });
@@ -160,16 +159,9 @@ export interface FetchedCharacter {
   isMine: boolean;
 }
 
-export async function fetchCharacter(
-  host: string,
-  id: string,
-  token?: string,
-): Promise<FetchedCharacter | null> {
+export async function fetchCharacter(host: string, id: string): Promise<FetchedCharacter | null> {
   try {
-    const res = await fetch(characterUrl(host, id), {
-      signal: signal(),
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    });
+    const res = await authedFetch(characterUrl(host, id), { signal: signal() });
     if (!res.ok) return null;
     const body = (await res.json()) as { character: CharacterCard; isMine?: boolean };
     return { card: body.character, isMine: body.isMine === true };
@@ -180,7 +172,7 @@ export async function fetchCharacter(
 
 export async function deleteCharacter(host: string, id: string): Promise<boolean> {
   try {
-    const res = await fetch(characterUrl(host, id), { method: "DELETE", signal: signal() });
+    const res = await authedFetch(characterUrl(host, id), { method: "DELETE", signal: signal() });
     return res.ok;
   } catch {
     return false;
@@ -189,7 +181,7 @@ export async function deleteCharacter(host: string, id: string): Promise<boolean
 
 export async function requestPortrait(host: string, id: string, prompt: string): Promise<boolean> {
   try {
-    const res = await fetch(characterPortraitUrl(host, id), {
+    const res = await authedFetch(characterPortraitUrl(host, id), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt }),

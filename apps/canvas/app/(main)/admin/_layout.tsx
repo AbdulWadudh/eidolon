@@ -8,14 +8,14 @@ import { useResolvedTheme } from "@/store/theme-store";
 
 export default function AdminLayout() {
   const theme = useResolvedTheme();
-  const { serverHost, pairingToken } = useConnectionStore();
+  const { serverHost, sessionToken } = useConnectionStore();
   const account = useAuthStore((state) => state.account);
   const isResolved = useAuthStore((state) => state.isResolved);
   const refresh = useAuthStore((state) => state.refresh);
 
   React.useEffect(() => {
-    void refresh(serverHost, pairingToken);
-  }, [refresh, serverHost, pairingToken]);
+    void refresh(serverHost, sessionToken);
+  }, [refresh, serverHost, sessionToken]);
 
   if (!isResolved) {
     return <View style={{ flex: 1, backgroundColor: theme.canvas }} />;

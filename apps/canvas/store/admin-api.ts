@@ -12,7 +12,7 @@ import {
   adminStorageObjectPath,
   adminStorageObjectsPath,
   adminStorageSweepPath,
-  stripAuthority,
+  httpBase,
   TIMEOUTS_MS,
 } from "@eidolon/config";
 import type { ConfigBucket } from "@eidolon/config/registry";
@@ -36,10 +36,6 @@ export class AdminRequestError extends Error {
     this.name = "AdminRequestError";
     this.status = status;
   }
-}
-
-function httpBase(host: string): string {
-  return host.startsWith("http") ? host.replace(/\/+$/, "") : `http://${stripAuthority(host)}`;
 }
 
 async function request<T>(

@@ -3,10 +3,6 @@ export const SERVER_DEFAULTS = {
   host: "0.0.0.0",
 } as const;
 
-export const PAIRING = {
-  uriScheme: "eidolon://pair",
-} as const;
-
 export const TIMEOUTS_MS = {
   serviceHealth: 2000,
   imageGeneration: 3000,
@@ -142,8 +138,6 @@ export const AUTH = {
   minPasswordLength: 8,
   sessionExpirySeconds: 60 * 60 * 24 * 30,
   sessionRefreshSeconds: 60 * 60 * 24,
-  localOwnerEmail: "owner@eidolon.local",
-  localOwnerName: "You",
   roleField: "role",
   ownerRole: "owner",
   memberRole: "member",
@@ -294,10 +288,6 @@ export const DATA_FILES = {
   sqlite: "eidolon.db",
   lancedb: "lancedb",
   directoryName: "eidolon",
-} as const;
-
-export const MOCK = {
-  aspectRatio: "9:16",
 } as const;
 
 export const PRONOUN_SETS = {

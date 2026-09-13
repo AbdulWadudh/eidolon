@@ -105,7 +105,6 @@ const SECRETS: ConfigGroup = {
   secret: true,
   reason: REASONS.secret,
   value: {
-    PAIRING_SECRET: Boolean(process.env.PAIRING_SECRET),
     S3_ACCESS_KEY: Boolean(process.env.S3_ACCESS_KEY),
     S3_SECRET_KEY: Boolean(process.env.S3_SECRET_KEY),
     SERPER_API_KEY: Boolean(process.env.SERPER_API_KEY),

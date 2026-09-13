@@ -3,7 +3,7 @@ import { MEDIA_GROUPS } from "./media";
 import { PROMPTING_GROUPS } from "./prompting";
 import { RUNTIME_GROUPS } from "./runtime";
 import { SYSTEM_GROUPS } from "./system";
-import { type ConfigBucket, type ConfigEntry, type ConfigGroup, entriesFor } from "./types";
+import { type ConfigEntry, type ConfigGroup, entriesFor } from "./types";
 
 export { REASONS } from "./reasons";
 export {
@@ -35,10 +35,6 @@ export function configEntry(path: string): ConfigEntry | null {
 
 export function isEditablePath(path: string): boolean {
   return configEntry(path)?.bucket === "editable";
-}
-
-export function entriesInBucket(bucket: ConfigBucket): ConfigEntry[] {
-  return CONFIG_ENTRIES.filter((entry) => entry.bucket === bucket);
 }
 
 export function classifiedGroupNames(): string[] {

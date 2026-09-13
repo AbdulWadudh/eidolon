@@ -5,18 +5,18 @@ import {
   SUGGESTIONS as SHIPPED_SUGGESTIONS,
   TTS as SHIPPED_TTS,
 } from "@eidolon/config";
-import { PAIRING_SECRET } from "@/auth";
 import { SUGGESTIONS, TTS } from "@/config";
 import { clearAudit } from "@/db/audit";
 import { removeOverride, writeOverride } from "@/db/overrides";
 import { app } from "@/index";
 import { loadConfigOverlay, reloadConfig, setConfigOverride } from "@/services/config";
+import { TEST_TOKEN } from "./support/session";
 
 const count = (): number => SUGGESTIONS.count as number;
 const temperature = (): number => SUGGESTIONS.temperature as number;
 const speed = (): number => TTS.speed as number;
 
-const OWNER = { "Content-Type": "application/json", Authorization: `Bearer ${PAIRING_SECRET}` };
+const OWNER = { "Content-Type": "application/json", Authorization: `Bearer ${TEST_TOKEN}` };
 const TOUCHED = ["SUGGESTIONS.count", "SUGGESTIONS.temperature", "TTS.speed", "TTS.voice"];
 
 function scrub(): void {

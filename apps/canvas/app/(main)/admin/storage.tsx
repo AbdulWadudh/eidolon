@@ -27,7 +27,7 @@ function megabytes(bytes: number): string {
 
 export default function AdminStorageScreen() {
   const reduced = useReducedMotion();
-  const { serverHost, pairingToken } = useConnectionStore();
+  const { serverHost, sessionToken } = useConnectionStore();
   const confirmation = useConfirm();
   const theme = useResolvedTheme();
   const [isSweepOpen, setSweepOpen] = React.useState(false);
@@ -45,14 +45,14 @@ export default function AdminStorageScreen() {
   const scan = React.useCallback(() => {
     setError(null);
     setWorking(true);
-    fetchStorage(serverHost, pairingToken)
+    fetchStorage(serverHost, sessionToken)
       .then(setView)
       .catch(report)
       .finally(() => {
         setWorking(false);
         setLoading(false);
       });
-  }, [pairingToken, report, serverHost]);
+  }, [sessionToken, report, serverHost]);
 
   React.useEffect(scan, [scan]);
 
@@ -64,13 +64,13 @@ export default function AdminStorageScreen() {
       onConfirm: () => {
         setError(null);
         setWorking(true);
-        sweepStorage(serverHost, pairingToken)
+        sweepStorage(serverHost, sessionToken)
           .then(setView)
           .catch(report)
           .finally(() => setWorking(false));
       },
     });
-  }, [confirmation.ask, pairingToken, report, serverHost, view]);
+  }, [confirmation.ask, sessionToken, report, serverHost, view]);
 
   const orphans = view?.orphans ?? [];
 
@@ -192,7 +192,7 @@ export default function AdminStorageScreen() {
 
       {view?.connected ? (
         <View className="border-border border-t pt-3 pb-6">
-          <StorageBrowser serverHost={serverHost} token={pairingToken} onError={setError} />
+          <StorageBrowser serverHost={serverHost} token={sessionToken} onError={setError} />
         </View>
       ) : null}
 

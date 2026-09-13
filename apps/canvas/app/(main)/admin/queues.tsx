@@ -37,7 +37,7 @@ const QUEUE_ICONS: Record<string, IconSvgElement> = {
 export default function AdminQueuesScreen() {
   const theme = useResolvedTheme();
   const reduced = useReducedMotion();
-  const { serverHost, pairingToken } = useConnectionStore();
+  const { serverHost, sessionToken } = useConnectionStore();
   const confirmation = useConfirm();
 
   const [queues, setQueues] = React.useState<QueueView[]>([]);
@@ -46,7 +46,7 @@ export default function AdminQueuesScreen() {
   const [openQueue, setOpenQueue] = React.useState<string | null>(null);
   const [openJob, setOpenJob] = React.useState<string | null>(null);
   const [stateTab, setStateTab] = React.useState<Record<string, QueueTab>>({});
-  const jobAuthor = useJobAuthor(serverHost, pairingToken);
+  const jobAuthor = useJobAuthor(serverHost, sessionToken);
 
   const report = React.useCallback((cause: unknown) => {
     const message = cause instanceof AdminRequestError ? cause.message : "";
@@ -54,7 +54,7 @@ export default function AdminQueuesScreen() {
   }, []);
 
   const reload = React.useCallback(() => {
-    fetchQueues(serverHost, pairingToken)
+    fetchQueues(serverHost, sessionToken)
       .then((body) => {
         setQueues(body.queues);
         setLoading(false);
@@ -63,7 +63,7 @@ export default function AdminQueuesScreen() {
         report(cause);
         setLoading(false);
       });
-  }, [pairingToken, report, serverHost]);
+  }, [sessionToken, report, serverHost]);
 
   React.useEffect(reload, [reload]);
 
@@ -81,19 +81,19 @@ export default function AdminQueuesScreen() {
         title: DASHBOARD_COPY.queueRemove,
         body: `${job.name} · ${job.characterId ?? job.id}`,
         confirmLabel: DASHBOARD_COPY.queueRemove,
-        onConfirm: () => apply(removeQueueJob(serverHost, pairingToken, queue.key, job.id)),
+        onConfirm: () => apply(removeQueueJob(serverHost, sessionToken, queue.key, job.id)),
       });
     },
-    [apply, confirmation.ask, pairingToken, serverHost],
+    [apply, confirmation.ask, sessionToken, serverHost],
   );
 
   const saveJob = React.useCallback(
     (queue: QueueView, job: QueueJobView, patch: Record<string, unknown>, retry: boolean) => {
       setError(null);
-      apply(editQueueJob(serverHost, pairingToken, queue.key, job.id, patch, retry));
+      apply(editQueueJob(serverHost, sessionToken, queue.key, job.id, patch, retry));
       jobAuthor.forget(job.id);
     },
-    [apply, jobAuthor.forget, pairingToken, serverHost],
+    [apply, jobAuthor.forget, sessionToken, serverHost],
   );
 
   const visibleJobs = React.useCallback(
@@ -155,7 +155,7 @@ export default function AdminQueuesScreen() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  onPress={() => apply(retryQueue(serverHost, pairingToken, queue.key))}
+                  onPress={() => apply(retryQueue(serverHost, sessionToken, queue.key))}
                 >
                   {DASHBOARD_COPY.queueRetryAll}
                 </Button>
@@ -184,7 +184,7 @@ export default function AdminQueuesScreen() {
                         onRevertField={(field) => jobAuthor.revert(job.id, field)}
                         onSave={(patch, retry) => saveJob(queue, job, patch, retry)}
                         onRetry={() =>
-                          apply(retryQueueJob(serverHost, pairingToken, queue.key, job.id))
+                          apply(retryQueueJob(serverHost, sessionToken, queue.key, job.id))
                         }
                         onRemove={() => dropJob(queue, job)}
                       />

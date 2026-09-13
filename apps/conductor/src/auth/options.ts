@@ -1,12 +1,12 @@
 import { AUTH } from "@eidolon/config";
-import { getAuthBaseUrl, getPairingSecret, getTrustedOrigins } from "@eidolon/config/server";
+import { getAuthBaseUrl, getAuthSecret, getTrustedOrigins } from "@eidolon/config/server";
 import type { BetterAuthOptions } from "better-auth";
 import { roleForNewUser } from "@/auth/roles";
 import { db } from "@/db";
 
 export const authOptions = {
   database: db,
-  secret: getPairingSecret(),
+  secret: getAuthSecret(),
   baseURL: getAuthBaseUrl(),
   trustedOrigins: getTrustedOrigins(),
   emailAndPassword: {

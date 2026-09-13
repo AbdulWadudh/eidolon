@@ -53,15 +53,14 @@ export default function ChatScreen() {
   const chat = useChatStore();
   const view = useChatView(characterId);
   const serverHost = useConnectionStore((state) => state.serverHost);
-  const pairingToken = useConnectionStore((state) => state.pairingToken);
   const [card, setCard] = React.useState<CharacterCard | null>(null);
 
   const loadCard = React.useCallback(() => {
     if (!serverHost) return;
-    void fetchCharacter(serverHost, characterId, pairingToken).then((next) => {
+    void fetchCharacter(serverHost, characterId).then((next) => {
       if (next) setCard(next.card);
     });
-  }, [serverHost, characterId, pairingToken]);
+  }, [serverHost, characterId]);
 
   const characterName = card?.name.trim() ?? "";
   const [actionsOpen, setActionsOpen] = React.useState(false);

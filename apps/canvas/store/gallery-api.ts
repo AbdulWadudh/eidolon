@@ -1,4 +1,5 @@
 import { characterGalleryUrl, charactersUrl, GALLERY, TIMEOUTS_MS } from "@eidolon/config";
+import { authedFetch } from "@/store/connection";
 
 export type GalleryKind = "photo" | "portrait" | "backdrop";
 
@@ -27,7 +28,7 @@ export async function fetchGallery(
   if (!host) return EMPTY;
 
   try {
-    const res = await fetch(characterGalleryUrl(host, characterId, { limit, offset }), {
+    const res = await authedFetch(characterGalleryUrl(host, characterId, { limit, offset }), {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(TIMEOUTS_MS.clientRequest),
     });
@@ -49,7 +50,7 @@ export async function setAvatar(host: string, characterId: string, url: string):
   if (!host) return false;
 
   try {
-    const res = await fetch(`${charactersUrl(host)}/${characterId}/avatar`, {
+    const res = await authedFetch(`${charactersUrl(host)}/${characterId}/avatar`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url }),
@@ -69,7 +70,7 @@ export async function deleteGalleryImage(
   if (!host) return false;
 
   try {
-    const res = await fetch(
+    const res = await authedFetch(
       `${charactersUrl(host)}/${characterId}/gallery/${encodeURIComponent(imageId)}`,
       { method: "DELETE", signal: AbortSignal.timeout(TIMEOUTS_MS.clientRequest) },
     );

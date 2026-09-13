@@ -31,9 +31,8 @@ describe("API versioning", () => {
 
   it("resolves the documented paths", () => {
     expect(apiPath("health")).toBe("/api/v1/health");
-    expect(apiPath("pairing")).toBe("/api/v1/pairing");
-    expect(apiPath("pairVerify")).toBe("/api/v1/pair/verify");
-    expect(apiPath("pairingQr")).toBe("/api/v1/pairing/qr");
+    expect(apiPath("session")).toBe("/api/v1/session");
+    expect(apiPath("characters")).toBe("/api/v1/characters");
     expect(apiPath("ws")).toBe("/api/v1/ws");
   });
 
@@ -45,9 +44,7 @@ describe("API versioning", () => {
 
 describe("URL builders", () => {
   it("builds an http URL from a host:port authority", () => {
-    expect(apiUrl("192.168.1.39:3000", "pairVerify")).toBe(
-      "http://192.168.1.39:3000/api/v1/pair/verify",
-    );
+    expect(apiUrl("192.168.1.39:3000", "session")).toBe("http://192.168.1.39:3000/api/v1/session");
     expect(apiUrl("example.com", "health", "https")).toBe("https://example.com/api/v1/health");
   });
 
@@ -69,15 +66,13 @@ describe("URL builders", () => {
 
 describe("scheme derived from the host", () => {
   it("keeps a LAN address on plain http and ws", () => {
-    expect(apiUrl("192.168.1.39:3000", "pairVerify")).toBe(
-      "http://192.168.1.39:3000/api/v1/pair/verify",
-    );
+    expect(apiUrl("192.168.1.39:3000", "session")).toBe("http://192.168.1.39:3000/api/v1/session");
     expect(socketUrl("192.168.1.39:3000", "t")).toBe("ws://192.168.1.39:3000/api/v1/ws?token=t");
   });
 
   it("upgrades a TLS origin to https and wss", () => {
-    expect(apiUrl("https://3000.k79.quest", "pairVerify")).toBe(
-      "https://3000.k79.quest/api/v1/pair/verify",
+    expect(apiUrl("https://3000.k79.quest", "session")).toBe(
+      "https://3000.k79.quest/api/v1/session",
     );
     expect(socketUrl("https://3000.k79.quest", "t")).toBe("wss://3000.k79.quest/api/v1/ws?token=t");
   });
@@ -93,8 +88,8 @@ describe("scheme derived from the host", () => {
   });
 
   it("still lets a caller force a scheme", () => {
-    expect(apiUrl("3000.k79.quest", "pairVerify", "https")).toBe(
-      "https://3000.k79.quest/api/v1/pair/verify",
+    expect(apiUrl("3000.k79.quest", "session", "https")).toBe(
+      "https://3000.k79.quest/api/v1/session",
     );
   });
 });

@@ -75,7 +75,6 @@ export function CharacterSettingsSheet({
   const cssVars = useThemeCssVars(characterId);
   const theme = useResolvedTheme(characterId);
   const serverHost = useConnectionStore((state) => state.serverHost);
-  const pairingToken = useConnectionStore((state) => state.pairingToken);
 
   const [card, setCard] = React.useState<CharacterCard | null>(null);
   const [isMine, setIsMine] = React.useState(true);
@@ -90,13 +89,13 @@ export function CharacterSettingsSheet({
     setNote(null);
     setPortrait(avatarUrl);
 
-    void fetchCharacter(serverHost, characterId, pairingToken).then((next) => {
+    void fetchCharacter(serverHost, characterId).then((next) => {
       setCard(next?.card ?? null);
       setIsMine(next?.isMine ?? true);
       setDraft(next ? toDraft(next.card) : EMPTY_DRAFT);
       if (!next) setNote(CHARACTER_COPY.failed);
     });
-  }, [isOpen, serverHost, characterId, pairingToken, avatarUrl]);
+  }, [isOpen, serverHost, characterId, avatarUrl]);
 
   const dirty = changedKeys(draft, card ? toDraft(card) : null);
 
@@ -115,7 +114,7 @@ export function CharacterSettingsSheet({
 
   const save = React.useCallback(async () => {
     setBusy(true);
-    const result = await saveCharacter(serverHost, characterId, draft, pairingToken);
+    const result = await saveCharacter(serverHost, characterId, draft);
     setBusy(false);
 
     if (!result) {
@@ -134,15 +133,15 @@ export function CharacterSettingsSheet({
     setIsMine(true);
     setDraft(toDraft(result.character));
     setNote(CHARACTER_COPY.saved);
-  }, [serverHost, characterId, draft, pairingToken, onForked]);
+  }, [serverHost, characterId, draft, onForked]);
 
   const publish = React.useCallback(
     async (isPublic: boolean) => {
-      const next = await publishCharacter(serverHost, characterId, isPublic, pairingToken);
+      const next = await publishCharacter(serverHost, characterId, isPublic);
       if (next) setCard(next);
       else setNote(CHARACTER_COPY.publishRefused);
     },
-    [serverHost, characterId, pairingToken],
+    [serverHost, characterId],
   );
 
   const discard = React.useCallback(() => {

@@ -21,10 +21,8 @@ export interface CharacterPreset {
   lore: PresetLore[];
 }
 
-const NEWLINE = String.fromCharCode(10);
-
 function dialogue(...lines: string[]): string {
-  return lines.join(NEWLINE);
+  return lines.join("\n");
 }
 
 export const CHARACTER_PRESETS: CharacterPreset[] = [

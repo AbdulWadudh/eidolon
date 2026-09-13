@@ -36,7 +36,7 @@ import { useResolvedTheme } from "@/store/theme-store";
 
 export default function MainCharactersScreen() {
   const router = useRouter();
-  const { serverHost, pairingToken, unpair, connectionState } = useConnectionStore();
+  const { serverHost, sessionToken, signOut, connectionState } = useConnectionStore();
   const theme = useResolvedTheme();
   const reduced = useReducedMotion();
   const isOwner = useIsOwner();
@@ -61,8 +61,8 @@ export default function MainCharactersScreen() {
 
   useFocusEffect(
     React.useCallback(() => {
-      void refreshAccount(serverHost, pairingToken);
-    }, [refreshAccount, serverHost, pairingToken]),
+      void refreshAccount(serverHost, sessionToken);
+    }, [refreshAccount, serverHost, sessionToken]),
   );
 
   useFocusEffect(
@@ -159,12 +159,12 @@ export default function MainCharactersScreen() {
                 className="flex-row gap-1.5"
                 onPress={() =>
                   confirmation.ask({
-                    title: CONFIRM_COPY.unpair,
-                    body: CONFIRM_COPY.unpairBody,
-                    confirmLabel: CONFIRM_COPY.unpairAction,
+                    title: CONFIRM_COPY.signOut,
+                    body: CONFIRM_COPY.signOutBody,
+                    confirmLabel: CONFIRM_COPY.signOutAction,
                     onConfirm: () => {
-                      unpair();
-                      router.replace("/(auth)/pairing");
+                      signOut();
+                      router.replace("/(auth)/sign-in");
                     },
                   })
                 }

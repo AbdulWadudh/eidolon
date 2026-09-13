@@ -27,7 +27,7 @@ import { useResolvedTheme } from "@/store/theme-store";
 export default function AdminConfigScreen() {
   const theme = useResolvedTheme();
   const reduced = useReducedMotion();
-  const { serverHost, pairingToken } = useConnectionStore();
+  const { serverHost, sessionToken } = useConnectionStore();
 
   const [view, setView] = React.useState<ConfigView | null>(null);
   const [isLoading, setLoading] = React.useState(true);
@@ -41,7 +41,7 @@ export default function AdminConfigScreen() {
   React.useEffect(() => {
     let live = true;
 
-    fetchConfig(serverHost, pairingToken)
+    fetchConfig(serverHost, sessionToken)
       .then((body) => {
         if (!live) return;
         setView(body);
@@ -56,7 +56,7 @@ export default function AdminConfigScreen() {
     return () => {
       live = false;
     };
-  }, [serverHost, pairingToken]);
+  }, [serverHost, sessionToken]);
 
   const report = React.useCallback((cause: unknown) => {
     const message = cause instanceof AdminRequestError ? cause.message : "";
@@ -83,28 +83,28 @@ export default function AdminConfigScreen() {
     (path: string, value: unknown) => {
       setError(null);
       void runSave(() =>
-        saveConfigValue(serverHost, pairingToken, path, value).then((body) =>
+        saveConfigValue(serverHost, sessionToken, path, value).then((body) =>
           replace(body.setting),
         ),
       ).catch(report);
     },
-    [pairingToken, replace, report, runSave, serverHost],
+    [sessionToken, replace, report, runSave, serverHost],
   );
 
   const reset = React.useCallback(
     (path: string) => {
       setError(null);
-      resetConfigValue(serverHost, pairingToken, path)
+      resetConfigValue(serverHost, sessionToken, path)
         .then((body) => replace(body.setting))
         .catch(report);
     },
-    [pairingToken, replace, report, serverHost],
+    [sessionToken, replace, report, serverHost],
   );
 
   const reload = React.useCallback(() => {
     setError(null);
-    reloadConfig(serverHost, pairingToken).then(setView).catch(report);
-  }, [pairingToken, report, serverHost]);
+    reloadConfig(serverHost, sessionToken).then(setView).catch(report);
+  }, [sessionToken, report, serverHost]);
 
   const visible = React.useMemo(() => {
     const needle = query.trim().toLowerCase();

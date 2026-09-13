@@ -29,15 +29,14 @@ export default function CallScreen() {
   const setActiveCharacter = useThemeStore((state) => state.setActiveCharacter);
   const socket = useConductorSocket();
   const serverHost = useConnectionStore((state) => state.serverHost);
-  const pairingToken = useConnectionStore((state) => state.pairingToken);
   const [card, setCard] = React.useState<CharacterCard | null>(null);
 
   React.useEffect(() => {
     if (!serverHost) return;
-    void fetchCharacter(serverHost, characterId, pairingToken).then((next) => {
+    void fetchCharacter(serverHost, characterId).then((next) => {
       if (next) setCard(next.card);
     });
-  }, [serverHost, characterId, pairingToken]);
+  }, [serverHost, characterId]);
 
   const characterName = card?.name.trim() ?? "";
   const look = useChatStore((state) => state.characterLook);

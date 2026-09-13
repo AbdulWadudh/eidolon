@@ -14,7 +14,7 @@ import { useConnectionStore } from "@/store/connection";
 import { flushThemePersistence, useResolvedTheme, useThemeCssVars } from "@/store/theme-store";
 
 export default function RootLayout() {
-  const { isPaired, initializeConnection } = useConnectionStore();
+  const { isSignedIn, initializeConnection } = useConnectionStore();
   const dynamicVars = useThemeCssVars();
   const resolvedTheme = useResolvedTheme();
   const segments = useSegments();
@@ -50,12 +50,12 @@ export default function RootLayout() {
   React.useEffect(() => {
     const inAuthGroup = segments[0] === "(auth)";
     const isDemoRoute = segments.includes("demo");
-    if (!isPaired && !inAuthGroup && !isDemoRoute && segments[0] !== undefined) {
-      router.replace("/(auth)/pairing");
-    } else if (isPaired && inAuthGroup) {
+    if (!isSignedIn && !inAuthGroup && !isDemoRoute && segments[0] !== undefined) {
+      router.replace("/(auth)/sign-in");
+    } else if (isSignedIn && inAuthGroup) {
       router.replace("/(main)");
     }
-  }, [isPaired, segments, router]);
+  }, [isSignedIn, segments, router]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

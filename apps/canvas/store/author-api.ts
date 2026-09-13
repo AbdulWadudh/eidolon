@@ -1,4 +1,5 @@
 import { type AuthorField, type AuthorMode, charactersUrl, TIMEOUTS_MS } from "@eidolon/config";
+import { authedFetch } from "@/store/connection";
 import type { Draft } from "./character-draft";
 
 export type AuthorContext = Partial<Record<AuthorField, string>>;
@@ -32,7 +33,7 @@ export async function authorField(
   if (!host) return { text: null, error: null };
 
   try {
-    const res = await fetch(`${charactersUrl(host)}/author`, {
+    const res = await authedFetch(`${charactersUrl(host)}/author`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ field, mode, draft, context }),

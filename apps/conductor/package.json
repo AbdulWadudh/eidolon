@@ -22,18 +22,15 @@
     "es-toolkit": "latest",
     "eventsource-parser": "^4.1.0",
     "hono": "^4.6.0",
-    "ioredis": "^6.0.0",
     "jsonrepair": "latest",
     "png-chunk-text": "^1.0.0",
     "png-chunks-encode": "^1.0.0",
     "png-chunks-extract": "^1.0.0",
-    "qrcode-terminal": "latest",
     "sharp": "^0.35.4"
   },
   "devDependencies": {
     "@eidolon/tsconfig": "workspace:*",
     "@types/bun": "latest",
-    "@types/qrcode-terminal": "latest",
     "typescript": "^5.7.3"
   }
 }

@@ -1,4 +1,4 @@
-import { AUTH, AUTH_ROUTES, apiPath, stripAuthority, TIMEOUTS_MS } from "@eidolon/config";
+import { AUTH, AUTH_ROUTES, apiPath, httpBase, TIMEOUTS_MS } from "@eidolon/config";
 import type { UserRole } from "@eidolon/protocol";
 import { create } from "zustand";
 import { appStorage } from "@/store/storage";
@@ -17,10 +17,6 @@ export interface Credentials {
 }
 
 const ACCOUNT_KEY = "eidolon.account";
-
-function httpBase(host: string): string {
-  return host.startsWith("http") ? host.replace(/\/+$/, "") : `http://${stripAuthority(host)}`;
-}
 
 function loadAccount(): Account | null {
   const raw = appStorage.getString(ACCOUNT_KEY);

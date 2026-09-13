@@ -18,7 +18,7 @@ import { useConnectionStore } from "@/store/connection";
 
 export default function AdminUsersScreen() {
   const reduced = useReducedMotion();
-  const { serverHost, pairingToken } = useConnectionStore();
+  const { serverHost, sessionToken } = useConnectionStore();
   const signedInId = useAuthStore((state) => state.account?.id ?? "");
 
   const [accounts, setAccounts] = React.useState<AdminAccount[]>([]);
@@ -30,7 +30,7 @@ export default function AdminUsersScreen() {
 
   const reload = React.useCallback(
     () =>
-      fetchAccounts(serverHost, pairingToken)
+      fetchAccounts(serverHost, sessionToken)
         .then((body) => {
           setAccounts(body.accounts);
           setLoading(false);
@@ -39,7 +39,7 @@ export default function AdminUsersScreen() {
           setError(DASHBOARD_COPY.failed);
           setLoading(false);
         }),
-    [pairingToken, serverHost],
+    [sessionToken, serverHost],
   );
 
   React.useEffect(() => {
@@ -67,23 +67,23 @@ export default function AdminUsersScreen() {
     (account: AdminAccount, body: { role?: AdminAccount["role"]; name?: string }) => {
       setError(null);
       void runSave(() =>
-        saveAccount(serverHost, pairingToken, account.id, body).then(() => reload()),
+        saveAccount(serverHost, sessionToken, account.id, body).then(() => reload()),
       ).catch(report);
     },
-    [pairingToken, reload, report, runSave, serverHost],
+    [sessionToken, reload, report, runSave, serverHost],
   );
 
   const remove = React.useCallback(
     (account: AdminAccount) => {
       setError(null);
-      removeAccount(serverHost, pairingToken, account.id)
+      removeAccount(serverHost, sessionToken, account.id)
         .then(() => {
           setOpenId(null);
           return reload();
         })
         .catch(report);
     },
-    [pairingToken, reload, report, serverHost],
+    [sessionToken, reload, report, serverHost],
   );
 
   return (

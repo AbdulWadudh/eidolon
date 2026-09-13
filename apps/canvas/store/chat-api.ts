@@ -1,5 +1,6 @@
 import { characterMemoryUrl, characterMessagesUrl, TIMEOUTS_MS } from "@eidolon/config";
 import { formatClockTime } from "@/lib/format";
+import { authedFetch } from "@/store/connection";
 import type { ChatMessage, MindState } from "./chat-messages";
 import type { AvatarCropRect, CharacterLook } from "./chat-photos";
 
@@ -94,7 +95,7 @@ export async function forgetCharacter(host: string, characterId: string): Promis
 }
 
 async function requestJson(url: string, method: "GET" | "DELETE"): Promise<TranscriptResponse> {
-  const response = await fetch(url, {
+  const response = await authedFetch(url, {
     method,
     headers: { Accept: "application/json" },
     signal: AbortSignal.timeout(TIMEOUTS_MS.transcript),

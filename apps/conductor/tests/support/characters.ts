@@ -1,11 +1,11 @@
 import { apiPath } from "@eidolon/config";
-import { PAIRING_SECRET } from "@/auth";
 import { db } from "@/db";
+import { TEST_TOKEN } from "./session";
 
 export const BASE = apiPath("characters");
 export const AUTHED = {
   "Content-Type": "application/json",
-  Authorization: `Bearer ${PAIRING_SECRET}`,
+  Authorization: `Bearer ${TEST_TOKEN}`,
 };
 
 const MADE = new Set<string>();

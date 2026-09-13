@@ -35,7 +35,7 @@ const CATEGORY_ICONS: Record<string, IconSvgElement> = {
 export default function AdminPromptsScreen() {
   const theme = useResolvedTheme();
   const reduced = useReducedMotion();
-  const { serverHost, pairingToken } = useConnectionStore();
+  const { serverHost, sessionToken } = useConnectionStore();
 
   const [prompts, setPrompts] = React.useState<AdminPrompt[]>([]);
   const [isLoading, setLoading] = React.useState(true);
@@ -46,12 +46,12 @@ export default function AdminPromptsScreen() {
   const [query, setQuery] = React.useState("");
   const [saveState, runSave] = useSaveState();
 
-  const author = usePromptAuthor(serverHost, pairingToken, (_key, text) => setDraft(text));
+  const author = usePromptAuthor(serverHost, sessionToken, (_key, text) => setDraft(text));
 
   React.useEffect(() => {
     let live = true;
 
-    fetchPrompts(serverHost, pairingToken)
+    fetchPrompts(serverHost, sessionToken)
       .then((body) => {
         if (!live) return;
         setPrompts(body.prompts);
@@ -66,7 +66,7 @@ export default function AdminPromptsScreen() {
     return () => {
       live = false;
     };
-  }, [serverHost, pairingToken]);
+  }, [serverHost, sessionToken]);
 
   const visible = React.useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -119,25 +119,25 @@ export default function AdminPromptsScreen() {
     (prompt: AdminPrompt) => {
       setError(null);
       void runSave(() =>
-        savePrompt(serverHost, pairingToken, prompt.key, draft).then((body) =>
+        savePrompt(serverHost, sessionToken, prompt.key, draft).then((body) =>
           replace(body.prompt),
         ),
       ).catch(() => setError(DASHBOARD_COPY.failed));
     },
-    [draft, pairingToken, replace, runSave, serverHost],
+    [draft, sessionToken, replace, runSave, serverHost],
   );
 
   const revert = React.useCallback(
     (prompt: AdminPrompt) => {
       setError(null);
-      resetPrompt(serverHost, pairingToken, prompt.key)
+      resetPrompt(serverHost, sessionToken, prompt.key)
         .then((body) => {
           replace(body.prompt);
           setDraft(body.prompt.value);
         })
         .catch(() => setError(DASHBOARD_COPY.failed));
     },
-    [pairingToken, replace, serverHost],
+    [sessionToken, replace, serverHost],
   );
 
   return (

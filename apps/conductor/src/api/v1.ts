@@ -1,12 +1,11 @@
-import { API_ROUTES, API_VERSION, AUTH_COPY } from "@eidolon/config";
-import { getPairingHost, SQLITE_DB_PATH } from "@eidolon/config/server";
+import { API_ROUTES, API_VERSION } from "@eidolon/config";
+import { SQLITE_DB_PATH } from "@eidolon/config/server";
 import { COLORS } from "@eidolon/tokens";
 import { Hono } from "hono";
 import { mountCharacters } from "@/api/characters";
 import { readLoreBody } from "@/api/lore-body";
 import { applyAffinityOverride, buildMindView } from "@/api/mind";
 import { mountVoices } from "@/api/voices";
-import { generatePairingPayload, PAIRING_SECRET, validateToken } from "@/auth";
 import { accountFor, requireOwner, requireUser, type UserEnv } from "@/auth/guard";
 import { AFFINITY, TRANSCRIPT } from "@/config";
 import {
@@ -36,7 +35,6 @@ import {
 import { deleteLoreEntry, upsertLoreEntry } from "@/db/lorebook";
 import { summarizeChronicleNow } from "@/orchestrator/chronicle";
 import { resolveMood } from "@/orchestrator/prompt-builder";
-import { renderPairingPage } from "@/pairing/page";
 import { describePrompt, listPrompts, resetPrompt, setPrompt } from "@/prompts/store";
 import { checkCacheHealth } from "@/services/cache";
 import { checkComfyHealth } from "@/services/comfyui";
@@ -46,7 +44,7 @@ import { forgetFace } from "@/services/selfie";
 import { getStorageConfig, isStorageConnected } from "@/services/storage";
 import { checkTranscribeHealth, isTranscriptionConfigured } from "@/services/transcribe";
 import { checkTtsHealth } from "@/services/tts";
-import { getConnectedDeviceCount, setupWebSocketRoutes } from "@/ws";
+import { setupWebSocketRoutes } from "@/ws";
 
 export const v1 = new Hono<UserEnv>();
 
@@ -95,45 +93,6 @@ export async function buildHealthReport() {
 }
 
 v1.get(API_ROUTES.health, async (c) => c.json(await buildHealthReport()));
-
-v1.get(API_ROUTES.pairing, (c) => {
-  if (!validateToken(c.req.header("Authorization") ?? c.req.query("token"))) {
-    return c.json({ error: AUTH_COPY.signInRequired }, 401);
-  }
-
-  return c.json({
-    pairing_url: generatePairingPayload(),
-    secret: PAIRING_SECRET,
-    server: getPairingHost(),
-  });
-});
-
-v1.get(API_ROUTES.pairVerify, (c) => {
-  const token = c.req.header("Authorization") ?? c.req.query("token");
-
-  if (!validateToken(token)) {
-    return c.json({ ok: false, error: "Invalid pairing token." }, 401);
-  }
-
-  return c.json({
-    ok: true,
-    service: "eidolon-conductor",
-    version: API_VERSION,
-    server: getPairingHost(),
-  });
-});
-
-v1.get(API_ROUTES.pairingQr, (c) => {
-  if (!validateToken(c.req.header("Authorization") ?? c.req.query("token"))) {
-    return c.text(AUTH_COPY.signInRequired, 401);
-  }
-
-  const payload = generatePairingPayload();
-
-  return c.html(renderPairingPage(payload, getPairingHost(), PAIRING_SECRET));
-});
-
-v1.get(API_ROUTES.pairingStatus, (c) => c.json({ devices: getConnectedDeviceCount() }));
 
 v1.get(API_ROUTES.session, async (c) => c.json({ account: await accountFor(c) }));
 

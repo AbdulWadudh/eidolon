@@ -1,4 +1,5 @@
 import { characterMessageUrl, TIMEOUTS_MS } from "@eidolon/config";
+import { authedFetch } from "@/store/connection";
 import { fetchTranscript, forgetCharacter as requestForget } from "./chat-api";
 import { INITIAL_CHAT, useChatStore } from "./chat-store";
 
@@ -74,7 +75,7 @@ export async function saveMessageEdit(
   if (!host) return false;
 
   try {
-    const res = await fetch(characterMessageUrl(host, characterId, messageId), {
+    const res = await authedFetch(characterMessageUrl(host, characterId, messageId), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content }),

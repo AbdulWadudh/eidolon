@@ -22,14 +22,14 @@ function uptimeLabel(seconds: number): string {
 export default function AdminHealthScreen() {
   const theme = useResolvedTheme();
   const reduced = useReducedMotion();
-  const { serverHost, pairingToken } = useConnectionStore();
+  const { serverHost, sessionToken } = useConnectionStore();
 
   const [view, setView] = React.useState<HealthView | null>(null);
   const [isLoading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
   const reload = React.useCallback(() => {
-    fetchHealth(serverHost, pairingToken)
+    fetchHealth(serverHost, sessionToken)
       .then((body) => {
         setView(body);
         setLoading(false);
@@ -39,7 +39,7 @@ export default function AdminHealthScreen() {
         setError(message.length > 0 ? message : DASHBOARD_COPY.failed);
         setLoading(false);
       });
-  }, [pairingToken, serverHost]);
+  }, [sessionToken, serverHost]);
 
   React.useEffect(reload, [reload]);
 

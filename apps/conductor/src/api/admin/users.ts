@@ -11,7 +11,6 @@ import {
   renameAccount,
   setUserRole,
 } from "@/auth/roles";
-import { forgetLocalOwner } from "@/auth/session";
 
 export const adminUsers = new Hono<OwnerEnv>();
 
@@ -49,7 +48,6 @@ adminUsers.patch("/:id", async (c) => {
 
   if (name !== undefined) renameAccount(id, name.trim());
 
-  forgetLocalOwner();
   return c.json({ account: getAccount(id) });
 });
 
@@ -61,6 +59,5 @@ adminUsers.delete("/:id", (c) => {
   if (isLastOwner(id)) return c.json({ error: AUTH_COPY.lastOwner }, 409);
 
   deleteAccount(id);
-  forgetLocalOwner();
   return c.json({ ok: true });
 });

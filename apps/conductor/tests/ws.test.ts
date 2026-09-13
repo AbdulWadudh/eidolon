@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { apiPath } from "@eidolon/config";
 import { parseServerMessage, type ServerMessage } from "@eidolon/protocol";
-import { PAIRING_SECRET } from "@/auth";
 import { app } from "@/index";
 import { websocket } from "@/ws";
+import { TEST_TOKEN } from "./support/session";
 
 describe("Conductor WebSocket Router", () => {
   let server: ReturnType<typeof Bun.serve>;
@@ -33,7 +33,7 @@ describe("Conductor WebSocket Router", () => {
   });
 
   it("accepts authorized connection and handles ping", async () => {
-    const ws = new WebSocket(`${wsUrl}?token=${PAIRING_SECRET}`);
+    const ws = new WebSocket(`${wsUrl}?token=${TEST_TOKEN}`);
 
     const messagePromise = new Promise<ServerMessage>((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error("Timeout waiting for pong")), 4000);
@@ -69,7 +69,7 @@ describe("Conductor WebSocket Router", () => {
   });
 
   it("streams a turn and appraises it, without spending calls on reply options", async () => {
-    const ws = new WebSocket(`${wsUrl}?token=${PAIRING_SECRET}`);
+    const ws = new WebSocket(`${wsUrl}?token=${TEST_TOKEN}`);
 
     const receivedMessages: ServerMessage[] = [];
 
@@ -126,7 +126,7 @@ describe("Conductor WebSocket Router", () => {
   });
 
   it("produces reply options when they are actually asked for", async () => {
-    const ws = new WebSocket(`${wsUrl}?token=${PAIRING_SECRET}`);
+    const ws = new WebSocket(`${wsUrl}?token=${TEST_TOKEN}`);
 
     const suggestions = new Promise<ServerMessage>((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error("Timeout waiting for suggestions")), 20000);

@@ -8,8 +8,8 @@ import {
 } from "@eidolon/config";
 import {
   getPublicAssetDir,
+  getServerAddress,
   getServerConfig,
-  hasPairingSecret,
   isTestEnv,
 } from "@eidolon/config/server";
 import { Hono } from "hono";
@@ -17,8 +17,8 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { mountAdmin } from "@/api/admin";
 import { buildHealthReport, v1 } from "@/api/v1";
-import { auth, generatePairingPayload } from "@/auth";
-import { renderBanner, renderPairingQr } from "@/pairing/banner";
+import { auth } from "@/auth";
+import { countUsers } from "@/auth/roles";
 import { loadPrompts } from "@/prompts/store";
 import { createQueueBoard } from "@/queue/board";
 import { closeQueues } from "@/queue/queues";
@@ -64,7 +64,6 @@ app.get(STATIC_ROUTES.logo, async (c) => {
 });
 
 const { port } = getServerConfig();
-const pairingPayload = generatePairingPayload();
 
 if (!isTestEnv()) {
   void initStorage().then((ready) => {
@@ -80,13 +79,12 @@ if (!isTestEnv()) {
     });
   }
 
-  if (!hasPairingSecret()) {
-    console.error("[Auth] PAIRING_SECRET is not set. Every pairing attempt and socket will be");
-    console.error("[Auth] refused. Set it in apps/conductor/.env before pairing a device.");
+  const address = getServerAddress();
+  const reachable = address.startsWith("http") ? address : `http://${address}`;
+  console.log(`[Conductor] Sign in at ${reachable} to reach this server.`);
+  if (countUsers() === 0) {
+    console.log("[Conductor] No accounts yet. The first account to sign up becomes the owner.");
   }
-
-  console.log(renderBanner(pairingPayload));
-  console.log(renderPairingQr(pairingPayload, process.stdout.columns ?? 80));
 }
 
 loadConfigOverlay();

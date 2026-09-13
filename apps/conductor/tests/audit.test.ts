@@ -1,13 +1,13 @@
 import { afterAll, beforeEach, describe, expect, it } from "bun:test";
 import { AUTH_ROUTES, adminApiPath, PROMPT_KEYS } from "@eidolon/config";
 import { AdminAuditViewSchema } from "@eidolon/protocol";
-import { PAIRING_SECRET } from "@/auth";
 import { deleteAccount } from "@/auth/roles";
 import { clearAudit, listAudit } from "@/db/audit";
 import { app } from "@/index";
 import { loadPrompts } from "@/prompts/store";
+import { TEST_EMAIL, TEST_TOKEN } from "./support/session";
 
-const OWNER = { "Content-Type": "application/json", Authorization: `Bearer ${PAIRING_SECRET}` };
+const OWNER = { "Content-Type": "application/json", Authorization: `Bearer ${TEST_TOKEN}` };
 const MEMBER_EMAIL = "audit-test-member@eidolon.test";
 const MEMBER_PASSWORD = "audit-test-password";
 const made = new Set<string>();
@@ -62,7 +62,7 @@ describe("the admin audit trail", () => {
     expect(methods).toContain("PUT");
     expect(methods).toContain("DELETE");
     expect(entries[0]?.path).toContain(key);
-    expect(entries[0]?.actorEmail).toBe("owner@eidolon.local");
+    expect(entries[0]?.actorEmail).toBe(TEST_EMAIL);
     expect(entries[0]?.status).toBe(200);
   });
 

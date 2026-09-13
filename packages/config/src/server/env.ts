@@ -46,19 +46,15 @@ export function getLocalIp(): string {
   return "127.0.0.1";
 }
 
-export function getPairingSecret(): string {
-  return process.env.PAIRING_SECRET ?? "";
-}
-
-export function hasPairingSecret(): boolean {
-  return getPairingSecret().trim().length > 0;
+export function getAuthSecret(): string {
+  return process.env.BETTER_AUTH_SECRET || process.env.PAIRING_SECRET || "";
 }
 
 export function getPublicUrl(): string {
   return (process.env.PUBLIC_URL ?? "").trim().replace(/\/+$/, "");
 }
 
-export function getPairingHost(): string {
+export function getServerAddress(): string {
   const publicUrl = getPublicUrl();
   if (publicUrl) return publicUrl;
   const { port } = getServerConfig();
@@ -137,10 +133,6 @@ export function getLlmProfile(): LlmProfileKey {
     `[llm] LLM_PROFILE="${name}" is not a model family this knows. Falling back to ${DEFAULT_LLM_PROFILE}.`,
   );
   return DEFAULT_LLM_PROFILE;
-}
-
-export function getMockBackdropUrl(): string {
-  return process.env.MOCK_BACKDROP_URL ?? "";
 }
 
 export function isTestEnv(): boolean {

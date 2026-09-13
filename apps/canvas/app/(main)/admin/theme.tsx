@@ -26,7 +26,7 @@ import { useResolvedTheme } from "@/store/theme-store";
 export default function AdminThemeScreen() {
   const theme = useResolvedTheme();
   const reduced = useReducedMotion();
-  const { serverHost, pairingToken } = useConnectionStore();
+  const { serverHost, sessionToken } = useConnectionStore();
   const confirmation = useConfirm();
 
   const [view, setView] = React.useState<AdminThemeView | null>(null);
@@ -44,7 +44,7 @@ export default function AdminThemeScreen() {
   React.useEffect(() => {
     let live = true;
 
-    fetchTheme(serverHost, pairingToken)
+    fetchTheme(serverHost, sessionToken)
       .then((body) => {
         if (!live) return;
         setView(body);
@@ -59,7 +59,7 @@ export default function AdminThemeScreen() {
     return () => {
       live = false;
     };
-  }, [serverHost, pairingToken]);
+  }, [serverHost, sessionToken]);
 
   const patch = React.useCallback(
     (body: ThemeTokenPatch) => {
@@ -67,21 +67,21 @@ export default function AdminThemeScreen() {
         current === null ? current : { ...current, tokens: { ...current.tokens, ...body } },
       );
       setError(null);
-      saveTheme(serverHost, pairingToken, body)
+      saveTheme(serverHost, sessionToken, body)
         .then(setView)
         .catch(() => setError(DASHBOARD_COPY.failed));
     },
-    [pairingToken, serverHost],
+    [sessionToken, serverHost],
   );
 
   const revert = React.useCallback(
     (token: keyof ThemeTokens) => {
       setError(null);
-      resetThemeToken(serverHost, pairingToken, token)
+      resetThemeToken(serverHost, sessionToken, token)
         .then(setView)
         .catch(() => setError(DASHBOARD_COPY.failed));
     },
-    [pairingToken, serverHost],
+    [sessionToken, serverHost],
   );
 
   const revertAll = React.useCallback(() => {
@@ -91,12 +91,12 @@ export default function AdminThemeScreen() {
       confirmLabel: CONFIRM_COPY.resetThemeAction,
       onConfirm: () => {
         setError(null);
-        resetTheme(serverHost, pairingToken)
+        resetTheme(serverHost, sessionToken)
           .then(setView)
           .catch(() => setError(DASHBOARD_COPY.failed));
       },
     });
-  }, [confirmation.ask, pairingToken, serverHost]);
+  }, [confirmation.ask, sessionToken, serverHost]);
 
   const isShipped = React.useCallback(
     (token: keyof ThemeTokens) => (view ? !(token in view.overrides) : true),

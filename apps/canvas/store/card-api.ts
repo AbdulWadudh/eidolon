@@ -1,4 +1,5 @@
 import { CARD_UPLOAD, characterImportUrl, TIMEOUTS_MS } from "@eidolon/config";
+import { authedFetch } from "@/store/connection";
 
 export interface ImportedCharacter {
   characterId: string;
@@ -40,7 +41,7 @@ export async function importTavernCard(host: string, pick: CardPick): Promise<Im
   if (!host) return { ok: false, error: "" };
 
   try {
-    const response = await fetch(characterImportUrl(host), {
+    const response = await authedFetch(characterImportUrl(host), {
       method: "POST",
       body: fileField(pick),
       signal: AbortSignal.timeout(TIMEOUTS_MS.transcript),

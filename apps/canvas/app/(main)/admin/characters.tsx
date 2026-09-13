@@ -65,7 +65,7 @@ function draftFrom(character: AdminCharacter): Draft {
 
 export default function AdminCharactersScreen() {
   const reduced = useReducedMotion();
-  const { serverHost, pairingToken } = useConnectionStore();
+  const { serverHost, sessionToken } = useConnectionStore();
 
   const [characters, setCharacters] = React.useState<AdminCharacter[]>([]);
   const [isLoading, setLoading] = React.useState(true);
@@ -77,7 +77,7 @@ export default function AdminCharactersScreen() {
 
   const reload = React.useCallback(
     () =>
-      fetchAdminCharacters(serverHost, pairingToken)
+      fetchAdminCharacters(serverHost, sessionToken)
         .then((body) => {
           setCharacters(body.characters);
           setLoading(false);
@@ -86,7 +86,7 @@ export default function AdminCharactersScreen() {
           setError(DASHBOARD_COPY.failed);
           setLoading(false);
         }),
-    [pairingToken, serverHost],
+    [sessionToken, serverHost],
   );
 
   React.useEffect(() => {
@@ -118,45 +118,45 @@ export default function AdminCharactersScreen() {
     (character: AdminCharacter) => {
       setError(null);
       void runSave(() =>
-        saveCharacter(serverHost, pairingToken, character.id, draft).then(() => reload()),
+        saveCharacter(serverHost, sessionToken, character.id, draft).then(() => reload()),
       ).catch(report);
     },
-    [draft, pairingToken, reload, report, runSave, serverHost],
+    [draft, sessionToken, reload, report, runSave, serverHost],
   );
 
   const publish = React.useCallback(
     (character: AdminCharacter, isPublic: boolean) => {
       setError(null);
-      saveCharacter(serverHost, pairingToken, character.id, { isPublic })
+      saveCharacter(serverHost, sessionToken, character.id, { isPublic })
         .then(() => reload())
         .catch(report);
     },
-    [pairingToken, reload, report, serverHost],
+    [sessionToken, reload, report, serverHost],
   );
 
   const remove = React.useCallback(
     (character: AdminCharacter) => {
       setError(null);
-      removeCharacter(serverHost, pairingToken, character.id)
+      removeCharacter(serverHost, sessionToken, character.id)
         .then(() => {
           setOpenId(null);
           return reload();
         })
         .catch(report);
     },
-    [pairingToken, reload, report, serverHost],
+    [sessionToken, reload, report, serverHost],
   );
 
   const add = React.useCallback(() => {
     if (newName.trim().length === 0) return;
     setError(null);
-    createCharacter(serverHost, pairingToken, newName.trim())
+    createCharacter(serverHost, sessionToken, newName.trim())
       .then(() => {
         setNewName("");
         return reload();
       })
       .catch(report);
-  }, [newName, pairingToken, reload, report, serverHost]);
+  }, [newName, sessionToken, reload, report, serverHost]);
 
   return (
     <AdminScreen
@@ -202,7 +202,7 @@ export default function AdminCharactersScreen() {
                   character={character}
                   draft={draft}
                   serverHost={serverHost}
-                  token={pairingToken}
+                  token={sessionToken}
                   avatarUrl={avatarUrl(character)}
                   onChange={change}
                   onPublish={(next) => publish(character, next)}

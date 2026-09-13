@@ -4,10 +4,6 @@ export const API_PREFIX = `/api/${API_VERSION}` as const;
 
 export const API_ROUTES = {
   health: "/health",
-  pairing: "/pairing",
-  pairVerify: "/pair/verify",
-  pairingQr: "/pairing/qr",
-  pairingStatus: "/pairing/status",
   ws: "/ws",
   session: "/session",
   prompts: "/prompts",
@@ -54,21 +50,8 @@ export function adminApiPath(route: AdminApiRoute, id?: string): string {
   return id === undefined ? base : `${base}/${encodeURIComponent(id)}`;
 }
 
-export function adminApiUrl(
-  host: string,
-  route: AdminApiRoute,
-  id?: string,
-  scheme = httpScheme(host),
-): string {
-  return `${scheme}://${stripAuthority(host)}${adminApiPath(route, id)}`;
-}
-
 export function adminPromptAuthorPath(key: string): string {
   return `${adminApiPath("prompts", key)}/author`;
-}
-
-export function adminPromptAuthorUrl(host: string, key: string, scheme = httpScheme(host)): string {
-  return `${scheme}://${stripAuthority(host)}${adminPromptAuthorPath(key)}`;
 }
 
 export function adminStorageSweepPath(): string {
@@ -111,11 +94,7 @@ export function adminConfigReloadPath(): string {
   return `${adminApiPath("config")}/reload`;
 }
 
-export function adminConfigReloadUrl(host: string, scheme = httpScheme(host)): string {
-  return `${scheme}://${stripAuthority(host)}${adminConfigReloadPath()}`;
-}
-
-export function adminPath(route: AdminRoute): string {
+function adminPath(route: AdminRoute): string {
   return ADMIN_ROUTES[route];
 }
 
@@ -155,11 +134,15 @@ export function stripAuthority(host: string): string {
   return host.replace(/^[a-z]+:\/\//i, "").replace(/\/+$/, "");
 }
 
-export function characterMessagesPath(characterId: string): string {
+export function httpBase(host: string): string {
+  return `${httpScheme(host)}://${stripAuthority(host)}`;
+}
+
+function characterMessagesPath(characterId: string): string {
   return `${apiPath("characters")}/${encodeURIComponent(characterId)}/messages`;
 }
 
-export function characterLookPath(characterId: string): string {
+function characterLookPath(characterId: string): string {
   return `${apiPath("characters")}/${encodeURIComponent(characterId)}/look`;
 }
 
@@ -171,7 +154,7 @@ export function characterLookUrl(
   return `${scheme}://${stripAuthority(host)}${characterLookPath(characterId)}`;
 }
 
-export function characterMessagePath(characterId: string, messageId: string): string {
+function characterMessagePath(characterId: string, messageId: string): string {
   return `${apiPath("characters")}/${encodeURIComponent(characterId)}/messages/${encodeURIComponent(messageId)}`;
 }
 
@@ -200,7 +183,7 @@ export function voicePreviewUrl(host: string, voiceId: string, scheme = httpSche
   return `${scheme}://${stripAuthority(host)}${apiPath("voices")}/${encodeURIComponent(voiceId)}/preview`;
 }
 
-export function characterPath(characterId: string): string {
+function characterPath(characterId: string): string {
   return `${apiPath("characters")}/${encodeURIComponent(characterId)}`;
 }
 
@@ -212,7 +195,7 @@ export function charactersUrl(host: string, scheme = httpScheme(host)): string {
   return `${scheme}://${stripAuthority(host)}${apiPath("characters")}`;
 }
 
-export function characterLorePath(characterId: string, entryId?: string): string {
+function characterLorePath(characterId: string, entryId?: string): string {
   const base = `${characterPath(characterId)}/lore`;
   return entryId ? `${base}/${encodeURIComponent(entryId)}` : base;
 }
@@ -226,7 +209,7 @@ export function characterLoreUrl(
   return `${scheme}://${stripAuthority(host)}${characterLorePath(characterId, entryId)}`;
 }
 
-export function characterGalleryPath(characterId: string): string {
+function characterGalleryPath(characterId: string): string {
   return `${characterPath(characterId)}/gallery`;
 }
 
@@ -243,7 +226,7 @@ export function characterGalleryUrl(
   return `${scheme}://${stripAuthority(host)}${characterGalleryPath(characterId)}${search}`;
 }
 
-export function characterPortraitPath(characterId: string): string {
+function characterPortraitPath(characterId: string): string {
   return `${characterPath(characterId)}/portrait`;
 }
 
@@ -255,7 +238,7 @@ export function characterPortraitUrl(
   return `${scheme}://${stripAuthority(host)}${characterPortraitPath(characterId)}`;
 }
 
-export function characterMindPath(characterId: string): string {
+function characterMindPath(characterId: string): string {
   return `${apiPath("characters")}/${encodeURIComponent(characterId)}/mind`;
 }
 
@@ -267,7 +250,7 @@ export function characterMindUrl(
   return `${scheme}://${stripAuthority(host)}${characterMindPath(characterId)}`;
 }
 
-export function characterAffinityPath(characterId: string): string {
+function characterAffinityPath(characterId: string): string {
   return `${apiPath("characters")}/${encodeURIComponent(characterId)}/affinity`;
 }
 
@@ -279,7 +262,7 @@ export function characterAffinityUrl(
   return `${scheme}://${stripAuthority(host)}${characterAffinityPath(characterId)}`;
 }
 
-export function characterMemoryPath(characterId: string): string {
+function characterMemoryPath(characterId: string): string {
   return `${apiPath("characters")}/${encodeURIComponent(characterId)}/memory`;
 }
 
@@ -303,15 +286,7 @@ export function characterExportPath(characterId: string): string {
   return `${characterPath(characterId)}/export`;
 }
 
-export function characterExportUrl(
-  host: string,
-  characterId: string,
-  scheme = httpScheme(host),
-): string {
-  return `${scheme}://${stripAuthority(host)}${characterExportPath(characterId)}`;
-}
-
-export function characterChroniclePath(characterId: string, chapterId?: string): string {
+function characterChroniclePath(characterId: string, chapterId?: string): string {
   const base = `${apiPath("characters")}/${encodeURIComponent(characterId)}/chronicle`;
   return chapterId ? `${base}/${encodeURIComponent(chapterId)}` : base;
 }
@@ -325,7 +300,7 @@ export function characterChronicleUrl(
   return `${scheme}://${stripAuthority(host)}${characterChroniclePath(characterId, chapterId)}`;
 }
 
-export function characterSummarizePath(characterId: string): string {
+function characterSummarizePath(characterId: string): string {
   return `${apiPath("characters")}/${encodeURIComponent(characterId)}/chronicle/summarize`;
 }
 

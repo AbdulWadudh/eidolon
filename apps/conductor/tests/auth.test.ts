@@ -1,84 +1,48 @@
 import { describe, expect, it } from "bun:test";
-import { generatePairingPayload, PAIRING_SECRET, validateToken } from "@/auth";
+import { AUTH, apiPath } from "@eidolon/config";
+import { bearer, ownerFor } from "@/auth/session";
+import { app } from "@/index";
+import { TEST_OWNER_ID, TEST_TOKEN } from "./support/session";
 
-describe("Authentication & Pairing", () => {
-  it("validates exact pairing secret", () => {
-    expect(validateToken(PAIRING_SECRET)).toBe(true);
+describe("Session authentication", () => {
+  it("reads a token with or without the Bearer prefix", () => {
+    expect(bearer(`Bearer ${TEST_TOKEN}`)).toBe(TEST_TOKEN);
+    expect(bearer(TEST_TOKEN)).toBe(TEST_TOKEN);
+    expect(bearer(null)).toBe("");
   });
 
-  it("validates Bearer token format", () => {
-    expect(validateToken(`Bearer ${PAIRING_SECRET}`)).toBe(true);
+  it("resolves a live session to the account behind it", async () => {
+    const account = await ownerFor(`Bearer ${TEST_TOKEN}`);
+
+    expect(account?.id).toBe(TEST_OWNER_ID);
+    expect(account?.role).toBe(AUTH.ownerRole);
   });
 
-  it("rejects invalid token", () => {
-    expect(validateToken("invalid_random_secret_token")).toBe(false);
+  it("refuses anything that is not a live session", async () => {
+    expect(await ownerFor("Bearer made-up")).toBeNull();
+    expect(await ownerFor("   ")).toBeNull();
+    expect(await ownerFor(undefined)).toBeNull();
   });
 
-  it("rejects null, undefined, or empty token", () => {
-    expect(validateToken(null)).toBe(false);
-    expect(validateToken(undefined)).toBe(false);
-    expect(validateToken("")).toBe(false);
-    expect(validateToken("   ")).toBe(false);
-    expect(validateToken("Bearer ")).toBe(false);
-  });
-
-  it("generates correct deep-link pairing payload format", () => {
-    const payload = generatePairingPayload();
-    expect(payload).toStartWith("eidolon://pair?server=");
-    expect(payload).toContain("&token=");
-    expect(payload).toContain(PAIRING_SECRET);
-  });
-
-  it("advertises PUBLIC_URL over the LAN address when one is set", () => {
-    const previous = process.env.PUBLIC_URL;
-    process.env.PUBLIC_URL = "https://eidolon.example.com";
-
-    try {
-      const payload = generatePairingPayload();
-      expect(payload).toStartWith("eidolon://pair?server=");
-
-      const params = new URLSearchParams(payload.split("?")[1]);
-      expect(params.get("server")).toBe("https://eidolon.example.com");
-      expect(params.get("token")).toBe(PAIRING_SECRET);
-    } finally {
-      if (previous === undefined) delete process.env.PUBLIC_URL;
-      else process.env.PUBLIC_URL = previous;
-    }
-  });
-});
-
-describe("Pairing secret is required", () => {
-  it("refuses every token when PAIRING_SECRET is unset", () => {
-    const previous = process.env.PAIRING_SECRET;
-    delete process.env.PAIRING_SECRET;
-
-    try {
-      expect(validateToken(PAIRING_SECRET)).toBe(false);
-      expect(validateToken("")).toBe(false);
-      expect(validateToken("anything")).toBe(false);
-      expect(validateToken("Bearer anything")).toBe(false);
-    } finally {
-      if (previous === undefined) {
-        delete process.env.PAIRING_SECRET;
-      } else {
-        process.env.PAIRING_SECRET = previous;
-      }
+  it("no longer answers the pairing routes", async () => {
+    for (const path of ["/pairing", "/pair/verify", "/pairing/qr", "/pairing/status"]) {
+      const response = await app.request(`${apiPath("health").replace("/health", "")}${path}`);
+      expect(response.status).toBe(404);
     }
   });
 
-  it("refuses every token when PAIRING_SECRET is blank", () => {
-    const previous = process.env.PAIRING_SECRET;
-    process.env.PAIRING_SECRET = "   ";
+  it("reports the signed-in account on the session route", async () => {
+    const response = await app.request(apiPath("session"), {
+      headers: { Authorization: `Bearer ${TEST_TOKEN}` },
+    });
+    const body = (await response.json()) as { account: { id: string } | null };
 
-    try {
-      expect(validateToken("   ")).toBe(false);
-      expect(validateToken("anything")).toBe(false);
-    } finally {
-      if (previous === undefined) {
-        delete process.env.PAIRING_SECRET;
-      } else {
-        process.env.PAIRING_SECRET = previous;
-      }
-    }
+    expect(response.status).toBe(200);
+    expect(body.account?.id).toBe(TEST_OWNER_ID);
+  });
+
+  it("reports no account without a credential", async () => {
+    const response = await app.request(apiPath("session"));
+    expect(await response.json()).toEqual({ account: null });
   });
 });
