@@ -8,7 +8,7 @@ import { PressableScale } from "@/components/common/pressable-scale";
 import { SkeletonLine } from "@/components/common/skeleton-line";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { GlassSurface } from "@/components/ui/glass-surface";
-import { croppedStyle } from "@/lib/avatar-crop";
+import { avatarImageProps } from "@/lib/avatar-crop";
 import { useBarTopInset } from "@/lib/bar-inset";
 import { ArrowLeft01Icon, Call02Icon, MoreVerticalIcon } from "@/lib/icons";
 import { useAffinityStore } from "@/store/affinity-store";
@@ -108,14 +108,9 @@ export function ChatTopBar({
             {avatarUrl ? (
               <Image
                 source={{ uri: avatarUrl }}
-                contentFit={avatarCrop ? "fill" : "cover"}
+                {...avatarImageProps(avatarCrop, AVATAR_PX)}
                 cachePolicy="disk"
                 accessibilityLabel={`${characterName}'s picture`}
-                style={
-                  avatarCrop
-                    ? croppedStyle(avatarCrop, AVATAR_PX)
-                    : { width: "100%", height: "100%" }
-                }
               />
             ) : (
               <AvatarFallback textClassName="font-main-bold text-xs text-primary">

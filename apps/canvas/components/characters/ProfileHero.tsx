@@ -50,6 +50,7 @@ export function ProfileHero({
             source={{ uri: avatarUrl }}
             style={{ width: "100%", height: "100%" }}
             contentFit="cover"
+            contentPosition="top"
             cachePolicy="disk"
             transition={reduced ? 0 : UI_MS.reveal}
             accessibilityLabel={name ? `${name}'s picture` : GALLERY_COPY.imageLabel}

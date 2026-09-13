@@ -5,7 +5,7 @@ import type { SharedValue } from "react-native-reanimated";
 import { AqueousPool } from "@/components/audio/AqueousPool";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { GlassSurface } from "@/components/ui/glass-surface";
-import { croppedStyle } from "@/lib/avatar-crop";
+import { avatarImageProps } from "@/lib/avatar-crop";
 import type { CallPhase } from "@/store/call-store";
 import type { AvatarCropRect } from "@/store/chat-photos";
 import { useResolvedTheme } from "@/store/theme-store";
@@ -59,14 +59,9 @@ export function CallStage({
           {avatarUrl ? (
             <Image
               source={{ uri: avatarUrl }}
-              contentFit={avatarCrop ? "fill" : "cover"}
+              {...avatarImageProps(avatarCrop, CALL.avatarPx)}
               cachePolicy="disk"
               accessibilityLabel={`${characterName}'s picture`}
-              style={
-                avatarCrop
-                  ? croppedStyle(avatarCrop, CALL.avatarPx)
-                  : { width: "100%", height: "100%" }
-              }
             />
           ) : (
             <AvatarFallback textClassName="font-main-bold text-2xl text-primary">

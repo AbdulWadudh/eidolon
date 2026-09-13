@@ -71,7 +71,12 @@ export function PortraitStudio({
           style={{ backgroundColor: theme.inputSurface }}
         >
           {avatarUrl ? (
-            <Image source={{ uri: avatarUrl }} style={{ flex: 1 }} contentFit="cover" />
+            <Image
+              source={{ uri: avatarUrl }}
+              style={{ flex: 1 }}
+              contentFit="cover"
+              contentPosition="top"
+            />
           ) : null}
 
           {waiting ? (

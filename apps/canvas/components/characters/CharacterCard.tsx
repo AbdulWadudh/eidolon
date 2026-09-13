@@ -6,7 +6,7 @@ import { PressableScale } from "@/components/common/pressable-scale";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { GlassSurface } from "@/components/ui/glass-surface";
-import { croppedStyle, usableCrop } from "@/lib/avatar-crop";
+import { avatarImageProps, usableCrop } from "@/lib/avatar-crop";
 import { MoreVerticalIcon } from "@/lib/icons";
 import { useAffinityStore } from "@/store/affinity-store";
 import type { CharacterSummary } from "@/store/character-api";
@@ -45,10 +45,9 @@ export function CharacterRosterCard({ character, onOpen, onEdit }: CharacterCard
           {character.avatarUrl ? (
             <Image
               source={{ uri: character.avatarUrl }}
-              contentFit={crop ? "fill" : "cover"}
+              {...avatarImageProps(crop, AVATAR_PX)}
               cachePolicy="disk"
               accessibilityLabel={`${character.name}'s picture`}
-              style={crop ? croppedStyle(crop, AVATAR_PX) : { width: "100%", height: "100%" }}
             />
           ) : (
             <AvatarFallback textClassName="font-main-bold text-base text-primary">

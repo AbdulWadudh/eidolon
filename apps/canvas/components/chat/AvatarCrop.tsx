@@ -33,23 +33,63 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
   const circleTop = (height - circle) / 2;
   const half = circle / 2;
 
-  const scale = useSharedValue(1);
-  const savedScale = useSharedValue(1);
+  const floorScale = Math.max(
+    PHOTO.minZoom,
+    circle / Math.max(shown.width, 1),
+    circle / Math.max(shown.height, 1),
+  );
+
+  const scale = useSharedValue(floorScale);
+  const savedScale = useSharedValue(floorScale);
   const offsetX = useSharedValue(0);
   const offsetY = useSharedValue(0);
   const savedX = useSharedValue(0);
   const savedY = useSharedValue(0);
 
+  const slack = React.useCallback(
+    (drawn: number) => {
+      "worklet";
+      return Math.max(0, (drawn - circle) / 2);
+    },
+    [circle],
+  );
+
+  const settle = React.useCallback(() => {
+    "worklet";
+    const next = Math.min(PHOTO.maxZoom, Math.max(floorScale, scale.get()));
+    scale.set(next);
+    savedScale.set(next);
+
+    const limitX = slack(shown.width * next);
+    const limitY = slack(shown.height * next);
+
+    offsetX.set(Math.min(limitX, Math.max(-limitX, offsetX.get())));
+    offsetY.set(Math.min(limitY, Math.max(-limitY, offsetY.get())));
+    savedX.set(offsetX.get());
+    savedY.set(offsetY.get());
+  }, [
+    floorScale,
+    shown.width,
+    shown.height,
+    slack,
+    scale,
+    savedScale,
+    offsetX,
+    offsetY,
+    savedX,
+    savedY,
+  ]);
+
+  React.useEffect(() => settle(), [settle]);
+
   const pinch = React.useMemo(
     () =>
       Gesture.Pinch()
         .onUpdate((event) => {
-          scale.set(
-            Math.min(PHOTO.maxZoom, Math.max(PHOTO.minZoom, savedScale.get() * event.scale)),
-          );
+          scale.set(Math.min(PHOTO.maxZoom, Math.max(floorScale, savedScale.get() * event.scale)));
         })
-        .onEnd(() => savedScale.set(scale.get())),
-    [scale, savedScale],
+        .onEnd(() => settle()),
+    [scale, savedScale, floorScale, settle],
   );
 
   const pan = React.useMemo(
@@ -57,14 +97,14 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
       Gesture.Pan()
         .averageTouches(true)
         .onUpdate((event) => {
-          offsetX.set(savedX.get() + event.translationX);
-          offsetY.set(savedY.get() + event.translationY);
+          const limitX = slack(shown.width * scale.get());
+          const limitY = slack(shown.height * scale.get());
+
+          offsetX.set(Math.min(limitX, Math.max(-limitX, savedX.get() + event.translationX)));
+          offsetY.set(Math.min(limitY, Math.max(-limitY, savedY.get() + event.translationY)));
         })
-        .onEnd(() => {
-          savedX.set(offsetX.get());
-          savedY.set(offsetY.get());
-        }),
-    [offsetX, offsetY, savedX, savedY],
+        .onEnd(() => settle()),
+    [offsetX, offsetY, savedX, savedY, scale, shown.width, shown.height, slack, settle],
   );
 
   const gesture = React.useMemo(() => Gesture.Simultaneous(pinch, pan), [pinch, pan]);

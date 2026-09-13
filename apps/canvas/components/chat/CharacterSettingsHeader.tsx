@@ -4,7 +4,7 @@ import { Text, View } from "react-native";
 import Animated, { cubicBezier, useReducedMotion } from "react-native-reanimated";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
-import { croppedStyle, usableCrop } from "@/lib/avatar-crop";
+import { avatarImageProps, usableCrop } from "@/lib/avatar-crop";
 import { useBarTopInset } from "@/lib/bar-inset";
 import { ArrowLeft01Icon, Moon02Icon, PaintBoardIcon, Sun02Icon } from "@/lib/icons";
 import { tap } from "@/services/haptics";
@@ -79,11 +79,7 @@ export function CharacterSettingsHeader({
         style={{ width: AVATAR_PX, height: AVATAR_PX }}
       >
         {avatarUrl ? (
-          <Image
-            source={{ uri: avatarUrl }}
-            contentFit={crop ? "fill" : "cover"}
-            style={crop ? croppedStyle(crop, AVATAR_PX) : { flex: 1 }}
-          />
+          <Image source={{ uri: avatarUrl }} {...avatarImageProps(crop, AVATAR_PX)} />
         ) : (
           <View className="flex-1 items-center justify-center">
             <Text className="font-main-bold text-base" style={{ color: theme.primary }}>
