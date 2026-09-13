@@ -67,6 +67,27 @@ Write the Personality: She is loyal to a fault and remembers every promise made 
   },
 ];
 
+export const JOB_AUTHORING_PROMPTS: PromptDefinition[] = [
+  {
+    key: "authoring.jobPromptWrite",
+    description:
+      "Rewrites the visual prompt of a failed image job more freely, when the current one produced nothing usable.",
+    variables: ["draft"],
+    value: `Rewrite this image prompt so it describes the same subject in a way an image generator can render. Keep the subject and the setting. Drop anything vague, contradictory or impossible to draw. Reply with one line of comma separated visual phrases and nothing else.
+
+Current: {{draft}}`,
+  },
+  {
+    key: "authoring.jobPromptEnhance",
+    description:
+      "Sharpens the visual prompt of a failed image job, keeping every element the author asked for.",
+    variables: ["draft"],
+    value: `Sharpen this image prompt. Keep every element it already names and add nothing new. Make each phrase concrete and renderable. Reply with one line of comma separated visual phrases and nothing else.
+
+Current: {{draft}}`,
+  },
+];
+
 export const PROMPT_AUTHORING_PROMPTS: PromptDefinition[] = [
   {
     key: "authoring.promptWrite",

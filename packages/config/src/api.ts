@@ -95,6 +95,10 @@ export function adminCharacterProactivePath(characterId: string): string {
   return `${adminApiPath("characters", characterId)}/proactive`;
 }
 
+export function adminQueueJobAuthorPath(queueKey: string, jobId: string): string {
+  return `${adminQueueJobPath(queueKey, jobId)}/author`;
+}
+
 export function adminConfigReloadPath(): string {
   return `${adminApiPath("config")}/reload`;
 }

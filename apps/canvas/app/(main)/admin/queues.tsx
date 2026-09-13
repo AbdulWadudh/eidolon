@@ -4,16 +4,21 @@ import { Text, View } from "react-native";
 import Animated, { useReducedMotion } from "react-native-reanimated";
 import { AdminEmpty, AdminScreen } from "@/components/admin/AdminScreen";
 import { revealAt } from "@/components/admin/admin-motion";
+import { QueueJobRow } from "@/components/admin/QueueJobRow";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Button } from "@/components/ui/button";
-import { GlassSurface } from "@/components/ui/glass-surface";
+import { CollapsibleSection } from "@/components/ui/collapsible-section";
+import { Segmented, type SegmentedOption } from "@/components/ui/segmented";
 import { useConfirm } from "@/hooks/use-confirm";
-import { Delete02Icon, RefreshIcon, Undo02Icon } from "@/lib/icons";
+import { useJobAuthor } from "@/hooks/use-job-author";
+import { Queue01Icon, RefreshIcon } from "@/lib/icons";
 import {
   AdminRequestError,
+  editQueueJob,
   fetchQueues,
   type QueueJobView,
+  type QueueState,
   type QueueView,
   removeQueueJob,
   retryQueue,
@@ -22,11 +27,8 @@ import {
 import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme } from "@/store/theme-store";
 
-const SHOWN_STATES = ["active", "waiting", "delayed", "failed"] as const;
-
-function when(at: number | null): string {
-  return at === null ? "" : new Date(at).toLocaleTimeString();
-}
+const ALL_STATES: QueueState[] = ["active", "waiting", "delayed", "failed", "completed"];
+const PENDING_STATES: QueueState[] = ["active", "waiting", "delayed", "failed"];
 
 export default function AdminQueuesScreen() {
   const theme = useResolvedTheme();
@@ -37,6 +39,10 @@ export default function AdminQueuesScreen() {
   const [queues, setQueues] = React.useState<QueueView[]>([]);
   const [isLoading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [openQueue, setOpenQueue] = React.useState<string | null>(null);
+  const [openJob, setOpenJob] = React.useState<string | null>(null);
+  const [stateTab, setStateTab] = React.useState<Record<string, QueueState>>({});
+  const jobAuthor = useJobAuthor(serverHost, pairingToken);
 
   const report = React.useCallback((cause: unknown) => {
     const message = cause instanceof AdminRequestError ? cause.message : "";
@@ -57,41 +63,52 @@ export default function AdminQueuesScreen() {
 
   React.useEffect(reload, [reload]);
 
-  const retryAll = React.useCallback(
-    (queue: QueueView) => {
+  const apply = React.useCallback(
+    (run: Promise<{ queues: QueueView[] }>) => {
       setError(null);
-      retryQueue(serverHost, pairingToken, queue.key)
-        .then((body) => setQueues(body.queues))
-        .catch(report);
+      run.then((body) => setQueues(body.queues)).catch(report);
     },
-    [pairingToken, report, serverHost],
+    [report],
   );
 
-  const retryOne = React.useCallback(
-    (queue: QueueView, job: QueueJobView) => {
-      setError(null);
-      retryQueueJob(serverHost, pairingToken, queue.key, job.id)
-        .then((body) => setQueues(body.queues))
-        .catch(report);
-    },
-    [pairingToken, report, serverHost],
-  );
-
-  const dropOne = React.useCallback(
+  const dropJob = React.useCallback(
     (queue: QueueView, job: QueueJobView) => {
       confirmation.ask({
         title: DASHBOARD_COPY.queueRemove,
         body: `${job.name} · ${job.characterId ?? job.id}`,
         confirmLabel: DASHBOARD_COPY.queueRemove,
-        onConfirm: () => {
-          setError(null);
-          removeQueueJob(serverHost, pairingToken, queue.key, job.id)
-            .then((body) => setQueues(body.queues))
-            .catch(report);
-        },
+        onConfirm: () => apply(removeQueueJob(serverHost, pairingToken, queue.key, job.id)),
       });
     },
-    [confirmation.ask, pairingToken, report, serverHost],
+    [apply, confirmation.ask, pairingToken, serverHost],
+  );
+
+  const pending = React.useCallback(
+    (queue: QueueView) => PENDING_STATES.reduce((total, state) => total + queue.counts[state], 0),
+    [],
+  );
+
+  const tabsFor = React.useCallback(
+    (queue: QueueView): SegmentedOption<QueueState>[] =>
+      ALL_STATES.map((state) => ({ value: state, label: `${state} ${queue.counts[state]}` })),
+    [],
+  );
+
+  const saveJob = React.useCallback(
+    (queue: QueueView, job: QueueJobView, patch: Record<string, unknown>, retry: boolean) => {
+      setError(null);
+      apply(editQueueJob(serverHost, pairingToken, queue.key, job.id, patch, retry));
+      jobAuthor.forget(job.id);
+    },
+    [apply, jobAuthor.forget, pairingToken, serverHost],
+  );
+
+  const visibleJobs = React.useCallback(
+    (queue: QueueView) => {
+      const state = stateTab[queue.key] ?? "active";
+      return queue.jobs.filter((job) => job.state === state);
+    },
+    [stateTab],
   );
 
   return (
@@ -113,93 +130,76 @@ export default function AdminQueuesScreen() {
       }
     >
       {queues.map((queue, index) => (
-        <Animated.View entering={revealAt(index, reduced)} key={queue.key} className="gap-2">
-          <GlassSurface
-            tint="card"
-            className="gap-2 overflow-hidden rounded-card border border-border p-4"
+        <Animated.View entering={revealAt(index, reduced)} key={queue.key}>
+          <CollapsibleSection
+            sectionKey={queue.key}
+            icon={Queue01Icon}
+            iconColor={queue.reachable ? theme.primary : theme.danger}
+            title={queue.name}
+            badge={
+              <Text
+                className="font-ui-bold text-[11px]"
+                style={{ color: queue.counts.failed > 0 ? theme.danger : theme.primary }}
+              >
+                {queue.reachable ? pending(queue) : DASHBOARD_COPY.failed}
+              </Text>
+            }
+            expanded={openQueue === queue.key}
+            onToggle={(key) => setOpenQueue((prev) => (prev === key ? null : key))}
+            chevronColor={theme.textMuted}
+            className="rounded-card border border-border bg-card p-3"
           >
-            <View className="flex-row items-center justify-between gap-2">
-              <Text className="flex-1 font-main-bold text-sm text-text-primary">{queue.name}</Text>
-              {queue.reachable ? null : (
-                <Text className="font-ui text-[11px] text-danger">{DASHBOARD_COPY.failed}</Text>
+            <View className="gap-3">
+              <Segmented
+                options={tabsFor(queue)}
+                value={stateTab[queue.key] ?? "active"}
+                onChange={(next) => setStateTab((current) => ({ ...current, [queue.key]: next }))}
+                accessibilityLabel={queue.name}
+              />
+
+              {queue.counts.failed > 0 ? (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onPress={() => apply(retryQueue(serverHost, pairingToken, queue.key))}
+                >
+                  {DASHBOARD_COPY.queueRetryAll}
+                </Button>
+              ) : null}
+
+              {visibleJobs(queue).length === 0 ? (
+                <AdminEmpty label={DASHBOARD_COPY.queuesEmpty} />
+              ) : (
+                <View className="gap-2">
+                  {visibleJobs(queue).map((job) => {
+                    const key = `${queue.key}:${job.id}`;
+
+                    return (
+                      <QueueJobRow
+                        key={key}
+                        job={job}
+                        expanded={openJob === key}
+                        busyField={jobAuthor.busyField}
+                        authorError={jobAuthor.error}
+                        authorable={jobAuthor.authorable}
+                        stepsBack={(field) => jobAuthor.stepsBack(`${job.id}:${field}`)}
+                        onToggle={() => setOpenJob((prev) => (prev === key ? null : key))}
+                        onAuthor={(field, mode, draft) =>
+                          jobAuthor.author(queue.key, job.id, field, mode, draft)
+                        }
+                        onRevertField={(field) => jobAuthor.revert(job.id, field)}
+                        onSave={(patch, retry) => saveJob(queue, job, patch, retry)}
+                        onRetry={() =>
+                          apply(retryQueueJob(serverHost, pairingToken, queue.key, job.id))
+                        }
+                        onRemove={() => dropJob(queue, job)}
+                      />
+                    );
+                  })}
+                </View>
               )}
             </View>
-
-            <View className="flex-row flex-wrap gap-3">
-              {SHOWN_STATES.map((state) => (
-                <View className="flex-row items-center gap-1.5" key={state}>
-                  <Text
-                    className="font-ui-bold text-xs"
-                    style={{ color: state === "failed" ? theme.danger : theme.primary }}
-                  >
-                    {queue.counts[state]}
-                  </Text>
-                  <Text className="font-ui text-[11px] text-text-muted">{state}</Text>
-                </View>
-              ))}
-            </View>
-
-            {queue.counts.failed > 0 ? (
-              <Button variant="secondary" size="sm" onPress={() => retryAll(queue)}>
-                {DASHBOARD_COPY.queueRetryAll}
-              </Button>
-            ) : null}
-          </GlassSurface>
-
-          {queue.jobs.length === 0 ? (
-            <AdminEmpty label={DASHBOARD_COPY.queuesEmpty} />
-          ) : (
-            queue.jobs.map((job) => (
-              <GlassSurface
-                key={`${queue.key}:${job.id}`}
-                tint="card"
-                className="flex-row items-center gap-2 overflow-hidden rounded-card border border-border px-4 py-2.5"
-              >
-                <View className="flex-1">
-                  <Text className="font-ui-medium text-xs text-text-primary" numberOfLines={1}>
-                    {job.name}
-                  </Text>
-                  <Text className="mt-0.5 font-ui text-[11px] text-text-muted" numberOfLines={1}>
-                    {[
-                      job.state,
-                      job.characterId,
-                      job.runAt ? when(job.runAt) : null,
-                      job.attemptsMade > 0 ? `try ${job.attemptsMade}` : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </Text>
-                  {job.failedReason ? (
-                    <Text className="mt-0.5 font-ui text-[11px] text-danger" numberOfLines={2}>
-                      {job.failedReason}
-                    </Text>
-                  ) : null}
-                </View>
-
-                {job.state === "failed" ? (
-                  <PressableScale
-                    accessibilityRole="button"
-                    accessibilityLabel={DASHBOARD_COPY.queueRetry}
-                    hitSlop={8}
-                    onPress={() => retryOne(queue, job)}
-                    className="h-8 w-8 items-center justify-center rounded-button border border-border"
-                  >
-                    <AppIcon icon={Undo02Icon} size={14} color={theme.textPrimary} />
-                  </PressableScale>
-                ) : null}
-
-                <PressableScale
-                  accessibilityRole="button"
-                  accessibilityLabel={DASHBOARD_COPY.queueRemove}
-                  hitSlop={8}
-                  onPress={() => dropOne(queue, job)}
-                  className="h-8 w-8 items-center justify-center rounded-button border border-border"
-                >
-                  <AppIcon icon={Delete02Icon} size={14} color={theme.danger} />
-                </PressableScale>
-              </GlassSurface>
-            ))
-          )}
+          </CollapsibleSection>
         </Animated.View>
       ))}
 

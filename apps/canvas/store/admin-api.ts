@@ -6,6 +6,7 @@ import {
   adminCharacterSummarizePath,
   adminConfigReloadPath,
   adminPromptAuthorPath,
+  adminQueueJobAuthorPath,
   adminQueueJobPath,
   adminQueueRetryPath,
   adminStorageSweepPath,
@@ -305,6 +306,13 @@ export function sweepStorage(host: string, token: string): Promise<StorageView> 
 
 export type QueueState = "waiting" | "active" | "delayed" | "failed" | "completed";
 
+export interface QueueField {
+  label: string;
+  value: string;
+  editable: boolean;
+  kind: "string" | "number" | "boolean";
+}
+
 export interface QueueJobView {
   id: string;
   name: string;
@@ -314,6 +322,10 @@ export interface QueueJobView {
   failedReason: string | null;
   createdAt: number;
   runAt: number | null;
+  finishedAt: number | null;
+  progress: number | null;
+  input: QueueField[];
+  output: string | null;
 }
 
 export interface QueueView {
@@ -409,4 +421,58 @@ export function cancelProactive(
   characterId: string,
 ): Promise<{ ok: true }> {
   return send(host, token, adminCharacterProactivePath(characterId), "DELETE");
+}
+
+export async function editQueueJob(
+  host: string,
+  token: string,
+  key: string,
+  jobId: string,
+  data: Record<string, unknown>,
+  retry: boolean,
+): Promise<QueuesView> {
+  const response = await fetch(`${httpBase(host)}${adminQueueJobPath(key, jobId)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ data, retry }),
+    signal: AbortSignal.timeout(TIMEOUTS_MS.generation),
+  });
+
+  const body = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+  if (!response.ok) {
+    throw new AdminRequestError(response.status, typeof body?.error === "string" ? body.error : "");
+  }
+
+  return body as unknown as QueuesView;
+}
+
+export async function authorQueueJobField(
+  host: string,
+  token: string,
+  key: string,
+  jobId: string,
+  field: string,
+  mode: "suggest" | "enhance",
+  draft: string,
+): Promise<PromptAuthorResult> {
+  if (!host) return { text: null, error: null };
+
+  try {
+    const response = await fetch(`${httpBase(host)}${adminQueueJobAuthorPath(key, jobId)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ field, mode, draft }),
+      signal: AbortSignal.timeout(TIMEOUTS_MS.generation),
+    });
+
+    const body = (await response.json().catch(() => null)) as {
+      text?: string;
+      error?: string;
+    } | null;
+
+    if (!response.ok) return { text: null, error: body?.error ?? null };
+    return { text: body?.text ?? null, error: null };
+  } catch {
+    return { text: null, error: null };
+  }
 }

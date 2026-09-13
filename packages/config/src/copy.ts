@@ -362,6 +362,11 @@ export const DASHBOARD_COPY = {
   queueRetry: "Try again",
   queueRemove: "Drop it",
   queueRetryAll: "Retry every failed job",
+  queueEdit: "Edit the input",
+  queueEditHint: "Only a failed job can be edited. Fields left alone keep their value.",
+  queueSaveRetry: "Save and try again",
+  queueSave: "Save",
+  queueNotEditable: "Set when the job was made",
   summarizeNow: "Write a chapter now",
   summarizeQueued: "Queued. The chapter appears when the GPU is done.",
 } as const;

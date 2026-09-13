@@ -58,6 +58,8 @@ export const QUEUE_VIEW = {
   perState: 20,
   maxRetryAtOnce: 50,
   pollMs: 5000,
+  maxFieldChars: 200,
+  redactedKeys: ["base64", "secret", "token", "password", "key"],
 } as const;
 
 export const CHRONICLE = {

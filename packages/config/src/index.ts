@@ -19,6 +19,7 @@ export {
   adminPath,
   adminPromptAuthorPath,
   adminPromptAuthorUrl,
+  adminQueueJobAuthorPath,
   adminQueueJobPath,
   adminQueueRetryPath,
   adminStorageSweepPath,

@@ -1,4 +1,8 @@
-import { AUTHORING_PROMPTS, PROMPT_AUTHORING_PROMPTS } from "./prompts/authoring";
+import {
+  AUTHORING_PROMPTS,
+  JOB_AUTHORING_PROMPTS,
+  PROMPT_AUTHORING_PROMPTS,
+} from "./prompts/authoring";
 import { MEDIA_PROMPTS } from "./prompts/media";
 import { MEMORY_PROMPTS } from "./prompts/memory";
 import { PERSONA_PROMPTS } from "./prompts/persona";
@@ -21,7 +25,10 @@ export const PROMPT_DEFAULTS: PromptDefinition[] = [
   ...inCategory(WRITING_PROMPTS, "writing"),
   ...inCategory(MEDIA_PROMPTS, "media"),
   ...inCategory(MEMORY_PROMPTS, "memory"),
-  ...inCategory([...AUTHORING_PROMPTS, ...PROMPT_AUTHORING_PROMPTS], "authoring"),
+  ...inCategory(
+    [...AUTHORING_PROMPTS, ...PROMPT_AUTHORING_PROMPTS, ...JOB_AUTHORING_PROMPTS],
+    "authoring",
+  ),
 ];
 
 export const PROMPT_KEYS = PROMPT_DEFAULTS.map((entry) => entry.key);
