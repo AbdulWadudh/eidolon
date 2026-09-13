@@ -6,7 +6,7 @@ import { AUTH, AUTH_ROUTES, apiPath } from "@eidolon/config";
 import { Hono } from "hono";
 import { PAIRING_SECRET, validateToken } from "@/auth";
 import { type OwnerEnv, requireOwner } from "@/auth/guard";
-import { deleteAccount, listAccounts } from "@/auth/roles";
+import { deleteAccount, getUserRole, listAccounts, setUserRole } from "@/auth/roles";
 import { ownerFor } from "@/auth/session";
 import { app } from "@/index";
 
@@ -130,6 +130,29 @@ describe("roles", () => {
 
     expect(verified.status).toBe(200);
     expect(socket.status).not.toBe(401);
+  });
+
+  it("revokes a session the moment the role behind it changes", async () => {
+    const token = await memberToken();
+    const account = await ownerFor(`Bearer ${token}`);
+    const before = getUserRole(account?.id ?? "");
+
+    setUserRole(account?.id ?? "", AUTH.ownerRole);
+
+    expect(await ownerFor(`Bearer ${token}`)).toBeNull();
+    expect(validateToken(token)).toBe(false);
+
+    setUserRole(account?.id ?? "", before ?? AUTH.memberRole);
+  });
+
+  it("leaves a session alone when the role is written but unchanged", async () => {
+    const token = await memberToken();
+    const account = await ownerFor(`Bearer ${token}`);
+    const current = getUserRole(account?.id ?? "");
+
+    setUserRole(account?.id ?? "", current ?? AUTH.memberRole);
+
+    expect(await ownerFor(`Bearer ${token}`)).not.toBeNull();
   });
 
   it("keeps every account it lists on one of the known roles", () => {

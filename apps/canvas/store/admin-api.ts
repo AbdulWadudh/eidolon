@@ -1,6 +1,9 @@
 import {
   type AdminApiRoute,
   adminApiPath,
+  adminCharacterOperationsPath,
+  adminCharacterProactivePath,
+  adminCharacterSummarizePath,
   adminConfigReloadPath,
   adminPromptAuthorPath,
   adminQueueJobPath,
@@ -351,6 +354,12 @@ export function removeQueueJob(
   return send(host, token, adminQueueJobPath(key, jobId), "DELETE");
 }
 
+export interface ServiceDetail {
+  endpoint: string;
+  using: string;
+  note: string;
+}
+
 export interface HealthView {
   status: string;
   version: string;
@@ -359,8 +368,45 @@ export interface HealthView {
   storage: { type: string; endpoint: string; bucket: string; status: string };
   webSearch: { primary: string; hasSerperFallback: boolean; hasExaFallback: boolean };
   databaseLocation: string;
+  details: Record<string, ServiceDetail>;
 }
 
 export function fetchHealth(host: string, token: string): Promise<HealthView> {
   return request(host, token, "health");
+}
+
+export interface PendingProactiveView {
+  jobId: string;
+  runAt: number;
+  contextPrompt: string;
+}
+
+export interface CharacterOperationsView {
+  messages: number;
+  chapters: number;
+  proactive: PendingProactiveView | null;
+}
+
+export function fetchCharacterOperations(
+  host: string,
+  token: string,
+  characterId: string,
+): Promise<CharacterOperationsView> {
+  return send(host, token, adminCharacterOperationsPath(characterId), "GET");
+}
+
+export function summarizeCharacter(
+  host: string,
+  token: string,
+  characterId: string,
+): Promise<{ queued: true; jobId: string }> {
+  return post(host, token, adminCharacterSummarizePath(characterId));
+}
+
+export function cancelProactive(
+  host: string,
+  token: string,
+  characterId: string,
+): Promise<{ ok: true }> {
+  return send(host, token, adminCharacterProactivePath(characterId), "DELETE");
 }

@@ -83,6 +83,18 @@ export function adminQueueJobPath(queueKey: string, jobId: string): string {
   return `${adminApiPath("queues", queueKey)}/jobs/${encodeURIComponent(jobId)}`;
 }
 
+export function adminCharacterOperationsPath(characterId: string): string {
+  return `${adminApiPath("characters", characterId)}/operations`;
+}
+
+export function adminCharacterSummarizePath(characterId: string): string {
+  return `${adminApiPath("characters", characterId)}/summarize`;
+}
+
+export function adminCharacterProactivePath(characterId: string): string {
+  return `${adminApiPath("characters", characterId)}/proactive`;
+}
+
 export function adminConfigReloadPath(): string {
   return `${adminApiPath("config")}/reload`;
 }

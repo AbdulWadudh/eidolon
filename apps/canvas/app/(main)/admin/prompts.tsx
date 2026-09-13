@@ -6,6 +6,7 @@ import {
   PROMPT_CATEGORIES,
   PROMPT_CATEGORY_COPY,
 } from "@eidolon/config";
+import type { IconSvgElement } from "@hugeicons/react-native";
 import * as React from "react";
 import { Text, TextInput, View } from "react-native";
 import Animated, { useReducedMotion } from "react-native-reanimated";
@@ -16,11 +17,20 @@ import { FieldAuthorRow } from "@/components/characters/FieldAuthorRow";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import { Input } from "@/components/ui/input";
 import { usePromptAuthor } from "@/hooks/use-prompt-author";
+import { Book02Icon, Image01Icon, MagicWand01Icon, PencilEdit02Icon, SmileIcon } from "@/lib/icons";
 import { type AdminPrompt, fetchPrompts, resetPrompt, savePrompt } from "@/store/admin-api";
 import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme } from "@/store/theme-store";
 
 const UNSORTED = "other";
+
+const CATEGORY_ICONS: Record<string, IconSvgElement> = {
+  persona: SmileIcon,
+  writing: PencilEdit02Icon,
+  media: Image01Icon,
+  memory: Book02Icon,
+  authoring: MagicWand01Icon,
+};
 
 export default function AdminPromptsScreen() {
   const theme = useResolvedTheme();
@@ -30,7 +40,7 @@ export default function AdminPromptsScreen() {
   const [prompts, setPrompts] = React.useState<AdminPrompt[]>([]);
   const [isLoading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [openCategory, setOpenCategory] = React.useState<string | null>(PROMPT_CATEGORIES[0]);
+  const [openCategory, setOpenCategory] = React.useState<string | null>(null);
   const [openKey, setOpenKey] = React.useState<string | null>(null);
   const [draft, setDraft] = React.useState("");
   const [query, setQuery] = React.useState("");
@@ -156,6 +166,8 @@ export default function AdminPromptsScreen() {
             <Animated.View entering={revealAt(index, reduced)} key={key}>
               <CollapsibleSection
                 sectionKey={key}
+                icon={CATEGORY_ICONS[key]}
+                iconColor={theme.primary}
                 title={`${copy?.label ?? key} · ${inCategory.length}`}
                 badge={
                   changed > 0 ? (

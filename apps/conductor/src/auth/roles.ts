@@ -50,8 +50,16 @@ export function getUserRole(userId: string): UserRole | null {
   return row ? roleOrDefault(row.role) : null;
 }
 
+export function revokeSessions(userId: string): number {
+  return db.query("DELETE FROM session WHERE userId = ?").run(userId).changes;
+}
+
 export function setUserRole(userId: string, role: UserRole): boolean {
-  return db.query("UPDATE user SET role = ?2 WHERE id = ?1").run(userId, role).changes > 0;
+  const current = getUserRole(userId);
+  const changed = db.query("UPDATE user SET role = ?2 WHERE id = ?1").run(userId, role).changes > 0;
+
+  if (changed && current !== role) revokeSessions(userId);
+  return changed;
 }
 
 export function isOwnerRole(role: UserRole | null | undefined): boolean {
@@ -77,7 +85,7 @@ export function getAccount(userId: string): AccountRow | null {
 }
 
 export function deleteAccount(userId: string): boolean {
-  db.query("DELETE FROM session WHERE userId = ?").run(userId);
+  revokeSessions(userId);
   db.query("DELETE FROM account WHERE userId = ?").run(userId);
   return db.query("DELETE FROM user WHERE id = ?").run(userId).changes > 0;
 }

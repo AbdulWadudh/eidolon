@@ -31,3 +31,36 @@ export async function scheduleProactiveFollowUp(
 
   return queued ?? null;
 }
+
+export interface PendingProactive {
+  jobId: string;
+  runAt: number;
+  contextPrompt: string;
+}
+
+export async function pendingProactive(characterId: string): Promise<PendingProactive | null> {
+  try {
+    const job = await proactiveQueue.getJob(proactiveJobId(characterId));
+    if (!job) return null;
+
+    return {
+      jobId: String(job.id ?? ""),
+      runAt: job.timestamp + (job.opts.delay ?? 0),
+      contextPrompt: job.data.contextPrompt,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function cancelProactive(characterId: string): Promise<boolean> {
+  try {
+    const job = await proactiveQueue.getJob(proactiveJobId(characterId));
+    if (!job) return false;
+
+    await job.remove();
+    return true;
+  } catch {
+    return false;
+  }
+}

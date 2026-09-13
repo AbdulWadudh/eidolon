@@ -2,6 +2,7 @@ import { CHARACTER_COPY, MIND_COPY, UI_MS } from "@eidolon/config";
 import * as React from "react";
 import { Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut, useReducedMotion } from "react-native-reanimated";
+import { CharacterOperations } from "@/components/admin/CharacterOperations";
 import { CharacterFields } from "@/components/characters/CharacterFields";
 import { PortraitStudio } from "@/components/characters/PortraitStudio";
 import { PronounPicker } from "@/components/characters/PronounPicker";
@@ -31,6 +32,7 @@ export interface AdminCharacterEditorProps {
   character: AdminCharacter;
   draft: Draft;
   serverHost: string;
+  token: string;
   avatarUrl: string | null;
   onChange: (patch: Partial<Draft>) => void;
   onPublish: (isPublic: boolean) => void;
@@ -41,6 +43,7 @@ export function AdminCharacterEditor({
   character,
   draft,
   serverHost,
+  token,
   avatarUrl,
   onChange,
   onPublish,
@@ -162,6 +165,8 @@ export function AdminCharacterEditor({
               onValueChange={onPublish}
               accessibilityLabel={CHARACTER_COPY.publishLabel}
             />
+            <CharacterOperations characterId={character.id} serverHost={serverHost} token={token} />
+
             <Text className="font-ui text-[10px] text-text-muted">{character.id}</Text>
           </View>
         ) : null}

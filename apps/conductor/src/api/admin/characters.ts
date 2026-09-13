@@ -1,6 +1,7 @@
 import { AdminCharacterDraftSchema } from "@eidolon/protocol";
 import { Hono } from "hono";
 import type { OwnerEnv } from "@/auth/guard";
+import { countMessages } from "@/db";
 import {
   createCharacter,
   deleteCharacter,
@@ -8,6 +9,9 @@ import {
   listCharacters,
   updateCharacter,
 } from "@/db/characters";
+import { countChronicles } from "@/db/chronicles";
+import { summarizeChronicleNow } from "@/orchestrator/chronicle";
+import { cancelProactive, pendingProactive } from "@/orchestrator/proactive";
 
 export const adminCharacters = new Hono<OwnerEnv>();
 
@@ -52,5 +56,38 @@ adminCharacters.delete("/:id", (c) => {
   if (!getCharacter(id)) return c.json({ error: NO_SUCH }, 404);
 
   deleteCharacter(id);
+  return c.json({ ok: true });
+});
+
+adminCharacters.get("/:id/operations", async (c) => {
+  const id = c.req.param("id");
+  if (!getCharacter(id)) return c.json({ error: NO_SUCH }, 404);
+
+  return c.json({
+    messages: countMessages(id),
+    chapters: countChronicles(id),
+    proactive: await pendingProactive(id),
+  });
+});
+
+adminCharacters.post("/:id/summarize", async (c) => {
+  const id = c.req.param("id");
+  if (!getCharacter(id)) return c.json({ error: NO_SUCH }, 404);
+
+  const jobId = await summarizeChronicleNow(id);
+  if (!jobId) return c.json({ error: "There is nothing said yet to summarise." }, 400);
+
+  c.set("auditDetail", `queued a chapter for ${id}`);
+  return c.json({ queued: true, jobId });
+});
+
+adminCharacters.delete("/:id/proactive", async (c) => {
+  const id = c.req.param("id");
+  if (!getCharacter(id)) return c.json({ error: NO_SUCH }, 404);
+
+  const cancelled = await cancelProactive(id);
+  if (!cancelled) return c.json({ error: "Nothing is waiting to be sent." }, 404);
+
+  c.set("auditDetail", `cancelled the pending message for ${id}`);
   return c.json({ ok: true });
 });

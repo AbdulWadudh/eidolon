@@ -1,6 +1,7 @@
 import { AUTHOR_FIELDS, CONFIRM_COPY, DASHBOARD_COPY } from "@eidolon/config";
+import { Image } from "expo-image";
 import * as React from "react";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import Animated, { useReducedMotion } from "react-native-reanimated";
 import { AdminCharacterEditor } from "@/components/admin/AdminCharacterEditor";
 import { AdminEmpty, AdminScreen } from "@/components/admin/AdminScreen";
@@ -18,6 +19,29 @@ import {
   saveCharacter,
 } from "@/store/admin-api";
 import { useConnectionStore } from "@/store/connection";
+
+const THUMB_PX = 36;
+
+function Portrait({ character }: { character: AdminCharacter }) {
+  const url = avatarUrl(character);
+
+  return (
+    <View
+      className="overflow-hidden rounded-full border border-border bg-input"
+      style={{ width: THUMB_PX, height: THUMB_PX }}
+    >
+      {url ? (
+        <Image source={{ uri: url }} contentFit="cover" style={{ flex: 1 }} />
+      ) : (
+        <View className="flex-1 items-center justify-center">
+          <Text className="font-main-bold text-primary text-xs">
+            {character.name.trim().slice(0, 1).toUpperCase() || "?"}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+}
 
 function avatarUrl(character: AdminCharacter): string | null {
   const value = (character as { avatarUrl?: string | null }).avatarUrl;
@@ -161,6 +185,7 @@ export default function AdminCharactersScreen() {
         characters.map((character, index) => (
           <Animated.View entering={revealAt(index, reduced)} key={character.id}>
             <EditableRow
+              leading={<Portrait character={character} />}
               title={character.name}
               subtitle={character.tagline || character.id}
               badge={character.isPublic ? "Public" : null}
@@ -177,6 +202,7 @@ export default function AdminCharactersScreen() {
                   character={character}
                   draft={draft}
                   serverHost={serverHost}
+                  token={pairingToken}
                   avatarUrl={avatarUrl(character)}
                   onChange={change}
                   onPublish={(next) => publish(character, next)}

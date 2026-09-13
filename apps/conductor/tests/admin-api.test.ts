@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
-import { AUTH, AUTH_ROUTES, adminApiPath, PROMPT_KEYS } from "@eidolon/config";
+import { AUTH, AUTH_ROUTES, adminApiPath, apiPath, PROMPT_KEYS } from "@eidolon/config";
 import {
   AdminAccountListSchema,
   AdminCharacterViewSchema,
@@ -9,6 +9,7 @@ import {
 import { DEFAULT_THEME_TOKENS } from "@eidolon/tokens";
 import { PAIRING_SECRET } from "@/auth";
 import { deleteAccount } from "@/auth/roles";
+import { clearAudit } from "@/db/audit";
 import { getCharacter } from "@/db/characters";
 import { removeOverridesUnder } from "@/db/overrides";
 import { app } from "@/index";
@@ -59,6 +60,7 @@ afterAll(() => {
   }
   for (const id of madeAccounts) deleteAccount(id);
   removeOverridesUnder(THEME_PREFIX);
+  clearAudit();
   madeAccounts.clear();
   madeCharacters.clear();
 });
@@ -349,5 +351,42 @@ describe("admin theme", () => {
     expect(Object.keys(body.overrides)).toEqual(["primary"]);
 
     await app.request(adminApiPath("theme"), { method: "DELETE", headers: OWNER });
+  });
+});
+
+describe("the older prompts routes", () => {
+  it("no longer answers anyone without an owner credential", async () => {
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${await signInMember()}`,
+    };
+
+    const anonymous = await app.request(apiPath("prompts"));
+    const member = await app.request(apiPath("prompts"), { headers });
+
+    expect(anonymous.status).toBe(401);
+    expect(member.status).toBe(403);
+  });
+
+  it("still answers the owner exactly as it used to", async () => {
+    const response = await app.request(apiPath("prompts"), { headers: OWNER });
+    const body = (await response.json()) as { prompts: { key: string }[] };
+
+    expect(response.status).toBe(200);
+    expect(body.prompts.length).toBe(PROMPT_KEYS.length);
+  });
+
+  it("guards writing a single prompt too", async () => {
+    const key = PROMPT_KEYS[0] ?? "";
+    const refused = await app.request(`${apiPath("prompts")}/${key}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${await signInMember()}`,
+      },
+      body: JSON.stringify({ value: "nope" }),
+    });
+
+    expect(refused.status).toBe(403);
   });
 });

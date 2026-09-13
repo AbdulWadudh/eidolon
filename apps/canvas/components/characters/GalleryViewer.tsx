@@ -1,4 +1,4 @@
-import { GALLERY_COPY, UI_MS } from "@eidolon/config";
+import { CONFIRM_COPY, GALLERY_COPY, MIND_COPY, UI_MS } from "@eidolon/config";
 import * as React from "react";
 import {
   FlatList,
@@ -15,6 +15,7 @@ import { type GalleryAction, GalleryActions } from "@/components/characters/Gall
 import { ZoomableImage } from "@/components/characters/ZoomableImage";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
+import { useConfirm } from "@/hooks/use-confirm";
 import { Cancel01Icon } from "@/lib/icons";
 import { savePhotoToDevice } from "@/lib/save-photo";
 import { tap } from "@/services/haptics";
@@ -44,6 +45,7 @@ export function GalleryViewer({
   onAvatarChanged,
 }: GalleryViewerProps) {
   const reduced = useReducedMotion();
+  const confirmation = useConfirm(characterId);
   const [width, setWidth] = React.useState(0);
   const [index, setIndex] = React.useState(startIndex);
   const [note, setNote] = React.useState<string | null>(null);
@@ -88,18 +90,25 @@ export function GalleryViewer({
       }
 
       if (action === "delete") {
-        const removal =
-          current.kind === "photo"
-            ? deletePhoto(serverHost, characterId, current.id).then(() => true)
-            : deleteGalleryImage(serverHost, characterId, current.id);
+        confirmation.ask({
+          title: CONFIRM_COPY.deletePhoto,
+          body: CONFIRM_COPY.deletePhotoBody,
+          confirmLabel: MIND_COPY.remove,
+          onConfirm: () => {
+            const removal =
+              current.kind === "photo"
+                ? deletePhoto(serverHost, characterId, current.id).then(() => true)
+                : deleteGalleryImage(serverHost, characterId, current.id);
 
-        void removal.then((gone) => {
-          if (!gone) {
-            setNote(GALLERY_COPY.deleteFailed);
-            return;
-          }
-          tap("medium");
-          onDeleted(current.id);
+            void removal.then((gone) => {
+              if (!gone) {
+                setNote(GALLERY_COPY.deleteFailed);
+                return;
+              }
+              tap("medium");
+              onDeleted(current.id);
+            });
+          },
         });
         return;
       }
@@ -121,7 +130,7 @@ export function GalleryViewer({
       tap("success");
       setNote(action === "face" ? GALLERY_COPY.setAsFace : GALLERY_COPY.setAsBackground);
     },
-    [current, serverHost, characterId, onOpenChat, onDeleted, onAvatarChanged],
+    [current, serverHost, characterId, onOpenChat, onDeleted, onAvatarChanged, confirmation.ask],
   );
 
   const base: GalleryAction[] =
@@ -221,6 +230,8 @@ export function GalleryViewer({
           </View>
         </View>
       </GestureHandlerRootView>
+
+      {confirmation.sheet}
     </Modal>
   );
 }

@@ -15,6 +15,7 @@ export type SaveState = "idle" | "saving" | "saved";
 
 export interface EditableRowProps {
   title: string;
+  leading?: React.ReactNode;
   subtitle?: string;
   badge?: string | null;
   expanded: boolean;
@@ -66,6 +67,7 @@ function saveLabel(state: SaveState): string {
 
 export function EditableRow({
   title,
+  leading,
   subtitle,
   badge,
   expanded,
@@ -114,6 +116,8 @@ export function EditableRow({
         onPress={onToggle}
         className="flex-row items-center gap-3 px-4 py-3"
       >
+        {leading}
+
         <View className="flex-1">
           <Text className="font-ui-medium text-sm text-text-primary" numberOfLines={1}>
             {title}

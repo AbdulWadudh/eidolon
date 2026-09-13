@@ -7,6 +7,7 @@ import {
 } from "@eidolon/config";
 import { PAIRING_SECRET } from "@/auth";
 import { SUGGESTIONS, TTS } from "@/config";
+import { clearAudit } from "@/db/audit";
 import { removeOverride, writeOverride } from "@/db/overrides";
 import { app } from "@/index";
 import { loadConfigOverlay, reloadConfig, setConfigOverride } from "@/services/config";
@@ -21,6 +22,7 @@ const TOUCHED = ["SUGGESTIONS.count", "SUGGESTIONS.temperature", "TTS.speed", "T
 function scrub(): void {
   for (const path of TOUCHED) removeOverride(path);
   loadConfigOverlay();
+  clearAudit();
 }
 
 beforeAll(scrub);

@@ -72,23 +72,49 @@ export default function AdminHealthScreen() {
         </PressableScale>
       }
     >
-      {services.map(([name, state], index) => (
-        <Animated.View entering={revealAt(index, reduced)} key={name}>
-          <GlassSurface
-            tint="card"
-            className="flex-row items-center gap-3 overflow-hidden rounded-card border border-border px-4 py-3"
-          >
-            <View
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ backgroundColor: colourFor(state) }}
-            />
-            <Text className="flex-1 font-ui-medium text-sm text-text-primary">{name}</Text>
-            <Text className="font-ui text-[11px]" style={{ color: colourFor(state) }}>
-              {state}
-            </Text>
-          </GlassSurface>
-        </Animated.View>
-      ))}
+      {services.map(([name, state], index) => {
+        const detail = view?.details[name];
+
+        return (
+          <Animated.View entering={revealAt(index, reduced)} key={name}>
+            <GlassSurface
+              tint="card"
+              className="gap-2 overflow-hidden rounded-card border border-border px-4 py-3"
+            >
+              <View className="flex-row items-center gap-3">
+                <View
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: colourFor(state) }}
+                />
+                <Text className="flex-1 font-ui-medium text-sm text-text-primary">{name}</Text>
+                <Text className="font-ui text-[11px]" style={{ color: colourFor(state) }}>
+                  {state}
+                </Text>
+              </View>
+
+              {detail ? (
+                <View className="gap-0.5 pl-[22px]">
+                  {detail.using ? (
+                    <Text className="font-ui-medium text-[11px] text-primary" numberOfLines={1}>
+                      {detail.using}
+                    </Text>
+                  ) : null}
+                  {detail.endpoint ? (
+                    <Text className="font-ui text-[10px] text-text-muted" numberOfLines={1}>
+                      {detail.endpoint}
+                    </Text>
+                  ) : null}
+                  {detail.note ? (
+                    <Text className="font-ui text-[10px] text-text-muted" numberOfLines={1}>
+                      {detail.note}
+                    </Text>
+                  ) : null}
+                </View>
+              ) : null}
+            </GlassSurface>
+          </Animated.View>
+        );
+      })}
 
       {view ? (
         <Animated.View entering={revealAt(services.length, reduced)}>
@@ -102,6 +128,7 @@ export default function AdminHealthScreen() {
               label="Storage"
               value={`${view.storage.status}${view.storage.bucket ? ` · ${view.storage.bucket}` : ""}`}
             />
+            <Detail label="Bucket" value={view.details.storage?.endpoint ?? ""} />
             <Detail label="Search" value={view.webSearch.primary} />
             <Detail
               label="Fallbacks"

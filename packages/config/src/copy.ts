@@ -286,6 +286,11 @@ export const CONFIRM_COPY = {
   promoteTheme: "Make this the look for everyone?",
   promoteThemeBody: "This character's colours replace the shared ones.",
   promoteThemeAction: "Use everywhere",
+  cancelProactive: "Cancel the message they were going to send?",
+  cancelProactiveBody:
+    "They will not write unprompted this time. The next reply you send schedules a new one.",
+  cancelProactiveAction: "Cancel it",
+  proactiveWaiting: (at: string) => `Waiting to write unprompted at ${at}`,
 } as const;
 
 export const DASHBOARD_COPY = {
