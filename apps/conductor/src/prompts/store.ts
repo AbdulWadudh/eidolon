@@ -4,8 +4,10 @@ import {
   type PromptCategory,
   type PromptDefinition,
 } from "@eidolon/config";
+import { eq } from "drizzle-orm";
 import { CACHE } from "@/config";
 import { db } from "@/db";
+import { prompts } from "@/db/tables";
 import { cacheDelete, cacheGet, cacheSet } from "@/services/cache";
 
 export interface PromptRecord {
@@ -18,24 +20,13 @@ export interface PromptRecord {
   updatedAt: number;
 }
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS prompts (
-    key TEXT PRIMARY KEY,
-    value TEXT NOT NULL,
-    updated_at INTEGER NOT NULL
-  );
-`);
-
 const memory = new Map<string, string>();
 const definitions = new Map<string, PromptDefinition>(
   PROMPT_DEFAULTS.map((entry) => [entry.key, entry]),
 );
 
 function readAllFromDb(): Record<string, string> {
-  const rows = db.query("SELECT key, value FROM prompts").all() as {
-    key: string;
-    value: string;
-  }[];
+  const rows = db.select({ key: prompts.key, value: prompts.value }).from(prompts).all();
   return Object.fromEntries(rows.map((row) => [row.key, row.value]));
 }
 
@@ -72,10 +63,12 @@ export async function setPrompt(key: string, value: string): Promise<PromptRecor
   const trimmed = value.trim();
   if (trimmed.length === 0) throw new Error("A prompt cannot be empty.");
 
-  db.query(
-    `INSERT INTO prompts (key, value, updated_at) VALUES (?1, ?2, ?3)
-     ON CONFLICT(key) DO UPDATE SET value = ?2, updated_at = ?3`,
-  ).run(key, trimmed, Date.now());
+  const updatedAt = Date.now();
+
+  db.insert(prompts)
+    .values({ key, value: trimmed, updatedAt })
+    .onConflictDoUpdate({ target: prompts.key, set: { value: trimmed, updatedAt } })
+    .run();
 
   memory.set(key, trimmed);
   await cacheSet(CACHE.promptsKey, JSON.stringify(readAllFromDb()), CACHE.promptsTtlSeconds);
@@ -85,7 +78,7 @@ export async function setPrompt(key: string, value: string): Promise<PromptRecor
 export async function resetPrompt(key: string): Promise<PromptRecord> {
   if (!definitions.has(key)) throw new Error(`Unknown prompt key: ${key}`);
 
-  db.query("DELETE FROM prompts WHERE key = ?").run(key);
+  db.delete(prompts).where(eq(prompts.key, key)).run();
   memory.set(key, defaultPrompt(key));
   await cacheSet(CACHE.promptsKey, JSON.stringify(readAllFromDb()), CACHE.promptsTtlSeconds);
   return describePrompt(key);
@@ -93,10 +86,11 @@ export async function resetPrompt(key: string): Promise<PromptRecord> {
 
 export function describePrompt(key: string): PromptRecord {
   const definition = definitions.get(key);
-  const row = db.query("SELECT value, updated_at FROM prompts WHERE key = ?").get(key) as {
-    value: string;
-    updated_at: number;
-  } | null;
+  const row = db
+    .select({ value: prompts.value, updatedAt: prompts.updatedAt })
+    .from(prompts)
+    .where(eq(prompts.key, key))
+    .get();
 
   return {
     key,
@@ -104,8 +98,8 @@ export function describePrompt(key: string): PromptRecord {
     description: definition?.description ?? "",
     category: definition?.category ?? null,
     variables: definition?.variables ?? [],
-    isCustom: row !== null,
-    updatedAt: row?.updated_at ?? 0,
+    isCustom: row !== undefined,
+    updatedAt: row?.updatedAt ?? 0,
   };
 }
 

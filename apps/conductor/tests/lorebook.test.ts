@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { LOREBOOK } from "@eidolon/config";
-import { db, ensureCharacter } from "@/db";
+import { ensureCharacter, sqlite } from "@/db";
 import { getActiveLoreEntries, type StoredLoreEntry, upsertLoreEntry } from "@/db/lorebook";
 import {
   formatLore,
@@ -53,8 +53,8 @@ function seed(): void {
 }
 
 function wipe(): void {
-  db.query("DELETE FROM lorebook_entries WHERE character_id = ?").run(CHARACTER_ID);
-  db.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM lorebook_entries WHERE character_id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
 }
 
 beforeEach(() => {

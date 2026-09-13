@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, it } from "bun:test";
-import { db, ensureCharacter } from "@/db";
+import { ensureCharacter, sqlite } from "@/db";
 import { addPortrait } from "@/db/portraits";
 import { referencedKeys, storedKey } from "@/services/storage-sweep";
 
@@ -9,9 +9,9 @@ const BUCKET = "eidolon-media";
 const CHARACTER_ID = "storage-sweep-test";
 
 beforeEach(() => {
-  db.query("DELETE FROM character_portraits WHERE character_id = ?").run(CHARACTER_ID);
-  db.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
-  db.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM character_portraits WHERE character_id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
   ensureCharacter(CHARACTER_ID, TEST_USER);
 });
 
@@ -54,15 +54,17 @@ describe("storedKey", () => {
 describe("referencedKeys", () => {
   it("counts a voice note and a photo hanging off a message", () => {
     const id = crypto.randomUUID();
-    db.query(
-      "INSERT INTO messages (id, character_id, role, content, created_at, audio_url, image_url) VALUES (?1, ?2, 'assistant', 'x', ?3, ?4, ?5)",
-    ).run(
-      id,
-      CHARACTER_ID,
-      Date.now(),
-      `http://h/${BUCKET}/characters/${CHARACTER_ID}/audio/${id}.mp3`,
-      `http://h/${BUCKET}/characters/${CHARACTER_ID}/images/${id}.webp`,
-    );
+    sqlite
+      .query(
+        "INSERT INTO messages (id, character_id, role, content, created_at, audio_url, image_url) VALUES (?1, ?2, 'assistant', 'x', ?3, ?4, ?5)",
+      )
+      .run(
+        id,
+        CHARACTER_ID,
+        Date.now(),
+        `http://h/${BUCKET}/characters/${CHARACTER_ID}/audio/${id}.mp3`,
+        `http://h/${BUCKET}/characters/${CHARACTER_ID}/images/${id}.webp`,
+      );
 
     const keys = referencedKeys(BUCKET);
     expect(keys.has(`characters/${CHARACTER_ID}/audio/${id}.mp3`)).toBe(true);
@@ -78,7 +80,7 @@ describe("referencedKeys", () => {
   it("counts the portrait and the avatar separately when they are the same file", () => {
     const url = `http://h/${BUCKET}/characters/${CHARACTER_ID}/images/face.webp`;
     addPortrait(CHARACTER_ID, url, null);
-    db.query("UPDATE characters SET avatar_url = ?2 WHERE id = ?1").run(CHARACTER_ID, url);
+    sqlite.query("UPDATE characters SET avatar_url = ?2 WHERE id = ?1").run(CHARACTER_ID, url);
 
     expect(referencedKeys(BUCKET).has(`characters/${CHARACTER_ID}/images/face.webp`)).toBe(true);
   });
@@ -86,18 +88,20 @@ describe("referencedKeys", () => {
   it("stops counting a voice note once its message is gone", () => {
     const id = crypto.randomUUID();
     const key = `characters/${CHARACTER_ID}/audio/${id}.mp3`;
-    db.query(
-      "INSERT INTO messages (id, character_id, role, content, created_at, audio_url) VALUES (?1, ?2, 'assistant', 'x', ?3, ?4)",
-    ).run(id, CHARACTER_ID, Date.now(), `http://h/${BUCKET}/${key}`);
+    sqlite
+      .query(
+        "INSERT INTO messages (id, character_id, role, content, created_at, audio_url) VALUES (?1, ?2, 'assistant', 'x', ?3, ?4)",
+      )
+      .run(id, CHARACTER_ID, Date.now(), `http://h/${BUCKET}/${key}`);
     expect(referencedKeys(BUCKET).has(key)).toBe(true);
 
-    db.query("DELETE FROM messages WHERE id = ?").run(id);
+    sqlite.query("DELETE FROM messages WHERE id = ?").run(id);
     expect(referencedKeys(BUCKET).has(key)).toBe(false);
   });
 });
 
 afterAll(() => {
-  db.query("DELETE FROM character_portraits WHERE character_id = ?").run(CHARACTER_ID);
-  db.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
-  db.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM character_portraits WHERE character_id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
 });

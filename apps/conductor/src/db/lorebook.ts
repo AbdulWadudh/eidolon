@@ -1,4 +1,6 @@
+import { asc, eq, sql } from "drizzle-orm";
 import { db, ensureCharacter } from "@/db";
+import { lorebookEntries } from "@/db/tables";
 import { safeJsonParse } from "@/utils/json";
 
 export interface StoredLoreEntry {
@@ -13,8 +15,8 @@ interface LoreRow {
   id: string;
   keys: string;
   content: string;
-  required_affinity: number;
-  is_active: number;
+  requiredAffinity: number | null;
+  isActive: number | null;
 }
 
 function toEntry(row: LoreRow): StoredLoreEntry {
@@ -27,17 +29,24 @@ function toEntry(row: LoreRow): StoredLoreEntry {
     id: row.id,
     keys,
     content: row.content,
-    requiredAffinity: row.required_affinity,
-    isActive: row.is_active === 1,
+    requiredAffinity: row.requiredAffinity ?? 0,
+    isActive: row.isActive === 1,
   };
 }
 
 export function getLoreEntries(characterId: string): StoredLoreEntry[] {
   return db
-    .query<LoreRow, [string]>(
-      "SELECT id, keys, content, required_affinity, is_active FROM lorebook_entries WHERE character_id = ?1 ORDER BY required_affinity ASC, rowid ASC",
-    )
-    .all(characterId)
+    .select({
+      id: lorebookEntries.id,
+      keys: lorebookEntries.keys,
+      content: lorebookEntries.content,
+      requiredAffinity: lorebookEntries.requiredAffinity,
+      isActive: lorebookEntries.isActive,
+    })
+    .from(lorebookEntries)
+    .where(eq(lorebookEntries.characterId, characterId))
+    .orderBy(asc(lorebookEntries.requiredAffinity), asc(sql`rowid`))
+    .all()
     .map(toEntry);
 }
 
@@ -54,28 +63,23 @@ export interface NewLoreEntry {
 
 export function upsertLoreEntry(characterId: string, entry: NewLoreEntry, id?: string): string {
   ensureCharacter(characterId, null);
-  const entryId = id ?? crypto.randomUUID();
 
-  db.query(
-    `INSERT INTO lorebook_entries (id, character_id, keys, content, required_affinity, is_active)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6)
-     ON CONFLICT(id) DO UPDATE SET
-       keys = ?3,
-       content = ?4,
-       required_affinity = ?5,
-       is_active = ?6`,
-  ).run(
-    entryId,
-    characterId,
-    JSON.stringify(entry.keys),
-    entry.content,
-    entry.requiredAffinity ?? 0,
-    entry.isActive === false ? 0 : 1,
-  );
+  const entryId = id ?? crypto.randomUUID();
+  const written = {
+    keys: JSON.stringify(entry.keys),
+    content: entry.content,
+    requiredAffinity: entry.requiredAffinity ?? 0,
+    isActive: entry.isActive === false ? 0 : 1,
+  };
+
+  db.insert(lorebookEntries)
+    .values({ id: entryId, characterId, ...written })
+    .onConflictDoUpdate({ target: lorebookEntries.id, set: written })
+    .run();
 
   return entryId;
 }
 
 export function deleteLoreEntry(entryId: string): void {
-  db.query("DELETE FROM lorebook_entries WHERE id = ?").run(entryId);
+  db.delete(lorebookEntries).where(eq(lorebookEntries.id, entryId)).run();
 }

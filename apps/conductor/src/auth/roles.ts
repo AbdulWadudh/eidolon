@@ -1,5 +1,7 @@
 import { AUTH, roleOrDefault, type UserRole } from "@eidolon/config";
+import { asc, count, eq } from "drizzle-orm";
 import { db } from "@/db";
+import { account, session, user } from "@/db/auth-tables";
 
 export interface AccountRow {
   id: string;
@@ -17,6 +19,14 @@ interface RawAccountRow {
   createdAt: string | number | null;
 }
 
+const ACCOUNT_COLUMNS = {
+  id: user.id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  createdAt: user.createdAt,
+};
+
 function toAccount(row: RawAccountRow): AccountRow {
   return {
     id: row.id,
@@ -28,14 +38,12 @@ function toAccount(row: RawAccountRow): AccountRow {
 }
 
 export function countUsers(): number {
-  return db.query<{ total: number }, []>("SELECT COUNT(*) as total FROM user").get()?.total ?? 0;
+  return db.select({ total: count() }).from(user).get()?.total ?? 0;
 }
 
 export function countOwners(): number {
   return (
-    db
-      .query<{ total: number }, [string]>("SELECT COUNT(*) as total FROM user WHERE role = ?")
-      .get(AUTH.ownerRole)?.total ?? 0
+    db.select({ total: count() }).from(user).where(eq(user.role, AUTH.ownerRole)).get()?.total ?? 0
   );
 }
 
@@ -44,19 +52,20 @@ export function roleForNewUser(): UserRole {
 }
 
 export function getUserRole(userId: string): UserRole | null {
-  const row = db
-    .query<{ role: string | null }, [string]>("SELECT role FROM user WHERE id = ? LIMIT 1")
-    .get(userId);
+  const row = db.select({ role: user.role }).from(user).where(eq(user.id, userId)).get();
   return row ? roleOrDefault(row.role) : null;
 }
 
 export function revokeSessions(userId: string): number {
-  return db.query("DELETE FROM session WHERE userId = ?").run(userId).changes;
+  return db.delete(session).where(eq(session.userId, userId)).returning({ id: session.id }).all()
+    .length;
 }
 
 export function setUserRole(userId: string, role: UserRole): boolean {
   const current = getUserRole(userId);
-  const changed = db.query("UPDATE user SET role = ?2 WHERE id = ?1").run(userId, role).changes > 0;
+  const changed =
+    db.update(user).set({ role }).where(eq(user.id, userId)).returning({ id: user.id }).all()
+      .length > 0;
 
   if (changed && current !== role) revokeSessions(userId);
   return changed;
@@ -68,28 +77,27 @@ export function isOwnerRole(role: UserRole | null | undefined): boolean {
 
 export function listAccounts(): AccountRow[] {
   return db
-    .query<RawAccountRow, []>(
-      "SELECT id, name, email, role, createdAt FROM user ORDER BY createdAt ASC, id ASC",
-    )
+    .select(ACCOUNT_COLUMNS)
+    .from(user)
+    .orderBy(asc(user.createdAt), asc(user.id))
     .all()
     .map(toAccount);
 }
 
 export function getAccount(userId: string): AccountRow | null {
-  const row = db
-    .query<RawAccountRow, [string]>(
-      "SELECT id, name, email, role, createdAt FROM user WHERE id = ? LIMIT 1",
-    )
-    .get(userId);
+  const row = db.select(ACCOUNT_COLUMNS).from(user).where(eq(user.id, userId)).get();
   return row ? toAccount(row) : null;
 }
 
 export function deleteAccount(userId: string): boolean {
   revokeSessions(userId);
-  db.query("DELETE FROM account WHERE userId = ?").run(userId);
-  return db.query("DELETE FROM user WHERE id = ?").run(userId).changes > 0;
+  db.delete(account).where(eq(account.userId, userId)).run();
+  return db.delete(user).where(eq(user.id, userId)).returning({ id: user.id }).all().length > 0;
 }
 
 export function renameAccount(userId: string, name: string): boolean {
-  return db.query("UPDATE user SET name = ?2 WHERE id = ?1").run(userId, name).changes > 0;
+  return (
+    db.update(user).set({ name }).where(eq(user.id, userId)).returning({ id: user.id }).all()
+      .length > 0
+  );
 }

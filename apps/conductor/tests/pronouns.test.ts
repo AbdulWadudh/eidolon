@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { DEFAULT_PRONOUNS, isPronounKey, PRONOUN_SETS, pronounsFor } from "@eidolon/config";
-import { db, getCharacterCard } from "@/db";
+import { getCharacterCard, sqlite } from "@/db";
 import { createCharacter, deleteCharacter, getCharacter, updateCharacter } from "@/db/characters";
 import { loadPrompts } from "@/prompts/store";
 import { buildSystemPrompt } from "@/services/persona";
@@ -11,7 +11,7 @@ const NAME = "Pronoun Probe";
 
 beforeEach(async () => {
   await loadPrompts();
-  db.query("DELETE FROM characters WHERE name = ?").run(NAME);
+  sqlite.query("DELETE FROM characters WHERE name = ?").run(NAME);
 });
 
 describe("Pronoun vocabulary", () => {
@@ -71,7 +71,7 @@ describe("Pronouns on the character", () => {
 
   it("tells the model they/them for a character created before the field existed", () => {
     const card = createCharacter({ name: NAME });
-    db.query("UPDATE characters SET pronouns = NULL WHERE id = ?").run(card.id);
+    sqlite.query("UPDATE characters SET pronouns = NULL WHERE id = ?").run(card.id);
 
     const prompt = buildSystemPrompt(getCharacterCard(card.id, TEST_USER));
     expect(prompt).toContain("they/them/their");

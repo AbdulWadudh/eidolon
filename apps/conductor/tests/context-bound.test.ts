@@ -6,7 +6,7 @@ import {
   PROMPT_BUDGET,
   WORKING_CONTEXT,
 } from "@eidolon/config";
-import { appendMessage, db, ensureCharacter } from "@/db";
+import { appendMessage, ensureCharacter, sqlite } from "@/db";
 import { assemblePrompt, clip, fitHistory } from "@/orchestrator/prompt-builder";
 import { loadPrompts } from "@/prompts/store";
 import { PROFILE } from "@/services/llm-profile";
@@ -16,8 +16,8 @@ const TEST_USER = "user:context-bound";
 const CHARACTER_ID = "context-bound-test";
 
 function wipe(): void {
-  db.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
-  db.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
 }
 
 beforeEach(async () => {

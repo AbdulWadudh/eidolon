@@ -1,5 +1,7 @@
 import { roleOrDefault, type UserRole } from "@eidolon/config";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
+import { session, user } from "@/db/auth-tables";
 
 export interface Owner {
   id: string;
@@ -10,21 +12,17 @@ export interface Owner {
 
 function sessionOwner(token: string): Owner | null {
   const row = db
-    .query<
-      {
-        id: string;
-        name: string;
-        email: string;
-        role: string | null;
-        expiresAt: string | number;
-      },
-      [string]
-    >(
-      `SELECT u.id as id, u.name as name, u.email as email, u.role as role, s.expiresAt as expiresAt
-       FROM session s JOIN user u ON u.id = s.userId
-       WHERE s.token = ? LIMIT 1`,
-    )
-    .get(token);
+    .select({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      expiresAt: session.expiresAt,
+    })
+    .from(session)
+    .innerJoin(user, eq(user.id, session.userId))
+    .where(eq(session.token, token))
+    .get();
 
   if (!row) return null;
 

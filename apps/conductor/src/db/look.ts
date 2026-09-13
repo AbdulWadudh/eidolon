@@ -1,4 +1,6 @@
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
+import { characters } from "@/db/tables";
 
 export interface CharacterLook {
   avatarUrl: string | null;
@@ -7,73 +9,78 @@ export interface CharacterLook {
   faceUrl: string | null;
 }
 
+function field<T>(characterId: string, column: Parameters<typeof db.select>[0]): T | undefined {
+  return db.select(column).from(characters).where(eq(characters.id, characterId)).get() as
+    | T
+    | undefined;
+}
+
+function write(characterId: string, patch: Partial<typeof characters.$inferInsert>): void {
+  db.update(characters).set(patch).where(eq(characters.id, characterId)).run();
+}
+
 export function getCharacterLook(characterId: string): CharacterLook {
   const row = db
-    .query("SELECT avatar_url, avatar_crop, background_url, face_url FROM characters WHERE id = ?")
-    .get(characterId) as
-    | {
-        avatar_url: string | null;
-        avatar_crop: string | null;
-        background_url: string | null;
-        face_url: string | null;
-      }
-    | undefined;
+    .select({
+      avatarUrl: characters.avatarUrl,
+      avatarCrop: characters.avatarCrop,
+      backgroundUrl: characters.backgroundUrl,
+      faceUrl: characters.faceUrl,
+    })
+    .from(characters)
+    .where(eq(characters.id, characterId))
+    .get();
 
   return {
-    avatarUrl: row?.avatar_url ?? null,
-    avatarCrop: row?.avatar_crop ? JSON.parse(row.avatar_crop) : null,
-    backgroundUrl: row?.background_url ?? null,
-    faceUrl: row?.face_url ?? null,
+    avatarUrl: row?.avatarUrl ?? null,
+    avatarCrop: row?.avatarCrop ? JSON.parse(row.avatarCrop) : null,
+    backgroundUrl: row?.backgroundUrl ?? null,
+    faceUrl: row?.faceUrl ?? null,
   };
 }
 
 export function setCharacterAvatarCrop(characterId: string, crop: unknown | null): void {
-  db.query("UPDATE characters SET avatar_crop = ?1 WHERE id = ?2").run(
-    crop === null ? null : JSON.stringify(crop),
-    characterId,
-  );
+  write(characterId, { avatarCrop: crop === null ? null : JSON.stringify(crop) });
 }
 
 export function setCharacterFace(characterId: string, faceUrl: string | null): void {
-  db.query("UPDATE characters SET face_url = ?1 WHERE id = ?2").run(faceUrl, characterId);
+  write(characterId, { faceUrl });
 }
 
 export function setCharacterBackground(characterId: string, backgroundUrl: string | null): void {
-  db.query("UPDATE characters SET background_url = ?1 WHERE id = ?2").run(
-    backgroundUrl,
-    characterId,
-  );
+  write(characterId, { backgroundUrl });
 }
 
 export function getCharacterAvatar(characterId: string): string | null {
-  const row = db.query("SELECT avatar_url FROM characters WHERE id = ?").get(characterId) as
-    | { avatar_url: string | null }
-    | undefined;
-  return row?.avatar_url ?? null;
+  return (
+    field<{ avatarUrl: string | null }>(characterId, { avatarUrl: characters.avatarUrl })
+      ?.avatarUrl ?? null
+  );
 }
 
 export function setCharacterAvatar(characterId: string, avatarUrl: string): void {
-  db.query("UPDATE characters SET avatar_url = ?1 WHERE id = ?2").run(avatarUrl, characterId);
+  write(characterId, { avatarUrl });
 }
 
 export function setCharacterPigment(characterId: string, pigment: string | null): void {
-  db.query("UPDATE characters SET theme_pigment = ?1 WHERE id = ?2").run(pigment, characterId);
+  write(characterId, { themePigment: pigment });
 }
 
 export function getCharacterPigment(characterId: string): string | null {
-  const row = db.query("SELECT theme_pigment FROM characters WHERE id = ?").get(characterId) as
-    | { theme_pigment: string | null }
-    | undefined;
-  return row?.theme_pigment ?? null;
+  return (
+    field<{ themePigment: string | null }>(characterId, {
+      themePigment: characters.themePigment,
+    })?.themePigment ?? null
+  );
 }
 
 export function setCharacterAppearance(characterId: string, appearance: string): void {
-  db.query("UPDATE characters SET appearance = ?1 WHERE id = ?2").run(appearance, characterId);
+  write(characterId, { appearance });
 }
 
 export function getCharacterAppearance(characterId: string): string | null {
-  const row = db.query("SELECT appearance FROM characters WHERE id = ?").get(characterId) as
-    | { appearance: string | null }
-    | undefined;
-  return row?.appearance ?? null;
+  return (
+    field<{ appearance: string | null }>(characterId, { appearance: characters.appearance })
+      ?.appearance ?? null
+  );
 }

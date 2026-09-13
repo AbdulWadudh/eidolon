@@ -32,6 +32,7 @@ COPY --chown=bun:bun package.json ./
 COPY --chown=bun:bun packages/ ./packages/
 COPY --chown=bun:bun apps/conductor/package.json apps/conductor/tsconfig.json ./apps/conductor/
 COPY --chown=bun:bun apps/conductor/src ./apps/conductor/src
+COPY --chown=bun:bun apps/conductor/drizzle ./apps/conductor/drizzle
 COPY --chown=bun:bun public ./public
 
 COPY --from=deps --chown=bun:bun /app/node_modules ./node_modules

@@ -1,5 +1,7 @@
+import { count, desc, notInArray, sql } from "drizzle-orm";
 import { AUDIT } from "@/config";
 import { db } from "@/db";
+import { adminAudit } from "@/db/tables";
 
 export interface AuditEntry {
   id: string;
@@ -12,30 +14,6 @@ export interface AuditEntry {
   createdAt: number;
 }
 
-interface AuditRow {
-  id: string;
-  actor_id: string | null;
-  actor_email: string | null;
-  method: string;
-  path: string;
-  status: number;
-  detail: string | null;
-  created_at: number;
-}
-
-function toEntry(row: AuditRow): AuditEntry {
-  return {
-    id: row.id,
-    actorId: row.actor_id,
-    actorEmail: row.actor_email,
-    method: row.method,
-    path: row.path,
-    status: row.status,
-    detail: row.detail,
-    createdAt: row.created_at,
-  };
-}
-
 export interface AuditWrite {
   actorId: string | null;
   actorEmail: string | null;
@@ -45,58 +23,60 @@ export interface AuditWrite {
   detail?: string | null;
 }
 
+const NEWEST_FIRST = [desc(adminAudit.createdAt), desc(sql`rowid`)] as const;
+
 export function recordAudit(entry: AuditWrite): AuditEntry {
   const id = crypto.randomUUID();
   const createdAt = Date.now();
   const detail = entry.detail ? entry.detail.slice(0, AUDIT.maxDetailChars) : null;
 
-  db.query(
-    `INSERT INTO admin_audit
-       (id, actor_id, actor_email, method, path, status, detail, created_at)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)`,
-  ).run(
-    id,
-    entry.actorId,
-    entry.actorEmail,
-    entry.method,
-    entry.path,
-    entry.status,
-    detail,
-    createdAt,
-  );
+  db.insert(adminAudit)
+    .values({ id, ...entry, detail, createdAt })
+    .run();
 
   pruneAudit();
   return { id, ...entry, detail, createdAt };
 }
 
 export function pruneAudit(): number {
+  const keep = db
+    .select({ id: adminAudit.id })
+    .from(adminAudit)
+    .orderBy(...NEWEST_FIRST)
+    .limit(AUDIT.retain);
+
   return db
-    .query(
-      `DELETE FROM admin_audit WHERE id NOT IN (
-         SELECT id FROM admin_audit ORDER BY created_at DESC, rowid DESC LIMIT ?1
-       )`,
-    )
-    .run(AUDIT.retain).changes;
+    .delete(adminAudit)
+    .where(notInArray(adminAudit.id, keep))
+    .returning({
+      id: adminAudit.id,
+    })
+    .all().length;
 }
 
 export function countAudit(): number {
-  return (
-    db.query<{ total: number }, []>("SELECT COUNT(*) as total FROM admin_audit").get()?.total ?? 0
-  );
+  return db.select({ total: count() }).from(adminAudit).get()?.total ?? 0;
 }
 
 export function listAudit(limit: number, offset = 0): AuditEntry[] {
   return db
-    .query<AuditRow, [number, number]>(
-      `SELECT id, actor_id, actor_email, method, path, status, detail, created_at
-         FROM admin_audit
-        ORDER BY created_at DESC, rowid DESC
-        LIMIT ?1 OFFSET ?2`,
-    )
-    .all(limit, offset)
-    .map(toEntry);
+    .select({
+      id: adminAudit.id,
+      actorId: adminAudit.actorId,
+      actorEmail: adminAudit.actorEmail,
+      method: adminAudit.method,
+      path: adminAudit.path,
+      status: adminAudit.status,
+      detail: adminAudit.detail,
+      createdAt: adminAudit.createdAt,
+    })
+    .from(adminAudit)
+    .orderBy(...NEWEST_FIRST)
+    .limit(limit)
+    .offset(offset)
+    .all();
 }
 
 export function clearAudit(): number {
-  return db.query("DELETE FROM admin_audit").run().changes;
+  return db.delete(adminAudit).returning({ id: adminAudit.id }).all().length;
 }

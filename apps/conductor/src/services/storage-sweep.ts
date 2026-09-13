@@ -1,4 +1,5 @@
 import { ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { sql } from "drizzle-orm";
 import { STORAGE_SWEEP } from "@/config";
 import { db } from "@/db";
 import { deleteFile, getS3Client, getStorageConfig, isStorageConnected } from "@/services/storage";
@@ -38,11 +39,11 @@ export function referencedKeys(bucket: string): Set<string> {
     for (const column of source.columns) {
       let rows: { value: string | null }[];
       try {
-        rows = db
-          .query<{ value: string | null }, []>(
+        rows = db.all<{ value: string | null }>(
+          sql.raw(
             `SELECT "${column}" as value FROM "${source.table}" WHERE "${column}" IS NOT NULL`,
-          )
-          .all();
+          ),
+        );
       } catch {
         continue;
       }

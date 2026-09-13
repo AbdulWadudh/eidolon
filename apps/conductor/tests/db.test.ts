@@ -1,11 +1,11 @@
 import { describe, expect, it } from "bun:test";
 import { existsSync } from "node:fs";
 import { SQLITE_DB_PATH } from "@eidolon/config/server";
-import { checkDatabaseHealth, db } from "@/db";
+import { checkDatabaseHealth, sqlite } from "@/db";
 
 describe("SQLite relational store", () => {
   it("opens the database file at the external OS data path", () => {
-    expect(db.filename).toBe(SQLITE_DB_PATH);
+    expect(sqlite.filename).toBe(SQLITE_DB_PATH);
     expect(existsSync(SQLITE_DB_PATH)).toBe(true);
   });
 
@@ -14,7 +14,7 @@ describe("SQLite relational store", () => {
   });
 
   it("creates the relational schema", () => {
-    const tables = db
+    const tables = sqlite
       .query<{ name: string }, []>(
         "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name",
       )
@@ -30,18 +30,17 @@ describe("SQLite relational store", () => {
     const characterId = `char-test-${crypto.randomUUID().slice(0, 8)}`;
 
     try {
-      db.query("INSERT INTO characters (id, name, tagline, created_at) VALUES (?, ?, ?, ?)").run(
-        characterId,
-        "Test Subject",
-        "A row that should not survive the test",
-        Date.now(),
-      );
+      sqlite
+        .query("INSERT INTO characters (id, name, tagline, created_at) VALUES (?, ?, ?, ?)")
+        .run(characterId, "Test Subject", "A row that should not survive the test", Date.now());
 
-      db.query(
-        "INSERT INTO messages (id, character_id, role, content, created_at) VALUES (?, ?, ?, ?, ?)",
-      ).run(crypto.randomUUID(), characterId, "user", "hello", Date.now());
+      sqlite
+        .query(
+          "INSERT INTO messages (id, character_id, role, content, created_at) VALUES (?, ?, ?, ?, ?)",
+        )
+        .run(crypto.randomUUID(), characterId, "user", "hello", Date.now());
 
-      const stored = db
+      const stored = sqlite
         .query<{ name: string; affinity_tier: string }, [string]>(
           "SELECT name, affinity_tier FROM characters WHERE id = ?",
         )
@@ -50,9 +49,9 @@ describe("SQLite relational store", () => {
       expect(stored?.name).toBe("Test Subject");
       expect(stored?.affinity_tier).toBe("Neutral");
 
-      db.query("DELETE FROM characters WHERE id = ?").run(characterId);
+      sqlite.query("DELETE FROM characters WHERE id = ?").run(characterId);
 
-      const orphans = db
+      const orphans = sqlite
         .query<{ count: number }, [string]>(
           "SELECT COUNT(*) as count FROM messages WHERE character_id = ?",
         )
@@ -60,7 +59,7 @@ describe("SQLite relational store", () => {
 
       expect(orphans?.count).toBe(0);
     } finally {
-      db.query("DELETE FROM characters WHERE id = ?").run(characterId);
+      sqlite.query("DELETE FROM characters WHERE id = ?").run(characterId);
     }
   });
 });

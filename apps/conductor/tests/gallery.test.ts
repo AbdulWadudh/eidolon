@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { appendMessage, db, setMessageImage } from "@/db";
+import { appendMessage, setMessageImage, sqlite } from "@/db";
 import { createCharacter } from "@/db/characters";
 import { countGallery, listGallery } from "@/db/gallery";
 import { setCharacterAvatar, setCharacterFace } from "@/db/look";
@@ -49,9 +49,9 @@ describe("what the gallery collects", () => {
     const id = withPhotos("Gallery Mixed", 1);
     addPortrait(id, "https://media.test/avatar.png", null);
     setCharacterAvatar(id, "https://media.test/avatar.png");
-    db.query(
-      "INSERT INTO stages (id, character_id, name, backdrop_url) VALUES (?1, ?2, ?3, ?4)",
-    ).run(`${id}-stage`, id, "The kitchen", "https://media.test/backdrop.png");
+    sqlite
+      .query("INSERT INTO stages (id, character_id, name, backdrop_url) VALUES (?1, ?2, ?3, ?4)")
+      .run(`${id}-stage`, id, "The kitchen", "https://media.test/backdrop.png");
 
     const kinds = listGallery(id, 10).map((image) => image.kind);
     expect(kinds).toContain("photo");

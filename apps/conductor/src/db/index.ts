@@ -1,27 +1,32 @@
 import { Database } from "bun:sqlite";
 import { DEFAULT_PRONOUNS, isPronounKey } from "@eidolon/config";
 import { SQLITE_DB_PATH } from "@eidolon/config/server";
+import { and, count, desc, eq, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/bun-sqlite";
 import { capitalize } from "es-toolkit";
 import { AFFINITY, CHAT_TURN } from "@/config";
-import { rebuildChronicles } from "@/db/migrations";
-import { applySchema } from "@/db/schema";
+import * as authTables from "@/db/auth-tables";
+import { runMigrations } from "@/db/migrate";
+import * as tables from "@/db/tables";
+import { characterState, characters, messages } from "@/db/tables";
 import { affinityTier, startingTier } from "@/services/affinity-ladder";
 
 console.log(`[Database] SQLite: ${SQLITE_DB_PATH}`);
 
-export const db = new Database(SQLITE_DB_PATH, { create: true });
+export const sqlite = new Database(SQLITE_DB_PATH, { create: true });
 
-db.exec("PRAGMA journal_mode = WAL;");
-db.exec("PRAGMA foreign_keys = ON;");
+sqlite.exec("PRAGMA journal_mode = WAL;");
+sqlite.exec("PRAGMA foreign_keys = ON;");
 
-rebuildChronicles(db);
+export const schema = { ...tables, ...authTables };
 
-applySchema(db);
+export const db = drizzle(sqlite, { schema });
+
+runMigrations(sqlite, db);
 
 export function checkDatabaseHealth(): boolean {
   try {
-    const result = db.query<{ result: number }, []>("SELECT 1 as result").get();
-    return result?.result === 1;
+    return sqlite.query<{ result: number }, []>("SELECT 1 as result").get()?.result === 1;
   } catch (error) {
     console.error("[Database] Health check failed:", error);
     return false;
@@ -36,84 +41,98 @@ export interface StoredMind {
 
 export function characterDefaults(characterId: string): StoredMind {
   const row = db
-    .query(
-      "SELECT default_affinity, default_mood, affinity_score, affinity_tier, current_mood FROM characters WHERE id = ?",
-    )
-    .get(characterId) as {
-    default_affinity?: number | null;
-    default_mood?: string | null;
-    affinity_score?: number;
-    affinity_tier?: string;
-    current_mood?: string;
-  } | null;
+    .select({
+      defaultAffinity: characters.defaultAffinity,
+      defaultMood: characters.defaultMood,
+    })
+    .from(characters)
+    .where(eq(characters.id, characterId))
+    .get();
 
-  const score = Number.isFinite(row?.default_affinity)
-    ? Number(row?.default_affinity)
+  const score = Number.isFinite(row?.defaultAffinity)
+    ? Number(row?.defaultAffinity)
     : AFFINITY.start;
 
   return {
     score,
     tier: affinityTier(score),
-    mood: row?.default_mood ?? AFFINITY.defaultMood,
+    mood: row?.defaultMood ?? AFFINITY.defaultMood,
   };
 }
 
 export function setCharacterDefaults(characterId: string, score: number, mood?: string): void {
-  db.query(
-    "UPDATE characters SET default_affinity = ?2, default_mood = COALESCE(?3, default_mood) WHERE id = ?1",
-  ).run(characterId, score, mood ?? null);
+  db.update(characters)
+    .set({
+      defaultAffinity: score,
+      defaultMood: sql`COALESCE(${mood ?? null}, ${characters.defaultMood})`,
+    })
+    .where(eq(characters.id, characterId))
+    .run();
 }
 
 export function getCharacterMind(characterId: string, userId: string | null): StoredMind {
   if (!userId) return characterDefaults(characterId);
 
   const row = db
-    .query<
-      { affinity_score: number; affinity_tier: string; current_mood: string },
-      [string, string]
-    >(
-      "SELECT affinity_score, affinity_tier, current_mood FROM character_state WHERE character_id = ?1 AND user_id = ?2",
-    )
-    .get(characterId, userId);
+    .select({
+      score: characterState.affinityScore,
+      tier: characterState.affinityTier,
+      mood: characterState.currentMood,
+    })
+    .from(characterState)
+    .where(and(eq(characterState.characterId, characterId), eq(characterState.userId, userId)))
+    .get();
 
   if (!row) return characterDefaults(characterId);
 
   return {
-    score: Number.isFinite(row.affinity_score) ? Number(row.affinity_score) : AFFINITY.start,
-    tier: row.affinity_tier || startingTier(),
-    mood: row.current_mood || AFFINITY.defaultMood,
+    score: Number.isFinite(row.score) ? Number(row.score) : AFFINITY.start,
+    tier: row.tier || startingTier(),
+    mood: row.mood || AFFINITY.defaultMood,
   };
 }
 
 export function isAffinityLocked(characterId: string, userId: string): boolean {
   const row = db
-    .query<{ affinity_locked: number | null }, [string, string]>(
-      "SELECT affinity_locked FROM character_state WHERE character_id = ?1 AND user_id = ?2",
-    )
-    .get(characterId, userId);
-  return row?.affinity_locked === 1;
+    .select({ locked: characterState.affinityLocked })
+    .from(characterState)
+    .where(and(eq(characterState.characterId, characterId), eq(characterState.userId, userId)))
+    .get();
+  return row?.locked === 1;
 }
 
 export function setAffinityLock(characterId: string, userId: string, locked: boolean): void {
   ensureCharacter(characterId, userId);
-  const mind = getCharacterMind(characterId, userId);
-  saveCharacterMind(characterId, userId, mind);
-  db.query(
-    "UPDATE character_state SET affinity_locked = ?3 WHERE character_id = ?1 AND user_id = ?2",
-  ).run(characterId, userId, locked ? 1 : 0);
+  saveCharacterMind(characterId, userId, getCharacterMind(characterId, userId));
+
+  db.update(characterState)
+    .set({ affinityLocked: locked ? 1 : 0 })
+    .where(and(eq(characterState.characterId, characterId), eq(characterState.userId, userId)))
+    .run();
 }
 
 export function saveCharacterMind(characterId: string, userId: string, mind: StoredMind): void {
-  db.query(
-    `INSERT INTO character_state
-       (character_id, user_id, affinity_score, affinity_tier, current_mood, updated_at)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6)
-     ON CONFLICT(character_id, user_id) DO UPDATE SET
-       affinity_score = ?3,
-       affinity_tier = ?4,
-       current_mood = ?5,
-       updated_at = ?6`,
-  ).run(characterId, userId, mind.score, mind.tier, mind.mood, Date.now());
+  const updatedAt = Date.now();
+
+  db.insert(characterState)
+    .values({
+      characterId,
+      userId,
+      affinityScore: mind.score,
+      affinityTier: mind.tier,
+      currentMood: mind.mood,
+      updatedAt,
+    })
+    .onConflictDoUpdate({
+      target: [characterState.characterId, characterState.userId],
+      set: {
+        affinityScore: mind.score,
+        affinityTier: mind.tier,
+        currentMood: mind.mood,
+        updatedAt,
+      },
+    })
+    .run();
 }
 
 export interface StoredCharacter {
@@ -131,30 +150,26 @@ export interface StoredCharacter {
 export function getCharacterCard(characterId: string, userId: string | null): StoredCharacter {
   const mind = getCharacterMind(characterId, userId);
   const row = db
-    .query(
-      `SELECT name, personality, system_prompt, scenario, rules, example_dialogue,
-              pronouns, current_mood, affinity_tier
-       FROM characters WHERE id = ?`,
-    )
-    .get(characterId) as {
-    name?: string;
-    personality?: string;
-    system_prompt?: string;
-    scenario?: string;
-    rules?: string;
-    example_dialogue?: string;
-    pronouns?: string;
-    current_mood?: string;
-    affinity_tier?: string;
-  } | null;
+    .select({
+      name: characters.name,
+      personality: characters.personality,
+      systemPrompt: characters.systemPrompt,
+      scenario: characters.scenario,
+      rules: characters.rules,
+      exampleDialogue: characters.exampleDialogue,
+      pronouns: characters.pronouns,
+    })
+    .from(characters)
+    .where(eq(characters.id, characterId))
+    .get();
 
   return {
     name: row?.name?.trim() || capitalize(characterId),
     personality: row?.personality ?? "",
-    systemPrompt: row?.system_prompt ?? "",
+    systemPrompt: row?.systemPrompt ?? "",
     scenario: row?.scenario ?? "",
     rules: row?.rules ?? "",
-    exampleDialogue: row?.example_dialogue ?? "",
+    exampleDialogue: row?.exampleDialogue ?? "",
     pronouns: isPronounKey(row?.pronouns) ? row.pronouns.trim().toLowerCase() : DEFAULT_PRONOUNS,
     mood: mind.mood,
     tier: mind.tier,
@@ -162,9 +177,15 @@ export function getCharacterCard(characterId: string, userId: string | null): St
 }
 
 export function ensureCharacter(characterId: string, ownerId: string | null): void {
-  db.query(
-    "INSERT INTO characters (id, name, created_at, owner_id) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(id) DO NOTHING",
-  ).run(characterId, capitalize(characterId), Date.now(), ownerId);
+  db.insert(characters)
+    .values({
+      id: characterId,
+      name: capitalize(characterId),
+      createdAt: Date.now(),
+      ownerId,
+    })
+    .onConflictDoNothing({ target: characters.id })
+    .run();
 }
 
 export function appendMessage(
@@ -175,25 +196,29 @@ export function appendMessage(
 ): string {
   ensureCharacter(characterId, userId);
   const id = crypto.randomUUID();
-  db.query(
-    "INSERT INTO messages (id, character_id, role, content, created_at, user_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-  ).run(id, characterId, role, content, Date.now(), userId);
+
+  db.insert(messages)
+    .values({ id, characterId, role, content, createdAt: Date.now(), userId })
+    .run();
+
   return id;
 }
 
 export function deleteMessage(messageId: string, userId: string): boolean {
-  const result = db
-    .query("DELETE FROM messages WHERE id = ?1 AND user_id = ?2")
-    .run(messageId, userId);
-  return result.changes > 0;
+  return (
+    db
+      .delete(messages)
+      .where(and(eq(messages.id, messageId), eq(messages.userId, userId)))
+      .returning({ id: messages.id })
+      .all().length > 0
+  );
 }
 
 export function setMessageImage(messageId: string, imageUrl: string, caption: string | null): void {
-  db.query("UPDATE messages SET image_url = ?1, image_caption = ?2 WHERE id = ?3").run(
-    imageUrl,
-    caption,
-    messageId,
-  );
+  db.update(messages)
+    .set({ imageUrl, imageCaption: caption })
+    .where(eq(messages.id, messageId))
+    .run();
 }
 
 export function setMessageAudio(
@@ -201,11 +226,7 @@ export function setMessageAudio(
   audioUrl: string,
   audioDuration: number | null,
 ): void {
-  db.query("UPDATE messages SET audio_url = ?1, audio_duration = ?2 WHERE id = ?3").run(
-    audioUrl,
-    audioDuration,
-    messageId,
-  );
+  db.update(messages).set({ audioUrl, audioDuration }).where(eq(messages.id, messageId)).run();
 }
 
 export function getRecentMessages(
@@ -213,21 +234,17 @@ export function getRecentMessages(
   userId: string,
   limit: number = CHAT_TURN.historyTurns,
 ): { role: string; content: string; imageCaption: string | null }[] {
-  const rows = db
-    .query(
-      "SELECT role, content, image_caption FROM messages WHERE character_id = ?1 AND user_id = ?2 ORDER BY created_at DESC, rowid DESC LIMIT ?3",
-    )
-    .all(characterId, userId, limit) as {
-    role: string;
-    content: string;
-    image_caption: string | null;
-  }[];
-  return rows
-    .map((row) => ({
-      role: row.role,
-      content: row.content,
-      imageCaption: row.image_caption,
-    }))
+  return db
+    .select({
+      role: messages.role,
+      content: messages.content,
+      imageCaption: messages.imageCaption,
+    })
+    .from(messages)
+    .where(and(eq(messages.characterId, characterId), eq(messages.userId, userId)))
+    .orderBy(desc(messages.createdAt), desc(sql`rowid`))
+    .limit(limit)
+    .all()
     .reverse();
 }
 
@@ -242,62 +259,56 @@ export interface StoredMessage {
 }
 
 export function getTranscript(characterId: string, userId: string, limit: number): StoredMessage[] {
-  const rows = db
-    .query(
-      "SELECT id, role, content, audio_url, audio_duration, image_url, created_at FROM messages WHERE character_id = ?1 AND user_id = ?2 ORDER BY created_at DESC, rowid DESC LIMIT ?3",
-    )
-    .all(characterId, userId, limit) as {
-    id: string;
-    role: string;
-    content: string;
-    audio_url: string | null;
-    audio_duration: number | null;
-    image_url: string | null;
-    created_at: number;
-  }[];
-
-  return rows
-    .map((row) => ({
-      id: row.id,
-      role: row.role,
-      content: row.content,
-      audioUrl: row.audio_url,
-      audioDuration: row.audio_duration,
-      imageUrl: row.image_url,
-      createdAt: row.created_at,
-    }))
+  return db
+    .select({
+      id: messages.id,
+      role: messages.role,
+      content: messages.content,
+      audioUrl: messages.audioUrl,
+      audioDuration: messages.audioDuration,
+      imageUrl: messages.imageUrl,
+      createdAt: messages.createdAt,
+    })
+    .from(messages)
+    .where(and(eq(messages.characterId, characterId), eq(messages.userId, userId)))
+    .orderBy(desc(messages.createdAt), desc(sql`rowid`))
+    .limit(limit)
+    .all()
     .reverse();
 }
 
 export function countMessages(characterId: string, userId: string): number {
   const row = db
-    .query<{ total: number }, [string, string]>(
-      "SELECT COUNT(*) as total FROM messages WHERE character_id = ?1 AND user_id = ?2",
-    )
-    .get(characterId, userId);
+    .select({ total: count() })
+    .from(messages)
+    .where(and(eq(messages.characterId, characterId), eq(messages.userId, userId)))
+    .get();
   return row?.total ?? 0;
 }
 
 export function forgetCharacter(characterId: string, userId: string): void {
-  db.query("DELETE FROM messages WHERE character_id = ?1 AND user_id = ?2").run(
-    characterId,
-    userId,
-  );
-  db.query("DELETE FROM chronicles WHERE character_id = ?1 AND user_id = ?2").run(
-    characterId,
-    userId,
-  );
-  db.query("DELETE FROM character_state WHERE character_id = ?1 AND user_id = ?2").run(
-    characterId,
-    userId,
-  );
+  db.delete(messages)
+    .where(and(eq(messages.characterId, characterId), eq(messages.userId, userId)))
+    .run();
+  db.delete(tables.chronicles)
+    .where(
+      and(eq(tables.chronicles.characterId, characterId), eq(tables.chronicles.userId, userId)),
+    )
+    .run();
+  db.delete(characterState)
+    .where(and(eq(characterState.characterId, characterId), eq(characterState.userId, userId)))
+    .run();
 }
 
 export function updateMessageContent(messageId: string, content: string, userId: string): boolean {
-  const result = db
-    .query("UPDATE messages SET content = ?2 WHERE id = ?1 AND user_id = ?3")
-    .run(messageId, content, userId);
-  return result.changes > 0;
+  return (
+    db
+      .update(messages)
+      .set({ content })
+      .where(and(eq(messages.id, messageId), eq(messages.userId, userId)))
+      .returning({ id: messages.id })
+      .all().length > 0
+  );
 }
 
 export interface LastExchange {
@@ -308,10 +319,12 @@ export interface LastExchange {
 
 export function lastExchange(characterId: string, userId: string): LastExchange | null {
   const rows = db
-    .query<{ id: string; role: string; content: string }, [string, string]>(
-      "SELECT id, role, content FROM messages WHERE character_id = ?1 AND user_id = ?2 ORDER BY created_at DESC, rowid DESC LIMIT 10",
-    )
-    .all(characterId, userId);
+    .select({ id: messages.id, role: messages.role, content: messages.content })
+    .from(messages)
+    .where(and(eq(messages.characterId, characterId), eq(messages.userId, userId)))
+    .orderBy(desc(messages.createdAt), desc(sql`rowid`))
+    .limit(10)
+    .all();
 
   const assistantAt = rows.findIndex((row) => row.role === "assistant");
   if (assistantAt === -1) return null;
@@ -328,15 +341,16 @@ export function lastExchange(characterId: string, userId: string): LastExchange 
 
 export function getMessage(messageId: string): { characterId: string; content: string } | null {
   const row = db
-    .query<{ character_id: string; content: string }, [string]>(
-      "SELECT character_id, content FROM messages WHERE id = ?",
-    )
-    .get(messageId);
-  return row ? { characterId: row.character_id, content: row.content } : null;
+    .select({ characterId: messages.characterId, content: messages.content })
+    .from(messages)
+    .where(eq(messages.id, messageId))
+    .get();
+  return row ?? null;
 }
 
 export function clearMessageAudio(messageId: string): void {
-  db.query("UPDATE messages SET audio_url = NULL, audio_duration = NULL WHERE id = ?").run(
-    messageId,
-  );
+  db.update(messages)
+    .set({ audioUrl: null, audioDuration: null })
+    .where(eq(messages.id, messageId))
+    .run();
 }

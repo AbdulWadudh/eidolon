@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "bun:test";
 import { CARD_UPLOAD, characterExportPath, characterImportPath } from "@eidolon/config";
-import { db } from "@/db";
+import { sqlite } from "@/db";
 import { app } from "@/index";
 import { readCardData, readCardJson } from "@/services/tavern-card";
 import { AUTHED, remember, wipeNamed } from "./support/characters";
@@ -65,7 +65,7 @@ describe("POST /characters/import", () => {
     const body = (await response.json()) as { characterId?: string; loreCount?: number };
     forget(body.characterId);
 
-    const counted = db
+    const counted = sqlite
       .query<{ total: number }, [string]>(
         "SELECT COUNT(*) as total FROM lorebook_entries WHERE character_id = ?",
       )

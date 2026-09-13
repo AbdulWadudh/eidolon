@@ -1,7 +1,7 @@
 import { AUTH } from "@eidolon/config";
 import { auth } from "@/auth";
 import { setUserRole } from "@/auth/roles";
-import { db } from "@/db";
+import { sqlite } from "@/db";
 
 export const TEST_EMAIL = "tests@eidolon.local";
 const EMAIL = TEST_EMAIL;
@@ -10,7 +10,7 @@ const NAME = "Test Owner";
 
 function accountId(): string | null {
   return (
-    db.query<{ id: string }, [string]>("SELECT id FROM user WHERE email = ? LIMIT 1").get(EMAIL)
+    sqlite.query<{ id: string }, [string]>("SELECT id FROM user WHERE email = ? LIMIT 1").get(EMAIL)
       ?.id ?? null
   );
 }

@@ -1,11 +1,11 @@
 import { afterAll, beforeEach, describe, expect, it } from "bun:test";
 import {
   appendMessage,
-  db,
   deleteMessage,
   ensureCharacter,
   getTranscript,
   lastExchange,
+  sqlite,
   updateMessageContent,
 } from "@/db";
 
@@ -14,8 +14,8 @@ const TEST_USER = "user:regenerate";
 const CHARACTER_ID = "regenerate-test";
 
 beforeEach(() => {
-  db.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
-  db.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
   ensureCharacter(CHARACTER_ID, TEST_USER);
 });
 
@@ -88,6 +88,6 @@ describe("Editing a message", () => {
 });
 
 afterAll(() => {
-  db.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
-  db.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
 });

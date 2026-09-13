@@ -1,4 +1,6 @@
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
+import { characters } from "@/db/tables";
 
 export type GalleryKind = "photo" | "portrait" | "backdrop";
 
@@ -20,40 +22,41 @@ interface Row {
   seq: number;
 }
 
-const SOURCES = `
+const sources = (characterId: string) => sql`
   SELECT m.id AS id, m.image_url AS url, m.image_caption AS caption,
          'photo' AS kind, m.created_at AS created_at, m.rowid AS seq
     FROM messages m
-   WHERE m.character_id = ?1 AND m.image_url IS NOT NULL AND m.image_url != ''
+   WHERE m.character_id = ${characterId} AND m.image_url IS NOT NULL AND m.image_url != ''
   UNION ALL
   SELECT p.id, p.url, p.prompt, 'portrait', p.created_at, p.rowid
     FROM character_portraits p
-   WHERE p.character_id = ?1
+   WHERE p.character_id = ${characterId}
   UNION ALL
   SELECT 'stage:' || s.id, s.backdrop_url, s.name, 'backdrop',
-         COALESCE((SELECT created_at FROM characters WHERE id = ?1), 0), s.rowid
+         COALESCE((SELECT created_at FROM characters WHERE id = ${characterId}), 0), s.rowid
     FROM stages s
-   WHERE s.character_id = ?1 AND s.backdrop_url IS NOT NULL AND s.backdrop_url != ''
+   WHERE s.character_id = ${characterId} AND s.backdrop_url IS NOT NULL AND s.backdrop_url != ''
 `;
 
 function currentAvatar(characterId: string): string | null {
-  const row = db
-    .query<{ avatar_url: string | null }, [string]>(
-      "SELECT avatar_url FROM characters WHERE id = ?",
-    )
-    .get(characterId);
-
-  return row?.avatar_url ?? null;
+  return (
+    db
+      .select({ avatarUrl: characters.avatarUrl })
+      .from(characters)
+      .where(eq(characters.id, characterId))
+      .get()?.avatarUrl ?? null
+  );
 }
 
 export function listGallery(characterId: string, limit: number, offset = 0): GalleryImage[] {
   const avatar = currentAvatar(characterId);
 
   return db
-    .query<Row, [string, number, number]>(
-      `SELECT * FROM (${SOURCES}) ORDER BY created_at DESC, seq DESC, id DESC LIMIT ?2 OFFSET ?3`,
+    .all<Row>(
+      sql`SELECT * FROM (${sources(characterId)})
+          ORDER BY created_at DESC, seq DESC, id DESC
+          LIMIT ${limit} OFFSET ${offset}`,
     )
-    .all(characterId, limit, offset)
     .map((row) => ({
       id: row.id,
       url: row.url,
@@ -65,9 +68,9 @@ export function listGallery(characterId: string, limit: number, offset = 0): Gal
 }
 
 export function countGallery(characterId: string): number {
-  const row = db
-    .query<{ total: number }, [string]>(`SELECT COUNT(*) AS total FROM (${SOURCES})`)
-    .get(characterId);
+  const [row] = db.all<{ total: number }>(
+    sql`SELECT COUNT(*) AS total FROM (${sources(characterId)})`,
+  );
 
   return row?.total ?? 0;
 }

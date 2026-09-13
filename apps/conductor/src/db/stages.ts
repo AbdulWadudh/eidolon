@@ -1,5 +1,7 @@
+import { and, asc, eq, sql } from "drizzle-orm";
 import { STAGE } from "@/config";
 import { db, ensureCharacter } from "@/db";
+import { stages } from "@/db/tables";
 import { safeJsonParse } from "@/utils/json";
 
 export interface StoredStage {
@@ -13,54 +15,67 @@ export interface StoredStage {
 interface StageRow {
   id: string;
   name: string;
-  backdrop_url: string | null;
-  lighting_tint: string | null;
-  soundscape_stems: string | null;
+  backdropUrl: string | null;
+  lightingTint: string | null;
+  soundscapeStems: string | null;
 }
+
+const COLUMNS = {
+  id: stages.id,
+  name: stages.name,
+  backdropUrl: stages.backdropUrl,
+  lightingTint: stages.lightingTint,
+  soundscapeStems: stages.soundscapeStems,
+};
 
 function toStage(row: StageRow): StoredStage {
   return {
     id: row.id,
     name: row.name,
-    backdropUrl: row.backdrop_url,
-    lightingTint: row.lighting_tint ?? STAGE.defaultLightingTint,
-    soundscapeStems: safeJsonParse<string[]>(row.soundscape_stems ?? "[]", []),
+    backdropUrl: row.backdropUrl,
+    lightingTint: row.lightingTint ?? STAGE.defaultLightingTint,
+    soundscapeStems: safeJsonParse<string[]>(row.soundscapeStems ?? "[]", []),
   };
 }
 
 export function getStage(characterId: string, stageName: string): StoredStage | null {
   const row = db
-    .query<StageRow, [string, string]>(
-      "SELECT id, name, backdrop_url, lighting_tint, soundscape_stems FROM stages WHERE character_id = ?1 AND name = ?2",
-    )
-    .get(characterId, stageName);
+    .select(COLUMNS)
+    .from(stages)
+    .where(and(eq(stages.characterId, characterId), eq(stages.name, stageName)))
+    .get();
   return row ? toStage(row) : null;
 }
 
 export function listStages(characterId: string): StoredStage[] {
   return db
-    .query<StageRow, [string]>(
-      "SELECT id, name, backdrop_url, lighting_tint, soundscape_stems FROM stages WHERE character_id = ?1 ORDER BY rowid ASC",
-    )
-    .all(characterId)
+    .select(COLUMNS)
+    .from(stages)
+    .where(eq(stages.characterId, characterId))
+    .orderBy(asc(sql`rowid`))
+    .all()
     .map(toStage);
+}
+
+function stageValues(characterId: string, stageName: string, backdropUrl: string | null) {
+  return {
+    id: crypto.randomUUID(),
+    characterId,
+    name: stageName,
+    backdropUrl,
+    lightingTint: STAGE.defaultLightingTint,
+    soundscapeStems: JSON.stringify(STAGE.defaultSoundscapeStems),
+    updatedAt: Date.now(),
+  };
 }
 
 export function registerStage(characterId: string, stageName: string): void {
   ensureCharacter(characterId, null);
 
-  db.query(
-    `INSERT INTO stages (id, character_id, name, backdrop_url, lighting_tint, soundscape_stems, updated_at)
-     VALUES (?1, ?2, ?3, NULL, ?4, ?5, ?6)
-     ON CONFLICT(character_id, name) DO NOTHING`,
-  ).run(
-    crypto.randomUUID(),
-    characterId,
-    stageName,
-    STAGE.defaultLightingTint,
-    JSON.stringify(STAGE.defaultSoundscapeStems),
-    Date.now(),
-  );
+  db.insert(stages)
+    .values(stageValues(characterId, stageName, null))
+    .onConflictDoNothing({ target: [stages.characterId, stages.name] })
+    .run();
 }
 
 export function saveStageBackdrop(
@@ -69,22 +84,15 @@ export function saveStageBackdrop(
   backdropUrl: string,
 ): StoredStage {
   ensureCharacter(characterId, null);
+  const updatedAt = Date.now();
 
-  db.query(
-    `INSERT INTO stages (id, character_id, name, backdrop_url, lighting_tint, soundscape_stems, updated_at)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
-     ON CONFLICT(character_id, name) DO UPDATE SET
-       backdrop_url = ?4,
-       updated_at = ?7`,
-  ).run(
-    crypto.randomUUID(),
-    characterId,
-    stageName,
-    backdropUrl,
-    STAGE.defaultLightingTint,
-    JSON.stringify(STAGE.defaultSoundscapeStems),
-    Date.now(),
-  );
+  db.insert(stages)
+    .values({ ...stageValues(characterId, stageName, backdropUrl), updatedAt })
+    .onConflictDoUpdate({
+      target: [stages.characterId, stages.name],
+      set: { backdropUrl, updatedAt },
+    })
+    .run();
 
   const saved = getStage(characterId, stageName);
   if (!saved) {

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { CHRONICLE_CONTEXT, LOREBOOK, PROMPT_BUDGET, RECALL, WEB_CONTEXT } from "@eidolon/config";
-import { appendMessage, db, ensureCharacter, saveCharacterMind } from "@/db";
+import { appendMessage, ensureCharacter, saveCharacterMind, sqlite } from "@/db";
 import { appendChronicle } from "@/db/chronicles";
 import { upsertLoreEntry } from "@/db/lorebook";
 import {
@@ -22,10 +22,10 @@ const CHARACTER_ID = "prompt-builder-test";
 const NEWLINE = String.fromCharCode(10);
 
 function wipe(): void {
-  db.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
-  db.query("DELETE FROM chronicles WHERE character_id = ?").run(CHARACTER_ID);
-  db.query("DELETE FROM lorebook_entries WHERE character_id = ?").run(CHARACTER_ID);
-  db.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM chronicles WHERE character_id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM lorebook_entries WHERE character_id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
 }
 
 beforeEach(async () => {

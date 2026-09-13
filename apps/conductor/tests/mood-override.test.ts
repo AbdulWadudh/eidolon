@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it } from "bun:test";
 import { AFFINITY } from "@eidolon/config";
 import { applyAffinityOverride } from "@/api/mind";
-import { db, ensureCharacter, getCharacterMind, saveCharacterMind } from "@/db";
+import { ensureCharacter, getCharacterMind, saveCharacterMind, sqlite } from "@/db";
 import { assemblePrompt, resolveMood } from "@/orchestrator/prompt-builder";
 import { loadPrompts } from "@/prompts/store";
 
@@ -11,8 +11,8 @@ const CHARACTER_ID = "mood-override-test";
 
 beforeEach(async () => {
   await loadPrompts();
-  db.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
-  db.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
   ensureCharacter(CHARACTER_ID, TEST_USER);
   saveCharacterMind(CHARACTER_ID, TEST_USER, { score: 40, tier: "Warm", mood: "Curious" });
 });
@@ -92,6 +92,6 @@ describe("One-turn mood override", () => {
 });
 
 afterAll(() => {
-  db.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
-  db.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
+  sqlite.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
 });
