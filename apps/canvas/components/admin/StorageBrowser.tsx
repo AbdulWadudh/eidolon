@@ -1,8 +1,8 @@
-import { CONFIRM_COPY, DASHBOARD_COPY } from "@eidolon/config";
+import { CONFIRM_COPY, DASHBOARD_COPY, UI_MS } from "@eidolon/config";
 import type { IconSvgElement } from "@hugeicons/react-native";
 import * as React from "react";
 import { ScrollView, Text, View } from "react-native";
-import Animated, { useReducedMotion } from "react-native-reanimated";
+import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
 import { AdminEmpty } from "@/components/admin/AdminScreen";
 import { revealAt } from "@/components/admin/admin-motion";
 import { MediaPreview } from "@/components/admin/MediaPreview";
@@ -15,10 +15,12 @@ import { Input } from "@/components/ui/input";
 import { useConfirm } from "@/hooks/use-confirm";
 import {
   ArrowRight01Icon,
+  Cancel01Icon,
   Delete02Icon,
   Folder01Icon,
   HardDriveIcon,
   Queue01Icon,
+  Search01Icon,
 } from "@/lib/icons";
 import {
   AdminRequestError,
@@ -63,6 +65,7 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
   const [kind, setKind] = React.useState<StoredMediaKind | null>(null);
   const [prefix, setPrefix] = React.useState("");
   const [folderMode, setFolderMode] = React.useState(false);
+  const [isSearchOpen, setSearchOpen] = React.useState(false);
   const [isBusy, setBusy] = React.useState(false);
   const [hasLoaded, setLoaded] = React.useState(false);
 
@@ -127,17 +130,46 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
 
   return (
     <View className="gap-2">
-      <Text className="font-ui-bold text-[11px] text-text-muted uppercase tracking-wider">
-        {DASHBOARD_COPY.storageBrowse}
-      </Text>
+      <View className="flex-row items-center gap-2">
+        <Text className="flex-1 font-ui-bold text-[11px] text-text-muted uppercase tracking-wider">
+          {DASHBOARD_COPY.storageBrowse}
+        </Text>
 
-      <Input
-        placeholder={DASHBOARD_COPY.search}
-        value={search}
-        onChangeText={setSearch}
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
+        <PressableScale
+          accessibilityRole="button"
+          accessibilityLabel={DASHBOARD_COPY.search}
+          accessibilityState={{ expanded: isSearchOpen }}
+          hitSlop={10}
+          onPress={() => {
+            if (isSearchOpen) setSearch("");
+            setSearchOpen(!isSearchOpen);
+          }}
+          className="h-8 w-8 items-center justify-center rounded-button border"
+          style={{
+            borderColor: search.length > 0 ? theme.primary : theme.cardBorder,
+            backgroundColor: theme.inputSurface,
+          }}
+        >
+          <AppIcon
+            icon={isSearchOpen ? Cancel01Icon : Search01Icon}
+            size={14}
+            color={search.length > 0 ? theme.primary : theme.textMuted}
+          />
+        </PressableScale>
+      </View>
+
+      {isSearchOpen ? (
+        <Animated.View entering={reduced ? undefined : FadeIn.duration(UI_MS.disclosure)}>
+          <Input
+            placeholder={DASHBOARD_COPY.search}
+            value={search}
+            onChangeText={setSearch}
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoFocus
+          />
+        </Animated.View>
+      ) : null}
 
       <View className="flex-row gap-1.5">
         <ModeChip
