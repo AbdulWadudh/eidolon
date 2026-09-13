@@ -10,6 +10,10 @@ and publishes it as the GitHub release notes.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.2.0] - 2026-09-13
+
 ### Added
 
 - **Voice calls.** The phone button is back in the chat header, and this time
