@@ -35,7 +35,7 @@ import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme } from "@/store/theme-store";
 
 const ACCOUNT_PX = 34;
-const HEADER_TOP_PX = 10;
+const HEADER_TOP_PX = 6;
 
 export default function MainCharactersScreen() {
   const router = useRouter();
@@ -100,8 +100,9 @@ export default function MainCharactersScreen() {
       className="flex-1 bg-canvas"
     >
       {}
-      <View
-        className="flex-row items-center justify-between border-b border-border px-3 pb-2.5"
+      <GlassSurface
+        tint="card"
+        className="flex-row items-center justify-between border-border border-b px-3 pb-2.5"
         style={{ paddingTop: insets.top + HEADER_TOP_PX }}
       >
         <Text
@@ -171,7 +172,7 @@ export default function MainCharactersScreen() {
             )}
           </Pressable>
         </View>
-      </View>
+      </GlassSurface>
 
       <ScrollView contentContainerStyle={{ padding: 14, gap: 10 }}>
         {}
