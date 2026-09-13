@@ -47,3 +47,4 @@ bun.lockb
 
 # Generated knowledge graph
 graphify-out/
+apps/conductor/tmp-*.ts
