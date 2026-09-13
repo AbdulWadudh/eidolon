@@ -1,15 +1,19 @@
 import { affinityLabel, HOME_COPY } from "@eidolon/config";
 import { Image } from "expo-image";
 import { StyleSheet, Text, View } from "react-native";
+import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { croppedStyle, usableCrop } from "@/lib/avatar-crop";
+import { MoreVerticalIcon } from "@/lib/icons";
 import { useAffinityStore } from "@/store/affinity-store";
 import type { CharacterSummary } from "@/store/character-api";
+import { useResolvedTheme } from "@/store/theme-store";
 
-const AVATAR_PX = 56;
+const AVATAR_PX = 44;
+const OVERFLOW_PX = 32;
 
 export interface CharacterCardProps {
   character: CharacterSummary;
@@ -18,6 +22,7 @@ export interface CharacterCardProps {
 }
 
 export function CharacterRosterCard({ character, onOpen, onEdit }: CharacterCardProps) {
+  const theme = useResolvedTheme();
   const insight = useAffinityStore((state) => state.isInsightModeEnabled);
   const initials = character.name.slice(0, 2).toUpperCase();
   const crop = usableCrop(character.avatarCrop);
@@ -32,10 +37,10 @@ export function CharacterRosterCard({ character, onOpen, onEdit }: CharacterCard
       accessibilityRole="button"
       accessibilityLabel={`Open your chat with ${character.name}`}
       onPress={onOpen}
-      className="overflow-hidden rounded-card border border-border p-4"
+      className="overflow-hidden rounded-card border border-border p-2.5"
     >
       <GlassSurface tint="card" pointerEvents="none" style={StyleSheet.absoluteFill} />
-      <View className="flex-row items-center gap-4">
+      <View className="flex-row items-center gap-3">
         <Avatar size={AVATAR_PX} className="overflow-hidden border border-border">
           {character.avatarUrl ? (
             <Image
@@ -46,14 +51,14 @@ export function CharacterRosterCard({ character, onOpen, onEdit }: CharacterCard
               style={crop ? croppedStyle(crop, AVATAR_PX) : { width: "100%", height: "100%" }}
             />
           ) : (
-            <AvatarFallback textClassName="font-main-bold text-lg text-primary">
+            <AvatarFallback textClassName="font-main-bold text-base text-primary">
               {initials}
             </AvatarFallback>
           )}
         </Avatar>
 
         <View className="flex-1">
-          <Text className="font-main-bold text-lg text-text-primary" numberOfLines={1}>
+          <Text className="font-main-bold text-base text-text-primary" numberOfLines={1}>
             {character.name}
           </Text>
 
@@ -71,7 +76,10 @@ export function CharacterRosterCard({ character, onOpen, onEdit }: CharacterCard
 
         <View className="flex-row items-center gap-1.5">
           {character.messageCount > 0 ? (
-            <Badge variant="muted">{`${character.messageCount}`}</Badge>
+            <Badge
+              variant="muted"
+              accessibilityLabel={`${character.messageCount} messages so far`}
+            >{`${character.messageCount}`}</Badge>
           ) : null}
 
           <PressableScale
@@ -79,9 +87,10 @@ export function CharacterRosterCard({ character, onOpen, onEdit }: CharacterCard
             accessibilityLabel={`Edit ${character.name}`}
             hitSlop={10}
             onPress={onEdit}
-            className="h-10 w-10 items-center justify-center rounded-button border border-border bg-input"
+            className="items-center justify-center rounded-button active:bg-input"
+            style={{ height: OVERFLOW_PX, width: OVERFLOW_PX }}
           >
-            <Text className="font-ui text-sm text-text-muted">⋯</Text>
+            <AppIcon icon={MoreVerticalIcon} size={17} color={theme.textMuted} strokeWidth={1.6} />
           </PressableScale>
         </View>
       </View>

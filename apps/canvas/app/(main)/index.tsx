@@ -91,13 +91,13 @@ export default function MainCharactersScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.canvas }} className="flex-1 bg-canvas">
       {}
-      <View className="flex-row items-center justify-between border-b border-border px-5 py-4">
-        <Text className="font-main-bold text-2xl text-text-primary tracking-tight">Eidolon</Text>
+      <View className="flex-row items-center justify-between border-b border-border px-3 py-2.5">
+        <Text className="font-main-bold text-xl text-text-primary tracking-tight">Eidolon</Text>
 
         {}
         <GlassSurface
           tint="card"
-          className="mx-2 flex-1 shrink flex-row items-center gap-2 overflow-hidden rounded-full border border-border px-3 py-1.5"
+          className="mx-2 flex-1 shrink flex-row items-center gap-2 overflow-hidden rounded-button border border-border px-2.5 py-1"
         >
           <View className="h-2 w-2 rounded-full" style={{ backgroundColor: status.color }} />
           <Text className="font-ui text-xs text-text-muted" numberOfLines={1}>
@@ -112,10 +112,15 @@ export default function MainCharactersScreen() {
               accessibilityRole="button"
               accessibilityLabel={DASHBOARD_COPY.title}
               hitSlop={6}
-              className="rounded-full border border-border bg-card p-2 active:bg-border"
+              className="items-center justify-center rounded-button p-2 active:bg-card"
               onPress={() => router.push("/(main)/admin")}
             >
-              <AppIcon icon={DashboardSquare01Icon} size={18} color={theme.primary} />
+              <AppIcon
+                icon={DashboardSquare01Icon}
+                size={18}
+                color={theme.primary}
+                strokeWidth={1.6}
+              />
             </Pressable>
           ) : null}
 
@@ -123,10 +128,10 @@ export default function MainCharactersScreen() {
             accessibilityRole="button"
             accessibilityLabel={HOME_COPY.lookTitle}
             hitSlop={6}
-            className="rounded-full border border-border bg-card p-2 active:bg-border"
+            className="items-center justify-center rounded-button p-2 active:bg-card"
             onPress={() => setShowThemeStudio(true)}
           >
-            <AppIcon icon={PaintBoardIcon} size={18} color={theme.primary} />
+            <AppIcon icon={PaintBoardIcon} size={18} color={theme.primary} strokeWidth={1.6} />
           </Pressable>
 
           <Pressable
@@ -134,15 +139,15 @@ export default function MainCharactersScreen() {
             accessibilityLabel={HOME_COPY.connectedTo}
             accessibilityState={{ expanded: showSettings }}
             hitSlop={6}
-            className="rounded-full border border-border bg-card p-2 active:bg-border"
+            className="items-center justify-center rounded-button p-2 active:bg-card"
             onPress={() => setShowSettings((prev) => !prev)}
           >
-            <AppIcon icon={Settings01Icon} size={18} color={theme.textPrimary} />
+            <AppIcon icon={Settings01Icon} size={18} color={theme.textPrimary} strokeWidth={1.6} />
           </Pressable>
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: 14, gap: 10 }}>
         {}
         {showSettings && (
           <Card className="border-primary/30">
