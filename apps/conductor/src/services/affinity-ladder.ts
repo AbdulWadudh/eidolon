@@ -1,5 +1,5 @@
-import { AFFINITY } from "@eidolon/config";
 import { clamp } from "es-toolkit";
+import { AFFINITY } from "@/config";
 
 export function clampScore(score: number): number {
   if (!Number.isFinite(score)) return AFFINITY.start;

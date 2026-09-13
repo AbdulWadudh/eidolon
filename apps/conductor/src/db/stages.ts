@@ -1,4 +1,4 @@
-import { STAGE } from "@eidolon/config";
+import { STAGE } from "@/config";
 import { db, ensureCharacter } from "@/db";
 import { safeJsonParse } from "@/utils/json";
 

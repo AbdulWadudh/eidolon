@@ -1,5 +1,5 @@
-import { TIMEOUTS_MS } from "@eidolon/config";
 import { getServicesConfig, isTestEnv } from "@eidolon/config/server";
+import { TIMEOUTS_MS } from "@/config";
 import { generateMockEmbedding, setMemoryDimensions } from "@/services/lancedb";
 
 interface EmbeddingResponse {

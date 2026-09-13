@@ -1,4 +1,5 @@
-import { IMAGE, PHOTO_COPY } from "@eidolon/config";
+import { PHOTO_COPY } from "@eidolon/config";
+import { IMAGE } from "@/config";
 import { appendMessage, getCharacterCard, getRecentMessages, setMessageImage } from "@/db";
 import { ComfyUnavailableError } from "@/services/comfyui";
 import { generatePhotoIdeas } from "@/services/photo-ideas";

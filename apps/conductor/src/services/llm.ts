@@ -1,7 +1,7 @@
-import { TIMEOUTS_MS } from "@eidolon/config";
 import { getServicesConfig } from "@eidolon/config/server";
 import { delay } from "es-toolkit";
 import { EventSourceParserStream } from "eventsource-parser/stream";
+import { TIMEOUTS_MS } from "@/config";
 import { canThink, STOP_TOKENS } from "@/services/llm-profile";
 import { safeJsonParse } from "@/utils/json";
 

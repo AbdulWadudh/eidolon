@@ -1,5 +1,6 @@
-import { AFFINITY, render } from "@eidolon/config";
+import { render } from "@eidolon/config";
 import { clamp, isString } from "es-toolkit";
+import { AFFINITY } from "@/config";
 import { getPrompt } from "@/prompts/store";
 import { affinityTier, applyDelta, clampScore } from "@/services/affinity-ladder";
 import { type ChatMessage, streamChatCompletion } from "@/services/llm";

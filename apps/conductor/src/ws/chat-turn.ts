@@ -1,5 +1,6 @@
-import { STATUS_COPY, SUGGESTIONS, TTS } from "@eidolon/config";
+import { STATUS_COPY } from "@eidolon/config";
 import { type ChatTurnEvent, splitInfluence } from "@eidolon/protocol";
+import { SUGGESTIONS, TTS } from "@/config";
 import { appendMessage, getCharacterCard, getRecentMessages } from "@/db";
 import { getCharacter } from "@/db/characters";
 import { maybeSummarizeChronicle } from "@/orchestrator/chronicle";

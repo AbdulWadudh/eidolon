@@ -1,4 +1,5 @@
-import { CHRONICLE, CHRONICLE_CONTEXT, QUEUE_JOBS, TRANSCRIPT } from "@eidolon/config";
+import { QUEUE_JOBS } from "@eidolon/config";
+import { CHRONICLE, CHRONICLE_CONTEXT, TRANSCRIPT } from "@/config";
 import { countMessages, getTranscript } from "@/db";
 import { getChronicles, nextChapterIndex } from "@/db/chronicles";
 import { jobKey } from "@/queue/job-id";

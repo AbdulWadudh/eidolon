@@ -1,4 +1,5 @@
-import { CHAT_TURN, pronounsFor, render } from "@eidolon/config";
+import { pronounsFor, render } from "@eidolon/config";
+import { CHAT_TURN } from "@/config";
 import { getPrompt } from "@/prompts/store";
 import type { ChatMessage } from "@/services/llm";
 

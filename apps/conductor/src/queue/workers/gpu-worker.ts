@@ -1,12 +1,6 @@
-import {
-  PORTRAIT,
-  QUEUE_CONCURRENCY,
-  QUEUE_LOCK,
-  QUEUE_NAMES,
-  QUEUE_PREFIXES,
-  STAGE,
-} from "@eidolon/config";
+import { QUEUE_CONCURRENCY, QUEUE_LOCK, QUEUE_NAMES, QUEUE_PREFIXES } from "@eidolon/config";
 import { Worker } from "bullmq";
+import { PORTRAIT, STAGE } from "@/config";
 import { getCharacterCard } from "@/db";
 import { appendChronicle, nextChapterIndex } from "@/db/chronicles";
 import { setCharacterAvatar, setCharacterFace } from "@/db/look";

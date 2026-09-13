@@ -1,4 +1,4 @@
-import { AFFINITY, TRANSCRIPT } from "@eidolon/config";
+import { AFFINITY, TRANSCRIPT } from "@/config";
 import {
   getCharacterCard,
   getCharacterMind,

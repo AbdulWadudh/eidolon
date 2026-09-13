@@ -1,6 +1,6 @@
-import { CARD_UPLOAD } from "@eidolon/config";
 import { type Context, Hono } from "hono";
 import { ownerFor } from "@/auth/session";
+import { CARD_UPLOAD } from "@/config";
 import { getCharacter } from "@/db/characters";
 import { exportFilename, exportTavernCard, parseTavernCard } from "@/services/card-parser";
 

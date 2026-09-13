@@ -1,4 +1,5 @@
-import { isSentenceBoundary, isSentenceTrailing, SENTENCE_BUFFER } from "@eidolon/config";
+import { isSentenceBoundary, isSentenceTrailing } from "@eidolon/config";
+import { SENTENCE_BUFFER } from "@/config";
 
 const STAGE_DIRECTION = /\*[^*]*\*/g;
 const STRAY_ASTERISK = /\*/g;

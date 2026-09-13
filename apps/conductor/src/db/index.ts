@@ -1,7 +1,8 @@
 import { Database } from "bun:sqlite";
-import { AFFINITY, CHAT_TURN, DEFAULT_PRONOUNS, isPronounKey } from "@eidolon/config";
+import { DEFAULT_PRONOUNS, isPronounKey } from "@eidolon/config";
 import { SQLITE_DB_PATH } from "@eidolon/config/server";
 import { capitalize } from "es-toolkit";
+import { AFFINITY, CHAT_TURN } from "@/config";
 import { rebuildChronicles } from "@/db/migrations";
 import { applySchema } from "@/db/schema";
 import { startingTier } from "@/services/affinity-ladder";

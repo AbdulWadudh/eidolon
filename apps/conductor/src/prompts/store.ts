@@ -1,4 +1,5 @@
-import { CACHE, defaultPrompt, PROMPT_DEFAULTS, type PromptDefinition } from "@eidolon/config";
+import { defaultPrompt, PROMPT_DEFAULTS, type PromptDefinition } from "@eidolon/config";
+import { CACHE } from "@/config";
 import { db } from "@/db";
 import { cacheDelete, cacheGet, cacheSet } from "@/services/cache";
 

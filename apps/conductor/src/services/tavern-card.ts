@@ -1,4 +1,3 @@
-import { CARD_UPLOAD, VOICE } from "@eidolon/config";
 import {
   type EidolonMetadata,
   EidolonMetadataSchema,
@@ -8,6 +7,7 @@ import {
 import text from "png-chunk-text";
 import encodeChunks from "png-chunks-encode";
 import extractChunks, { type PngChunk } from "png-chunks-extract";
+import { CARD_UPLOAD, VOICE } from "@/config";
 import { safeJsonParse } from "@/utils/json";
 
 export interface TavernLoreEntry {

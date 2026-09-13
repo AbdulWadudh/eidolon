@@ -1,6 +1,6 @@
-import { KOKORO, TTS } from "@eidolon/config";
 import { getServicesConfig } from "@eidolon/config/server";
 import { stripInfluence } from "@eidolon/protocol";
+import { KOKORO, TTS } from "@/config";
 import { stripEmoji } from "@/utils/sentence-buffer";
 
 export function ttsApiUrl(): string {

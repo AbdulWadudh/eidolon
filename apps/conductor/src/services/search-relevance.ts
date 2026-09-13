@@ -1,4 +1,4 @@
-import { WEB_CONTEXT } from "@eidolon/config";
+import { WEB_CONTEXT } from "@/config";
 
 const WORD = /[\p{L}\p{N}]+/gu;
 

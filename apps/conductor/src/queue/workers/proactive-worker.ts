@@ -1,5 +1,4 @@
 import {
-  PROACTIVE,
   QUEUE_CONCURRENCY,
   QUEUE_LOCK,
   QUEUE_NAMES,
@@ -7,6 +6,7 @@ import {
   render,
 } from "@eidolon/config";
 import { Worker } from "bullmq";
+import { PROACTIVE } from "@/config";
 import { appendMessage, getCharacterCard } from "@/db";
 import { getPrompt } from "@/prompts/store";
 import { queueConnection } from "@/queue/connection";

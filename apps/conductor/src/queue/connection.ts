@@ -1,6 +1,6 @@
-import { CACHE } from "@eidolon/config";
 import { getCacheUrl } from "@eidolon/config/server";
 import type { ConnectionOptions } from "bullmq";
+import { CACHE } from "@/config";
 
 export interface QueueConnectionOptions {
   host: string;

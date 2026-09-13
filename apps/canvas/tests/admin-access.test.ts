@@ -15,7 +15,7 @@ function respondWith(status: number, body: unknown): void {
     new Response(JSON.stringify(body), {
       status,
       headers: { "Content-Type": "application/json" },
-    })) as typeof fetch;
+    })) as unknown as typeof fetch;
 }
 
 afterEach(() => {

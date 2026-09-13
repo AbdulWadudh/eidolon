@@ -1,5 +1,5 @@
-import { CHAT_TURN, MIND_UPDATE, PERSONA_GUARD } from "@eidolon/config";
 import { sample } from "es-toolkit";
+import { CHAT_TURN, MIND_UPDATE, PERSONA_GUARD } from "@/config";
 import { stripMindBlock } from "@/orchestrator/mind-block";
 import { type ChatMessage, streamChatCompletion } from "@/services/llm";
 import { PROFILE, placeSystemNote, STOP_TOKENS } from "@/services/llm-profile";

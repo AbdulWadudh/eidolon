@@ -1,4 +1,4 @@
-import { REPLY_VARIANTS } from "@eidolon/config";
+import { REPLY_VARIANTS } from "@/config";
 import { getCharacter } from "@/db/characters";
 import { assemblePrompt } from "@/orchestrator/prompt-builder";
 import { exampleLines } from "@/services/self-reference";

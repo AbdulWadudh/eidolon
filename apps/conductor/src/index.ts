@@ -23,6 +23,7 @@ import { loadPrompts } from "@/prompts/store";
 import { createQueueBoard } from "@/queue/board";
 import { closeQueues } from "@/queue/queues";
 import { startWorkers, stopWorkers } from "@/queue/workers";
+import { loadConfigOverlay } from "@/services/config";
 import { initStorage } from "@/services/storage";
 import { startStorageSweep } from "@/services/storage-sweep";
 import { websocket } from "@/ws";
@@ -87,6 +88,8 @@ if (!isTestEnv()) {
   console.log(renderBanner(pairingPayload));
   console.log(renderPairingQr(pairingPayload, process.stdout.columns ?? 80));
 }
+
+loadConfigOverlay();
 
 await loadPrompts();
 

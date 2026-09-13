@@ -1,5 +1,5 @@
 import { ListObjectsV2Command } from "@aws-sdk/client-s3";
-import { STORAGE_SWEEP } from "@eidolon/config";
+import { STORAGE_SWEEP } from "@/config";
 import { db } from "@/db";
 import { deleteFile, getS3Client, getStorageConfig, isStorageConnected } from "@/services/storage";
 

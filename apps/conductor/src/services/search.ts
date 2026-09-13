@@ -1,5 +1,5 @@
-import { SEARCH, TIMEOUTS_MS } from "@eidolon/config";
 import { search as duckDuckGoSearch, SafeSearchType } from "duck-duck-scrape";
+import { SEARCH, TIMEOUTS_MS } from "@/config";
 
 export interface SearchResultItem {
   title: string;

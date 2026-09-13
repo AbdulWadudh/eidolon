@@ -1,4 +1,4 @@
-import { LOREBOOK } from "@eidolon/config";
+import { LOREBOOK } from "@/config";
 import { getActiveLoreEntries, type StoredLoreEntry } from "@/db/lorebook";
 
 const NEWLINE = String.fromCharCode(10);

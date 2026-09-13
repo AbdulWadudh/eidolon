@@ -1,4 +1,4 @@
-import { AFFINITY, API_ROUTES, API_VERSION, TRANSCRIPT } from "@eidolon/config";
+import { API_ROUTES, API_VERSION } from "@eidolon/config";
 import { getPairingHost, SQLITE_DB_PATH } from "@eidolon/config/server";
 import { COLORS } from "@eidolon/tokens";
 import { Hono } from "hono";
@@ -8,6 +8,7 @@ import { applyAffinityOverride, buildMindView } from "@/api/mind";
 import { mountVoices } from "@/api/voices";
 import { generatePairingPayload, PAIRING_SECRET, validateToken } from "@/auth";
 import { accountFor } from "@/auth/guard";
+import { AFFINITY, TRANSCRIPT } from "@/config";
 import {
   checkDatabaseHealth,
   deleteMessage,

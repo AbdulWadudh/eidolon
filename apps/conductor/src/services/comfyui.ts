@@ -1,6 +1,6 @@
-import { IMAGE, TIMEOUTS_MS } from "@eidolon/config";
 import { getServicesConfig } from "@eidolon/config/server";
 import { delay } from "es-toolkit";
+import { IMAGE, TIMEOUTS_MS } from "@/config";
 import {
   COMFY_CLIENT_ID,
   connectComfyEvents,

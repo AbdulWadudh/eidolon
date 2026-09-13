@@ -1,6 +1,6 @@
-import { ENHANCE } from "@eidolon/config";
 import { splitInfluence } from "@eidolon/protocol";
 import { random } from "es-toolkit";
+import { ENHANCE } from "@/config";
 import { getPrompt } from "@/prompts/store";
 import { CompletionUnsupportedError, completeText } from "@/services/llm";
 import { isActionOnly } from "@/services/reply-length";

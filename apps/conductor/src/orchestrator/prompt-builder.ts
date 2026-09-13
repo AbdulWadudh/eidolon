@@ -1,11 +1,5 @@
-import {
-  AFFINITY,
-  PROMPT_BUDGET,
-  render,
-  STATUS_COPY,
-  WEB_CONTEXT,
-  WORKING_CONTEXT,
-} from "@eidolon/config";
+import { render, STATUS_COPY } from "@eidolon/config";
+import { AFFINITY, PROMPT_BUDGET, WEB_CONTEXT, WORKING_CONTEXT } from "@/config";
 import { getCharacterCard, getCharacterMind, getRecentMessages } from "@/db";
 import { getActiveChronicle } from "@/orchestrator/chronicle";
 import { loreContext } from "@/orchestrator/lorebook";

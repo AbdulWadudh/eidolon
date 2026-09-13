@@ -1,5 +1,5 @@
-import { TIMEOUTS_MS, TRANSCRIBE } from "@eidolon/config";
 import { getServicesConfig } from "@eidolon/config/server";
+import { TIMEOUTS_MS, TRANSCRIBE } from "@/config";
 
 export function sttApiUrl(): string {
   return getServicesConfig().sttApiUrl;

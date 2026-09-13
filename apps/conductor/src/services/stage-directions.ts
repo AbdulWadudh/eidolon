@@ -1,4 +1,4 @@
-import { STAGE_DIRECTIONS } from "@eidolon/config";
+import { STAGE_DIRECTIONS } from "@/config";
 
 const ASTERISK = "*";
 const WHITESPACE = /\s+/;

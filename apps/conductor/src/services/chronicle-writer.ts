@@ -1,4 +1,5 @@
-import { CHRONICLE, render } from "@eidolon/config";
+import { render } from "@eidolon/config";
+import { CHRONICLE } from "@/config";
 import { getPrompt } from "@/prompts/store";
 import { type ChatMessage, streamChatCompletion } from "@/services/llm";
 import { thinkingBudget } from "@/services/llm-profile";

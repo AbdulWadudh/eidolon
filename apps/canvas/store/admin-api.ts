@@ -1,4 +1,11 @@
-import { type AdminApiRoute, adminApiPath, stripAuthority, TIMEOUTS_MS } from "@eidolon/config";
+import {
+  type AdminApiRoute,
+  adminApiPath,
+  adminConfigReloadPath,
+  stripAuthority,
+  TIMEOUTS_MS,
+} from "@eidolon/config";
+import type { ConfigBucket } from "@eidolon/config/registry";
 import type {
   AdminAccount,
   AdminCharacter,
@@ -138,4 +145,61 @@ export function resetThemeToken(
 
 export function resetTheme(host: string, token: string): Promise<AdminThemeView> {
   return request(host, token, "theme", { method: "DELETE" });
+}
+
+export interface ConfigSetting {
+  path: string;
+  group: string;
+  source: string;
+  bucket: ConfigBucket;
+  reason: string;
+  boundTo: string | null;
+  kind: "string" | "number" | "boolean" | "list" | "object";
+  secret: boolean;
+  shipped: unknown;
+  value: unknown;
+  isOverridden: boolean;
+}
+
+export interface ConfigView {
+  generation: number;
+  overridden: number;
+  buckets: { bucket: ConfigBucket; label: string; blurb: string; count: number }[];
+  settings: ConfigSetting[];
+}
+
+export function fetchConfig(host: string, token: string): Promise<ConfigView> {
+  return request(host, token, "config");
+}
+
+export function saveConfigValue(
+  host: string,
+  token: string,
+  path: string,
+  value: unknown,
+): Promise<{ setting: ConfigSetting }> {
+  return request(host, token, "config", { id: path, method: "PUT", body: { value } });
+}
+
+export function resetConfigValue(
+  host: string,
+  token: string,
+  path: string,
+): Promise<{ setting: ConfigSetting }> {
+  return request(host, token, "config", { id: path, method: "DELETE" });
+}
+
+export async function reloadConfig(host: string, token: string): Promise<ConfigView> {
+  const response = await fetch(`${httpBase(host)}${adminConfigReloadPath()}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(TIMEOUTS_MS.clientRequest),
+  });
+
+  const body = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+  if (!response.ok) {
+    throw new AdminRequestError(response.status, typeof body?.error === "string" ? body.error : "");
+  }
+
+  return body as unknown as ConfigView;
 }

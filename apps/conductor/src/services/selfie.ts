@@ -1,5 +1,6 @@
-import { IMAGE, render, TIMEOUTS_MS } from "@eidolon/config";
+import { render } from "@eidolon/config";
 import { sample } from "es-toolkit";
+import { IMAGE, TIMEOUTS_MS } from "@/config";
 import { getCharacterAvatar, getCharacterLook, setCharacterAvatar } from "@/db/look";
 
 import { getPrompt } from "@/prompts/store";

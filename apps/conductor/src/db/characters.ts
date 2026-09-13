@@ -1,5 +1,6 @@
-import { DEFAULT_PRONOUNS, isPronounKey, VOICE } from "@eidolon/config";
+import { DEFAULT_PRONOUNS, isPronounKey } from "@eidolon/config";
 import { kebabCase } from "es-toolkit";
+import { VOICE } from "@/config";
 import { db } from "@/db";
 import { safeJsonParse } from "@/utils";
 

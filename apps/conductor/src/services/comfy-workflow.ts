@@ -1,11 +1,6 @@
-import {
-  composePrompt,
-  IMAGE,
-  IMAGE_PRESETS,
-  type ImagePreset,
-  negativePromptFor,
-} from "@eidolon/config";
+import { composePrompt, IMAGE_PRESETS, type ImagePreset, negativePromptFor } from "@eidolon/config";
 import { getImagePreset } from "@eidolon/config/server";
+import { IMAGE } from "@/config";
 
 export type Orientation = "portrait" | "landscape" | "square";
 

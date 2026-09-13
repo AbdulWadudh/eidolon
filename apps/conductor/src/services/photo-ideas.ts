@@ -1,5 +1,6 @@
-import { IMAGE, render } from "@eidolon/config";
+import { render } from "@eidolon/config";
 import { shuffle, take } from "es-toolkit";
+import { IMAGE } from "@/config";
 import { getPrompt } from "@/prompts/store";
 import { type ChatMessage, streamChatCompletion } from "@/services/llm";
 import { safeJsonParse } from "@/utils/json";

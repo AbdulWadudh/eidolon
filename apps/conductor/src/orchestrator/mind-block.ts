@@ -1,5 +1,5 @@
-import { AFFINITY, MIND_UPDATE } from "@eidolon/config";
 import { clamp, isString } from "es-toolkit";
+import { AFFINITY, MIND_UPDATE } from "@/config";
 import { safeJsonParse } from "@/utils/json";
 
 export interface MindBlock {

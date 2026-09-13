@@ -1,5 +1,5 @@
-import { PERSONA_GUARD } from "@eidolon/config";
 import { sample } from "es-toolkit";
+import { PERSONA_GUARD } from "@/config";
 import { getPrompt } from "@/prompts/store";
 
 const TELLS: RegExp[] = [

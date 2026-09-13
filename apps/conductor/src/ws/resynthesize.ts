@@ -1,5 +1,6 @@
-import { CHAT_COPY, TTS } from "@eidolon/config";
+import { CHAT_COPY } from "@eidolon/config";
 import type { ResynthesizeAudioEvent } from "@eidolon/protocol";
+import { TTS } from "@/config";
 import { clearMessageAudio, getMessage } from "@/db";
 import { getCharacter } from "@/db/characters";
 import { synthesizeSpeech, ttsApiUrl } from "@/services/tts";

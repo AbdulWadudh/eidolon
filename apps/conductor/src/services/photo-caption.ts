@@ -1,4 +1,5 @@
-import { IMAGE, render } from "@eidolon/config";
+import { render } from "@eidolon/config";
+import { IMAGE } from "@/config";
 import { getPrompt } from "@/prompts/store";
 import { askInVoice } from "@/services/prompt-writer";
 

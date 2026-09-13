@@ -1,4 +1,5 @@
-import { QUEUE_JOBS, TTS } from "@eidolon/config";
+import { QUEUE_JOBS } from "@eidolon/config";
+import { TTS } from "@/config";
 import { jobKey } from "@/queue/job-id";
 import { enqueueUploadJob } from "@/queue/queues";
 import { mp3DurationSeconds } from "@/services/audio-duration";

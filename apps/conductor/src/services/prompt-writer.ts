@@ -1,4 +1,4 @@
-import { IMAGE } from "@eidolon/config";
+import { IMAGE } from "@/config";
 import { type ChatMessage, streamChatCompletion } from "@/services/llm";
 import { thinkingBudget } from "@/services/llm-profile";
 

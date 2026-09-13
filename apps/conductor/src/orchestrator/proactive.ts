@@ -1,5 +1,6 @@
-import { PROACTIVE, QUEUE_JOBS } from "@eidolon/config";
+import { QUEUE_JOBS } from "@eidolon/config";
 import { random } from "es-toolkit";
+import { PROACTIVE } from "@/config";
 import { jobKey } from "@/queue/job-id";
 import { enqueueProactiveJob, proactiveQueue } from "@/queue/queues";
 import type { ProactiveMessageJob } from "@/queue/types";

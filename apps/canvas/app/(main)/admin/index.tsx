@@ -12,6 +12,7 @@ import {
   ArrowRight01Icon,
   Book02Icon,
   PaintBoardIcon,
+  SlidersHorizontalIcon,
   SparklesIcon,
   UserMultiple02Icon,
 } from "@/lib/icons";
@@ -42,6 +43,12 @@ const TILES: Tile[] = [
     icon: UserMultiple02Icon,
     title: DASHBOARD_COPY.usersTitle,
     blurb: DASHBOARD_COPY.usersBlurb,
+  },
+  {
+    href: "/(main)/admin/config",
+    icon: SlidersHorizontalIcon,
+    title: DASHBOARD_COPY.configTitle,
+    blurb: DASHBOARD_COPY.configBlurb,
   },
   {
     href: "/(main)/admin/theme",

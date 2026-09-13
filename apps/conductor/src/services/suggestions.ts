@@ -1,5 +1,6 @@
-import { render, STAGE_DIRECTIONS, SUGGESTIONS } from "@eidolon/config";
+import { render } from "@eidolon/config";
 import { isString, shuffle, take, uniq } from "es-toolkit";
+import { STAGE_DIRECTIONS, SUGGESTIONS } from "@/config";
 import { getPrompt } from "@/prompts/store";
 import { type ChatMessage, streamChatCompletion } from "@/services/llm";
 import { spokenWords } from "@/services/reply-length";

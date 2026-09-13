@@ -1,4 +1,4 @@
-import { RECALL } from "@eidolon/config";
+import { RECALL } from "@/config";
 import { embed, embeddingSource } from "@/services/embeddings";
 import { insertMemory, type MemorySearchResult, searchMemories } from "@/services/lancedb";
 

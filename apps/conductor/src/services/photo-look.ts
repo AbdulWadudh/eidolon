@@ -1,4 +1,5 @@
-import { IMAGE, render } from "@eidolon/config";
+import { render } from "@eidolon/config";
+import { IMAGE } from "@/config";
 import { getCharacterAppearance, setCharacterAppearance } from "@/db/look";
 
 import { getPrompt } from "@/prompts/store";

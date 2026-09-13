@@ -1,4 +1,5 @@
-import { KOKORO, SILENT_MP3, silentMp3FrameCount, TTS } from "@eidolon/config";
+import { SILENT_MP3, silentMp3FrameCount } from "@eidolon/config";
+import { KOKORO, TTS } from "@/config";
 import { ttsApiUrl } from "@/services/tts";
 import { speakableSentence } from "@/utils/sentence-buffer";
 

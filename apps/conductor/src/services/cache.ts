@@ -1,6 +1,6 @@
-import { CACHE } from "@eidolon/config";
 import { getCacheUrl } from "@eidolon/config/server";
 import { RedisClient } from "bun";
+import { CACHE } from "@/config";
 
 let client: RedisClient | null = null;
 let unavailable = false;

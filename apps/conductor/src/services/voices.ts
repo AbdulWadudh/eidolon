@@ -1,4 +1,5 @@
-import { isPreferredGrade, parseVoiceId, TIMEOUTS_MS, VOICE } from "@eidolon/config";
+import { isPreferredGrade, parseVoiceId } from "@eidolon/config";
+import { TIMEOUTS_MS, VOICE } from "@/config";
 import { ttsApiUrl } from "@/services/tts";
 
 export interface Voice {

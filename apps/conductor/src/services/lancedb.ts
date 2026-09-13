@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { MEMORY } from "@eidolon/config";
 import { LANCEDB_DIR_PATH } from "@eidolon/config/server";
 import * as lancedb from "@lancedb/lancedb";
+import { MEMORY } from "@/config";
 import { safeJsonParse } from "@/utils/json";
 
 mkdirSync(LANCEDB_DIR_PATH, { recursive: true });

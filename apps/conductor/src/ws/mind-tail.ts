@@ -1,4 +1,4 @@
-import { MIND_UPDATE } from "@eidolon/config";
+import { MIND_UPDATE } from "@/config";
 
 const MARKER = MIND_UPDATE.marker;
 

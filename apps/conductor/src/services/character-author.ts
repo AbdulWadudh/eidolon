@@ -1,4 +1,5 @@
-import { AUTHORING, type AuthorField, type AuthorMode } from "@eidolon/config";
+import type { AuthorField, AuthorMode } from "@eidolon/config";
+import { AUTHORING } from "@/config";
 import { getPrompt } from "@/prompts/store";
 import { CompletionUnsupportedError, completeText } from "@/services/llm";
 

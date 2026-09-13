@@ -1,5 +1,6 @@
-import { API_ROUTES, VOICE } from "@eidolon/config";
+import { API_ROUTES } from "@eidolon/config";
 import { Hono } from "hono";
+import { VOICE } from "@/config";
 import { synthesizeSpeech } from "@/services/tts";
 import { listVoices } from "@/services/voices";
 

@@ -1,7 +1,8 @@
-import { CARD_UPLOAD, STORAGE, TIMEOUTS_MS } from "@eidolon/config";
+import { STORAGE } from "@eidolon/config";
 import type { TavernV2Card } from "@eidolon/protocol";
 import { COLORS } from "@eidolon/tokens";
 import sharp from "sharp";
+import { CARD_UPLOAD, TIMEOUTS_MS } from "@/config";
 import { appendMessage, getCharacterMind, saveCharacterMind } from "@/db";
 import { type CharacterCard, createCharacter, getCharacter } from "@/db/characters";
 import {

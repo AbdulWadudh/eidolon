@@ -1,4 +1,4 @@
-import { CHAT_TURN } from "@eidolon/config";
+import { CHAT_TURN } from "@/config";
 import { stripActions } from "@/services/stage-directions";
 
 const SENTENCE_END = /[.!?…]["')\]]?(\s|$)/g;

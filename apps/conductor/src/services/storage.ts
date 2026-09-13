@@ -6,9 +6,10 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { IMAGE_ENCODE, STORAGE } from "@eidolon/config";
+import { STORAGE } from "@eidolon/config";
 import { getStorageConfig, missingStorageConfig, type StorageConfig } from "@eidolon/config/server";
 import sharp from "sharp";
+import { IMAGE_ENCODE } from "@/config";
 
 export { getStorageConfig, missingStorageConfig, type StorageConfig };
 
