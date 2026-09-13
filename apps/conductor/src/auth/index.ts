@@ -8,6 +8,7 @@ import {
 } from "@eidolon/config/server";
 import { betterAuth } from "better-auth";
 import { authOptions } from "@/auth/options";
+import { ensureAuthSchema } from "@/auth/schema";
 import { hasActiveSession } from "@/auth/sessions-read";
 
 export { getLocalIp };
@@ -15,6 +16,8 @@ export { getLocalIp };
 export const PAIRING_SECRET = getPairingSecret();
 
 export const AUTH_BASE_URL = getAuthBaseUrl();
+
+await ensureAuthSchema();
 
 export const auth = betterAuth(authOptions);
 

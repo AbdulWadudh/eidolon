@@ -9,6 +9,7 @@ export const API_ROUTES = {
   pairingQr: "/pairing/qr",
   pairingStatus: "/pairing/status",
   ws: "/ws",
+  session: "/session",
   prompts: "/prompts",
   characters: "/characters",
   voices: "/voices",

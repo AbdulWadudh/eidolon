@@ -7,6 +7,7 @@ import { readLoreBody } from "@/api/lore-body";
 import { applyAffinityOverride, buildMindView } from "@/api/mind";
 import { mountVoices } from "@/api/voices";
 import { generatePairingPayload, PAIRING_SECRET, validateToken } from "@/auth";
+import { accountFor } from "@/auth/guard";
 import {
   checkDatabaseHealth,
   deleteMessage,
@@ -122,6 +123,8 @@ v1.get(API_ROUTES.pairingQr, (c) => {
 });
 
 v1.get(API_ROUTES.pairingStatus, (c) => c.json({ devices: getConnectedDeviceCount() }));
+
+v1.get(API_ROUTES.session, async (c) => c.json({ account: await accountFor(c) }));
 
 setupWebSocketRoutes(v1);
 

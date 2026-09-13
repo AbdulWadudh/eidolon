@@ -134,13 +134,29 @@ export const TTS = {
   timeoutMs: 20000,
 } as const;
 
+export const USER_ROLES = ["owner", "member"] as const;
+
+export type UserRole = (typeof USER_ROLES)[number];
+
 export const AUTH = {
   minPasswordLength: 8,
   sessionExpirySeconds: 60 * 60 * 24 * 30,
   sessionRefreshSeconds: 60 * 60 * 24,
   localOwnerEmail: "owner@eidolon.local",
   localOwnerName: "You",
+  roleField: "role",
+  ownerRole: "owner",
+  memberRole: "member",
+  defaultRole: "member",
 } as const;
+
+export function isUserRole(value: unknown): value is UserRole {
+  return typeof value === "string" && USER_ROLES.some((role) => role === value);
+}
+
+export function roleOrDefault(value: unknown): UserRole {
+  return isUserRole(value) ? value : AUTH.defaultRole;
+}
 
 export const CACHE = {
   defaultUrl: "redis://127.0.0.1:6379",

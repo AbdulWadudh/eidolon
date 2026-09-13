@@ -254,6 +254,30 @@ export const CHAT_COPY = {
   messageActions: "Message actions",
 } as const;
 
+export const AUTH_COPY = {
+  signInRequired: "Sign in to reach this.",
+  ownerOnly: "This needs the owner account.",
+  noSuchAccount: "No such account.",
+  lastOwner: "The last owner cannot be demoted or removed.",
+  notYourself: "You cannot remove the account you are signed in as.",
+  unknownRole: "Unknown role.",
+  signUpTitle: "Make an account",
+  signInTitle: "Sign in",
+  emailLabel: "Email",
+  passwordLabel: "Password",
+  nameLabel: "Name",
+  addressLabel: "Conductor address",
+  signUpAction: "Create it",
+  signInAction: "Sign in",
+  signOutAction: "Sign out",
+  switchToSignUp: "No account yet? Make one.",
+  switchToSignIn: "Already have one? Sign in.",
+  working: "One moment…",
+  missingFields: "Fill in every field first.",
+  failed: "That did not work. Check the address and try again.",
+  firstAccountNote: "The first account on a conductor becomes its owner.",
+} as const;
+
 export const ADMIN_COPY = {
   title: "Admin controls",
   blurb: "Levers for working on a chat rather than living in one.",

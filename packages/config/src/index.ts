@@ -60,6 +60,7 @@ export {
 } from "./authoring";
 export {
   ADMIN_COPY,
+  AUTH_COPY,
   AUTHOR_COPY,
   CHARACTER_COPY,
   CHAT_COPY,
@@ -88,6 +89,7 @@ export {
   ENHANCE,
   IMAGE_ENCODE,
   isPronounKey,
+  isUserRole,
   MEMORY,
   MOCK,
   OUTPUT_TAGS,
@@ -99,6 +101,7 @@ export {
   pronounsFor,
   RECONNECT_DELAYS_MS,
   REPLY_VARIANTS,
+  roleOrDefault,
   SEARCH,
   SERVER_DEFAULTS,
   SOCKET,
@@ -109,6 +112,8 @@ export {
   TIMEOUTS_MS,
   TRANSCRIPT,
   TTS,
+  USER_ROLES,
+  type UserRole,
 } from "./defaults";
 export {
   AFFINITY_HUD,

@@ -1,26 +1,42 @@
-import { AUTH } from "@eidolon/config";
+import { AUTH, roleOrDefault, type UserRole } from "@eidolon/config";
 import { auth, PAIRING_SECRET } from "@/auth";
+import { isOwnerRole, setUserRole } from "@/auth/roles";
 import { db } from "@/db";
 
 export interface Owner {
   id: string;
   name: string;
   email: string;
+  role: UserRole;
+}
+
+interface OwnerRow {
+  id: string;
+  name: string;
+  email: string;
+  role: string | null;
 }
 
 let localOwner: Owner | null = null;
 
+function readByEmail(email: string): OwnerRow | null {
+  return db
+    .query<OwnerRow, [string]>("SELECT id, name, email, role FROM user WHERE email = ? LIMIT 1")
+    .get(email);
+}
+
+function claimLocalOwner(row: OwnerRow): Owner {
+  if (!isOwnerRole(roleOrDefault(row.role))) setUserRole(row.id, AUTH.ownerRole);
+  return { id: row.id, name: row.name, email: row.email, role: AUTH.ownerRole };
+}
+
 export async function ensureLocalOwner(): Promise<Owner | null> {
   if (localOwner) return localOwner;
 
-  const existing = db
-    .query<{ id: string; name: string; email: string }, [string]>(
-      "SELECT id, name, email FROM user WHERE email = ? LIMIT 1",
-    )
-    .get(AUTH.localOwnerEmail);
+  const existing = readByEmail(AUTH.localOwnerEmail);
 
   if (existing) {
-    localOwner = existing;
+    localOwner = claimLocalOwner(existing);
     return localOwner;
   }
 
@@ -37,13 +53,9 @@ export async function ensureLocalOwner(): Promise<Owner | null> {
     return null;
   }
 
-  const created = db
-    .query<{ id: string; name: string; email: string }, [string]>(
-      "SELECT id, name, email FROM user WHERE email = ? LIMIT 1",
-    )
-    .get(AUTH.localOwnerEmail);
+  const created = readByEmail(AUTH.localOwnerEmail);
 
-  localOwner = created;
+  localOwner = created ? claimLocalOwner(created) : null;
   return localOwner;
 }
 
@@ -53,8 +65,17 @@ export function forgetLocalOwner(): void {
 
 function sessionOwner(token: string): Owner | null {
   const row = db
-    .query<{ id: string; name: string; email: string; expiresAt: string | number }, [string]>(
-      `SELECT u.id as id, u.name as name, u.email as email, s.expiresAt as expiresAt
+    .query<
+      {
+        id: string;
+        name: string;
+        email: string;
+        role: string | null;
+        expiresAt: string | number;
+      },
+      [string]
+    >(
+      `SELECT u.id as id, u.name as name, u.email as email, u.role as role, s.expiresAt as expiresAt
        FROM session s JOIN user u ON u.id = s.userId
        WHERE s.token = ? LIMIT 1`,
     )
@@ -65,7 +86,7 @@ function sessionOwner(token: string): Owner | null {
   const expiry = typeof row.expiresAt === "number" ? row.expiresAt : Date.parse(row.expiresAt);
   if (Number.isFinite(expiry) && expiry < Date.now()) return null;
 
-  return { id: row.id, name: row.name, email: row.email };
+  return { id: row.id, name: row.name, email: row.email, role: roleOrDefault(row.role) };
 }
 
 export function bearer(header: string | undefined | null): string {
