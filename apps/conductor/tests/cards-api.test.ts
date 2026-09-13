@@ -3,7 +3,7 @@ import { CARD_UPLOAD, characterExportPath, characterImportPath } from "@eidolon/
 import { db } from "@/db";
 import { app } from "@/index";
 import { readCardData, readCardJson } from "@/services/tavern-card";
-import { remember, wipe } from "./support/characters";
+import { remember, wipeNamed } from "./support/characters";
 import { blankPng, cardPng, V2_CARD } from "./support/tavern-cards";
 
 function upload(png: Buffer, field = CARD_UPLOAD.fieldNames[0] ?? "card"): FormData {
@@ -20,7 +20,7 @@ function forget(characterId: unknown): void {
   if (typeof characterId === "string") remember({ id: characterId });
 }
 
-afterEach(wipe);
+afterEach(() => wipeNamed(V2_CARD.data.name));
 
 describe("POST /characters/import", () => {
   it("imports a Tavern card and answers with its new id", async () => {

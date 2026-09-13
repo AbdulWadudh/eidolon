@@ -1,5 +1,6 @@
 import {
   AFFINITY as SHIPPED_AFFINITY,
+  AUDIT as SHIPPED_AUDIT,
   AUTHOR_FIELDS as SHIPPED_AUTHOR_FIELDS,
   AUTHORING as SHIPPED_AUTHORING,
   CACHE as SHIPPED_CACHE,
@@ -38,6 +39,7 @@ import {
 import { resolvedGroup } from "@/services/config-overlay";
 
 export const AFFINITY = resolvedGroup("AFFINITY", SHIPPED_AFFINITY);
+export const AUDIT = resolvedGroup("AUDIT", SHIPPED_AUDIT);
 export const AUTHORING = resolvedGroup("AUTHORING", SHIPPED_AUTHORING);
 export const AUTHOR_FIELDS = resolvedGroup("AUTHOR_FIELDS", SHIPPED_AUTHOR_FIELDS);
 export const CACHE = resolvedGroup("CACHE", SHIPPED_CACHE);

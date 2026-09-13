@@ -41,6 +41,7 @@ export const ADMIN_API_ROUTES = {
   users: "/users",
   theme: "/theme",
   config: "/config",
+  audit: "/audit",
 } as const;
 
 export type AdminApiRoute = keyof typeof ADMIN_API_ROUTES;

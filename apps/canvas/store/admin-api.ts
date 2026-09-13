@@ -9,6 +9,7 @@ import {
 import type { ConfigBucket } from "@eidolon/config/registry";
 import type {
   AdminAccount,
+  AdminAuditView,
   AdminCharacter,
   AdminPrompt,
   AdminThemeView,
@@ -36,9 +37,10 @@ async function request<T>(
   host: string,
   token: string,
   route: AdminApiRoute,
-  options: { id?: string; method?: string; body?: unknown } = {},
+  options: { id?: string; method?: string; body?: unknown; query?: Record<string, string> } = {},
 ): Promise<T> {
-  const response = await fetch(`${httpBase(host)}${adminApiPath(route, options.id)}`, {
+  const search = options.query ? `?${new URLSearchParams(options.query).toString()}` : "";
+  const response = await fetch(`${httpBase(host)}${adminApiPath(route, options.id)}${search}`, {
     method: options.method ?? "GET",
     headers: {
       "Content-Type": "application/json",
@@ -237,4 +239,14 @@ export async function authorPrompt(
   } catch {
     return { text: null, error: null };
   }
+}
+
+export type { AdminAuditView, AuditEntry } from "@eidolon/protocol";
+
+export function fetchAudit(host: string, token: string, offset = 0): Promise<AdminAuditView> {
+  return request(host, token, "audit", { query: { offset: String(offset) } });
+}
+
+export function clearAudit(host: string, token: string): Promise<{ ok: true; removed: number }> {
+  return request(host, token, "audit", { method: "DELETE" });
 }

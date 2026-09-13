@@ -1,5 +1,6 @@
 import { ADMIN_API_PREFIX, ADMIN_API_ROUTES } from "@eidolon/config";
 import { Hono } from "hono";
+import { adminAudit } from "@/api/admin/audit";
 import { adminCharacters } from "@/api/admin/characters";
 import { adminConfig } from "@/api/admin/config";
 import { adminPrompts } from "@/api/admin/prompts";
@@ -16,6 +17,7 @@ admin.route(ADMIN_API_ROUTES.characters, adminCharacters);
 admin.route(ADMIN_API_ROUTES.users, adminUsers);
 admin.route(ADMIN_API_ROUTES.theme, adminTheme);
 admin.route(ADMIN_API_ROUTES.config, adminConfig);
+admin.route(ADMIN_API_ROUTES.audit, adminAudit);
 
 export function mountAdmin(app: Hono): void {
   app.route(ADMIN_API_PREFIX, admin);

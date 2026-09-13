@@ -158,6 +158,12 @@ export function roleOrDefault(value: unknown): UserRole {
   return isUserRole(value) ? value : AUTH.defaultRole;
 }
 
+export const AUDIT = {
+  retain: 2000,
+  pageSize: 100,
+  maxDetailChars: 500,
+} as const;
+
 export const CACHE = {
   defaultUrl: "redis://127.0.0.1:6379",
   defaultPort: 6379,

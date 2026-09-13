@@ -11,6 +11,7 @@ import { GlassSurface } from "@/components/ui/glass-surface";
 import {
   ArrowRight01Icon,
   Book02Icon,
+  ClipboardIcon,
   PaintBoardIcon,
   SlidersHorizontalIcon,
   SparklesIcon,
@@ -43,6 +44,12 @@ const TILES: Tile[] = [
     icon: UserMultiple02Icon,
     title: DASHBOARD_COPY.usersTitle,
     blurb: DASHBOARD_COPY.usersBlurb,
+  },
+  {
+    href: "/(main)/admin/audit",
+    icon: ClipboardIcon,
+    title: DASHBOARD_COPY.auditTitle,
+    blurb: DASHBOARD_COPY.auditBlurb,
   },
   {
     href: "/(main)/admin/config",

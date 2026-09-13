@@ -2,13 +2,13 @@ import { CHARACTER_COPY } from "@eidolon/config";
 import type { SegmentedOption } from "@/components/ui/segmented";
 import type { FieldKey } from "@/store/character-draft";
 
-export type SectionKey = "identity" | "mind" | "voice" | "sharing";
+export type SectionKey = "identity" | "mind" | "voice" | "misc";
 
 export const SECTION_OPTIONS: SegmentedOption<SectionKey>[] = [
   { value: "identity", label: CHARACTER_COPY.sectionIdentity },
   { value: "mind", label: CHARACTER_COPY.sectionMind },
   { value: "voice", label: CHARACTER_COPY.sectionVoice },
-  { value: "sharing", label: CHARACTER_COPY.sectionSharing },
+  { value: "misc", label: CHARACTER_COPY.sectionMisc },
 ];
 
 interface SectionSpec {
@@ -19,14 +19,14 @@ export const SECTIONS: Record<SectionKey, SectionSpec> = {
   identity: { fields: ["name", "tagline", "greeting"] },
   mind: { fields: ["personality", "scenario", "rules", "exampleDialogue", "systemPrompt"] },
   voice: { fields: [] },
-  sharing: { fields: [] },
+  misc: { fields: [] },
 };
 
 const BLURBS: Record<SectionKey, string> = {
   identity: CHARACTER_COPY.identityBlurb,
   mind: CHARACTER_COPY.mindBlurb,
   voice: CHARACTER_COPY.voiceBlurb,
-  sharing: CHARACTER_COPY.sharingBlurb,
+  misc: CHARACTER_COPY.miscBlurb,
 };
 
 export function sectionBlurb(section: SectionKey): string {

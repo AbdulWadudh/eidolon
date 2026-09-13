@@ -216,7 +216,7 @@ export default function MainCharactersScreen() {
                 <View className="flex-1 pr-3">
                   <View className="flex-row items-center gap-2">
                     <AppIcon icon={DashboardSquare01Icon} size={16} color={theme.primary} />
-                    <Text className="font-main-bold text-sm text-text-primary">
+                    <Text className="flex-1 font-main-bold text-sm text-text-primary">
                       {DASHBOARD_COPY.title}
                     </Text>
                   </View>
@@ -224,7 +224,12 @@ export default function MainCharactersScreen() {
                     {DASHBOARD_COPY.blurb}
                   </Text>
                 </View>
-                <Button variant="default" size="sm" onPress={() => router.push("/(main)/admin")}>
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="shrink-0"
+                  onPress={() => router.push("/(main)/admin")}
+                >
                   {HOME_COPY.open}
                 </Button>
               </View>
@@ -239,13 +244,18 @@ export default function MainCharactersScreen() {
               <View className="flex-1 pr-3">
                 <View className="flex-row items-center gap-2">
                   <AppIcon icon={PaintBoardIcon} size={16} color={theme.primary} />
-                  <Text className="font-main-bold text-sm text-text-primary">
+                  <Text className="flex-1 font-main-bold text-sm text-text-primary">
                     {HOME_COPY.lookTitle}
                   </Text>
                 </View>
                 <Text className="mt-1 font-ui text-xs text-text-muted">{HOME_COPY.lookBlurb}</Text>
               </View>
-              <Button variant="default" size="sm" onPress={() => setShowThemeStudio(true)}>
+              <Button
+                variant="default"
+                size="sm"
+                className="shrink-0"
+                onPress={() => setShowThemeStudio(true)}
+              >
                 {HOME_COPY.open}
               </Button>
             </View>
@@ -259,13 +269,18 @@ export default function MainCharactersScreen() {
               <View className="flex-1 pr-3">
                 <View className="flex-row items-center gap-2">
                   <AppIcon icon={SparklesIcon} size={16} color={theme.primary} />
-                  <Text className="font-main-bold text-sm text-text-primary">
+                  <Text className="flex-1 font-main-bold text-sm text-text-primary">
                     {HOME_COPY.typeTitle}
                   </Text>
                 </View>
                 <Text className="mt-1 font-ui text-xs text-text-muted">{HOME_COPY.typeBlurb}</Text>
               </View>
-              <Button variant="secondary" size="sm" onPress={() => router.push("/demo")}>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="shrink-0"
+                onPress={() => router.push("/demo")}
+              >
                 {HOME_COPY.open}
               </Button>
             </View>

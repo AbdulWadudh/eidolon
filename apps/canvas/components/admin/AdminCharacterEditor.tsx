@@ -1,13 +1,23 @@
-import { AUTHOR_COPY, CHARACTER_COPY, DASHBOARD_COPY, MIND_COPY } from "@eidolon/config";
+import { CHARACTER_COPY, MIND_COPY, UI_MS } from "@eidolon/config";
 import * as React from "react";
 import { Text, View } from "react-native";
-import { CharacterForm, type Draft } from "@/components/characters/CharacterForm";
+import Animated, { FadeIn, FadeOut, useReducedMotion } from "react-native-reanimated";
+import { CharacterFields } from "@/components/characters/CharacterFields";
 import { PortraitStudio } from "@/components/characters/PortraitStudio";
 import { PronounPicker } from "@/components/characters/PronounPicker";
+import {
+  SECTION_OPTIONS,
+  SECTIONS,
+  type SectionKey,
+  sectionBlurb,
+} from "@/components/chat/character-settings-sections";
 import { LoreSection } from "@/components/chat/mind/LoreSection";
-import { CollapsibleSection } from "@/components/ui/collapsible-section";
+import { Segmented } from "@/components/ui/segmented";
 import { SwitchRow } from "@/components/ui/switch";
+import { VoicePicker } from "@/components/ui/voice-picker";
+import { useFieldAuthor } from "@/hooks/use-field-author";
 import type { AdminCharacter } from "@/store/admin-api";
+import type { Draft } from "@/store/character-draft";
 import {
   createLore,
   fetchMind,
@@ -16,7 +26,6 @@ import {
   removeLore,
   updateLore,
 } from "@/store/mind-api";
-import { useResolvedTheme } from "@/store/theme-store";
 
 export interface AdminCharacterEditorProps {
   character: AdminCharacter;
@@ -28,8 +37,6 @@ export interface AdminCharacterEditorProps {
   onPortrait: (url: string) => void;
 }
 
-const SECTIONS = { card: "card", look: "look", lore: "lore", sharing: "sharing" } as const;
-
 export function AdminCharacterEditor({
   character,
   draft,
@@ -39,13 +46,10 @@ export function AdminCharacterEditor({
   onPublish,
   onPortrait,
 }: AdminCharacterEditorProps) {
-  const theme = useResolvedTheme(character.id);
-  const [open, setOpen] = React.useState<string | null>(SECTIONS.card);
+  const reduced = useReducedMotion();
+  const author = useFieldAuthor(serverHost, draft, onChange);
+  const [section, setSection] = React.useState<SectionKey>("identity");
   const [lore, setLore] = React.useState<LoreView[]>([]);
-
-  const toggle = React.useCallback((key: string) => {
-    setOpen((prev) => (prev === key ? null : key));
-  }, []);
 
   const reloadLore = React.useCallback(() => {
     void Promise.resolve(fetchMind(serverHost, character.id)).then((mind) => {
@@ -72,91 +76,96 @@ export function AdminCharacterEditor({
     [character.id, reloadLore, serverHost],
   );
 
+  const fields = SECTIONS[section].fields;
+
   return (
-    <View className="gap-2">
-      <CollapsibleSection
-        sectionKey={SECTIONS.card}
-        title={CHARACTER_COPY.newCharacter}
-        expanded={open === SECTIONS.card}
-        onToggle={toggle}
-        chevronColor={theme.textMuted}
-        className="rounded-card border border-border p-3"
+    <View className="gap-3">
+      <Segmented
+        options={SECTION_OPTIONS}
+        value={section}
+        onChange={setSection}
+        characterId={character.id}
+        accessibilityLabel={CHARACTER_COPY.editTitle}
+      />
+
+      <Text className="font-ui text-[11px] text-text-muted leading-4">{sectionBlurb(section)}</Text>
+
+      <Animated.View
+        key={section}
+        entering={reduced ? undefined : FadeIn.duration(UI_MS.disclosure)}
+        exiting={reduced ? undefined : FadeOut.duration(UI_MS.revealReduced)}
+        className="gap-4"
       >
-        <View className="gap-3">
-          <CharacterForm
+        {fields.length > 0 ? (
+          <CharacterFields
+            keys={fields}
             draft={draft}
-            serverHost={serverHost}
             characterId={character.id}
+            author={author}
             compact
             onChange={onChange}
           />
-          <View className="h-px bg-border" />
-          <PronounPicker
+        ) : null}
+
+        {section === "identity" ? (
+          <View className="gap-4 border-border border-t pt-4">
+            <PronounPicker
+              characterId={character.id}
+              value={draft.pronouns}
+              onChange={(pronouns) => onChange({ pronouns })}
+            />
+            <PortraitStudio
+              characterId={character.id}
+              serverHost={serverHost}
+              avatarUrl={avatarUrl}
+              onPortrait={onPortrait}
+            />
+          </View>
+        ) : null}
+
+        {section === "mind" ? (
+          <View className="gap-3 border-border border-t pt-4">
+            <View className="flex-row items-center justify-between">
+              <Text className="font-ui-bold text-[11px] text-text-muted uppercase tracking-wider">
+                {MIND_COPY.loreHeading}
+              </Text>
+              {lore.length > 0 ? (
+                <Text className="font-ui-medium text-[10px] text-primary">{lore.length}</Text>
+              ) : null}
+            </View>
+            <LoreSection
+              characterId={character.id}
+              entries={lore}
+              serverHost={serverHost}
+              onSave={saveLore}
+              onDelete={dropLore}
+            />
+          </View>
+        ) : null}
+
+        {section === "voice" ? (
+          <VoicePicker
             characterId={character.id}
-            value={draft.pronouns}
-            onChange={(pronouns) => onChange({ pronouns })}
+            serverHost={serverHost}
+            value={draft.voice}
+            onChange={(voice) => onChange({ voice })}
           />
-        </View>
-      </CollapsibleSection>
+        ) : null}
 
-      <CollapsibleSection
-        sectionKey={SECTIONS.look}
-        title={AUTHOR_COPY.portraitTitle}
-        expanded={open === SECTIONS.look}
-        onToggle={toggle}
-        chevronColor={theme.textMuted}
-        className="rounded-card border border-border p-3"
-      >
-        <PortraitStudio
-          characterId={character.id}
-          serverHost={serverHost}
-          avatarUrl={avatarUrl}
-          onPortrait={onPortrait}
-        />
-      </CollapsibleSection>
-
-      <CollapsibleSection
-        sectionKey={SECTIONS.lore}
-        title={MIND_COPY.loreHeading}
-        badge={
-          lore.length > 0 ? (
-            <Text className="font-ui-medium text-[10px] text-primary">{lore.length}</Text>
-          ) : null
-        }
-        expanded={open === SECTIONS.lore}
-        onToggle={toggle}
-        chevronColor={theme.textMuted}
-        className="rounded-card border border-border p-3"
-      >
-        <LoreSection
-          characterId={character.id}
-          entries={lore}
-          serverHost={serverHost}
-          onSave={saveLore}
-          onDelete={dropLore}
-        />
-      </CollapsibleSection>
-
-      <CollapsibleSection
-        sectionKey={SECTIONS.sharing}
-        title={DASHBOARD_COPY.charactersTitle}
-        expanded={open === SECTIONS.sharing}
-        onToggle={toggle}
-        chevronColor={theme.textMuted}
-        className="rounded-card border border-border p-3"
-      >
-        <View className="gap-3">
-          <SwitchRow
-            characterId={character.id}
-            label={CHARACTER_COPY.publishLabel}
-            hint={CHARACTER_COPY.publishHint}
-            value={character.isPublic}
-            onValueChange={onPublish}
-            accessibilityLabel={CHARACTER_COPY.publishLabel}
-          />
-          <Text className="font-ui text-[10px] text-text-muted">{character.id}</Text>
-        </View>
-      </CollapsibleSection>
+        {section === "misc" ? (
+          <View className="gap-3">
+            <SwitchRow
+              characterId={character.id}
+              label={CHARACTER_COPY.publishLabel}
+              hint={CHARACTER_COPY.publishHint}
+              value={character.isPublic}
+              onValueChange={onPublish}
+              accessibilityLabel={CHARACTER_COPY.publishLabel}
+            />
+            <Text className="font-ui text-[10px] text-text-muted">{character.id}</Text>
+          </View>
+        ) : null}
+      </Animated.View>
     </View>
   );
 }

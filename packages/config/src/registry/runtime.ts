@@ -1,5 +1,6 @@
 import {
   AFFINITY,
+  AUDIT,
   AUTH,
   CACHE,
   CHAT_TURN,
@@ -177,6 +178,13 @@ export const RUNTIME_GROUPS: ConfigGroup[] = [
           "The account behind PAIRING_SECRET is found by this address. Changing it orphans it.",
       },
     },
+  },
+  {
+    name: "AUDIT",
+    source: SOURCE,
+    value: AUDIT,
+    bucket: "editable",
+    reason: "The audit log reads this each time it writes or is paged.",
   },
   {
     name: "USER_ROLES",

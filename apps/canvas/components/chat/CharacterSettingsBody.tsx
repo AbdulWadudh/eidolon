@@ -80,7 +80,7 @@ export function CharacterSettingsBody({
         />
       ) : null}
 
-      {section === "sharing" ? (
+      {section === "misc" ? (
         <CharacterSharingSection
           characterId={characterId}
           isPublic={isPublic}

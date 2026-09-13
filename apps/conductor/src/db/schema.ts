@@ -104,6 +104,20 @@ export function applySchema(db: Database): void {
     CREATE UNIQUE INDEX IF NOT EXISTS idx_portraits_url
       ON character_portraits(character_id, url);
 
+    CREATE TABLE IF NOT EXISTS admin_audit (
+      id TEXT PRIMARY KEY,
+      actor_id TEXT,
+      actor_email TEXT,
+      method TEXT NOT NULL,
+      path TEXT NOT NULL,
+      status INTEGER NOT NULL,
+      detail TEXT,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_admin_audit_time
+      ON admin_audit(created_at DESC);
+
     CREATE TABLE IF NOT EXISTS config_overrides (
       path TEXT PRIMARY KEY,
       value TEXT NOT NULL,

@@ -112,6 +112,25 @@ export const AdminThemeViewSchema = z.object({
   overrides: ThemeTokenPatchSchema,
 });
 
+export const AuditEntrySchema = z.object({
+  id: z.string().min(1),
+  actorId: z.string().nullable(),
+  actorEmail: z.string().nullable(),
+  method: z.string().min(1),
+  path: z.string().min(1),
+  status: z.number(),
+  detail: z.string().nullable(),
+  createdAt: z.number(),
+});
+
+export const AdminAuditViewSchema = z.object({
+  total: z.number(),
+  retain: z.number(),
+  limit: z.number(),
+  offset: z.number(),
+  entries: z.array(AuditEntrySchema),
+});
+
 export const AdminErrorSchema = z.object({ error: z.string().min(1) });
 
 export const AdminOkSchema = z.object({ ok: z.literal(true) });
@@ -123,4 +142,6 @@ export type AdminPrompt = z.infer<typeof AdminPromptSchema>;
 export type AdminCharacter = z.infer<typeof AdminCharacterSchema>;
 export type AdminCharacterDraft = z.infer<typeof AdminCharacterDraftSchema>;
 export type AdminThemeView = z.infer<typeof AdminThemeViewSchema>;
+export type AuditEntry = z.infer<typeof AuditEntrySchema>;
+export type AdminAuditView = z.infer<typeof AdminAuditViewSchema>;
 export type ThemeTokenPatch = z.infer<typeof ThemeTokenPatchSchema>;
