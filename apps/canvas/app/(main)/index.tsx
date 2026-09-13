@@ -11,7 +11,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import * as React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { CharacterRosterCard } from "@/components/characters/CharacterCard";
 import { ImportCardButton } from "@/components/characters/ImportCardButton";
 import { CharacterSettingsSheet } from "@/components/chat/CharacterSettingsSheet";
@@ -35,11 +35,13 @@ import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme } from "@/store/theme-store";
 
 const ACCOUNT_PX = 34;
+const HEADER_TOP_PX = 10;
 
 export default function MainCharactersScreen() {
   const router = useRouter();
   const { serverHost, sessionToken, signOut, connectionState } = useConnectionStore();
   const theme = useResolvedTheme();
+  const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
   const isOwner = useIsOwner();
   const refreshAccount = useAuthStore((state) => state.refresh);
@@ -92,10 +94,22 @@ export default function MainCharactersScreen() {
   }[connectionState];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.canvas }} className="flex-1 bg-canvas">
+    <SafeAreaView
+      edges={["left", "right", "bottom"]}
+      style={{ flex: 1, backgroundColor: theme.canvas }}
+      className="flex-1 bg-canvas"
+    >
       {}
-      <View className="flex-row items-center justify-between border-b border-border px-3 py-2.5">
-        <Text className="font-main-bold text-xl text-text-primary tracking-tight">Eidolon</Text>
+      <View
+        className="flex-row items-center justify-between border-b border-border px-3 pb-2.5"
+        style={{ paddingTop: insets.top + HEADER_TOP_PX }}
+      >
+        <Text
+          className="shrink-0 font-main-bold text-xl text-text-primary tracking-tight"
+          numberOfLines={1}
+        >
+          Eidolon
+        </Text>
 
         {}
         <GlassSurface
