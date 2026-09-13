@@ -62,8 +62,9 @@ export default function CallScreen() {
     call.open(characterId);
     return () => {
       setActiveCharacter(null);
+      call.close();
     };
-  }, [characterId, setActiveCharacter, call.open]);
+  }, [characterId, setActiveCharacter, call.open, call.close]);
 
   React.useEffect(() => onServerMessage(call.handleServerMessage), [call.handleServerMessage]);
 
