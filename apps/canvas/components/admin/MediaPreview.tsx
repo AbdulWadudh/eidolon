@@ -6,11 +6,12 @@ import { ActivityIndicator, Clipboard, Text, View } from "react-native";
 import { ImageLightbox } from "@/components/admin/ImageLightbox";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
-import { ClipboardIcon, Download01Icon, PauseIcon, PlayIcon } from "@/lib/icons";
+import { ClipboardIcon, Download01Icon, PauseIcon, PlayIcon, SentIcon } from "@/lib/icons";
 import { filenameOf, isUrlLike, mediaKindFor } from "@/lib/media-kind";
-import { saveMediaToDevice } from "@/lib/save-media";
+import { saveMediaToDevice, shareMedia } from "@/lib/save-media";
 import { tap } from "@/services/haptics";
 import { useResolvedTheme } from "@/store/theme-store";
+import { notify } from "@/store/toast-store";
 
 export interface MediaPreviewProps {
   value: string;
@@ -27,7 +28,12 @@ export function MediaPreview({ value, characterId }: MediaPreviewProps) {
     <View className="flex-row items-start gap-2">
       <Text className="flex-1 font-ui text-[10px] text-text-primary">{value}</Text>
       <CopyButton value={value} characterId={characterId} />
-      {isUrlLike(value) ? <DownloadButton url={value} characterId={characterId} /> : null}
+      {isUrlLike(value) ? (
+        <>
+          <ShareButton url={value} characterId={characterId} />
+          <DownloadButton url={value} characterId={characterId} />
+        </>
+      ) : null}
     </View>
   );
 }
@@ -55,6 +61,7 @@ export function CopyButton({ value, characterId }: { value: string; characterId?
   const copy = React.useCallback(() => {
     Clipboard.setString(value);
     tap("light");
+    notify(DASHBOARD_COPY.copied, "good");
     setCopied(true);
 
     if (timer.current) clearTimeout(timer.current);
@@ -74,66 +81,94 @@ export function CopyButton({ value, characterId }: { value: string; characterId?
   );
 }
 
+export function ShareButton({ url, characterId }: { url: string; characterId?: string }) {
+  const theme = useResolvedTheme(characterId);
+  const [isBusy, setBusy] = React.useState(false);
+
+  const send = React.useCallback(() => {
+    if (isBusy) return;
+    setBusy(true);
+
+    void shareMedia(url)
+      .then((result) => {
+        if (result === "shared") {
+          tap("success");
+          return;
+        }
+        tap("light");
+        notify(
+          result === "unavailable" ? DASHBOARD_COPY.shareUnavailable : DASHBOARD_COPY.shareFailed,
+          "bad",
+        );
+      })
+      .finally(() => setBusy(false));
+  }, [isBusy, url]);
+
+  return (
+    <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel={DASHBOARD_COPY.share}
+      accessibilityState={{ busy: isBusy }}
+      hitSlop={8}
+      onPress={send}
+      className="h-7 w-7 items-center justify-center rounded-button border border-border"
+    >
+      {isBusy ? (
+        <ActivityIndicator size="small" color={theme.primary} />
+      ) : (
+        <AppIcon icon={SentIcon} size={13} color={theme.textMuted} />
+      )}
+    </PressableScale>
+  );
+}
+
 export function DownloadButton({ url, characterId }: { url: string; characterId?: string }) {
   const theme = useResolvedTheme(characterId);
   const [isSaving, setSaving] = React.useState(false);
-  const [note, setNote] = React.useState<string | null>(null);
 
   const save = React.useCallback(() => {
     if (isSaving) return;
-
     setSaving(true);
-    setNote(null);
 
     void saveMediaToDevice(url)
       .then((outcome) => {
         if (outcome.result === "saved") {
           tap("success");
-          setNote(
+          notify(
             outcome.target === "gallery"
               ? DASHBOARD_COPY.downloadedGallery
               : DASHBOARD_COPY.downloadedFile(outcome.name),
+            "good",
           );
           return;
         }
 
         tap("light");
-        setNote(
+        notify(
           outcome.result === "denied"
             ? DASHBOARD_COPY.downloadDenied
             : DASHBOARD_COPY.downloadFailed,
+          "bad",
         );
       })
       .finally(() => setSaving(false));
   }, [isSaving, url]);
 
   return (
-    <View className="flex-row items-center gap-2">
-      <PressableScale
-        accessibilityRole="button"
-        accessibilityLabel={DASHBOARD_COPY.download}
-        accessibilityState={{ busy: isSaving }}
-        hitSlop={8}
-        onPress={save}
-        className="h-7 w-7 items-center justify-center rounded-button border border-border"
-      >
-        {isSaving ? (
-          <ActivityIndicator size="small" color={theme.primary} />
-        ) : (
-          <AppIcon icon={Download01Icon} size={13} color={theme.textMuted} />
-        )}
-      </PressableScale>
-
-      {note ? (
-        <Text
-          accessibilityLiveRegion="polite"
-          className="flex-1 font-ui text-[10px] text-text-muted"
-          numberOfLines={2}
-        >
-          {note}
-        </Text>
-      ) : null}
-    </View>
+    <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel={DASHBOARD_COPY.download}
+      accessibilityState={{ busy: isSaving }}
+      hitSlop={8}
+      onPress={save}
+      className="h-7 w-7 items-center justify-center rounded-button border border-border"
+    >
+      {isSaving ? (
+        <ActivityIndicator size="small" color={theme.primary} />
+      ) : (
+        <AppIcon icon={Download01Icon} size={13} color={theme.textMuted} />
+      )}
+    </PressableScale>
   );
 }
 
@@ -171,6 +206,7 @@ function ImagePreview({ url, characterId }: { url: string; characterId?: string 
       <View className="flex-row items-center gap-2">
         <Caption value={url} />
         <CopyButton value={url} characterId={characterId} />
+        <ShareButton url={url} characterId={characterId} />
         <DownloadButton url={url} characterId={characterId} />
       </View>
 
@@ -243,6 +279,7 @@ function AudioPreview({ url, characterId }: { url: string; characterId?: string 
 
       <Caption value={url} />
       <CopyButton value={url} characterId={characterId} />
+      <ShareButton url={url} characterId={characterId} />
       <DownloadButton url={url} characterId={characterId} />
     </View>
   );

@@ -37,6 +37,40 @@ async function downloadToFiles(url: string): Promise<SaveOutcome> {
   }
 }
 
+export type ShareResult = "shared" | "unavailable" | "failed";
+
+async function loadSharing(): Promise<typeof import("expo-sharing") | null> {
+  try {
+    const module = await import("expo-sharing");
+    return (await module.isAvailableAsync()) ? module : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function shareMedia(url: string): Promise<ShareResult> {
+  const sharing = await loadSharing();
+  if (!sharing) return "unavailable";
+
+  try {
+    const folder = new Directory(Paths.cache, DATA_FILES.directoryName);
+    if (!folder.exists) folder.create({ intermediates: true });
+
+    const response = await fetch(url);
+    if (!response.ok) return "failed";
+
+    const target = new File(folder, safeName(url));
+    target.create({ overwrite: true });
+    target.write(new Uint8Array(await response.arrayBuffer()));
+
+    await sharing.shareAsync(target.uri);
+    return "shared";
+  } catch (error) {
+    console.error("[share-media]", error);
+    return "failed";
+  }
+}
+
 export async function saveMediaToDevice(url: string): Promise<SaveOutcome> {
   const name = safeName(url);
 

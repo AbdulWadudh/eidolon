@@ -2,15 +2,16 @@ import { DASHBOARD_COPY } from "@eidolon/config";
 import * as React from "react";
 import { Text, View } from "react-native";
 import Animated, { useReducedMotion } from "react-native-reanimated";
-import { AdminEmpty, AdminScreen } from "@/components/admin/AdminScreen";
+import { AdminScreen } from "@/components/admin/AdminScreen";
 import { revealAt } from "@/components/admin/admin-motion";
 import { MediaPreview } from "@/components/admin/MediaPreview";
 import { StorageBrowser } from "@/components/admin/StorageBrowser";
-import { Button } from "@/components/ui/button";
+import { AppIcon } from "@/components/common/icon";
+import { PressableScale } from "@/components/common/pressable-scale";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { useConfirm } from "@/hooks/use-confirm";
-import { HardDriveIcon } from "@/lib/icons";
+import { Delete02Icon, HardDriveIcon, RefreshIcon } from "@/lib/icons";
 import { AdminRequestError, fetchStorage, type StorageView, sweepStorage } from "@/store/admin-api";
 import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme } from "@/store/theme-store";
@@ -117,29 +118,44 @@ export default function AdminStorageScreen() {
             ) : null}
           </View>
 
-          <View className="flex-row items-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              className="flex-1"
+          <View className="flex-row items-center justify-end gap-2">
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel={DASHBOARD_COPY.storageScan}
+              accessibilityState={{ busy: isWorking }}
               disabled={isWorking}
               onPress={scan}
+              className="h-8 flex-row items-center gap-1.5 rounded-button border border-border px-3"
+              style={{ backgroundColor: theme.inputSurface, opacity: isWorking ? 0.5 : 1 }}
             >
-              {isWorking ? DASHBOARD_COPY.storageScanning : DASHBOARD_COPY.storageScan}
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="flex-1"
+              <AppIcon icon={RefreshIcon} size={13} color={theme.textMuted} />
+              <Text className="font-ui-medium text-[11px] text-text-primary">
+                {isWorking ? DASHBOARD_COPY.storageScanning : DASHBOARD_COPY.storageScanShort}
+              </Text>
+            </PressableScale>
+
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel={DASHBOARD_COPY.storageSweep}
               disabled={isWorking || orphans.length === 0 || view?.skipped !== null}
               onPress={sweep}
+              className="h-8 flex-row items-center gap-1.5 rounded-button px-3"
+              style={{
+                backgroundColor: theme.danger,
+                opacity: isWorking || orphans.length === 0 || view?.skipped !== null ? 0.4 : 1,
+              }}
             >
-              {DASHBOARD_COPY.storageSweep}
-            </Button>
+              <AppIcon icon={Delete02Icon} size={13} color={theme.textPrimary} />
+              <Text className="font-ui-medium text-[11px] text-text-primary">
+                {DASHBOARD_COPY.storageSweepShort}
+              </Text>
+            </PressableScale>
           </View>
 
           {orphans.length === 0 ? (
-            <AdminEmpty label={DASHBOARD_COPY.storageClean} />
+            <Text className="font-ui text-[11px] text-text-muted">
+              {DASHBOARD_COPY.storageClean}
+            </Text>
           ) : (
             <>
               <Text className="font-ui text-xs text-text-muted">
@@ -175,7 +191,7 @@ export default function AdminStorageScreen() {
       </CollapsibleSection>
 
       {view?.connected ? (
-        <View className="mt-2 border-border border-t pt-4">
+        <View className="border-border border-t pt-3 pb-6">
           <StorageBrowser serverHost={serverHost} token={pairingToken} onError={setError} />
         </View>
       ) : null}

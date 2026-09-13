@@ -8,6 +8,7 @@ import { VariableContextProvider } from "react-native-css";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { Toast } from "@/components/ui/toast";
 import { initializeFonts } from "@/services/font-registry";
 import { useConnectionStore } from "@/store/connection";
 import { flushThemePersistence, useResolvedTheme, useThemeCssVars } from "@/store/theme-store";
@@ -64,6 +65,7 @@ export default function RootLayout() {
           <VariableContextProvider value={dynamicVars}>
             <View style={rootStyle} className="flex-1 bg-canvas">
               <Stack screenOptions={stackScreenOptions} />
+              <Toast />
             </View>
           </VariableContextProvider>
         </SafeAreaProvider>

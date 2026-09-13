@@ -1,7 +1,7 @@
 import { CONFIRM_COPY, DASHBOARD_COPY, UI_MS } from "@eidolon/config";
 import type { IconSvgElement } from "@hugeicons/react-native";
 import * as React from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, TextInput, View } from "react-native";
 import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
 import { AdminEmpty } from "@/components/admin/AdminScreen";
 import { revealAt } from "@/components/admin/admin-motion";
@@ -11,7 +11,6 @@ import { LoadingState } from "@/components/common/loading-state";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Button } from "@/components/ui/button";
 import { GlassSurface } from "@/components/ui/glass-surface";
-import { Input } from "@/components/ui/input";
 import { useConfirm } from "@/hooks/use-confirm";
 import {
   ArrowRight01Icon,
@@ -129,11 +128,33 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
   const walking = view?.folderMode ?? folderMode;
 
   return (
-    <View className="gap-2">
-      <View className="flex-row items-center gap-2">
-        <Text className="flex-1 font-ui-bold text-[11px] text-text-muted uppercase tracking-wider">
-          {DASHBOARD_COPY.storageBrowse}
-        </Text>
+    <View className="gap-1.5">
+      <View className="h-9 flex-row items-center gap-2">
+        {isSearchOpen ? (
+          <Animated.View
+            className="flex-1"
+            entering={reduced ? undefined : FadeIn.duration(UI_MS.disclosure)}
+          >
+            <TextInput
+              accessibilityLabel={DASHBOARD_COPY.search}
+              value={search}
+              onChangeText={setSearch}
+              placeholder={DASHBOARD_COPY.search}
+              placeholderTextColor={theme.textMuted}
+              cursorColor={theme.primary}
+              selectionColor={theme.primary}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoFocus
+              className="h-9 rounded-button border border-border bg-input-surface px-3 font-ui text-xs text-text-primary"
+              style={{ paddingVertical: 0, includeFontPadding: false, textAlignVertical: "center" }}
+            />
+          </Animated.View>
+        ) : (
+          <Text className="flex-1 font-ui-bold text-[11px] text-text-muted uppercase tracking-wider">
+            {DASHBOARD_COPY.storageBrowse}
+          </Text>
+        )}
 
         <PressableScale
           accessibilityRole="button"
@@ -157,19 +178,6 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
           />
         </PressableScale>
       </View>
-
-      {isSearchOpen ? (
-        <Animated.View entering={reduced ? undefined : FadeIn.duration(UI_MS.disclosure)}>
-          <Input
-            placeholder={DASHBOARD_COPY.search}
-            value={search}
-            onChangeText={setSearch}
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoFocus
-          />
-        </Animated.View>
-      ) : null}
 
       <View className="flex-row gap-1.5">
         <ModeChip

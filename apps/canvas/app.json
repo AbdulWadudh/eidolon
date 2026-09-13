@@ -61,7 +61,8 @@
           }
         }
       ],
-      "expo-speech-recognition"
+      "expo-speech-recognition",
+      "expo-sharing"
     ],
     "backgroundColor": "#0D0E11"
   }

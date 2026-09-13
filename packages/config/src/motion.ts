@@ -41,6 +41,8 @@ export const UI_MS = {
   revealReduced: 200,
   disclosure: 220,
   saveConfirm: 1400,
+  toastHold: 2600,
+  toastExit: 180,
 } as const;
 
 export const EASING = {
