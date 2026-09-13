@@ -1,11 +1,13 @@
-import { AFFINITY_HUD, affinityLabel, EASING_BEZIER, UI_MS } from "@eidolon/config";
+import { AFFINITY_HUD, affinityLabel, CHAT_COPY, EASING_BEZIER, UI_MS } from "@eidolon/config";
 import { Image } from "expo-image";
 import { Text, View } from "react-native";
 import Animated, { cubicBezier, FadeIn, useReducedMotion } from "react-native-reanimated";
 import { AffinityToast } from "@/components/chat/AffinityToast";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
+import { SkeletonLine } from "@/components/common/skeleton-line";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { croppedStyle } from "@/lib/avatar-crop";
 import { ArrowLeft01Icon, Call02Icon, MoreVerticalIcon } from "@/lib/icons";
 import { useAffinityStore } from "@/store/affinity-store";
@@ -55,7 +57,11 @@ export function ChatTopBar({
   const subtitle = showsAffinity && mind ? affinityLabel(mind.tier, mind.affinity) : statusLabel;
 
   return (
-    <View className="flex-row items-center gap-2 border-border border-b px-3 py-2">
+    <GlassSurface
+      tint="canvas"
+      characterId={characterId}
+      className="flex-row items-center gap-2 border-border border-b px-3 py-2"
+    >
       <PressableScale
         accessibilityRole="button"
         accessibilityLabel="Back to characters"
@@ -113,9 +119,18 @@ export function ChatTopBar({
         onPress={onOpenProfile}
         className="flex-1 pl-0.5"
       >
-        <Text className="font-main-bold text-base text-text-primary" numberOfLines={1}>
-          {characterName}
-        </Text>
+        {characterName.length > 0 ? (
+          <Text className="font-main-bold text-base text-text-primary" numberOfLines={1}>
+            {characterName}
+          </Text>
+        ) : (
+          <SkeletonLine
+            characterId={characterId}
+            width={120}
+            height={14}
+            label={CHAT_COPY.loadingName}
+          />
+        )}
         <View className="flex-row items-center gap-1.5">
           <Animated.View
             className="h-1.5 w-1.5 rounded-full"
@@ -162,6 +177,6 @@ export function ChatTopBar({
       >
         <AppIcon icon={MoreVerticalIcon} size={19} color={theme.textMuted} />
       </PressableScale>
-    </View>
+    </GlassSurface>
   );
 }

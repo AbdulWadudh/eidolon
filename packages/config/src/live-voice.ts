@@ -116,7 +116,7 @@ export const CALL_COPY = {
   thinking: "Thinking…",
   connecting: "Reaching her…",
   offline: "The conductor is not reachable.",
-  subtitlePlaceholder: "Whatever she says next appears here.",
+  subtitlePlaceholder: "Whatever they say next appears here.",
   back: "Back to the chat",
   speakerOn: "Speaker on",
   speakerOff: "Speaker off",
@@ -127,9 +127,9 @@ export const CALL_COPY = {
   muted: "Muted",
   tapToTalk: "Tap to talk",
   justTalk: "Just talk",
-  cutInHint: "Cut in while she is speaking",
+  cutInHint: "Cut in while they are speaking",
   micOpen: "Your microphone is open",
-  micGated: "Muted while she speaks",
+  micGated: "Muted while they speak",
   tapToSend: "Tap to send",
   startTalking: "Start talking",
   sendWhatYouSaid: "Send what you said",
@@ -143,7 +143,7 @@ export const CALL_COPY = {
 
 export const IMPORT_COPY = {
   action: "Import Tavern Card",
-  blurb: "A V2 character card PNG brings her portrait, greeting and lorebook with it.",
+  blurb: "A V2 character card PNG brings the portrait, greeting and lorebook with it.",
   picking: "Choosing a card…",
   uploading: "Reading the card…",
   failed: "That PNG carried no character card.",
@@ -165,7 +165,8 @@ export function isSentenceTrailing(character: string): boolean {
 }
 
 export function callTitle(characterName: string): string {
-  return `${characterName} • ${CALL_COPY.titleSuffix}`;
+  const name = characterName.trim();
+  return name.length > 0 ? `${name} • ${CALL_COPY.titleSuffix}` : CALL_COPY.titleSuffix;
 }
 
 export function callSpeakingLine(characterName: string): string {

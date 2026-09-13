@@ -1,5 +1,5 @@
 import { CALL_MS, CONNECTION_COPY } from "@eidolon/config";
-import { capitalize, isString } from "es-toolkit";
+import { isString } from "es-toolkit";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as React from "react";
 import { Text, View } from "react-native";
@@ -8,6 +8,7 @@ import { CallControls } from "@/components/call/CallControls";
 import { CallStage } from "@/components/call/CallStage";
 import { CallSubtitles } from "@/components/call/CallSubtitles";
 import { CallTopBar } from "@/components/call/CallTopBar";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { useCallAudio } from "@/hooks/use-call-audio";
 import { useCallSpeech } from "@/hooks/use-call-speech";
 import { tap } from "@/services/haptics";
@@ -38,7 +39,7 @@ export default function CallScreen() {
     });
   }, [serverHost, characterId, pairingToken]);
 
-  const characterName = card?.name.trim() || capitalize(characterId);
+  const characterName = card?.name.trim() ?? "";
   const look = useChatStore((state) => state.characterLook);
 
   const call = useCallStore();
@@ -146,11 +147,11 @@ export default function CallScreen() {
         />
 
         {socket.isConnected ? null : (
-          <View className="w-full rounded-card border border-border bg-card px-4 py-3">
+          <GlassSurface tint="card" className="w-full rounded-card border border-border px-4 py-3">
             <Text className="font-ui-medium text-center text-sm" style={{ color: theme.danger }}>
               {CONNECTION_COPY[socket.status]}
             </Text>
-          </View>
+          </GlassSurface>
         )}
       </View>
 
