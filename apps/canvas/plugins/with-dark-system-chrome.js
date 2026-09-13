@@ -44,6 +44,13 @@ const withDarkSystemChrome = (config) => {
       value: "@android:color/transparent",
       parent: getAppThemeGroup(),
     });
+    // The frame before JS runs, so the bar is never black behind the splash.
+    mod.modResults = assignStylesValue(mod.modResults, {
+      add: true,
+      name: "android:statusBarColor",
+      value: "@color/activityBackground",
+      parent: getAppThemeGroup(),
+    });
     return mod;
   });
 

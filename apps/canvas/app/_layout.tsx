@@ -3,7 +3,7 @@ import "../global.css";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as React from "react";
-import { AppState, View } from "react-native";
+import { AppState, Platform, StatusBar as SystemStatusBar, View } from "react-native";
 import { VariableContextProvider } from "react-native-css";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -32,6 +32,11 @@ export default function RootLayout() {
     }),
     [resolvedTheme.canvas],
   );
+
+  React.useEffect(() => {
+    if (Platform.OS !== "android") return;
+    SystemStatusBar.setBackgroundColor(resolvedTheme.canvas, false);
+  }, [resolvedTheme.canvas]);
 
   React.useEffect(() => {
     const sub = AppState.addEventListener("change", (next) => {
