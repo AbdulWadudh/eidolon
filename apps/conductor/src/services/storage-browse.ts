@@ -111,7 +111,7 @@ export async function browseStorage(query: BrowseQuery = {}): Promise<BrowseResu
     matched: 0,
     bytes: 0,
     kinds: { image: 0, audio: 0, other: 0 },
-    folderMode: query.folderMode !== false,
+    folderMode: query.folderMode === true,
     prefix: "",
     folders: [],
     limit: STORAGE_BROWSER.pageSize,
@@ -134,7 +134,7 @@ export async function browseStorage(query: BrowseQuery = {}): Promise<BrowseResu
   const needle = (query.search ?? "").trim().toLowerCase();
   const prefix = normalisePrefix(query.prefix);
   const searching = needle.length > 0;
-  const walking = query.folderMode !== false && !searching;
+  const walking = query.folderMode === true && !searching;
 
   const filtered = all
     .filter((object) => (query.onlyOrphans ? !object.referenced : true))

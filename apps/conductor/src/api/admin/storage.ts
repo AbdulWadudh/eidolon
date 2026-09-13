@@ -52,7 +52,7 @@ adminStorage.get("/objects", async (c) =>
       search: c.req.query("search"),
       onlyOrphans: flag(c.req.query("orphans")),
       kind: kindOf(c.req.query("kind")),
-      folderMode: c.req.query("folders") !== "false",
+      folderMode: flag(c.req.query("folders")),
       prefix: c.req.query("prefix"),
       limit: numeric(c.req.query("limit")),
       offset: numeric(c.req.query("offset")),

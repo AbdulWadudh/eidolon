@@ -433,11 +433,10 @@ describe("walking the bucket as folders", () => {
     expect(mediaKindForKey("loose.txt")).toBe("other");
   });
 
-  it("flattens when folder mode is off, and never invents a folder", async () => {
-    const response = await app.request(
-      `${adminApiPath("storage")}/objects?folders=false&prefix=characters`,
-      { headers: OWNER },
-    );
+  it("is flat by default, and never invents a folder", async () => {
+    const response = await app.request(`${adminApiPath("storage")}/objects?prefix=characters`, {
+      headers: OWNER,
+    });
     const body = (await response.json()) as {
       folderMode: boolean;
       folders: unknown[];
@@ -449,17 +448,20 @@ describe("walking the bucket as folders", () => {
     expect(body.prefix).toBe("");
   });
 
-  it("walks folders by default", async () => {
-    const response = await app.request(`${adminApiPath("storage")}/objects`, { headers: OWNER });
+  it("walks folders only when asked", async () => {
+    const response = await app.request(`${adminApiPath("storage")}/objects?folders=true`, {
+      headers: OWNER,
+    });
     const body = (await response.json()) as { folderMode: boolean };
 
     expect(body.folderMode).toBe(true);
   });
 
   it("serves folders and a prefix over the route", async () => {
-    const response = await app.request(`${adminApiPath("storage")}/objects?prefix=characters`, {
-      headers: OWNER,
-    });
+    const response = await app.request(
+      `${adminApiPath("storage")}/objects?folders=true&prefix=characters`,
+      { headers: OWNER },
+    );
     const body = (await response.json()) as { prefix: string; folders: unknown[] };
 
     expect(response.status).toBe(200);

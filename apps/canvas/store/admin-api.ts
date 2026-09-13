@@ -533,7 +533,7 @@ export function browseStorage(
   if (options.search) query.set("search", options.search);
   if (options.orphans) query.set("orphans", "true");
   if (options.kind) query.set("kind", options.kind);
-  if (options.folderMode === false) query.set("folders", "false");
+  if (options.folderMode === true) query.set("folders", "true");
   if (options.prefix) query.set("prefix", options.prefix);
   if (options.offset) query.set("offset", String(options.offset));
 

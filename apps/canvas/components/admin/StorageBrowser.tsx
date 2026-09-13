@@ -62,7 +62,7 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
   const [onlyOrphans, setOnlyOrphans] = React.useState(false);
   const [kind, setKind] = React.useState<StoredMediaKind | null>(null);
   const [prefix, setPrefix] = React.useState("");
-  const [folderMode, setFolderMode] = React.useState(true);
+  const [folderMode, setFolderMode] = React.useState(false);
   const [isBusy, setBusy] = React.useState(false);
   const [hasLoaded, setLoaded] = React.useState(false);
 
