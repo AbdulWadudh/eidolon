@@ -141,12 +141,6 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
 
       <View className="flex-row gap-1.5">
         <ModeChip
-          label={DASHBOARD_COPY.storageFolderMode}
-          icon={Folder01Icon}
-          active={folderMode}
-          onPress={() => setFolderMode(true)}
-        />
-        <ModeChip
           label={DASHBOARD_COPY.storageFlatMode}
           icon={Queue01Icon}
           active={!folderMode}
@@ -154,6 +148,12 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
             setFolderMode(false);
             setPrefix("");
           }}
+        />
+        <ModeChip
+          label={DASHBOARD_COPY.storageFolderMode}
+          icon={Folder01Icon}
+          active={folderMode}
+          onPress={() => setFolderMode(true)}
         />
       </View>
 
