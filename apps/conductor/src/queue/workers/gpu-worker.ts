@@ -6,7 +6,7 @@ import {
   QUEUE_NAMES,
   QUEUE_PREFIXES,
 } from "@eidolon/config";
-import { Worker } from "bullmq";
+import { type Job, Worker } from "bullmq";
 import { PORTRAIT, STAGE } from "@/config";
 import { appendMessage, getCharacterCard, getRecentMessages, setMessageImage } from "@/db";
 import { appendChronicle, nextChapterIndex } from "@/db/chronicles";
@@ -122,23 +122,34 @@ async function renderPortrait(data: PortraitJob): Promise<void> {
   setCharacterFace(data.characterId, url);
 }
 
-async function renderChatPhoto(data: ChatPhotoJob): Promise<void> {
+async function renderChatPhoto(job: Job<ChatPhotoJob>, data: ChatPhotoJob): Promise<void> {
   const { characterId, userId } = data;
   const card = getCharacterCard(characterId, userId);
 
   const say = (message: unknown) => broadcastToCharacter(characterId, userId, message);
 
   try {
-    const selfie = await paintSelfie({
-      characterId,
-      name: card.name,
-      personality: card.personality,
-      pronouns: card.pronouns,
-      scene: formatPhotoScene(getRecentMessages(characterId, userId), card.name),
-      request: data.request,
-      orientation: data.orientation,
-      referenceUrl: data.referenceUrl,
-    });
+    const selfie = await paintSelfie(
+      {
+        characterId,
+        name: card.name,
+        personality: card.personality,
+        pronouns: card.pronouns,
+        scene: formatPhotoScene(getRecentMessages(characterId, userId), card.name),
+        request: data.request,
+        orientation: data.orientation,
+        referenceUrl: data.referenceUrl,
+      },
+      {
+        onProgress: ({ value, max }) => {
+          void job.updateProgress(max > 0 ? Math.round((value / max) * 100) : 0);
+          say({
+            type: "image_preview",
+            payload: { step: value, total_steps: max },
+          });
+        },
+      },
+    );
 
     const messageId = appendMessage(characterId, "assistant", selfie.message.trim(), userId);
     setMessageImage(messageId, selfie.imageUrl, selfie.caption || null);
@@ -169,7 +180,7 @@ async function renderChatPhoto(data: ChatPhotoJob): Promise<void> {
 
 export async function processGpuJob(job: GpuJob): Promise<void> {
   if (isChatPhotoJob(job)) {
-    await renderChatPhoto(job.data);
+    await renderChatPhoto(job, job.data);
     return;
   }
   if (isStageBackdropJob(job)) {

@@ -40,9 +40,9 @@ export const QUEUE_PROACTIVE_RETRY = {
 } as const;
 
 export const QUEUE_LOCK = {
-  durationMs: 120000,
-  stalledIntervalMs: 120000,
-  maxStalledCount: 1,
+  durationMs: 30000,
+  stalledIntervalMs: 30000,
+  maxStalledCount: 2,
 } as const;
 
 export const QUEUE_CONCURRENCY = {
