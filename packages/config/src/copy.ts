@@ -430,6 +430,8 @@ export const AUTH_COPY = {
   missingFields: "Fill in every field first.",
   failed: "That did not work. Check the address and try again.",
   firstAccountNote: "The first account on a conductor becomes its owner.",
+  showPassword: "Show the password",
+  hidePassword: "Hide the password",
 } as const;
 
 export const ADMIN_COPY = {

@@ -51,5 +51,7 @@ export { default as Sun02Icon } from "@hugeicons/core-free-icons/Sun02Icon";
 export { default as TextFontIcon } from "@hugeicons/core-free-icons/TextFontIcon";
 export { default as Undo02Icon } from "@hugeicons/core-free-icons/Undo02Icon";
 export { default as UserMultiple02Icon } from "@hugeicons/core-free-icons/UserMultiple02Icon";
+export { default as ViewIcon } from "@hugeicons/core-free-icons/ViewIcon";
+export { default as ViewOffIcon } from "@hugeicons/core-free-icons/ViewOffIcon";
 export { default as VolumeHighIcon } from "@hugeicons/core-free-icons/VolumeHighIcon";
 export { default as VolumeOffIcon } from "@hugeicons/core-free-icons/VolumeOffIcon";

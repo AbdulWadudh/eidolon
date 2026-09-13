@@ -1,7 +1,12 @@
+import { AUTH_COPY } from "@eidolon/config";
 import * as React from "react";
 import { TextInput, type TextInputProps } from "react-native";
+import { AppIcon } from "@/components/common/icon";
+import { PressableScale } from "@/components/common/pressable-scale";
 import { GlassSurface } from "@/components/ui/glass-surface";
+import { ViewIcon, ViewOffIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import { select } from "@/services/haptics";
 import { useResolvedTheme } from "@/store/theme-store";
 
 export interface InputProps extends TextInputProps {
@@ -11,12 +16,15 @@ export interface InputProps extends TextInputProps {
 export const Input = React.forwardRef<React.ElementRef<typeof TextInput>, InputProps>(
   ({ className, placeholderTextColor, cursorColor, selectionColor, ...props }, ref) => {
     const theme = useResolvedTheme();
+    const [isRevealed, setRevealed] = React.useState(false);
+    const isMasked = props.secureTextEntry === true;
 
     return (
-      <GlassSurface tint="input" className={cn("w-full rounded-input", className)}>
+      <GlassSurface tint="input" className={cn("relative w-full rounded-input", className)}>
         <TextInput
           ref={ref}
           {...props}
+          secureTextEntry={isMasked && !isRevealed}
           placeholderTextColor={placeholderTextColor ?? theme.textMuted}
           cursorColor={cursorColor ?? theme.primary}
           selectionColor={selectionColor ?? theme.primary}
@@ -26,9 +34,30 @@ export const Input = React.forwardRef<React.ElementRef<typeof TextInput>, InputP
           ]}
           className={cn(
             "h-11 w-full rounded-input border border-border px-4 py-2 font-ui text-sm text-text-primary",
+            isMasked && "pr-12",
             "focus:border-primary",
           )}
         />
+
+        {isMasked ? (
+          <PressableScale
+            accessibilityRole="button"
+            accessibilityLabel={isRevealed ? AUTH_COPY.hidePassword : AUTH_COPY.showPassword}
+            accessibilityState={{ expanded: isRevealed }}
+            hitSlop={8}
+            onPress={() => {
+              select();
+              setRevealed((prev) => !prev);
+            }}
+            className="absolute top-0 right-0 h-11 w-11 items-center justify-center"
+          >
+            <AppIcon
+              icon={isRevealed ? ViewOffIcon : ViewIcon}
+              size={16}
+              color={isRevealed ? theme.primary : theme.textMuted}
+            />
+          </PressableScale>
+        ) : null}
       </GlassSurface>
     );
   },
