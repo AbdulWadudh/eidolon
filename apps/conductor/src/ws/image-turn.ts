@@ -23,6 +23,7 @@ export async function handlePhotoIdeas(
   ws: WebSocketSender,
   userId: string,
   characterId: string,
+  isEditing: boolean,
   signal: AbortSignal,
 ): Promise<void> {
   const card = getCharacterCard(characterId, userId);
@@ -30,6 +31,7 @@ export async function handlePhotoIdeas(
     card.name,
     formatScene(getRecentMessages(characterId, userId), card.name),
     signal,
+    isEditing,
   );
   if (signal.aborted) return;
   sendServerMessage(ws, { type: "photo_ideas", payload: { ideas } });

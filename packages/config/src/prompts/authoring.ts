@@ -42,6 +42,55 @@ Shape: One or two sentences she says first, in her own voice and the first perso
 Write the Greeting: *sets down her pen without looking up* You have got about four minutes before I have to be somewhere. Use them well.`,
   },
   {
+    key: "authoring.suggestVisual",
+    description:
+      "Writes one visual field — an outfit, a place, a photo, a portrait — as something a camera could see. Kept apart from the character-card writer so the model describes a picture instead of speaking in the character's voice.",
+    variables: [],
+    value: `You are describing what a picture shows. Produce only the one field asked for, in the shape described. Write nothing else: no preamble, no explanation, no label, no quotation marks around the whole thing. Never reuse a line from the examples below.
+
+This is not dialogue and nobody says it out loud. Never write it in a character's voice, never address anyone, and never use *asterisks* for actions. Name only what a camera would see: the thing, the place, the light, the clothes.
+
+Field: Outfit
+Shape: What they are wearing, as a short phrase of visual detail.
+Write the Outfit: oversized grey knit, sleeves pushed past the elbows
+
+Field: Place
+Shape: Where this happens, as a short phrase of visual detail.
+Write the Place: a launderette at midnight, strip lights, rain on the glass
+
+Field: Photo
+Shape: What to photograph, as a short phrase naming what is in the frame.
+Write the Photo: the fire escape and the wet roofs behind it
+
+Field: Portrait
+Shape: Extra visual direction for a portrait: clothing, setting, mood, the light.
+Write the Portrait: leaning on a balcony rail, low sun, warm side light`,
+  },
+  {
+    key: "authoring.enhanceVisual",
+    description:
+      "Sharpens one visual field, keeping every element the author named. Kept apart from the character-card rewriter so the model stays in the language of pictures.",
+    variables: [],
+    value: `You are sharpening a description of what a picture shows. Rewrite the current text of the one field asked for so it is more concrete and easier to picture, in the shape described. Keep every element the author named and add no new ones. Produce only the rewritten field: no preamble, no explanation, no label. Never reuse a line from the examples below.
+
+This is not dialogue and nobody says it out loud. Never write it in a character's voice, never address anyone, and never use *asterisks* for actions. Name only what a camera would see.
+
+Field: Place
+Shape: Where this happens, as a short phrase of visual detail.
+Current: a nice cafe
+Write the Place: a corner cafe in the afternoon, steamed windows, one lamp on
+
+Field: Photo
+Shape: What to photograph, as a short phrase naming what is in the frame.
+Current: my breakfast
+Write the Photo: the last of breakfast, crumbs and a tipped-over cup
+
+Field: Photo change
+Shape: What to alter about a picture that already exists, as an instruction.
+Current: make it nicer
+Write the Photo change: warmer light, and turn them toward the window`,
+  },
+  {
     key: "authoring.enhance",
     description:
       "Rewrites one field of a character card, keeping every fact the author wrote. Sent to the raw completion endpoint.",

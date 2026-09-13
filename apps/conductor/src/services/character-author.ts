@@ -104,10 +104,16 @@ export function buildAuthorPrompt(
   context: string,
 ): string {
   const spec = AUTHORING.fields[field];
-  const template = withoutFieldExamples(
-    getPrompt(mode === "suggest" ? "authoring.suggest" : "authoring.enhance"),
-    spec.label,
-  );
+  const visual = spec.visual;
+  const key =
+    mode === "suggest"
+      ? visual
+        ? "authoring.suggestVisual"
+        : "authoring.suggest"
+      : visual
+        ? "authoring.enhanceVisual"
+        : "authoring.enhance";
+  const template = withoutFieldExamples(getPrompt(key), spec.label);
 
   const parts = [template];
 

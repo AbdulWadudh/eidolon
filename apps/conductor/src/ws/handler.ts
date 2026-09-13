@@ -141,7 +141,13 @@ export async function handleClientMessage(
     }
 
     case "request_photo_ideas": {
-      await handlePhotoIdeas(ws, userId, clientMsg.character_id, sessionManager.getAbortSignal(ws));
+      await handlePhotoIdeas(
+        ws,
+        userId,
+        clientMsg.character_id,
+        clientMsg.editing === true,
+        sessionManager.getAbortSignal(ws),
+      );
       break;
     }
   }

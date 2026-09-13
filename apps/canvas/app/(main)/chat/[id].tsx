@@ -302,7 +302,7 @@ export default function ChatScreen() {
         characterName={characterName}
         ideas={view.photoIdeas}
         areIdeasLoading={view.areIdeasLoading}
-        onRequestIdeas={() => chat.requestPhotoIdeas(characterId)}
+        onRequestIdeas={() => chat.requestPhotoIdeas(characterId, Boolean(photos.editing))}
         editing={photos.editing}
         onClose={photos.closeSheet}
         onSubmit={photos.submit}

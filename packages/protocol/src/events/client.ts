@@ -26,6 +26,7 @@ export const RequestImageSchema = z.object({
 export const RequestPhotoIdeasSchema = z.object({
   type: z.literal("request_photo_ideas"),
   character_id: z.string().min(1, "character_id cannot be empty"),
+  editing: z.boolean().optional(),
 });
 
 export const RegenerateSuggestionsSchema = z.object({

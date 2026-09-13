@@ -55,6 +55,24 @@ Do not name what is in the frame and do not announce that you are sending a phot
 At most twelve words — one line, the length of a real text. At most twelve words. Never write your own name. No asterisks, no quotation marks, no square brackets.`,
   },
   {
+    key: "image.editIdeas",
+    description:
+      "Changes offered when the reader asks for an existing photo to be redone, rather than subjects for a new one.",
+    variables: ["name", "scene", "count", "maxChars"],
+    value: `{{name}} sent someone a photo and has been asked to take it again, differently. Suggest {{count}} things they could change about it.
+
+The conversation so far:
+{{scene}}
+
+Return a JSON array of exactly {{count}} strings and nothing else. No explanation and no second array.
+
+Every string is a change to the picture that already exists, not a description of a new one and not a subject on its own. Say what is different this time: the light, the distance, the angle, the pose, what they are wearing, something that comes into or leaves the frame. Under {{maxChars}} characters, a few words each.
+
+Nobody says these out loud, so they are not sentences, not greetings and never in {{name}}'s voice. Never write the name {{name}}. Never mention phones, screens, texting or the taking of the photo itself.
+
+Make the {{count}} pull in different directions rather than being the same note reworded: change one thing about the light, one about where the camera is, one about them, one about what else is in the frame.`,
+  },
+  {
     key: "image.ideas",
     description:
       "Photo ideas offered when the reader asks for a picture, drawn from the character and where the conversation has got to.",

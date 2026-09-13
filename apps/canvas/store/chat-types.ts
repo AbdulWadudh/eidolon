@@ -57,7 +57,7 @@ export interface ChatStore {
     orientation?: PhotoOrientation,
     referenceUrl?: string | null,
   ) => void;
-  requestPhotoIdeas: (characterId: string) => void;
+  requestPhotoIdeas: (characterId: string, isEditing?: boolean) => void;
   isPainting: boolean;
   paintingStep: number;
   paintingTotal: number;

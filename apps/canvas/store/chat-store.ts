@@ -166,9 +166,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     });
   },
 
-  requestPhotoIdeas: (characterId) => {
+  requestPhotoIdeas: (characterId, isEditing = false) => {
     set({ areIdeasLoading: true, photoIdeas: [] });
-    sendMessage({ type: "request_photo_ideas", character_id: characterId });
+    sendMessage({ type: "request_photo_ideas", character_id: characterId, editing: isEditing });
   },
 
   handleServerMessage: (msg) => reduceServerMessage(msg, set, commitStreamingTurn),

@@ -45,7 +45,7 @@ export function PhotoRequestSheet({
   onSubmit,
 }: PhotoRequestSheetProps) {
   const theme = useResolvedTheme(characterId);
-  const author = useTextAuthor(serverHost, "photo");
+  const author = useTextAuthor(serverHost, editing ? "photoEdit" : "photo");
   const reduced = useReducedMotion();
   const [orientation, setOrientation] = React.useState<PhotoOrientation | null>(null);
   const [situation, setSituation] = React.useState("");

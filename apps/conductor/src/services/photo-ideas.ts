@@ -20,6 +20,21 @@ const FALLBACK_IDEAS = [
   "the sky right now",
 ];
 
+const FALLBACK_EDITS = [
+  "closer in",
+  "further back",
+  "warmer light",
+  "darker, later in the day",
+  "looking away from the camera",
+  "from a lower angle",
+  "with the window behind them",
+  "a wider shot of the room",
+  "sitting down instead",
+  "outside rather than in",
+  "a different jacket",
+  "no smile this time",
+];
+
 const PARROTS = ["me and the dog on the sofa", "the view from the top", "hey just got home"];
 
 const BANNED =
@@ -127,10 +142,10 @@ export function isUsable(idea: string, name: string): boolean {
   return !PARROTS.includes(said.join(" "));
 }
 
-export function fill(ideas: string[]): string[] {
+export function fill(ideas: string[], fallbacks: string[] = FALLBACK_IDEAS): string[] {
   const chosen = distinct(ideas);
 
-  for (const filler of shuffle(FALLBACK_IDEAS)) {
+  for (const filler of shuffle(fallbacks)) {
     if (chosen.length >= IMAGE.ideaCount) break;
     if (chosen.some((kept) => echoes(kept, filler))) continue;
     chosen.push(filler);
@@ -143,11 +158,13 @@ export async function generatePhotoIdeas(
   name: string,
   scene: string,
   signal?: AbortSignal,
+  isEditing = false,
 ): Promise<string[]> {
+  const fallbacks = isEditing ? FALLBACK_EDITS : FALLBACK_IDEAS;
   const messages: ChatMessage[] = [
     {
       role: "user",
-      content: render(getPrompt("image.ideas"), {
+      content: render(getPrompt(isEditing ? "image.editIdeas" : "image.ideas"), {
         name,
         scene,
         count: IMAGE.ideaCount,
@@ -167,12 +184,13 @@ export async function generatePhotoIdeas(
       if (raw.length > IMAGE.promptMaxChars) break;
     }
   } catch {
-    return take(shuffle(FALLBACK_IDEAS), IMAGE.ideaCount);
+    return take(shuffle(fallbacks), IMAGE.ideaCount);
   }
 
   return fill(
     extractIdeas(raw)
       .map(tidy)
       .filter((idea) => isUsable(idea, name)),
+    fallbacks,
   );
 }
