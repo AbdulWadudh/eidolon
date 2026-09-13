@@ -38,6 +38,9 @@ export const characters = sqliteTable("characters", {
   defaultAffinity: integer("default_affinity"),
   defaultMood: text("default_mood"),
   outfit: text(),
+  likes: text(),
+  dislikes: text(),
+  personaId: text("persona_id"),
 });
 
 export const messages = sqliteTable(
@@ -182,4 +185,39 @@ export const characterState = sqliteTable(
       name: "character_state_character_id_user_id_pk",
     }),
   ],
+);
+
+export const personas = sqliteTable(
+  "personas",
+  {
+    id: text().primaryKey(),
+    userId: text("user_id").notNull(),
+    name: text().notNull(),
+    photoUrl: text("photo_url"),
+    photoCrop: text("photo_crop"),
+    bio: text(),
+    hobbies: text(),
+    likes: text(),
+    dislikes: text(),
+    personality: text(),
+    isDefault: integer("is_default").default(0),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [index("idx_personas_reader").on(table.userId, desc(table.updatedAt))],
+);
+
+export const personaChapters = sqliteTable(
+  "persona_chapters",
+  {
+    id: text().primaryKey(),
+    personaId: text("persona_id")
+      .notNull()
+      .references(() => personas.id, { onDelete: "cascade" }),
+    chapterIndex: integer("chapter_index").notNull(),
+    title: text(),
+    body: text().notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [index("idx_persona_chapters_persona").on(table.personaId, table.chapterIndex)],
 );

@@ -42,6 +42,33 @@ Read the conversation above before answering. Reply to the last thing they said,
 Right now you feel {{mood}}. How close you feel to them: {{tier}}.`,
   },
   {
+    key: "persona.reader",
+    description:
+      "Who the reader is, assembled from the persona they are speaking as. Given to the character so it answers the person in front of it rather than a stranger.",
+    variables: ["reader"],
+    value: `Who you are talking to:
+{{reader}}
+
+This is the person on the other side of the conversation, not you and not a character in a story. Use what is here the way a friend would: remember it, refer back to it, let it shape what you say and what you ask about. Never recite it back at them, never list it, and never tell them what you know about them unless it comes up naturally.`,
+  },
+  {
+    key: "persona.readerLikes",
+    description:
+      "The reader's likes and dislikes, kept apart from the rest so they can be dropped when the prompt runs long.",
+    variables: ["likes", "dislikes"],
+    value: `Drawn to: {{likes}}
+Put off by: {{dislikes}}`,
+  },
+  {
+    key: "persona.characterLikes",
+    description:
+      "What the character is drawn to and put off by, injected when the card sets either.",
+    variables: ["likes", "dislikes"],
+    value: `What you are drawn to and what puts you off:
+Drawn to: {{likes}}
+Put off by: {{dislikes}}`,
+  },
+  {
     key: "persona.searchContext",
     description: "Wrapper for fresh web results injected into the character's system prompt.",
     variables: ["context"],

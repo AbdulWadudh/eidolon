@@ -5,6 +5,7 @@ import { Hono } from "hono";
 import { mountCharacters } from "@/api/characters";
 import { readLoreBody } from "@/api/lore-body";
 import { applyAffinityOverride, buildMindView } from "@/api/mind";
+import { mountPersonas } from "@/api/personas";
 import { mountVoices } from "@/api/voices";
 import { accountFor, requireOwner, requireUser, type UserEnv } from "@/auth/guard";
 import { AFFINITY, TRANSCRIPT } from "@/config";
@@ -105,6 +106,9 @@ v1.use(API_ROUTES.prompts, requireOwner);
 
 v1.use(API_ROUTES.characters, requireUser);
 v1.use(`${API_ROUTES.characters}/*`, requireUser);
+
+v1.use(API_ROUTES.personas, requireUser);
+v1.use(`${API_ROUTES.personas}/*`, requireUser);
 
 v1.get(API_ROUTES.prompts, (c) => c.json({ prompts: listPrompts() }));
 
@@ -252,6 +256,7 @@ v1.delete(`${API_ROUTES.characters}/:id/memory`, (c) => {
 });
 
 mountCharacters(v1);
+mountPersonas(v1);
 mountVoices(v1);
 
 v1.post(`${API_ROUTES.characters}/:id/chronicle/summarize`, async (c) => {

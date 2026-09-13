@@ -12,6 +12,8 @@ export interface CharacterCard {
   rules: string;
   exampleDialogue: string;
   pronouns: string;
+  likes?: string;
+  dislikes?: string;
   mood: string;
   tier: string;
 }
@@ -45,6 +47,12 @@ export function buildSystemPrompt(card: CharacterCard, injectedContext?: string)
     }),
     block("persona.scenario", "scenario", card.scenario),
     block("persona.rules", "rules", card.rules),
+    (card.likes ?? "").trim().length > 0 || (card.dislikes ?? "").trim().length > 0
+      ? render(getPrompt("persona.characterLikes"), {
+          likes: (card.likes ?? "").trim() || "nothing in particular",
+          dislikes: (card.dislikes ?? "").trim() || "nothing in particular",
+        })
+      : "",
     block("persona.exampleDialogue", "examples", card.exampleDialogue),
     context.length > 0 ? render(getPrompt("persona.searchContext"), { context }) : "",
   ]

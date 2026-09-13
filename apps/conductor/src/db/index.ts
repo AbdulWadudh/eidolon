@@ -143,6 +143,8 @@ export interface StoredCharacter {
   rules: string;
   exampleDialogue: string;
   pronouns: string;
+  likes: string;
+  dislikes: string;
   mood: string;
   tier: string;
 }
@@ -158,6 +160,8 @@ export function getCharacterCard(characterId: string, userId: string | null): St
       rules: characters.rules,
       exampleDialogue: characters.exampleDialogue,
       pronouns: characters.pronouns,
+      likes: characters.likes,
+      dislikes: characters.dislikes,
     })
     .from(characters)
     .where(eq(characters.id, characterId))
@@ -170,6 +174,8 @@ export function getCharacterCard(characterId: string, userId: string | null): St
     scenario: row?.scenario ?? "",
     rules: row?.rules ?? "",
     exampleDialogue: row?.exampleDialogue ?? "",
+    likes: row?.likes ?? "",
+    dislikes: row?.dislikes ?? "",
     pronouns: isPronounKey(row?.pronouns) ? row.pronouns.trim().toLowerCase() : DEFAULT_PRONOUNS,
     mood: mind.mood,
     tier: mind.tier,

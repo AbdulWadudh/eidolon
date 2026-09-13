@@ -44,6 +44,8 @@ const TEXT_FIELDS: Array<keyof Draft> = [
   "greeting",
   "voice",
   "pronouns",
+  "likes",
+  "dislikes",
 ];
 
 export function readDraft(body: Record<string, unknown>): Draft {

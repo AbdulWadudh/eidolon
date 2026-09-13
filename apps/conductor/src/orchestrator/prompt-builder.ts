@@ -4,6 +4,7 @@ import { getCharacterCard, getCharacterMind, getRecentMessages } from "@/db";
 import { getActiveChronicle } from "@/orchestrator/chronicle";
 import { loreContext } from "@/orchestrator/lorebook";
 import { recallMemories } from "@/orchestrator/memory-manager";
+import { readerContext } from "@/orchestrator/reader";
 import { shouldSearchWeb } from "@/orchestrator/search-trigger";
 import { getPrompt } from "@/prompts/store";
 import { type ChatMessage, streamChatCompletion } from "@/services/llm";
@@ -162,6 +163,7 @@ export async function assemblePrompt(options: AssembleOptions): Promise<Assemble
 
   const sections: Record<string, string> = {
     persona: buildSystemPrompt(card),
+    reader: readerContext(characterId, userId),
     state: stateDirective(mind.score, mind.tier, mind.mood),
     chronicle: getActiveChronicle(characterId, userId),
     recall,

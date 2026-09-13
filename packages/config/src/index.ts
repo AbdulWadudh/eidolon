@@ -81,6 +81,7 @@ export {
   MOMENT_COPY,
   MOOD_COPY,
   OUTFIT_COPY,
+  PERSONA_COPY,
   PHOTO_COPY,
   STATUS_COPY,
   type StatusKey,

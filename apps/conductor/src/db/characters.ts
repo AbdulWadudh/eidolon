@@ -18,6 +18,9 @@ export interface CharacterCard {
   greeting: string;
   voice: string;
   pronouns: string;
+  likes: string;
+  dislikes: string;
+  personaId: string | null;
   ownerId: string | null;
   isPublic: boolean;
   forkedFrom: string | null;
@@ -46,6 +49,9 @@ const COLUMNS = {
   greeting: characters.greeting,
   voice: characters.voice,
   pronouns: characters.pronouns,
+  likes: characters.likes,
+  dislikes: characters.dislikes,
+  personaId: characters.personaId,
   ownerId: characters.ownerId,
   isPublic: characters.isPublic,
   forkedFrom: characters.forkedFrom,
@@ -67,6 +73,9 @@ type CardRow = Pick<
   | "greeting"
   | "voice"
   | "pronouns"
+  | "likes"
+  | "dislikes"
+  | "personaId"
   | "ownerId"
   | "isPublic"
   | "forkedFrom"
@@ -85,6 +94,9 @@ function toCard(row: CardRow): CharacterCard {
     greeting: row.greeting ?? "",
     voice: row.voice ?? VOICE.defaultId,
     pronouns: isPronounKey(row.pronouns) ? row.pronouns.trim().toLowerCase() : DEFAULT_PRONOUNS,
+    likes: row.likes ?? "",
+    dislikes: row.dislikes ?? "",
+    personaId: row.personaId,
     ownerId: row.ownerId,
     isPublic: row.isPublic === 1,
     forkedFrom: row.forkedFrom,

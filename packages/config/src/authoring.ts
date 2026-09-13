@@ -11,6 +11,15 @@ export type AuthorField =
   | "lore"
   | "outfit"
   | "place"
+  | "likes"
+  | "dislikes"
+  | "personaName"
+  | "personaBio"
+  | "personaHobbies"
+  | "personaLikes"
+  | "personaDislikes"
+  | "personaPersonality"
+  | "personaChapter"
   | "photo"
   | "photoEdit"
   | "portrait"
@@ -162,6 +171,87 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
     maxChars: 300,
     visual: false,
     singleLine: false,
+  },
+  likes: {
+    label: "Likes",
+    guidance:
+      "Things they are drawn to, as a short comma separated list: food, music, weather, places, the kind of person they warm to. Six or seven at most, concrete rather than abstract. Never a sentence.",
+    maxTokens: 60,
+    maxChars: 200,
+    singleLine: true,
+    visual: false,
+  },
+  dislikes: {
+    label: "Dislikes",
+    guidance:
+      "Things that put them off, as a short comma separated list: habits, noises, foods, kinds of talk. Six or seven at most, concrete rather than abstract. Never a sentence, and never the exact opposite of their likes.",
+    maxTokens: 60,
+    maxChars: 200,
+    singleLine: true,
+    visual: false,
+  },
+  personaName: {
+    label: "Your name",
+    guidance:
+      "The name you want characters to call you. One or two words, a given name or a handle. Never a title and never a description.",
+    maxTokens: 12,
+    maxChars: 48,
+    singleLine: true,
+    visual: false,
+  },
+  personaBio: {
+    label: "Your bio",
+    guidance:
+      "Two or three sentences about who you are, in the first person: what you do, where you are, what your days look like. Concrete and plain, the way you would tell someone you had just met.",
+    maxTokens: 160,
+    maxChars: 500,
+    singleLine: false,
+    visual: false,
+  },
+  personaHobbies: {
+    label: "Your hobbies",
+    guidance:
+      "What you do with your own time, as a short comma separated list. Five or six at most, specific rather than general: name the instrument, the sport, the game, the kind of book. Never a sentence.",
+    maxTokens: 60,
+    maxChars: 200,
+    singleLine: true,
+    visual: false,
+  },
+  personaLikes: {
+    label: "What you like",
+    guidance:
+      "Things you are drawn to, as a short comma separated list, written about yourself: food, music, weather, places, the kind of person you warm to. Six or seven at most, concrete. Never a sentence.",
+    maxTokens: 60,
+    maxChars: 200,
+    singleLine: true,
+    visual: false,
+  },
+  personaDislikes: {
+    label: "What you dislike",
+    guidance:
+      "Things that put you off, as a short comma separated list, written about yourself: habits, noises, foods, kinds of talk. Six or seven at most, concrete. Never a sentence, and never the exact opposite of what you like.",
+    maxTokens: 60,
+    maxChars: 200,
+    singleLine: true,
+    visual: false,
+  },
+  personaPersonality: {
+    label: "Your personality",
+    guidance:
+      "Two or three sentences about how you think and behave, in the first person. Concrete habits and reactions, how you are in a conversation, what you do when something goes wrong. Not a list of adjectives.",
+    maxTokens: 200,
+    maxChars: 700,
+    singleLine: false,
+    visual: false,
+  },
+  personaChapter: {
+    label: "A chapter of your life",
+    guidance:
+      "A few sentences about one stretch of your life, in the first person and the past tense: where you were, what you were doing, what changed by the end of it. One chapter only, never a summary of everything.",
+    maxTokens: 200,
+    maxChars: 700,
+    singleLine: false,
+    visual: false,
   },
   lore: {
     label: "Lore entry",

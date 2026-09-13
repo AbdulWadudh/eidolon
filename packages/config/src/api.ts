@@ -8,6 +8,7 @@ export const API_ROUTES = {
   session: "/session",
   prompts: "/prompts",
   characters: "/characters",
+  personas: "/personas",
   voices: "/voices",
 } as const;
 
