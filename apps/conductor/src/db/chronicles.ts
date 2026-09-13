@@ -66,3 +66,24 @@ export function countChronicles(characterId: string): number {
     .get(characterId);
   return row?.total ?? 0;
 }
+
+export function updateChronicle(chronicleId: string, summaryText: string): boolean {
+  const result = db
+    .query("UPDATE chronicles SET summary_text = ?2 WHERE id = ?1")
+    .run(chronicleId, summaryText);
+  return result.changes > 0;
+}
+
+export function deleteChronicle(chronicleId: string): boolean {
+  const result = db.query("DELETE FROM chronicles WHERE id = ?").run(chronicleId);
+  return result.changes > 0;
+}
+
+export function getChronicle(chronicleId: string): StoredChronicle | null {
+  const row = db
+    .query<ChronicleRow, [string]>(
+      "SELECT id, chapter_index, summary_text, created_at FROM chronicles WHERE id = ?",
+    )
+    .get(chronicleId);
+  return row ? toChronicle(row) : null;
+}

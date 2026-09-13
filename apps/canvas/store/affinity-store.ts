@@ -1,4 +1,4 @@
-import { AFFINITY_HUD } from "@eidolon/config";
+import { AFFINITY_HUD, DEFAULT_PRONOUNS } from "@eidolon/config";
 import { create } from "zustand";
 import { tap } from "@/services/haptics";
 import { appStorage } from "@/store/storage";
@@ -17,6 +17,7 @@ export interface AffinityState {
   affinityScore: number;
   affinityTier: string;
   currentMood: string;
+  pronouns: string;
   isAffinityLocked: boolean;
   isInsightModeEnabled: boolean;
   allowWebSearch: boolean;
@@ -36,6 +37,7 @@ export interface AffinitySnapshot {
   affinityScore: number;
   affinityTier: string;
   currentMood: string;
+  pronouns?: string;
   isAffinityLocked: boolean;
 }
 
@@ -43,6 +45,7 @@ const INITIAL = {
   affinityScore: 0,
   affinityTier: "",
   currentMood: "",
+  pronouns: DEFAULT_PRONOUNS as string,
   isAffinityLocked: false,
   toast: null as AffinityToast | null,
 };
@@ -102,6 +105,7 @@ export const useAffinityStore = create<AffinityState>((set, get) => ({
       affinityTier: snapshot.affinityTier,
       currentMood: snapshot.currentMood,
       isAffinityLocked: snapshot.isAffinityLocked,
+      ...(snapshot.pronouns ? { pronouns: snapshot.pronouns } : {}),
     });
   },
 

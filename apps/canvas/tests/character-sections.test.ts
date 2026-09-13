@@ -11,8 +11,9 @@ const grouped = Object.values(SECTIONS).flatMap((spec) => spec.fields);
 
 describe("grouping the card into sections", () => {
   it("reaches every editable field", () => {
+    const pickers = new Set(["voice", "pronouns"]);
     const editable = (Object.keys(EMPTY_DRAFT) as (keyof typeof EMPTY_DRAFT)[]).filter(
-      (key): key is FieldKey => key !== "voice",
+      (key): key is FieldKey => !pickers.has(key),
     );
 
     expect([...grouped].sort()).toEqual([...editable].sort());

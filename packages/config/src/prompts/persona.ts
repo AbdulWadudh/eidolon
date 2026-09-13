@@ -49,6 +49,12 @@ Right now you feel {{mood}}. How close you feel to them: {{tier}}.`,
 {{context}}`,
   },
   {
+    key: "persona.pronouns",
+    description: "How the character is referred to, injected from the card's pronoun setting.",
+    variables: ["subject", "object", "possessive"],
+    value: `You are referred to as {{subject}}/{{object}}/{{possessive}}. Anyone speaking about you uses those words.`,
+  },
+  {
     key: "persona.scenario",
     description: "Where the two of you are and what is going on, injected when the card sets one.",
     variables: ["scenario"],

@@ -1,4 +1,4 @@
-import { CHARACTER_COPY, VOICE } from "@eidolon/config";
+import { CHARACTER_COPY, DEFAULT_PRONOUNS, VOICE } from "@eidolon/config";
 import type { CharacterCard } from "./character-api";
 
 export type Draft = Omit<CharacterCard, "id" | "ownerId" | "isPublic" | "forkedFrom">;
@@ -13,9 +13,10 @@ export const EMPTY_DRAFT: Draft = {
   exampleDialogue: "",
   greeting: "",
   voice: VOICE.defaultId,
+  pronouns: DEFAULT_PRONOUNS,
 };
 
-export type FieldKey = Exclude<keyof Draft, "voice">;
+export type FieldKey = Exclude<keyof Draft, "voice" | "pronouns">;
 
 export interface FieldSpec {
   key: FieldKey;

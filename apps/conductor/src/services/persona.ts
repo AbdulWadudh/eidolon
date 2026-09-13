@@ -1,4 +1,4 @@
-import { CHAT_TURN, render } from "@eidolon/config";
+import { CHAT_TURN, pronounsFor, render } from "@eidolon/config";
 import { getPrompt } from "@/prompts/store";
 import type { ChatMessage } from "@/services/llm";
 
@@ -11,6 +11,7 @@ export interface CharacterCard {
   scenario: string;
   rules: string;
   exampleDialogue: string;
+  pronouns: string;
   mood: string;
   tier: string;
 }
@@ -34,8 +35,14 @@ function block(key: string, variable: string, value: string): string {
 
 export function buildSystemPrompt(card: CharacterCard, injectedContext?: string): string {
   const context = injectedContext?.trim() ?? "";
+  const voice = pronounsFor(card.pronouns);
   const extra = [
     card.systemPrompt.trim(),
+    render(getPrompt("persona.pronouns"), {
+      subject: voice.subject,
+      object: voice.object,
+      possessive: voice.possessive,
+    }),
     block("persona.scenario", "scenario", card.scenario),
     block("persona.rules", "rules", card.rules),
     block("persona.exampleDialogue", "examples", card.exampleDialogue),

@@ -7,7 +7,7 @@ import type { ChronicleSummaryJob } from "@/queue/types";
 
 const NEWLINE = String.fromCharCode(10);
 
-export function chronicleJobId(characterId: string, milestone: number): string {
+export function chronicleJobId(characterId: string, milestone: number | string): string {
   return jobKey("chronicle", characterId, milestone);
 }
 
@@ -41,6 +41,20 @@ export async function maybeSummarizeChronicle(characterId: string): Promise<stri
 
   const jobId = await enqueueGpuJob(QUEUE_JOBS.summarizeChronicle, data, {
     jobId: chronicleJobId(characterId, total),
+  });
+
+  return jobId ?? null;
+}
+
+export async function summarizeChronicleNow(characterId: string): Promise<string | null> {
+  const messageBatch = batchForMilestone(characterId);
+  if (messageBatch.length === 0) return null;
+
+  const chapterIndex = nextChapterIndex(characterId);
+  const data: ChronicleSummaryJob = { characterId, messageBatch, chapterIndex };
+
+  const jobId = await enqueueGpuJob(QUEUE_JOBS.summarizeChronicle, data, {
+    jobId: chronicleJobId(characterId, `manual-${chapterIndex}-${Date.now()}`),
   });
 
   return jobId ?? null;

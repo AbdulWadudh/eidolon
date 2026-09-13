@@ -6,7 +6,10 @@ export type AuthorField =
   | "rules"
   | "exampleDialogue"
   | "greeting"
-  | "systemPrompt";
+  | "systemPrompt"
+  | "chapter"
+  | "lore"
+  | "reply";
 
 export type AuthorMode = "suggest" | "enhance";
 
@@ -30,7 +33,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   tagline: {
     label: "Tagline",
     guidance:
-      "One short line about her, under ten words, written about her rather than by her. No full stop needed.",
+      "One short line about them, under ten words, written about them rather than by them. No full stop needed.",
     maxTokens: 28,
     maxChars: 90,
     singleLine: true,
@@ -38,7 +41,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   personality: {
     label: "Personality",
     guidance:
-      "Two or three sentences of prose about how she thinks and behaves, in the third person. Concrete habits and reactions, not a list of adjectives.",
+      "Two or three sentences of prose about how they think and behave, in the third person. Concrete habits and reactions, not a list of adjectives.",
     maxTokens: 200,
     maxChars: 700,
     singleLine: false,
@@ -54,7 +57,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   rules: {
     label: "Rules",
     guidance:
-      "Short standing rules, one per line, of what she always or never does. No prose, no numbering.",
+      "Short standing rules, one per line, of what they always or never do. No prose, no numbering.",
     maxTokens: 140,
     maxChars: 400,
     singleLine: false,
@@ -62,7 +65,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   exampleDialogue: {
     label: "Example dialogue",
     guidance:
-      "Two or three short exchanges showing how she talks. Every line begins with either You: or her name and a colon. Actions go in *asterisks*.",
+      "Two or three short exchanges showing how they talk. Every line begins with either You: or their name and a colon. Actions go in *asterisks*.",
     maxTokens: 240,
     maxChars: 800,
     singleLine: false,
@@ -70,7 +73,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   greeting: {
     label: "Greeting",
     guidance:
-      "One or two sentences she says first, in her own voice and the first person. It may open with one short *action*.",
+      "One or two sentences they say first, in their own voice and the first person. It may open with one short *action*.",
     maxTokens: 90,
     maxChars: 300,
     singleLine: false,
@@ -78,9 +81,33 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   systemPrompt: {
     label: "System prompt",
     guidance:
-      "Standing instructions to the model in the imperative, addressed to her. Two or three short sentences at most.",
+      "Standing instructions to the model in the imperative, addressed to them. Two or three short sentences at most.",
     maxTokens: 140,
     maxChars: 400,
+    singleLine: false,
+  },
+  chapter: {
+    label: "Chapter",
+    guidance:
+      "Two to four short lines, one per beat, of what happened between the two of you. Past tense, third person, one line each. No preamble and no numbering.",
+    maxTokens: 160,
+    maxChars: 500,
+    singleLine: false,
+  },
+  reply: {
+    label: "Reply",
+    guidance:
+      "One or two short sentences in their own voice, first person, the way a real person texts. It may open with one short *action*.",
+    maxTokens: 90,
+    maxChars: 300,
+    singleLine: false,
+  },
+  lore: {
+    label: "Lore entry",
+    guidance:
+      "One or two sentences of a single fact about them or their world, written as something they know. Concrete and specific, never a summary of their personality.",
+    maxTokens: 110,
+    maxChars: 320,
     singleLine: false,
   },
 };

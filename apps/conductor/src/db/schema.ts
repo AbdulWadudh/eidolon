@@ -105,8 +105,6 @@ export function applySchema(db: Database): void {
       ON character_portraits(character_id, url);
   `);
 
-  adoptExistingPortraits(db);
-
   addColumnIfMissing(db, "stages", "updated_at", "INTEGER");
   addColumnIfMissing(db, "characters", "affinity_locked", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "characters", "greeting", "TEXT");
@@ -125,4 +123,7 @@ export function applySchema(db: Database): void {
   addColumnIfMissing(db, "characters", "avatar_crop", "TEXT");
   addColumnIfMissing(db, "characters", "face_url", "TEXT");
   addColumnIfMissing(db, "characters", "theme_pigment", "TEXT");
+  addColumnIfMissing(db, "characters", "pronouns", "TEXT");
+
+  adoptExistingPortraits(db);
 }

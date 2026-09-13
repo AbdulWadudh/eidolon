@@ -1,4 +1,4 @@
-import { VOICE } from "@eidolon/config";
+import { DEFAULT_PRONOUNS, isPronounKey, VOICE } from "@eidolon/config";
 import { kebabCase } from "es-toolkit";
 import { db } from "@/db";
 import { safeJsonParse } from "@/utils";
@@ -14,6 +14,7 @@ export interface CharacterCard {
   exampleDialogue: string;
   greeting: string;
   voice: string;
+  pronouns: string;
   ownerId: string | null;
   isPublic: boolean;
   forkedFrom: string | null;
@@ -39,6 +40,7 @@ interface CharacterRow {
   example_dialogue: string | null;
   greeting: string | null;
   voice: string | null;
+  pronouns: string | null;
   owner_id: string | null;
   is_public: number | null;
   forked_from: string | null;
@@ -51,7 +53,7 @@ interface CharacterRow {
 }
 
 const COLUMNS = `id, name, tagline, personality, system_prompt, scenario, rules,
-  example_dialogue, greeting, voice, owner_id, is_public, forked_from, avatar_url,
+  example_dialogue, greeting, voice, pronouns, owner_id, is_public, forked_from, avatar_url,
   avatar_crop, affinity_score, affinity_tier, current_mood, created_at`;
 
 function toCard(row: CharacterRow): CharacterCard {
@@ -66,6 +68,7 @@ function toCard(row: CharacterRow): CharacterCard {
     exampleDialogue: row.example_dialogue ?? "",
     greeting: row.greeting ?? "",
     voice: row.voice ?? VOICE.defaultId,
+    pronouns: isPronounKey(row.pronouns) ? row.pronouns.trim().toLowerCase() : DEFAULT_PRONOUNS,
     ownerId: row.owner_id,
     isPublic: row.is_public === 1,
     forkedFrom: row.forked_from,
@@ -136,8 +139,8 @@ export function createCharacter(draft: CharacterDraft): CharacterCard {
   db.query(
     `INSERT INTO characters
        (id, name, tagline, personality, system_prompt, scenario, rules,
-        example_dialogue, greeting, voice, owner_id, is_public, forked_from, created_at)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)`,
+        example_dialogue, greeting, voice, pronouns, owner_id, is_public, forked_from, created_at)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)`,
   ).run(
     id,
     draft.name.trim(),
@@ -149,6 +152,7 @@ export function createCharacter(draft: CharacterDraft): CharacterCard {
     draft.exampleDialogue ?? "",
     draft.greeting ?? "",
     draft.voice ?? VOICE.defaultId,
+    isPronounKey(draft.pronouns) ? draft.pronouns.trim().toLowerCase() : DEFAULT_PRONOUNS,
     draft.ownerId ?? null,
     draft.isPublic ? 1 : 0,
     draft.forkedFrom ?? null,
@@ -172,6 +176,7 @@ const EDITABLE: Record<EditableField, string> = {
   exampleDialogue: "example_dialogue",
   greeting: "greeting",
   voice: "voice",
+  pronouns: "pronouns",
   isPublic: "is_public",
 };
 
@@ -184,6 +189,7 @@ export function updateCharacter(
   for (const [field, column] of Object.entries(EDITABLE)) {
     const value = patch[field as EditableField];
     if (value === undefined) continue;
+    if (field === "pronouns" && !isPronounKey(value as string)) continue;
     db.query(`UPDATE characters SET ${column} = ?2 WHERE id = ?1`).run(
       id,
       typeof value === "boolean" ? (value ? 1 : 0) : value,

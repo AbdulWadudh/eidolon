@@ -97,3 +97,7 @@ export const PROMPT_BUDGET = {
 } as const;
 
 export type PromptSection = (typeof PROMPT_BUDGET.sectionOrder)[number];
+
+export const CHRONICLE_PAGING = {
+  steps: [5, 10, 20, 50] as readonly number[],
+} as const;

@@ -15,6 +15,7 @@ export interface CharacterCard {
   exampleDialogue: string;
   greeting: string;
   voice: string;
+  pronouns: string;
 }
 
 export interface CharacterSummary extends CharacterCard {
@@ -34,6 +35,7 @@ export interface Preset {
   name: string;
   tagline: string;
   voice: string;
+  pronouns: string;
 }
 
 function signal(): AbortSignal {

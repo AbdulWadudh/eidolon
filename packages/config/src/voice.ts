@@ -27,7 +27,7 @@ export const VOICE = {
 
 export const VOICE_COPY = {
   title: "Voice",
-  subtitle: "How she sounds when she sends a voice note.",
+  subtitle: "How they sound when they send a voice note.",
   search: "Search voices",
   preview: "Play a sample",
   previewing: "Playing",

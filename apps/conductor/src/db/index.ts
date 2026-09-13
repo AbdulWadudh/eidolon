@@ -1,5 +1,5 @@
 import { Database } from "bun:sqlite";
-import { AFFINITY, CHAT_TURN } from "@eidolon/config";
+import { AFFINITY, CHAT_TURN, DEFAULT_PRONOUNS, isPronounKey } from "@eidolon/config";
 import { SQLITE_DB_PATH } from "@eidolon/config/server";
 import { capitalize } from "es-toolkit";
 import { rebuildChronicles } from "@/db/migrations";
@@ -92,6 +92,7 @@ export interface StoredCharacter {
   scenario: string;
   rules: string;
   exampleDialogue: string;
+  pronouns: string;
   mood: string;
   tier: string;
 }
@@ -100,7 +101,7 @@ export function getCharacterCard(characterId: string): StoredCharacter {
   const row = db
     .query(
       `SELECT name, personality, system_prompt, scenario, rules, example_dialogue,
-              current_mood, affinity_tier
+              pronouns, current_mood, affinity_tier
        FROM characters WHERE id = ?`,
     )
     .get(characterId) as {
@@ -110,6 +111,7 @@ export function getCharacterCard(characterId: string): StoredCharacter {
     scenario?: string;
     rules?: string;
     example_dialogue?: string;
+    pronouns?: string;
     current_mood?: string;
     affinity_tier?: string;
   } | null;
@@ -121,6 +123,7 @@ export function getCharacterCard(characterId: string): StoredCharacter {
     scenario: row?.scenario ?? "",
     rules: row?.rules ?? "",
     exampleDialogue: row?.example_dialogue ?? "",
+    pronouns: isPronounKey(row?.pronouns) ? row.pronouns.trim().toLowerCase() : DEFAULT_PRONOUNS,
     mood: row?.current_mood ?? AFFINITY.defaultMood,
     tier: row?.affinity_tier ?? startingTier(),
   };
@@ -244,4 +247,50 @@ export function forgetCharacter(characterId: string): void {
   db.query(
     "UPDATE characters SET affinity_score = ?2, affinity_tier = ?3, current_mood = ?4 WHERE id = ?1",
   ).run(characterId, AFFINITY.start, startingTier(), AFFINITY.defaultMood);
+}
+
+export function updateMessageContent(messageId: string, content: string): boolean {
+  const result = db.query("UPDATE messages SET content = ?2 WHERE id = ?1").run(messageId, content);
+  return result.changes > 0;
+}
+
+export interface LastExchange {
+  assistantId: string;
+  assistantText: string;
+  userText: string;
+}
+
+export function lastExchange(characterId: string): LastExchange | null {
+  const rows = db
+    .query<{ id: string; role: string; content: string }, [string]>(
+      "SELECT id, role, content FROM messages WHERE character_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 10",
+    )
+    .all(characterId);
+
+  const assistantAt = rows.findIndex((row) => row.role === "assistant");
+  if (assistantAt === -1) return null;
+
+  const user = rows.slice(assistantAt + 1).find((row) => row.role === "user");
+  if (!user) return null;
+
+  return {
+    assistantId: rows[assistantAt]?.id ?? "",
+    assistantText: rows[assistantAt]?.content ?? "",
+    userText: user.content,
+  };
+}
+
+export function getMessage(messageId: string): { characterId: string; content: string } | null {
+  const row = db
+    .query<{ character_id: string; content: string }, [string]>(
+      "SELECT character_id, content FROM messages WHERE id = ?",
+    )
+    .get(messageId);
+  return row ? { characterId: row.character_id, content: row.content } : null;
+}
+
+export function clearMessageAudio(messageId: string): void {
+  db.query("UPDATE messages SET audio_url = NULL, audio_duration = NULL WHERE id = ?").run(
+    messageId,
+  );
 }

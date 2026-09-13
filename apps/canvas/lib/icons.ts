@@ -11,6 +11,7 @@ export { default as CallEnd01Icon } from "@hugeicons/core-free-icons/CallEnd01Ic
 export { default as Cancel01Icon } from "@hugeicons/core-free-icons/Cancel01Icon";
 export { default as CheckmarkCircle01Icon } from "@hugeicons/core-free-icons/CheckmarkCircle01Icon";
 export { default as ColorPickerIcon } from "@hugeicons/core-free-icons/ColorPickerIcon";
+export { default as Delete02Icon } from "@hugeicons/core-free-icons/Delete02Icon";
 export { default as Download01Icon } from "@hugeicons/core-free-icons/Download01Icon";
 export { default as FileUploadIcon } from "@hugeicons/core-free-icons/FileUploadIcon";
 export { default as FlashIcon } from "@hugeicons/core-free-icons/FlashIcon";
@@ -25,6 +26,7 @@ export { default as Moon02Icon } from "@hugeicons/core-free-icons/Moon02Icon";
 export { default as MoreVerticalIcon } from "@hugeicons/core-free-icons/MoreVerticalIcon";
 export { default as PaintBoardIcon } from "@hugeicons/core-free-icons/PaintBoardIcon";
 export { default as PauseIcon } from "@hugeicons/core-free-icons/PauseIcon";
+export { default as PencilEdit02Icon } from "@hugeicons/core-free-icons/PencilEdit02Icon";
 export { default as PlayIcon } from "@hugeicons/core-free-icons/PlayIcon";
 export { default as QrCodeIcon } from "@hugeicons/core-free-icons/QrCodeIcon";
 export { default as RefreshIcon } from "@hugeicons/core-free-icons/RefreshIcon";

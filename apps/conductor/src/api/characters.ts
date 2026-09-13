@@ -34,6 +34,7 @@ const TEXT_FIELDS: Array<keyof Draft> = [
   "exampleDialogue",
   "greeting",
   "voice",
+  "pronouns",
 ];
 
 export function readDraft(body: Record<string, unknown>): Draft {

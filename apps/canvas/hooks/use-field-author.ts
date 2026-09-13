@@ -3,24 +3,25 @@ import * as React from "react";
 import { tap } from "@/services/haptics";
 import { authorField, contextFrom } from "@/store/author-api";
 import type { Draft } from "@/store/character-draft";
+export type DraftField = AuthorField & keyof Draft;
 
 export interface FieldAuthor {
-  busyField: AuthorField | null;
+  busyField: DraftField | null;
   error: string | null;
-  run: (field: AuthorField, mode: AuthorMode) => void;
-  revert: (field: AuthorField) => void;
-  stepsBack: (field: AuthorField) => number;
+  run: (field: DraftField, mode: AuthorMode) => void;
+  revert: (field: DraftField) => void;
+  stepsBack: (field: DraftField) => number;
   clearError: () => void;
 }
 
-type History = Partial<Record<AuthorField, string[]>>;
+type History = Partial<Record<DraftField, string[]>>;
 
 export function useFieldAuthor(
   serverHost: string,
   draft: Draft,
   onChange: (patch: Partial<Draft>) => void,
 ): FieldAuthor {
-  const [busyField, setBusyField] = React.useState<AuthorField | null>(null);
+  const [busyField, setBusyField] = React.useState<DraftField | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const history = React.useRef<History>({});
 
@@ -28,7 +29,7 @@ export function useFieldAuthor(
   latest.current = draft;
 
   const run = React.useCallback(
-    (field: AuthorField, mode: AuthorMode) => {
+    (field: DraftField, mode: AuthorMode) => {
       if (busyField) return;
 
       const current = latest.current;
@@ -59,7 +60,7 @@ export function useFieldAuthor(
   );
 
   const revert = React.useCallback(
-    (field: AuthorField) => {
+    (field: DraftField) => {
       const stack = history.current[field] ?? [];
       if (stack.length === 0) return;
 
@@ -73,7 +74,7 @@ export function useFieldAuthor(
   );
 
   const stepsBack = React.useCallback(
-    (field: AuthorField) => (history.current[field] ?? []).length,
+    (field: DraftField) => (history.current[field] ?? []).length,
     [],
   );
 

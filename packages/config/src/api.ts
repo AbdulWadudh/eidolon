@@ -129,16 +129,18 @@ export function charactersUrl(host: string, scheme = httpScheme(host)): string {
   return `${scheme}://${stripAuthority(host)}${apiPath("characters")}`;
 }
 
-export function characterLorePath(characterId: string): string {
-  return `${characterPath(characterId)}/lore`;
+export function characterLorePath(characterId: string, entryId?: string): string {
+  const base = `${characterPath(characterId)}/lore`;
+  return entryId ? `${base}/${encodeURIComponent(entryId)}` : base;
 }
 
 export function characterLoreUrl(
   host: string,
   characterId: string,
+  entryId?: string,
   scheme = httpScheme(host),
 ): string {
-  return `${scheme}://${stripAuthority(host)}${characterLorePath(characterId)}`;
+  return `${scheme}://${stripAuthority(host)}${characterLorePath(characterId, entryId)}`;
 }
 
 export function characterGalleryPath(characterId: string): string {
@@ -224,4 +226,30 @@ export function characterExportUrl(
   scheme = httpScheme(host),
 ): string {
   return `${scheme}://${stripAuthority(host)}${characterExportPath(characterId)}`;
+}
+
+export function characterChroniclePath(characterId: string, chapterId?: string): string {
+  const base = `${apiPath("characters")}/${encodeURIComponent(characterId)}/chronicle`;
+  return chapterId ? `${base}/${encodeURIComponent(chapterId)}` : base;
+}
+
+export function characterChronicleUrl(
+  host: string,
+  characterId: string,
+  chapterId?: string,
+  scheme = httpScheme(host),
+): string {
+  return `${scheme}://${stripAuthority(host)}${characterChroniclePath(characterId, chapterId)}`;
+}
+
+export function characterSummarizePath(characterId: string): string {
+  return `${apiPath("characters")}/${encodeURIComponent(characterId)}/chronicle/summarize`;
+}
+
+export function characterSummarizeUrl(
+  host: string,
+  characterId: string,
+  scheme = httpScheme(host),
+): string {
+  return `${scheme}://${stripAuthority(host)}${characterSummarizePath(characterId)}`;
 }
