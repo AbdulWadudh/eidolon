@@ -2,6 +2,7 @@ import { AFFINITY_HUD, affinityLabel, CHAT_COPY, EASING_BEZIER, UI_MS } from "@e
 import { Image } from "expo-image";
 import { Text, View } from "react-native";
 import Animated, { cubicBezier, FadeIn, useReducedMotion } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AffinityToast } from "@/components/chat/AffinityToast";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
@@ -36,6 +37,8 @@ const ACTION_PX = AVATAR_PX;
 const ICON_PX = 18;
 const ICON_STROKE = 1.6;
 
+const BAR_TOP_PX = 6;
+
 export function ChatTopBar({
   characterName,
   avatarUrl,
@@ -51,6 +54,7 @@ export function ChatTopBar({
   onOverflow,
   onCall,
 }: ChatTopBarProps) {
+  const insets = useSafeAreaInsets();
   const theme = useResolvedTheme(characterId);
   const reduced = useReducedMotion();
   const insight = useAffinityStore((state) => state.isInsightModeEnabled);
@@ -63,7 +67,8 @@ export function ChatTopBar({
     <GlassSurface
       tint="canvas"
       characterId={characterId}
-      className="flex-row items-center gap-1 border-border border-b px-2 py-2"
+      className="flex-row items-center gap-1 border-border border-b px-2 pb-2"
+      style={{ paddingTop: insets.top + BAR_TOP_PX }}
     >
       <PressableScale
         accessibilityRole="button"

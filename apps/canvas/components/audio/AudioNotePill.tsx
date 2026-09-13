@@ -51,6 +51,11 @@ export function AudioNotePill({
           borderTopRightRadius: theme.radius,
           borderBottomLeftRadius: 0,
           borderBottomRightRadius: 0,
+          borderColor: theme.cardBorder,
+          borderBottomWidth: 0,
+          borderTopWidth: theme.borderWidth,
+          borderLeftWidth: theme.borderWidth,
+          borderRightWidth: theme.borderWidth,
         }}
       />
 

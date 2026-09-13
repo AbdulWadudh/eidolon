@@ -164,7 +164,7 @@ export function CharacterSettingsSheet({
     >
       <VariableContextProvider value={cssVars}>
         <SafeAreaView
-          edges={["top", "bottom"]}
+          edges={["bottom"]}
           className="flex-1 bg-canvas"
           style={{ flex: 1, backgroundColor: theme.canvas }}
         >

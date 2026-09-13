@@ -112,7 +112,7 @@ export default function CallScreen() {
 
   return (
     <SafeAreaView
-      edges={["top", "bottom"]}
+      edges={["bottom"]}
       style={{ flex: 1, backgroundColor: theme.canvas }}
       className="flex-1 bg-canvas"
     >

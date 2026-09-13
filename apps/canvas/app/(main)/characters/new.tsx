@@ -4,7 +4,7 @@ import * as React from "react";
 import { ScrollView, Text, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { CharacterForm, type Draft, EMPTY_DRAFT } from "@/components/characters/CharacterForm";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
@@ -20,7 +20,10 @@ import {
 import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme } from "@/store/theme-store";
 
+const BAR_TOP_PX = 6;
+
 export default function NewCharacterScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const theme = useResolvedTheme();
   const reduced = useReducedMotion();
@@ -74,11 +77,14 @@ export default function NewCharacterScreen() {
 
   return (
     <SafeAreaView
-      edges={["top", "bottom"]}
+      edges={["bottom"]}
       style={{ flex: 1, backgroundColor: theme.canvas }}
       className="flex-1 bg-canvas"
     >
-      <View className="flex-row items-center gap-3 border-border border-b px-4 py-3">
+      <View
+        className="flex-row items-center gap-3 border-border border-b px-4 pb-3"
+        style={{ paddingTop: insets.top + BAR_TOP_PX }}
+      >
         <PressableScale
           accessibilityRole="button"
           accessibilityLabel={CHARACTER_COPY.cancel}
