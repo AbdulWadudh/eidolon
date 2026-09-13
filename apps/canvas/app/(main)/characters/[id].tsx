@@ -2,17 +2,19 @@ import { affinityLabel, GALLERY_COPY, UI_MS } from "@eidolon/config";
 import { isString } from "es-toolkit";
 import { useFocusEffect, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import * as React from "react";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Modal, ScrollView, Text, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AvatarFraming } from "@/components/characters/AvatarFraming";
 import { GalleryGrid } from "@/components/characters/GalleryGrid";
 import { GalleryViewer } from "@/components/characters/GalleryViewer";
 import { PortraitSheet } from "@/components/characters/PortraitSheet";
 import { ProfileHero } from "@/components/characters/ProfileHero";
+import { AvatarCrop } from "@/components/chat/AvatarCrop";
 import { openMode, type StackRoute } from "@/lib/stack-nav";
 import { useAffinityStore } from "@/store/affinity-store";
 import { type CharacterSummary, fetchCharacters } from "@/store/character-api";
+import { type AvatarCropRect, saveLook } from "@/store/chat-photos";
 import { useConnectionStore } from "@/store/connection";
 import { fetchGallery, type GalleryImage, mergePage } from "@/store/gallery-api";
 import { useResolvedTheme } from "@/store/theme-store";
@@ -35,6 +37,18 @@ export default function CharacterProfileScreen() {
   const [loading, setLoading] = React.useState(true);
   const [viewing, setViewing] = React.useState<number | null>(null);
   const [portraitOpen, setPortraitOpen] = React.useState(false);
+  const [isCropping, setCropping] = React.useState(false);
+
+  const frame = React.useCallback(
+    (crop: AvatarCropRect | null) => {
+      const avatarUrl = character?.avatarUrl;
+      if (!avatarUrl) return;
+
+      void saveLook(serverHost, characterId, { avatarUrl, avatarCrop: crop });
+      setCharacter((held) => (held ? { ...held, avatarCrop: crop } : held));
+    },
+    [character?.avatarUrl, serverHost, characterId],
+  );
 
   const openChat = React.useCallback(() => {
     const routes = (navigation.getState()?.routes ?? []) as StackRoute[];
@@ -97,19 +111,12 @@ export default function CharacterProfileScreen() {
           pictureCount={total}
           onBack={() => router.back()}
           onOpenChat={openChat}
+          avatarCrop={character?.avatarCrop ?? null}
+          onPickPart={() => setCropping(true)}
+          onUseWhole={() => frame(null)}
         />
 
         <View style={{ paddingHorizontal: PADDING_PX }}>
-          <AvatarFraming
-            characterId={characterId}
-            serverHost={serverHost}
-            avatarUrl={character?.avatarUrl ?? null}
-            avatarCrop={character?.avatarCrop ?? null}
-            onFramed={(crop) =>
-              setCharacter((held) => (held ? { ...held, avatarCrop: crop } : held))
-            }
-          />
-
           <Text className="mt-6 mb-3 font-main-bold text-base text-text-primary">
             {GALLERY_COPY.title}
           </Text>
@@ -144,6 +151,29 @@ export default function CharacterProfileScreen() {
           ) : null}
         </View>
       </ScrollView>
+
+      <Modal
+        visible={isCropping && character?.avatarUrl !== null}
+        transparent
+        animationType="none"
+        onRequestClose={() => setCropping(false)}
+      >
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <View className="flex-1" style={{ backgroundColor: "rgba(0,0,0,0.94)" }}>
+            {character?.avatarUrl ? (
+              <AvatarCrop
+                uri={character.avatarUrl}
+                characterId={characterId}
+                onCancel={() => setCropping(false)}
+                onConfirm={(crop) => {
+                  setCropping(false);
+                  frame(crop);
+                }}
+              />
+            ) : null}
+          </View>
+        </GestureHandlerRootView>
+      </Modal>
 
       <PortraitSheet
         isOpen={portraitOpen}

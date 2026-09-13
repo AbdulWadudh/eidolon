@@ -5,7 +5,8 @@ import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-rea
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft01Icon, SparklesIcon } from "@/lib/icons";
+import { ArrowLeft01Icon, CropIcon, Image01Icon, SparklesIcon } from "@/lib/icons";
+import type { AvatarCropRect } from "@/store/chat-photos";
 import { useResolvedTheme } from "@/store/theme-store";
 
 const PORTRAIT_RATIO = 0.78;
@@ -20,6 +21,9 @@ export interface ProfileHeroProps {
   onBack: () => void;
   onOpenChat: () => void;
   onGeneratePortrait: () => void;
+  avatarCrop: AvatarCropRect | null;
+  onPickPart: () => void;
+  onUseWhole: () => void;
 }
 
 function plural(one: string, many: string, count: number): string {
@@ -36,6 +40,9 @@ export function ProfileHero({
   onBack,
   onOpenChat,
   onGeneratePortrait,
+  avatarCrop,
+  onPickPart,
+  onUseWhole,
 }: ProfileHeroProps) {
   const { width } = useWindowDimensions();
   const theme = useResolvedTheme(characterId);
@@ -50,7 +57,7 @@ export function ProfileHero({
             source={{ uri: avatarUrl }}
             style={{ width: "100%", height: "100%" }}
             contentFit="cover"
-            contentPosition="top"
+            contentPosition={{ top: "25%", left: "50%" }}
             cachePolicy="disk"
             transition={reduced ? 0 : UI_MS.reveal}
             accessibilityLabel={name ? `${name}'s picture` : GALLERY_COPY.imageLabel}
@@ -70,16 +77,58 @@ export function ProfileHero({
           style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
         />
 
-        <PressableScale
-          accessibilityRole="button"
-          accessibilityLabel={AUTHOR_COPY.portraitRegenerate}
-          hitSlop={10}
-          onPress={onGeneratePortrait}
-          className="absolute top-3 right-4 h-11 w-11 items-center justify-center rounded-full"
-          style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
-        >
-          <AppIcon icon={SparklesIcon} size={20} color="#fff" />
-        </PressableScale>
+        <View className="absolute top-3 right-4 gap-2">
+          <PressableScale
+            accessibilityRole="button"
+            accessibilityLabel={AUTHOR_COPY.portraitRegenerate}
+            hitSlop={10}
+            onPress={onGeneratePortrait}
+            className="h-11 w-11 items-center justify-center rounded-full"
+            style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
+          >
+            <AppIcon icon={SparklesIcon} size={20} color="#fff" />
+          </PressableScale>
+
+          {avatarUrl ? (
+            <>
+              <PressableScale
+                accessibilityRole="button"
+                accessibilityLabel="Pick the part of this picture to use"
+                accessibilityState={{ selected: avatarCrop !== null }}
+                hitSlop={10}
+                onPress={onPickPart}
+                className="h-11 w-11 items-center justify-center rounded-full"
+                style={{
+                  backgroundColor: avatarCrop !== null ? theme.primary : "rgba(0,0,0,0.55)",
+                }}
+              >
+                <AppIcon
+                  icon={CropIcon}
+                  size={18}
+                  color={avatarCrop !== null ? theme.primaryForeground : "#fff"}
+                />
+              </PressableScale>
+
+              <PressableScale
+                accessibilityRole="button"
+                accessibilityLabel="Use the whole picture"
+                accessibilityState={{ selected: avatarCrop === null }}
+                hitSlop={10}
+                onPress={onUseWhole}
+                className="h-11 w-11 items-center justify-center rounded-full"
+                style={{
+                  backgroundColor: avatarCrop === null ? theme.primary : "rgba(0,0,0,0.55)",
+                }}
+              >
+                <AppIcon
+                  icon={Image01Icon}
+                  size={18}
+                  color={avatarCrop === null ? theme.primaryForeground : "#fff"}
+                />
+              </PressableScale>
+            </>
+          ) : null}
+        </View>
 
         <PressableScale
           accessibilityRole="button"
