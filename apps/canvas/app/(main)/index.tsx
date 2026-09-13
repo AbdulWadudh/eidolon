@@ -97,7 +97,7 @@ export default function MainCharactersScreen() {
         {}
         <GlassSurface
           tint="card"
-          className="flex-row items-center gap-2 overflow-hidden rounded-full border border-border px-3 py-1.5"
+          className="mx-2 flex-1 shrink flex-row items-center gap-2 overflow-hidden rounded-full border border-border px-3 py-1.5"
         >
           <View className="h-2 w-2 rounded-full" style={{ backgroundColor: status.color }} />
           <Text className="font-ui text-xs text-text-muted" numberOfLines={1}>
@@ -106,8 +106,23 @@ export default function MainCharactersScreen() {
         </GlassSurface>
 
         {}
-        <View className="flex-row items-center gap-2">
+        <View className="shrink-0 flex-row items-center gap-2">
+          {isOwner ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={DASHBOARD_COPY.title}
+              hitSlop={6}
+              className="rounded-full border border-border bg-card p-2 active:bg-border"
+              onPress={() => router.push("/(main)/admin")}
+            >
+              <AppIcon icon={DashboardSquare01Icon} size={18} color={theme.primary} />
+            </Pressable>
+          ) : null}
+
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={HOME_COPY.lookTitle}
+            hitSlop={6}
             className="rounded-full border border-border bg-card p-2 active:bg-border"
             onPress={() => setShowThemeStudio(true)}
           >
@@ -115,6 +130,10 @@ export default function MainCharactersScreen() {
           </Pressable>
 
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={HOME_COPY.connectedTo}
+            accessibilityState={{ expanded: showSettings }}
+            hitSlop={6}
             className="rounded-full border border-border bg-card p-2 active:bg-border"
             onPress={() => setShowSettings((prev) => !prev)}
           >
