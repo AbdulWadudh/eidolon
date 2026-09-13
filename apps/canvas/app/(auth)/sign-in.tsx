@@ -9,6 +9,7 @@ import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-rea
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SignInPanel } from "@/components/auth/SignInPanel";
 import { AppIcon } from "@/components/common/icon";
+import { PressableScale } from "@/components/common/pressable-scale";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { AlertCircleIcon, CheckmarkCircle01Icon, HardDriveIcon } from "@/lib/icons";
@@ -36,6 +37,7 @@ export default function SignInScreen() {
 
   const [hostInput, setHostInput] = React.useState(DEFAULT_HOST);
   const [reach, setReach] = React.useState<Reach>("unknown");
+  const [addressOpen, setAddressOpen] = React.useState(!DEFAULT_HOST);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
   const reveal = (index: number) =>
@@ -59,6 +61,7 @@ export default function SignInScreen() {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (err) {
       setReach("unreachable");
+      setAddressOpen(true);
       setErrorMessage(humanError(err));
     }
   }, [hostInput]);
@@ -71,7 +74,12 @@ export default function SignInScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.canvas }} className="flex-1 bg-canvas">
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }} className="flex-1">
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingVertical: 20 }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 20,
+          }}
           keyboardShouldPersistTaps="handled"
         >
           <Animated.View entering={reveal(0)} className="mb-5 items-center">
@@ -90,26 +98,50 @@ export default function SignInScreen() {
           </Animated.View>
 
           <Animated.View entering={reveal(1)}>
-            <Card className="flex-col gap-1.5">
-              <Text className="font-ui text-xs text-text-muted">{CONNECT_COPY.addressLabel}</Text>
-              <Input
-                leading={HardDriveIcon}
-                placeholder={DEFAULT_HOST || "192.168.1.39:3000"}
-                value={hostInput}
-                onChangeText={(next) => {
-                  setHostInput(next);
-                  setReach("unknown");
-                  setErrorMessage(null);
-                }}
-                onBlur={() => void checkHost()}
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={reach !== "checking"}
-                returnKeyType="done"
-                onSubmitEditing={() => void checkHost()}
-              />
-              <HostStatus reach={reach} reduced={reduced} theme={theme} />
-            </Card>
+            {addressOpen ? (
+              <Card className="flex-col gap-1.5">
+                <Text className="font-ui text-xs text-text-muted">{CONNECT_COPY.addressLabel}</Text>
+                <Input
+                  leading={HardDriveIcon}
+                  placeholder={DEFAULT_HOST || "192.168.1.39:3000"}
+                  value={hostInput}
+                  onChangeText={(next) => {
+                    setHostInput(next);
+                    setReach("unknown");
+                    setErrorMessage(null);
+                  }}
+                  onBlur={() => void checkHost()}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoFocus={!DEFAULT_HOST}
+                  editable={reach !== "checking"}
+                  returnKeyType="done"
+                  onSubmitEditing={() => void checkHost()}
+                />
+                <HostStatus reach={reach} reduced={reduced} theme={theme} />
+              </Card>
+            ) : (
+              <PressableScale
+                accessibilityRole="button"
+                accessibilityLabel={`${CONNECT_COPY.addressLabel}: ${hostInput}. ${CONNECT_COPY.changeAddress}`}
+                hitSlop={8}
+                onPress={() => setAddressOpen(true)}
+                className="flex-row items-center justify-center gap-1.5 py-1"
+              >
+                <AppIcon
+                  icon={reach === "reachable" ? CheckmarkCircle01Icon : HardDriveIcon}
+                  size={12}
+                  color={reach === "reachable" ? theme.success : theme.textMuted}
+                  strokeWidth={1.6}
+                />
+                <Text className="font-ui text-[11px] text-text-muted" numberOfLines={1}>
+                  {hostInput}
+                </Text>
+                <Text className="font-ui-bold text-[11px]" style={{ color: theme.primary }}>
+                  {CONNECT_COPY.changeAddress}
+                </Text>
+              </PressableScale>
+            )}
           </Animated.View>
 
           {errorMessage ? (
