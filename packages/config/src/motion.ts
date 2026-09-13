@@ -24,8 +24,10 @@ export const UI_MS = {
   pressFeedback: 160,
   reveal: 400,
   revealStagger: 55,
+  revealStaggerCap: 8,
   revealReduced: 200,
   disclosure: 220,
+  saveConfirm: 1400,
 } as const;
 
 export const EASING = {

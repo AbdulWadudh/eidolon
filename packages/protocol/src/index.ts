@@ -1,6 +1,7 @@
 import { type ClientMessage, ClientMessageSchema } from "./events/client";
 import { type ServerMessage, ServerMessageSchema } from "./events/server";
 
+export * from "./admin";
 export * from "./character";
 export * from "./events/client";
 export * from "./events/server";

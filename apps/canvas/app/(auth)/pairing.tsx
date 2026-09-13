@@ -1,4 +1,4 @@
-import { PAIRING_COPY, PAIRING_MESSAGES, UI_MS } from "@eidolon/config";
+import { AUTH_COPY, PAIRING_COPY, PAIRING_MESSAGES, UI_MS } from "@eidolon/config";
 import { type BarcodeScanningResult, CameraView, useCameraPermissions } from "expo-camera";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
@@ -7,11 +7,13 @@ import { ActivityIndicator, Platform, Pressable, ScrollView, Text, View } from "
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { SignInPanel } from "@/components/auth/SignInPanel";
 import { AppIcon } from "@/components/common/icon";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ArrowDown01Icon, ArrowUp01Icon, QrCodeIcon } from "@/lib/icons";
+import { useAuthStore } from "@/store/auth-store";
 import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme } from "@/store/theme-store";
 
@@ -29,7 +31,10 @@ export default function PairingScreen() {
   const reduced = useReducedMotion();
   const [permission, requestPermission] = useCameraPermissions();
 
+  const setAccount = useAuthStore((state) => state.setAccount);
+
   const [isManualOpen, setIsManualOpen] = React.useState(false);
+  const [isSignInOpen, setIsSignInOpen] = React.useState(false);
   const [hostInput, setHostInput] = React.useState(DEFAULT_HOST);
   const [tokenInput, setTokenInput] = React.useState("");
   const [isConnecting, setIsConnecting] = React.useState(false);
@@ -218,6 +223,32 @@ export default function PairingScreen() {
                   {isConnecting ? PAIRING_COPY.connecting : PAIRING_COPY.connect}
                 </Button>
               </Card>
+            )}
+
+            {}
+            <Pressable
+              className="mt-2 flex-row items-center justify-between rounded-button border border-border bg-card px-4 py-3"
+              onPress={() => setIsSignInOpen((prev) => !prev)}
+            >
+              <Text className="font-ui-medium text-sm text-text-primary">
+                {AUTH_COPY.signInTitle}
+              </Text>
+              <AppIcon
+                icon={isSignInOpen ? ArrowUp01Icon : ArrowDown01Icon}
+                size={18}
+                color={theme.textMuted}
+              />
+            </Pressable>
+
+            {isSignInOpen && (
+              <SignInPanel
+                host={hostInput}
+                onSignedIn={async (token, account) => {
+                  await setManualConnection(hostInput, token);
+                  setAccount(account);
+                  router.replace("/(main)");
+                }}
+              />
             )}
 
             {}

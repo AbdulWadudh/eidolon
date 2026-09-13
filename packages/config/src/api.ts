@@ -33,6 +33,40 @@ export const ADMIN_ROUTES = {
 
 export type AdminRoute = keyof typeof ADMIN_ROUTES;
 
+export const ADMIN_API_PREFIX = `${API_PREFIX}/admin` as const;
+
+export const ADMIN_API_ROUTES = {
+  prompts: "/prompts",
+  characters: "/characters",
+  users: "/users",
+  theme: "/theme",
+  config: "/config",
+} as const;
+
+export type AdminApiRoute = keyof typeof ADMIN_API_ROUTES;
+
+export function adminApiPath(route: AdminApiRoute, id?: string): string {
+  const base = `${ADMIN_API_PREFIX}${ADMIN_API_ROUTES[route]}`;
+  return id === undefined ? base : `${base}/${encodeURIComponent(id)}`;
+}
+
+export function adminApiUrl(
+  host: string,
+  route: AdminApiRoute,
+  id?: string,
+  scheme = httpScheme(host),
+): string {
+  return `${scheme}://${stripAuthority(host)}${adminApiPath(route, id)}`;
+}
+
+export function adminConfigReloadPath(): string {
+  return `${adminApiPath("config")}/reload`;
+}
+
+export function adminConfigReloadUrl(host: string, scheme = httpScheme(host)): string {
+  return `${scheme}://${stripAuthority(host)}${adminConfigReloadPath()}`;
+}
+
 export function adminPath(route: AdminRoute): string {
   return ADMIN_ROUTES[route];
 }

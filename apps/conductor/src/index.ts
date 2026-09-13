@@ -15,6 +15,7 @@ import {
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { mountAdmin } from "@/api/admin";
 import { buildHealthReport, v1 } from "@/api/v1";
 import { auth, generatePairingPayload } from "@/auth";
 import { renderBanner, renderPairingQr } from "@/pairing/banner";
@@ -41,6 +42,7 @@ app.use(
 app.on(["GET", "POST"], `${AUTH_ROUTES.base}/*`, (c) => auth.handler(c.req.raw));
 
 app.route(API_PREFIX, v1);
+mountAdmin(app);
 app.route(ADMIN_ROUTES.queues, createQueueBoard());
 
 app.get(HEALTH_ALIAS_PATH, async (c) => c.json(await buildHealthReport()));

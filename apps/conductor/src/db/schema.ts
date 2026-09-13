@@ -103,6 +103,12 @@ export function applySchema(db: Database): void {
 
     CREATE UNIQUE INDEX IF NOT EXISTS idx_portraits_url
       ON character_portraits(character_id, url);
+
+    CREATE TABLE IF NOT EXISTS config_overrides (
+      path TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
   `);
 
   addColumnIfMissing(db, "stages", "updated_at", "INTEGER");

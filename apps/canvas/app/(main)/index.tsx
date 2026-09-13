@@ -1,4 +1,11 @@
-import { CHARACTER_COPY, CONNECTION_COPY, GALLERY_COPY, HOME_COPY, UI_MS } from "@eidolon/config";
+import {
+  CHARACTER_COPY,
+  CONNECTION_COPY,
+  DASHBOARD_COPY,
+  GALLERY_COPY,
+  HOME_COPY,
+  UI_MS,
+} from "@eidolon/config";
 import { useFocusEffect, useRouter } from "expo-router";
 import * as React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
@@ -13,16 +20,25 @@ import { ThemeStudioSheet } from "@/components/theme/ThemeStudioSheet";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { GlassSurface } from "@/components/ui/glass-surface";
-import { Logout01Icon, PaintBoardIcon, Settings01Icon, SparklesIcon } from "@/lib/icons";
+import {
+  DashboardSquare01Icon,
+  Logout01Icon,
+  PaintBoardIcon,
+  Settings01Icon,
+  SparklesIcon,
+} from "@/lib/icons";
+import { useAuthStore, useIsOwner } from "@/store/auth-store";
 import { type CharacterSummary, fetchCharacters } from "@/store/character-api";
 import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme } from "@/store/theme-store";
 
 export default function MainCharactersScreen() {
   const router = useRouter();
-  const { serverHost, unpair, connectionState } = useConnectionStore();
+  const { serverHost, pairingToken, unpair, connectionState } = useConnectionStore();
   const theme = useResolvedTheme();
   const reduced = useReducedMotion();
+  const isOwner = useIsOwner();
+  const refreshAccount = useAuthStore((state) => state.refresh);
 
   const revealAt = (index: number) =>
     reduced
@@ -38,6 +54,12 @@ export default function MainCharactersScreen() {
   const refreshRoster = React.useCallback(
     () => fetchCharacters(serverHost).then(setRoster),
     [serverHost],
+  );
+
+  useFocusEffect(
+    React.useCallback(() => {
+      void refreshAccount(serverHost, pairingToken);
+    }, [refreshAccount, serverHost, pairingToken]),
   );
 
   useFocusEffect(
@@ -176,6 +198,29 @@ export default function MainCharactersScreen() {
             }}
           />
         </Animated.View>
+
+        {isOwner ? (
+          <Animated.View entering={revealAt(0)}>
+            <Card className="border-primary/30 p-4">
+              <View className="flex-row items-center justify-between">
+                <View className="flex-1 pr-3">
+                  <View className="flex-row items-center gap-2">
+                    <AppIcon icon={DashboardSquare01Icon} size={16} color={theme.primary} />
+                    <Text className="font-main-bold text-sm text-text-primary">
+                      {DASHBOARD_COPY.title}
+                    </Text>
+                  </View>
+                  <Text className="mt-1 font-ui text-xs text-text-muted">
+                    {DASHBOARD_COPY.blurb}
+                  </Text>
+                </View>
+                <Button variant="default" size="sm" onPress={() => router.push("/(main)/admin")}>
+                  {HOME_COPY.open}
+                </Button>
+              </View>
+            </Card>
+          </Animated.View>
+        ) : null}
 
         {/* Dynamic Theming Studio Card */}
         <Animated.View entering={revealAt(1)}>
