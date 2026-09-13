@@ -318,16 +318,16 @@ function ModeChip({
       onPress={onPress}
     >
       <View
-        className="flex-row items-center gap-1.5 rounded-full border px-2.5 py-1.5"
+        className="flex-row items-center gap-1.5 rounded-button border px-2.5 py-1.5"
         style={{
-          backgroundColor: active ? theme.primary : theme.inputSurface,
+          backgroundColor: theme.inputSurface,
           borderColor: active ? theme.primary : theme.cardBorder,
         }}
       >
-        <AppIcon icon={icon} size={12} color={active ? theme.primaryForeground : theme.textMuted} />
+        <AppIcon icon={icon} size={12} color={active ? theme.primary : theme.textMuted} />
         <Text
           className="font-ui-medium text-[10px]"
-          style={{ color: active ? theme.primaryForeground : theme.textMuted }}
+          style={{ color: active ? theme.primary : theme.textMuted }}
         >
           {label}
         </Text>
