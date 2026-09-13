@@ -1,4 +1,4 @@
-import { CONNECTION_COPY, MIND_COPY, STATUS_COPY } from "@eidolon/config";
+import { CONFIRM_COPY, CONNECTION_COPY, MIND_COPY, STATUS_COPY } from "@eidolon/config";
 import { isString } from "es-toolkit";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import * as React from "react";
@@ -19,6 +19,7 @@ import { SuggestionTray } from "@/components/chat/SuggestionTray";
 import { AlertSheet } from "@/components/ui/alert-sheet";
 import { useChatSocket } from "@/hooks/use-chat-socket";
 import { useChatView } from "@/hooks/use-chat-view";
+import { useConfirm } from "@/hooks/use-confirm";
 import { usePhotoFlow } from "@/hooks/use-photo-flow";
 import { useSuggestions } from "@/hooks/use-suggestions";
 import { VoiceNotesProvider } from "@/hooks/use-voice-notes";
@@ -131,11 +132,20 @@ export default function ChatScreen() {
     [chat.setMoodOverride, serverHost, characterId],
   );
 
+  const confirmation = useConfirm(characterId);
+
   const handleAction = React.useCallback(
     (action: ChatAction) => {
       setActionsOpen(false);
       if (action === "refresh") loadHistory(serverHost, characterId);
-      if (action === "reset") forgetCharacter(serverHost, characterId);
+      if (action === "reset") {
+        confirmation.ask({
+          title: CONFIRM_COPY.resetChat,
+          body: CONFIRM_COPY.resetChatBody,
+          confirmLabel: CONFIRM_COPY.resetChatAction,
+          onConfirm: () => forgetCharacter(serverHost, characterId),
+        });
+      }
       if (action === "admin") setAdminOpen(true);
       if (action === "summarize") {
         void Promise.resolve(summarizeNow(serverHost, characterId)).then((next) => {
@@ -143,7 +153,7 @@ export default function ChatScreen() {
         });
       }
     },
-    [serverHost, characterId],
+    [serverHost, characterId, confirmation.ask],
   );
 
   return (
@@ -230,6 +240,8 @@ export default function ChatScreen() {
           />
         </VoiceNotesProvider>
       </KeyboardAvoidingView>
+
+      {confirmation.sheet}
 
       <AlertSheet
         isOpen={notice !== null}

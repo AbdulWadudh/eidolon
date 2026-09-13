@@ -1,4 +1,4 @@
-import { DASHBOARD_COPY, UI_MS } from "@eidolon/config";
+import { CONFIRM_COPY, DASHBOARD_COPY, UI_MS } from "@eidolon/config";
 import * as React from "react";
 import { Text, View } from "react-native";
 import Animated, { useReducedMotion } from "react-native-reanimated";
@@ -7,6 +7,7 @@ import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Button } from "@/components/ui/button";
 import { GlassSurface } from "@/components/ui/glass-surface";
+import { useConfirm } from "@/hooks/use-confirm";
 import { ArrowDown01Icon, ArrowUp01Icon, Delete02Icon, Undo02Icon } from "@/lib/icons";
 import { useResolvedTheme } from "@/store/theme-store";
 
@@ -23,6 +24,10 @@ export interface EditableRowProps {
   onRemove?: () => void;
   saveState?: SaveState;
   canSave?: boolean;
+  removeTitle?: string;
+  removeBody?: string;
+  resetTitle?: string;
+  resetBody?: string;
   children?: React.ReactNode;
 }
 
@@ -70,10 +75,35 @@ export function EditableRow({
   onRemove,
   saveState = "idle",
   canSave = true,
+  removeTitle,
+  removeBody,
+  resetTitle,
+  resetBody,
   children,
 }: EditableRowProps) {
   const theme = useResolvedTheme();
   const reduced = useReducedMotion();
+  const confirmation = useConfirm();
+
+  const askRemove = React.useCallback(() => {
+    if (!onRemove) return;
+    confirmation.ask({
+      title: removeTitle ?? CONFIRM_COPY.deleteCharacter,
+      body: removeBody,
+      confirmLabel: DASHBOARD_COPY.remove,
+      onConfirm: onRemove,
+    });
+  }, [confirmation.ask, onRemove, removeTitle, removeBody]);
+
+  const askReset = React.useCallback(() => {
+    if (!onReset) return;
+    confirmation.ask({
+      title: resetTitle ?? CONFIRM_COPY.resetSetting,
+      body: resetBody ?? CONFIRM_COPY.resetSettingBody,
+      confirmLabel: DASHBOARD_COPY.reset,
+      onConfirm: onReset,
+    });
+  }, [confirmation.ask, onReset, resetTitle, resetBody]);
 
   return (
     <GlassSurface tint="card" className="overflow-hidden rounded-card border border-border">
@@ -91,7 +121,7 @@ export function EditableRow({
           {subtitle ? (
             <Text
               className="mt-0.5 font-ui text-[11px] text-text-muted leading-4"
-              numberOfLines={2}
+              numberOfLines={expanded ? undefined : 2}
             >
               {subtitle}
             </Text>
@@ -122,7 +152,7 @@ export function EditableRow({
                 size="sm"
                 className="flex-row gap-1.5"
                 accessibilityLabel={DASHBOARD_COPY.remove}
-                onPress={onRemove}
+                onPress={askRemove}
               >
                 <AppIcon icon={Delete02Icon} size={14} color={theme.danger} />
                 <Text className="font-ui-medium text-xs text-danger">{DASHBOARD_COPY.remove}</Text>
@@ -135,7 +165,7 @@ export function EditableRow({
                 size="sm"
                 className="flex-row gap-1.5"
                 accessibilityLabel={DASHBOARD_COPY.reset}
-                onPress={onReset}
+                onPress={askReset}
               >
                 <AppIcon icon={Undo02Icon} size={14} color={theme.textMuted} />
                 <Text className="font-ui-medium text-xs text-secondary-foreground">
@@ -158,6 +188,8 @@ export function EditableRow({
           </View>
         </Animated.View>
       ) : null}
+
+      {confirmation.sheet}
     </GlassSurface>
   );
 }

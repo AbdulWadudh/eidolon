@@ -66,3 +66,24 @@ Current: shes very loyal and doesnt like being lied to. gets quiet when upset
 Write the Personality: She is loyal to a fault and remembers every promise made to her. Lying to her costs more than it looks like it will. When something hurts her she goes quiet rather than loud, and stays that way until she has decided what she thinks.`,
   },
 ];
+
+export const PROMPT_AUTHORING_PROMPTS: PromptDefinition[] = [
+  {
+    key: "authoring.promptWrite",
+    description:
+      "Writes one of the conductor's own system prompts from its description. Sent to the raw completion endpoint so the model produces the prompt rather than talking about it.",
+    variables: [],
+    value: `You are writing an instruction that will be given to a roleplay model as its system prompt. Produce only the instruction itself: no preamble, no explanation, no commentary about what you wrote, no quotation marks around the whole thing, no markdown fences.
+
+Write in the imperative, addressed to the model. Prefer short declarative lines over paragraphs. Every placeholder listed below must appear in your output spelled exactly as given, including the double braces.`,
+  },
+  {
+    key: "authoring.promptEnhance",
+    description:
+      "Rewrites one of the conductor's own system prompts, keeping every instruction and every placeholder. Sent to the raw completion endpoint.",
+    variables: [],
+    value: `You are rewriting an instruction that is given to a roleplay model as its system prompt. Make it clearer and harder to misread. Keep every rule the current version states, and never invent a new one. Produce only the rewritten instruction: no preamble, no explanation, no quotation marks around the whole thing, no markdown fences.
+
+Every placeholder listed below must still appear, spelled exactly as given, including the double braces. Dropping one breaks the prompt.`,
+  },
+];

@@ -4,6 +4,7 @@ import {
   AUTHOR_COPY,
   CHARACTER_COPY,
   CHAT_COPY,
+  CONFIRM_COPY,
   CONNECTION_COPY,
   DASHBOARD_COPY,
   ENHANCE_COPY,
@@ -36,6 +37,7 @@ import type { ConfigGroup } from "./types";
 const COPY_GROUPS: ConfigGroup[] = [
   { name: "STATUS_COPY", value: STATUS_COPY },
   { name: "CONNECTION_COPY", value: CONNECTION_COPY },
+  { name: "CONFIRM_COPY", value: CONFIRM_COPY },
   { name: "PHOTO_COPY", value: PHOTO_COPY },
   { name: "PAIRING_COPY", value: PAIRING_COPY },
   { name: "PAIRING_MESSAGES", value: PAIRING_MESSAGES },

@@ -254,6 +254,40 @@ export const CHAT_COPY = {
   messageActions: "Message actions",
 } as const;
 
+export const CONFIRM_COPY = {
+  keep: "Keep it",
+  deleteCharacter: "Delete this character?",
+  deleteCharacterBody:
+    "Everything they said, the chapters, the lorebook and the gallery go with them. This cannot be undone.",
+  deleteCharacterAction: "Delete them",
+  resetChat: "Start this chat over?",
+  resetChatBody:
+    "Every message and every chapter is deleted, and how they feel about you goes back to the beginning. The character itself stays.",
+  resetChatAction: "Start over",
+  deleteAccount: "Remove this account?",
+  deleteAccountBody: "They lose access to this conductor immediately. What they made stays.",
+  deleteAccountAction: "Remove them",
+  deleteMessage: "Delete this message?",
+  deleteMessageBody: "Anything said after it will be answering something that is no longer there.",
+  deletePhoto: "Delete this photo?",
+  deletePhotoBody: "It is removed from the gallery and from storage.",
+  resetPrompt: "Put this prompt back?",
+  resetPromptBody: "Your version is discarded and the shipped wording returns.",
+  resetPromptAction: "Put it back",
+  resetSetting: "Put this setting back?",
+  resetSettingBody: "The override is dropped and the shipped value returns.",
+  resetTheme: "Put the whole theme back?",
+  resetThemeBody: "Every colour, corner and typeface you changed returns to what shipped.",
+  resetThemeAction: "Put it back",
+  unpair: "Disconnect from this conductor?",
+  unpairBody:
+    "This device forgets the address and the passphrase. Nothing on the conductor is deleted.",
+  unpairAction: "Disconnect",
+  promoteTheme: "Make this the look for everyone?",
+  promoteThemeBody: "This character's colours replace the shared ones.",
+  promoteThemeAction: "Use everywhere",
+} as const;
+
 export const DASHBOARD_COPY = {
   title: "Dashboard",
   blurb: "The levers behind the app, for whoever owns this conductor.",

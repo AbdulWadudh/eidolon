@@ -2,6 +2,7 @@ import {
   type AdminApiRoute,
   adminApiPath,
   adminConfigReloadPath,
+  adminPromptAuthorPath,
   stripAuthority,
   TIMEOUTS_MS,
 } from "@eidolon/config";
@@ -202,4 +203,38 @@ export async function reloadConfig(host: string, token: string): Promise<ConfigV
   }
 
   return body as unknown as ConfigView;
+}
+
+export interface PromptAuthorResult {
+  text: string | null;
+  error: string | null;
+}
+
+export async function authorPrompt(
+  host: string,
+  token: string,
+  key: string,
+  mode: "suggest" | "enhance",
+  draft: string,
+): Promise<PromptAuthorResult> {
+  if (!host) return { text: null, error: null };
+
+  try {
+    const response = await fetch(`${httpBase(host)}${adminPromptAuthorPath(key)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ mode, draft }),
+      signal: AbortSignal.timeout(TIMEOUTS_MS.generation),
+    });
+
+    const body = (await response.json().catch(() => null)) as {
+      text?: string;
+      error?: string;
+    } | null;
+
+    if (!response.ok) return { text: null, error: body?.error ?? null };
+    return { text: body?.text ?? null, error: null };
+  } catch {
+    return { text: null, error: null };
+  }
 }

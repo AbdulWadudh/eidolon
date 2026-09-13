@@ -23,10 +23,13 @@ export const AdminAccountPatchSchema = z
     message: "Body must carry a role or a name.",
   });
 
+export const PromptCategorySchema = z.enum(["persona", "writing", "media", "memory", "authoring"]);
+
 export const AdminPromptSchema = z.object({
   key: z.string().min(1),
   value: z.string(),
   description: z.string(),
+  category: PromptCategorySchema.nullable(),
   variables: z.array(z.string()),
   isCustom: z.boolean(),
   updatedAt: z.number(),

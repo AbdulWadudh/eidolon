@@ -1,5 +1,6 @@
 import {
   CHARACTER_COPY,
+  CONFIRM_COPY,
   CONNECTION_COPY,
   DASHBOARD_COPY,
   GALLERY_COPY,
@@ -20,6 +21,7 @@ import { ThemeStudioSheet } from "@/components/theme/ThemeStudioSheet";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { GlassSurface } from "@/components/ui/glass-surface";
+import { useConfirm } from "@/hooks/use-confirm";
 import {
   DashboardSquare01Icon,
   Logout01Icon,
@@ -39,6 +41,7 @@ export default function MainCharactersScreen() {
   const reduced = useReducedMotion();
   const isOwner = useIsOwner();
   const refreshAccount = useAuthStore((state) => state.refresh);
+  const confirmation = useConfirm();
 
   const revealAt = (index: number) =>
     reduced
@@ -135,10 +138,17 @@ export default function MainCharactersScreen() {
                 variant="destructive"
                 size="sm"
                 className="flex-row gap-1.5"
-                onPress={() => {
-                  unpair();
-                  router.replace("/(auth)/pairing");
-                }}
+                onPress={() =>
+                  confirmation.ask({
+                    title: CONFIRM_COPY.unpair,
+                    body: CONFIRM_COPY.unpairBody,
+                    confirmLabel: CONFIRM_COPY.unpairAction,
+                    onConfirm: () => {
+                      unpair();
+                      router.replace("/(auth)/pairing");
+                    },
+                  })
+                }
               >
                 <AppIcon icon={Logout01Icon} size={14} color={theme.textPrimary} />
                 <Text className="font-ui-medium text-xs text-text-primary">
@@ -262,6 +272,8 @@ export default function MainCharactersScreen() {
           </Card>
         </Animated.View>
       </ScrollView>
+
+      {confirmation.sheet}
 
       <CharacterSettingsSheet
         isOpen={managing !== null}

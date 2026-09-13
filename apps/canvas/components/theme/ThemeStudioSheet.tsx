@@ -1,4 +1,4 @@
-import { THEME_COPY } from "@eidolon/config";
+import { CONFIRM_COPY, THEME_COPY } from "@eidolon/config";
 import type { ThemeTokens } from "@eidolon/tokens";
 import * as React from "react";
 import { Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
@@ -20,6 +20,7 @@ import { FontFamilyPicker } from "@/components/ui/font-family-picker";
 import { RangeSlider } from "@/components/ui/range-slider";
 import { ResetTokenButton } from "@/components/ui/reset-token-button";
 import { TextSizeControl } from "@/components/ui/text-size-control";
+import { useConfirm } from "@/hooks/use-confirm";
 import { Cancel01Icon, ColorPickerIcon, PaintBoardIcon, SparklesIcon } from "@/lib/icons";
 import { MODES } from "@/lib/theme-presets";
 import {
@@ -71,6 +72,7 @@ export function ThemeStudioSheet({
   const promoteCharacterToGlobal = useThemeStore((state) => state.promoteCharacterToGlobal);
   const resetGlobalTheme = useThemeStore((state) => state.resetGlobalTheme);
   const setColorMode = useThemeStore((state) => state.setColorMode);
+  const confirmation = useConfirm(characterId);
 
   const [scope, setScope] = React.useState<"global" | "character">(
     lockToCharacter ? "character" : "global",
@@ -669,20 +671,46 @@ export function ThemeStudioSheet({
                   <Button
                     variant="default"
                     size="sm"
-                    onPress={() => promoteCharacterToGlobal(targetCharacterId)}
+                    onPress={() =>
+                      confirmation.ask({
+                        title: CONFIRM_COPY.promoteTheme,
+                        body: CONFIRM_COPY.promoteThemeBody,
+                        confirmLabel: CONFIRM_COPY.promoteThemeAction,
+                        isDestructive: false,
+                        onConfirm: () => promoteCharacterToGlobal(targetCharacterId),
+                      })
+                    }
                   >
                     Promote to Master Default Theme
                   </Button>
                   <Button
                     variant="secondary"
                     size="sm"
-                    onPress={() => resetCharacterTheme(targetCharacterId)}
+                    onPress={() =>
+                      confirmation.ask({
+                        title: CONFIRM_COPY.resetTheme,
+                        body: CONFIRM_COPY.resetThemeBody,
+                        confirmLabel: CONFIRM_COPY.resetThemeAction,
+                        onConfirm: () => resetCharacterTheme(targetCharacterId),
+                      })
+                    }
                   >
                     Reset to Default Theme
                   </Button>
                 </View>
               ) : (
-                <Button variant="destructive" size="sm" onPress={resetGlobalTheme}>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onPress={() =>
+                    confirmation.ask({
+                      title: CONFIRM_COPY.resetTheme,
+                      body: CONFIRM_COPY.resetThemeBody,
+                      confirmLabel: CONFIRM_COPY.resetThemeAction,
+                      onConfirm: resetGlobalTheme,
+                    })
+                  }
+                >
                   Reset to Factory Defaults
                 </Button>
               )}
@@ -690,6 +718,8 @@ export function ThemeStudioSheet({
           </ScrollView>
         </SafeAreaView>
       </VariableContextProvider>
+
+      {confirmation.sheet}
 
       <ColorPickerModal
         isOpen={pickerOpen}

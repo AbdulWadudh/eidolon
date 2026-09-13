@@ -1,4 +1,4 @@
-import { AUTH, DASHBOARD_COPY } from "@eidolon/config";
+import { AUTH, CONFIRM_COPY, DASHBOARD_COPY } from "@eidolon/config";
 import * as React from "react";
 import { Text, View } from "react-native";
 import Animated, { useReducedMotion } from "react-native-reanimated";
@@ -110,6 +110,8 @@ export default function AdminUsersScreen() {
                 onToggle={() => open(account)}
                 onSave={() => patch(account, { name: draftName })}
                 onRemove={isSelf ? undefined : () => remove(account)}
+                removeTitle={CONFIRM_COPY.deleteAccount}
+                removeBody={CONFIRM_COPY.deleteAccountBody}
                 saveState={saveState}
                 canSave={draftName.trim().length > 0 && draftName !== account.name}
               >

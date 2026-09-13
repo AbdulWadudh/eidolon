@@ -125,6 +125,19 @@ export const AUTHORING = {
   fields: AUTHOR_FIELDS,
 } as const;
 
+export const PROMPT_AUTHORING = {
+  maxTokens: 900,
+  maxChars: 6000,
+  maxDraftChars: 6000,
+  suggestTemperatures: [0.7, 0.95],
+  enhanceTemperatures: [0.3, 0.6],
+  descriptionLabel: "What this prompt is for:",
+  variablesLabel: "Placeholders that must appear, spelled exactly like this:",
+  noVariables: "This prompt takes no placeholders.",
+  draftLabel: "Current prompt:",
+  writeLabel: "Write the prompt:",
+} as const;
+
 export const AUTHOR_FIELD_KEYS = Object.keys(AUTHOR_FIELDS) as AuthorField[];
 
 export function isAuthorField(value: unknown): value is AuthorField {

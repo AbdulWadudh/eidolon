@@ -2,6 +2,13 @@ export const FIELD_PADDING = {
   horizontal: 18,
   vertical: 14,
   multilineTop: 16,
+  lineHeightPx: 24,
+  basePx: 30,
+  compactHorizontal: 12,
+  compactVertical: 9,
+  compactMultilineTop: 10,
+  compactLineHeightPx: 17,
+  compactBasePx: 16,
 } as const;
 
 export const GALLERY = {

@@ -1,10 +1,12 @@
-import { AUTHOR_FIELDS, DASHBOARD_COPY } from "@eidolon/config";
+import { AUTHOR_FIELDS, CONFIRM_COPY, DASHBOARD_COPY } from "@eidolon/config";
 import * as React from "react";
-import { Text, TextInput, View } from "react-native";
+import { View } from "react-native";
 import Animated, { useReducedMotion } from "react-native-reanimated";
+import { AdminCharacterEditor } from "@/components/admin/AdminCharacterEditor";
 import { AdminEmpty, AdminScreen } from "@/components/admin/AdminScreen";
 import { revealAt } from "@/components/admin/admin-motion";
 import { EditableRow, useSaveState } from "@/components/admin/EditableRow";
+import { type Draft, EMPTY_DRAFT } from "@/components/characters/CharacterForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,16 +18,28 @@ import {
   saveCharacter,
 } from "@/store/admin-api";
 import { useConnectionStore } from "@/store/connection";
-import { useResolvedTheme } from "@/store/theme-store";
 
-const FIELDS = ["tagline", "personality", "scenario", "rules", "greeting"] as const;
+function avatarUrl(character: AdminCharacter): string | null {
+  const value = (character as { avatarUrl?: string | null }).avatarUrl;
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
 
-type Field = (typeof FIELDS)[number];
-
-type Draft = Partial<Record<Field | "name", string>>;
+function draftFrom(character: AdminCharacter): Draft {
+  return {
+    name: character.name,
+    tagline: character.tagline,
+    personality: character.personality,
+    systemPrompt: character.systemPrompt,
+    scenario: character.scenario,
+    rules: character.rules,
+    exampleDialogue: character.exampleDialogue,
+    greeting: character.greeting,
+    voice: character.voice,
+    pronouns: character.pronouns,
+  };
+}
 
 export default function AdminCharactersScreen() {
-  const theme = useResolvedTheme();
   const reduced = useReducedMotion();
   const { serverHost, pairingToken } = useConnectionStore();
 
@@ -33,7 +47,7 @@ export default function AdminCharactersScreen() {
   const [isLoading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [openId, setOpenId] = React.useState<string | null>(null);
-  const [draft, setDraft] = React.useState<Draft>({});
+  const [draft, setDraft] = React.useState<Draft>(EMPTY_DRAFT);
   const [newName, setNewName] = React.useState("");
   const [saveState, runSave] = useSaveState();
 
@@ -67,17 +81,14 @@ export default function AdminCharactersScreen() {
         return;
       }
       setOpenId(character.id);
-      setDraft({
-        name: character.name,
-        tagline: character.tagline,
-        personality: character.personality,
-        scenario: character.scenario,
-        rules: character.rules,
-        greeting: character.greeting,
-      });
+      setDraft(draftFrom(character));
     },
     [openId],
   );
+
+  const change = React.useCallback((patch: Partial<Draft>) => {
+    setDraft((current) => ({ ...current, ...patch }));
+  }, []);
 
   const commit = React.useCallback(
     (character: AdminCharacter) => {
@@ -87,6 +98,16 @@ export default function AdminCharactersScreen() {
       ).catch(report);
     },
     [draft, pairingToken, reload, report, runSave, serverHost],
+  );
+
+  const publish = React.useCallback(
+    (character: AdminCharacter, isPublic: boolean) => {
+      setError(null);
+      saveCharacter(serverHost, pairingToken, character.id, { isPublic })
+        .then(() => reload())
+        .catch(report);
+    },
+    [pairingToken, reload, report, serverHost],
   );
 
   const remove = React.useCallback(
@@ -147,39 +168,21 @@ export default function AdminCharactersScreen() {
               onToggle={() => open(character)}
               onSave={() => commit(character)}
               onRemove={() => remove(character)}
+              removeTitle={CONFIRM_COPY.deleteCharacter}
+              removeBody={CONFIRM_COPY.deleteCharacterBody}
               saveState={saveState}
             >
-              <View className="gap-1.5">
-                <Text className="font-ui text-[11px] text-text-muted">
-                  {AUTHOR_FIELDS.name.label}
-                </Text>
-                <Input
-                  value={draft.name ?? ""}
-                  onChangeText={(value) => setDraft((prev) => ({ ...prev, name: value }))}
-                  autoCapitalize="words"
+              {openId === character.id ? (
+                <AdminCharacterEditor
+                  character={character}
+                  draft={draft}
+                  serverHost={serverHost}
+                  avatarUrl={avatarUrl(character)}
+                  onChange={change}
+                  onPublish={(next) => publish(character, next)}
+                  onPortrait={() => void reload()}
                 />
-              </View>
-
-              {FIELDS.map((field) => (
-                <View className="gap-1.5" key={field}>
-                  <Text className="font-ui text-[11px] text-text-muted">
-                    {AUTHOR_FIELDS[field].label}
-                  </Text>
-                  <TextInput
-                    multiline={!AUTHOR_FIELDS[field].singleLine}
-                    value={draft[field] ?? ""}
-                    onChangeText={(value) => setDraft((prev) => ({ ...prev, [field]: value }))}
-                    placeholderTextColor={theme.textMuted}
-                    cursorColor={theme.primary}
-                    selectionColor={theme.primary}
-                    style={{
-                      minHeight: AUTHOR_FIELDS[field].singleLine ? undefined : 96,
-                      textAlignVertical: AUTHOR_FIELDS[field].singleLine ? "center" : "top",
-                    }}
-                    className="rounded-input border border-border bg-input-surface p-3 font-ui text-xs text-text-primary leading-5"
-                  />
-                </View>
-              ))}
+              ) : null}
             </EditableRow>
           </Animated.View>
         ))

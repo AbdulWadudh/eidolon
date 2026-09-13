@@ -1,4 +1,9 @@
-import { defaultPrompt, PROMPT_DEFAULTS, type PromptDefinition } from "@eidolon/config";
+import {
+  defaultPrompt,
+  PROMPT_DEFAULTS,
+  type PromptCategory,
+  type PromptDefinition,
+} from "@eidolon/config";
 import { CACHE } from "@/config";
 import { db } from "@/db";
 import { cacheDelete, cacheGet, cacheSet } from "@/services/cache";
@@ -7,6 +12,7 @@ export interface PromptRecord {
   key: string;
   value: string;
   description: string;
+  category: PromptCategory | null;
   variables: string[];
   isCustom: boolean;
   updatedAt: number;
@@ -96,6 +102,7 @@ export function describePrompt(key: string): PromptRecord {
     key,
     value: getPrompt(key),
     description: definition?.description ?? "",
+    category: definition?.category ?? null,
     variables: definition?.variables ?? [],
     isCustom: row !== null,
     updatedAt: row?.updated_at ?? 0,

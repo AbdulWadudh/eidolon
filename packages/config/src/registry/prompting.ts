@@ -1,4 +1,4 @@
-import { AUTHOR_FIELD_KEYS, AUTHOR_FIELDS, AUTHORING } from "../authoring";
+import { AUTHOR_FIELD_KEYS, AUTHOR_FIELDS, AUTHORING, PROMPT_AUTHORING } from "../authoring";
 import {
   CHRONICLE_CONTEXT,
   LOREBOOK,
@@ -9,7 +9,7 @@ import {
   WORKING_CONTEXT,
 } from "../memory";
 import { CHARACTER_PRESETS, PRESET_COPY } from "../presets";
-import { PROMPT_DEFAULTS, PROMPT_KEYS } from "../prompts";
+import { PROMPT_CATEGORIES, PROMPT_CATEGORY_COPY, PROMPT_DEFAULTS, PROMPT_KEYS } from "../prompts";
 import { CHRONICLE, PROACTIVE } from "../queue";
 import { REASONS } from "./reasons";
 import type { ConfigGroup } from "./types";
@@ -109,6 +109,13 @@ export const PROMPTING_GROUPS: ConfigGroup[] = [
     reason: "Each field's guidance and limits go into the prompt on every authoring request.",
   },
   {
+    name: "PROMPT_AUTHORING",
+    source: "authoring.ts",
+    value: PROMPT_AUTHORING,
+    bucket: "editable",
+    reason: REASONS.requestRead,
+  },
+  {
     name: "AUTHOR_FIELD_KEYS",
     source: "authoring.ts",
     value: AUTHOR_FIELD_KEYS,
@@ -128,6 +135,20 @@ export const PROMPTING_GROUPS: ConfigGroup[] = [
     value: PROMPT_KEYS,
     bucket: "structural",
     reason: REASONS.promptStore,
+  },
+  {
+    name: "PROMPT_CATEGORIES",
+    source: "prompts-shared.ts",
+    value: PROMPT_CATEGORIES,
+    bucket: "structural",
+    reason: REASONS.typeLevel,
+  },
+  {
+    name: "PROMPT_CATEGORY_COPY",
+    source: "prompts-shared.ts",
+    value: PROMPT_CATEGORY_COPY,
+    bucket: "structural",
+    reason: REASONS.copy,
   },
   {
     name: "CHARACTER_PRESETS",

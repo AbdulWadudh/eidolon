@@ -14,6 +14,7 @@ export interface CharacterFieldsProps {
   draft: Draft;
   characterId?: string;
   author?: FieldAuthor;
+  compact?: boolean;
   onChange: (patch: Partial<Draft>) => void;
 }
 
@@ -22,13 +23,14 @@ export function CharacterFields({
   draft,
   characterId,
   author,
+  compact = false,
   onChange,
 }: CharacterFieldsProps) {
   const theme = useResolvedTheme(characterId);
   const reduced = useReducedMotion();
 
   return (
-    <View className="gap-4">
+    <View className={compact ? "gap-3" : "gap-4"}>
       {keys.map((key, position) => {
         const field = FIELDS[key];
         const value = draft[key];
@@ -43,12 +45,20 @@ export function CharacterFields({
                 ? undefined
                 : FadeInDown.duration(UI_MS.disclosure).delay(position * UI_MS.revealStagger)
             }
-            className="gap-2"
+            className={compact ? "gap-1.5" : "gap-2"}
           >
             <View className="flex-row items-center gap-2">
               <View className="flex-1">
                 <View className="flex-row items-center gap-2">
-                  <Text className="font-ui-bold text-[13px] text-text-primary">{field.label}</Text>
+                  <Text
+                    className={
+                      compact
+                        ? "font-ui-bold text-[12px] text-text-primary"
+                        : "font-ui-bold text-[13px] text-text-primary"
+                    }
+                  >
+                    {field.label}
+                  </Text>
                   <Animated.View
                     className="h-1.5 w-1.5 rounded-full"
                     style={{
@@ -63,9 +73,11 @@ export function CharacterFields({
                     }}
                   />
                 </View>
-                <Text className="mt-1 font-ui text-[11px] text-text-muted leading-4">
-                  {field.hint}
-                </Text>
+                {compact ? null : (
+                  <Text className="mt-1 font-ui text-[11px] text-text-muted leading-4">
+                    {field.hint}
+                  </Text>
+                )}
               </View>
 
               {author ? (
@@ -93,12 +105,30 @@ export function CharacterFields({
               cursorColor={theme.primary}
               selectionColor={theme.primary}
               textAlignVertical={field.lines > 1 ? "top" : "center"}
-              className="rounded-button border border-border bg-input font-main text-[15px] text-text-primary leading-6"
+              className={
+                compact
+                  ? "rounded-button border border-border bg-input font-main text-[13px] text-text-primary leading-5"
+                  : "rounded-button border border-border bg-input font-main text-[15px] text-text-primary leading-6"
+              }
               style={{
-                minHeight: Math.max(CHAT.minTouchTargetPx + 8, field.lines * 24 + 30),
-                paddingHorizontal: FIELD_PADDING.horizontal,
-                paddingTop: field.lines > 1 ? FIELD_PADDING.multilineTop : FIELD_PADDING.vertical,
-                paddingBottom: FIELD_PADDING.vertical,
+                minHeight: compact
+                  ? field.lines * FIELD_PADDING.compactLineHeightPx + FIELD_PADDING.compactBasePx
+                  : Math.max(
+                      CHAT.minTouchTargetPx + 8,
+                      field.lines * FIELD_PADDING.lineHeightPx + FIELD_PADDING.basePx,
+                    ),
+                paddingHorizontal: compact
+                  ? FIELD_PADDING.compactHorizontal
+                  : FIELD_PADDING.horizontal,
+                paddingTop:
+                  field.lines > 1
+                    ? compact
+                      ? FIELD_PADDING.compactMultilineTop
+                      : FIELD_PADDING.multilineTop
+                    : compact
+                      ? FIELD_PADDING.compactVertical
+                      : FIELD_PADDING.vertical,
+                paddingBottom: compact ? FIELD_PADDING.compactVertical : FIELD_PADDING.vertical,
                 opacity: isBusy ? 0.5 : 1,
               }}
             />

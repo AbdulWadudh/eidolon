@@ -1,7 +1,10 @@
+import { isAuthorMode } from "@eidolon/config";
 import { AdminPromptPutSchema } from "@eidolon/protocol";
 import { Hono } from "hono";
 import type { OwnerEnv } from "@/auth/guard";
 import { describePrompt, listPrompts, resetPrompt, setPrompt } from "@/prompts/store";
+import { AuthorUnavailableError } from "@/services/character-author";
+import { authorPromptText } from "@/services/prompt-author";
 
 export const adminPrompts = new Hono<OwnerEnv>();
 
@@ -36,4 +39,21 @@ adminPrompts.delete("/:key", async (c) => {
   if (!known(key)) return c.json({ error: "No such prompt." }, 404);
 
   return c.json({ prompt: await resetPrompt(key) });
+});
+
+adminPrompts.post("/:key/author", async (c) => {
+  const key = c.req.param("key");
+  if (!known(key)) return c.json({ error: "No such prompt." }, 404);
+
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!isAuthorMode(body.mode)) return c.json({ error: "Unknown mode." }, 400);
+
+  const draft = typeof body.draft === "string" ? body.draft : "";
+
+  try {
+    return c.json({ text: await authorPromptText({ key, mode: body.mode, draft }) });
+  } catch (error) {
+    if (error instanceof AuthorUnavailableError) return c.json({ error: error.message }, 503);
+    throw error;
+  }
 });

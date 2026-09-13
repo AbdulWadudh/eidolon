@@ -24,19 +24,35 @@ const ALL_FIELDS: FieldKey[] = [
 export interface CharacterFormProps {
   draft: Draft;
   serverHost: string;
+  characterId?: string;
+  compact?: boolean;
   onChange: (patch: Partial<Draft>) => void;
 }
 
-export function CharacterForm({ draft, serverHost, onChange }: CharacterFormProps) {
+export function CharacterForm({
+  draft,
+  serverHost,
+  characterId,
+  compact = false,
+  onChange,
+}: CharacterFormProps) {
   const author = useFieldAuthor(serverHost, draft, onChange);
 
   return (
-    <View className="gap-5">
-      <CharacterFields keys={ALL_FIELDS} draft={draft} author={author} onChange={onChange} />
+    <View className={compact ? "gap-3" : "gap-5"}>
+      <CharacterFields
+        keys={ALL_FIELDS}
+        draft={draft}
+        characterId={characterId}
+        author={author}
+        compact={compact}
+        onChange={onChange}
+      />
 
       <View className="h-px bg-border" />
 
       <VoicePicker
+        characterId={characterId}
         serverHost={serverHost}
         value={draft.voice}
         onChange={(voice) => onChange({ voice })}

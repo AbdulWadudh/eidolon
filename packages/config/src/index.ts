@@ -14,6 +14,8 @@ export {
   adminConfigReloadPath,
   adminConfigReloadUrl,
   adminPath,
+  adminPromptAuthorPath,
+  adminPromptAuthorUrl,
   adminUrl,
   apiPath,
   apiUrl,
@@ -64,6 +66,7 @@ export {
   type AuthorMode,
   isAuthorField,
   isAuthorMode,
+  PROMPT_AUTHORING,
 } from "./authoring";
 export {
   ADMIN_COPY,
@@ -71,6 +74,7 @@ export {
   AUTHOR_COPY,
   CHARACTER_COPY,
   CHAT_COPY,
+  CONFIRM_COPY,
   CONNECTION_COPY,
   type ConnectionKey,
   DASHBOARD_COPY,
@@ -199,8 +203,11 @@ export {
 } from "./presets";
 export {
   defaultPrompt,
+  PROMPT_CATEGORIES,
+  PROMPT_CATEGORY_COPY,
   PROMPT_DEFAULTS,
   PROMPT_KEYS,
+  type PromptCategory,
   type PromptDefinition,
   render,
 } from "./prompts";

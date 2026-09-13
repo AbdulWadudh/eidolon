@@ -59,6 +59,14 @@ export function adminApiUrl(
   return `${scheme}://${stripAuthority(host)}${adminApiPath(route, id)}`;
 }
 
+export function adminPromptAuthorPath(key: string): string {
+  return `${adminApiPath("prompts", key)}/author`;
+}
+
+export function adminPromptAuthorUrl(host: string, key: string, scheme = httpScheme(host)): string {
+  return `${scheme}://${stripAuthority(host)}${adminPromptAuthorPath(key)}`;
+}
+
 export function adminConfigReloadPath(): string {
   return `${adminApiPath("config")}/reload`;
 }
