@@ -11,7 +11,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import * as React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CharacterRosterCard } from "@/components/characters/CharacterCard";
 import { ImportCardButton } from "@/components/characters/ImportCardButton";
 import { CharacterSettingsSheet } from "@/components/chat/CharacterSettingsSheet";
@@ -94,11 +94,7 @@ export default function MainCharactersScreen() {
   }[connectionState];
 
   return (
-    <SafeAreaView
-      edges={["left", "right", "bottom"]}
-      style={{ flex: 1, backgroundColor: theme.canvas }}
-      className="flex-1 bg-canvas"
-    >
+    <View style={{ flex: 1, backgroundColor: theme.canvas }} className="flex-1 bg-canvas">
       {}
       <GlassSurface
         tint="card"
@@ -174,7 +170,9 @@ export default function MainCharactersScreen() {
         </View>
       </GlassSurface>
 
-      <ScrollView contentContainerStyle={{ padding: 14, gap: 10 }}>
+      <ScrollView
+        contentContainerStyle={{ padding: 14, paddingBottom: insets.bottom + 14, gap: 10 }}
+      >
         {}
         {showSettings && (
           <Card className="border-primary/30">
@@ -371,6 +369,6 @@ export default function MainCharactersScreen() {
         characterId={managing?.id}
         characterName={managing?.name}
       />
-    </SafeAreaView>
+    </View>
   );
 }
