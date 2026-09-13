@@ -1,15 +1,18 @@
-import { PERSONA_COPY, UI_MS } from "@eidolon/config";
+import { PERSONA_COPY } from "@eidolon/config";
 import * as DocumentPicker from "expo-document-picker";
 import { Image } from "expo-image";
 import * as React from "react";
-import { ActivityIndicator, Modal, Text, View } from "react-native";
-import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
+import { ActivityIndicator, Text, View } from "react-native";
+import { useReducedMotion } from "react-native-reanimated";
+import { PhotoViewer } from "@/components/chat/PhotoViewer";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Cancel01Icon, Delete02Icon, FileUploadIcon, SparklesIcon, UserIcon } from "@/lib/icons";
+import { SparklesIcon, UserIcon } from "@/lib/icons";
+import { savePhotoToDevice } from "@/lib/save-photo";
 import { tap } from "@/services/haptics";
+import { useChatStore } from "@/store/chat-store";
 import {
   fetchPersona,
   type Persona,
@@ -22,6 +25,13 @@ import { useToastStore } from "@/store/toast-store";
 
 const PHOTO_PX = 72;
 const POLL_MS = 3000;
+const GIVE_UP_MS = 180000;
+
+const SAVE_FAILED: Record<string, string> = {
+  denied: "Allow photos to save it to your phone.",
+  unavailable: "This build cannot reach the photo library.",
+  failed: "That picture could not be saved.",
+};
 
 export interface PersonaPhotoProps {
   serverHost: string;
@@ -34,23 +44,56 @@ export function PersonaPhoto({ serverHost, persona, onChanged }: PersonaPhotoPro
   const [isBusy, setBusy] = React.useState(false);
   const [isDrawing, setDrawing] = React.useState(false);
   const [isOpen, setOpen] = React.useState(false);
-  const reduced = useReducedMotion();
+  const _reduced = useReducedMotion();
   const startedWith = React.useRef(persona.photoUrl);
+  const report = React.useRef(onChanged);
+  report.current = onChanged;
+
+  const pushed = useChatStore((state) => state.personaUpdate);
+  const clearPushed = useChatStore((state) => state.clearPersonaUpdate);
+
+  React.useEffect(() => {
+    if (!pushed || pushed.id !== persona.id || !pushed.photoUrl) return;
+
+    clearPushed();
+    if (pushed.photoUrl === persona.photoUrl) return;
+
+    setDrawing(false);
+    tap("success");
+    void fetchPersona(serverHost, persona.id).then((next) => {
+      if (next) report.current(next);
+    });
+  }, [pushed, persona.id, persona.photoUrl, serverHost, clearPushed]);
+
+  React.useEffect(() => {
+    if (!isDrawing || !persona.photoUrl || persona.photoUrl === startedWith.current) return;
+
+    setDrawing(false);
+  }, [isDrawing, persona.photoUrl]);
 
   React.useEffect(() => {
     if (!isDrawing) return;
 
+    let waited = 0;
     const timer = setInterval(() => {
+      waited += POLL_MS;
+
+      if (waited > GIVE_UP_MS) {
+        setDrawing(false);
+        useToastStore.getState().notify(PERSONA_COPY.photoFailed, "bad");
+        return;
+      }
+
       void fetchPersona(serverHost, persona.id).then((next) => {
         if (!next?.photoUrl || next.photoUrl === startedWith.current) return;
         setDrawing(false);
         tap("success");
-        onChanged(next);
+        report.current(next);
       });
     }, POLL_MS);
 
     return () => clearInterval(timer);
-  }, [isDrawing, serverHost, persona.id, onChanged]);
+  }, [isDrawing, serverHost, persona.id]);
 
   const draw = React.useCallback(async () => {
     startedWith.current = persona.photoUrl;
@@ -157,84 +200,33 @@ export function PersonaPhoto({ serverHost, persona, onChanged }: PersonaPhotoPro
         </View>
       </View>
 
-      <Modal
-        visible={isOpen}
-        transparent
-        animationType="none"
-        onRequestClose={() => setOpen(false)}
-      >
-        <Animated.View
-          entering={reduced ? undefined : FadeIn.duration(UI_MS.disclosure)}
-          className="flex-1"
-          style={{ backgroundColor: "rgba(0,0,0,0.94)" }}
-        >
-          <View className="flex-row justify-end px-4 pt-14">
-            <PressableScale
-              accessibilityRole="button"
-              accessibilityLabel={PERSONA_COPY.photoClose}
-              hitSlop={12}
-              onPress={() => setOpen(false)}
-              className="h-11 w-11 items-center justify-center"
-            >
-              <AppIcon icon={Cancel01Icon} size={22} color="#fff" strokeWidth={2} />
-            </PressableScale>
-          </View>
-
-          <View className="flex-1 items-center justify-center px-8">
-            {persona.photoUrl ? (
-              <Image
-                source={{ uri: persona.photoUrl }}
-                contentFit="contain"
-                cachePolicy="disk"
-                accessibilityLabel={PERSONA_COPY.photoLabel}
-                style={{ width: "100%", height: "70%" }}
-              />
-            ) : (
-              <View className="items-center gap-3">
-                <View
-                  className="h-24 w-24 items-center justify-center rounded-full border border-border"
-                  style={{ backgroundColor: theme.inputSurface }}
-                >
-                  <AppIcon icon={UserIcon} size={40} color={theme.textMuted} />
-                </View>
-                <Text className="text-center font-main text-[13px] text-text-muted leading-5">
-                  {PERSONA_COPY.photoEmpty}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          <View className="flex-row flex-wrap justify-center gap-2 px-4 pb-12">
-            <Button
-              variant="secondary"
-              size="sm"
-              className="flex-row gap-1.5"
-              disabled={isBusy || isDrawing}
-              onPress={() => void pick()}
-            >
-              <AppIcon icon={FileUploadIcon} size={13} color={theme.textPrimary} />
-              <Text className="font-ui-medium text-[11px] text-text-primary">
-                {PERSONA_COPY.photoChange}
-              </Text>
-            </Button>
-
-            {persona.photoUrl ? (
-              <Button
-                variant="destructive"
-                size="sm"
-                className="flex-row gap-1.5"
-                disabled={isBusy || isDrawing}
-                onPress={() => void clear()}
-              >
-                <AppIcon icon={Delete02Icon} size={13} color={theme.textPrimary} />
-                <Text className="font-ui-medium text-[11px] text-text-primary">
-                  {PERSONA_COPY.photoRemove}
-                </Text>
-              </Button>
-            ) : null}
-          </View>
-        </Animated.View>
-      </Modal>
+      <PhotoViewer
+        uri={persona.photoUrl}
+        characterId=""
+        isOpen={isOpen}
+        emptyHint={PERSONA_COPY.photoEmpty}
+        actions={persona.photoUrl ? ["change", "save", "delete"] : ["change"]}
+        onClose={() => setOpen(false)}
+        onCrop={() => undefined}
+        onAction={(action) => {
+          if (action === "change") {
+            setOpen(false);
+            void pick();
+            return;
+          }
+          if (action === "save" && persona.photoUrl) {
+            void savePhotoToDevice(persona.photoUrl).then((result) => {
+              if (result === "saved") return;
+              useToastStore.getState().notify(SAVE_FAILED[result] ?? SAVE_FAILED.failed, "bad");
+            });
+            return;
+          }
+          if (action === "delete") {
+            setOpen(false);
+            void clear();
+          }
+        }}
+      />
     </>
   );
 }

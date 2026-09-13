@@ -167,11 +167,7 @@ export default function PersonaEditorScreen() {
             </Text>
           ) : (
             <>
-              <PersonaPhoto
-                serverHost={serverHost}
-                persona={persona}
-                onChanged={(next) => setPersona(next)}
-              />
+              <PersonaPhoto serverHost={serverHost} persona={persona} onChanged={setPersona} />
 
               <AuthoredFields
                 keys={PERSONA_FIELD_ORDER}

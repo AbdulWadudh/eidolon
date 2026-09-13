@@ -23,12 +23,15 @@ export type PhotoAction =
   | "face"
   | "background"
   | "save"
+  | "change"
   | "regenerate"
   | "delete";
 
 export interface PhotoViewerProps {
   uri: string | null;
   characterId: string;
+  isOpen?: boolean;
+  emptyHint?: string;
   onClose: () => void;
   onAction: (action: PhotoAction) => void;
   onCrop: (crop: AvatarCropRect | null) => void;
@@ -41,6 +44,7 @@ const LABELS: Record<PhotoAction, string> = {
   face: "Use as the face",
   background: "Chat background",
   save: "Save to device",
+  change: "Change picture",
   regenerate: "Regenerate",
   delete: "Delete",
 };
@@ -59,6 +63,8 @@ const FRAMES_THE_AVATAR: PhotoAction[] = ["avatar", "adjust"];
 export function PhotoViewer({
   uri,
   characterId,
+  isOpen,
+  emptyHint,
   onClose,
   onAction,
   onCrop,
@@ -144,7 +150,12 @@ export function PhotoViewer({
   }));
 
   return (
-    <Modal visible={uri !== null} transparent animationType="none" onRequestClose={onClose}>
+    <Modal
+      visible={isOpen ?? uri !== null}
+      transparent
+      animationType="none"
+      onRequestClose={onClose}
+    >
       {}
       <GestureHandlerRootView style={{ flex: 1 }}>
         <Animated.View
@@ -193,6 +204,10 @@ export function PhotoViewer({
                         style={{ width: "100%", height: "100%" }}
                       />
                     </Animated.View>
+                  ) : emptyHint ? (
+                    <Text className="px-10 text-center font-main text-sm text-text-muted leading-5">
+                      {emptyHint}
+                    </Text>
                   ) : null}
                 </Animated.View>
               </GestureDetector>

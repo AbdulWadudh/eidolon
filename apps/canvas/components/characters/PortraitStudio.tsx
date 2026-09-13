@@ -1,4 +1,7 @@
 import { AUTHOR_COPY, CHAT, PORTRAIT_POLL_MS, UI_MS } from "@eidolon/config";
+
+const GIVE_UP_MS = 180000;
+
 import { Image } from "expo-image";
 import * as React from "react";
 import { ActivityIndicator, Text, View } from "react-native";
@@ -32,22 +35,40 @@ export function PortraitStudio({
   const [waiting, setWaiting] = React.useState(false);
   const [note, setNote] = React.useState<string | null>(null);
   const startedWith = React.useRef<string | null>(avatarUrl);
+  const report = React.useRef(onPortrait);
+  report.current = onPortrait;
+
+  React.useEffect(() => {
+    if (!waiting || !avatarUrl || avatarUrl === startedWith.current) return;
+
+    setWaiting(false);
+    setNote(null);
+  }, [waiting, avatarUrl]);
 
   React.useEffect(() => {
     if (!waiting) return;
 
+    let spent = 0;
     const timer = setInterval(() => {
+      spent += PORTRAIT_POLL_MS;
+
+      if (spent > GIVE_UP_MS) {
+        setWaiting(false);
+        setNote(AUTHOR_COPY.portraitFailed);
+        return;
+      }
+
       void fetchLook(serverHost, characterId).then((look) => {
         if (!look?.avatarUrl || look.avatarUrl === startedWith.current) return;
         setWaiting(false);
         setNote(null);
         tap("success");
-        onPortrait(look.avatarUrl);
+        report.current(look.avatarUrl);
       });
     }, PORTRAIT_POLL_MS);
 
     return () => clearInterval(timer);
-  }, [waiting, serverHost, characterId, onPortrait]);
+  }, [waiting, serverHost, characterId]);
 
   const generate = React.useCallback(() => {
     startedWith.current = avatarUrl;
