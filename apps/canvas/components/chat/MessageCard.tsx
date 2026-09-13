@@ -105,79 +105,59 @@ function MessageCardBase({
         tint="card"
         characterId={message.characterId}
         className={cn(
-          "w-full overflow-hidden rounded-card border border-border",
+          "w-full rounded-card border border-border p-3.5",
           isUser ? "border-primary/25" : "",
         )}
         style={{
           ...(message.audioUrl ? { borderTopLeftRadius: 0 } : null),
+          ...(fusesActions ? { borderBottomLeftRadius: 0 } : null),
         }}
       >
-        <View className="p-3.5">
-          {message.imageUrl ? (
-            <Pressable
-              accessibilityRole="imagebutton"
-              accessibilityLabel="Open photo"
-              onPress={() => onOpenPhoto?.(message)}
-            >
-              <MessageImage uri={message.imageUrl} characterId={message.characterId} />
-            </Pressable>
-          ) : null}
-
-          {editing ? (
-            <TextInput
-              accessibilityLabel={CHAT_COPY.editMessage}
-              multiline
-              autoFocus
-              value={draft}
-              onChangeText={setDraft}
-              placeholderTextColor={theme.textMuted}
-              cursorColor={theme.primary}
-              selectionColor={theme.primary}
-              className="font-main text-base text-text-primary"
-              style={{ minHeight: 44, textAlignVertical: "top", includeFontPadding: false }}
-            />
-          ) : body.length > 0 ? (
-            <RoleplayText text={body} />
-          ) : null}
-
-          {editing ? (
-            <View className="mt-2.5">
-              <AuthorActions
-                characterId={message.characterId}
-                {...textAuthorActions(author, draft, setDraft)}
-              />
-            </View>
-          ) : null}
-
-          <View className="mt-2.5 flex-row items-center justify-end gap-1.5">
-            {isUser ? <View className="h-1 w-1 rounded-full bg-success" /> : null}
-            <Text
-              className="font-ui text-xs text-text-muted"
-              style={{ fontVariant: ["tabular-nums"] }}
-            >
-              {isUser ? `${message.timestamp} • Delivered` : message.timestamp}
-            </Text>
-          </View>
-        </View>
-
-        {fusesActions ? (
-          <MessageActions
-            characterId={message.characterId}
-            isEditing={editing}
-            isBusy={isLastReply && isBusy}
-            canRevise={isLastReply}
-            canEdit={canEdit}
-            canSpeak={canSpeak}
-            hasAudio={message.audioUrl !== null}
-            isSpeaking={isLastReply && isSpeaking}
-            onRegenerate={() => requestReplyOptions(message.characterId)}
-            onAnother={() => regenerateReply(message.characterId)}
-            onSpeak={() => refreshAudio(message.id)}
-            onEdit={beginEdit}
-            onSave={commitEdit}
-            onCancel={() => setEditing(false)}
-          />
+        {message.imageUrl ? (
+          <Pressable
+            accessibilityRole="imagebutton"
+            accessibilityLabel="Open photo"
+            onPress={() => onOpenPhoto?.(message)}
+          >
+            <MessageImage uri={message.imageUrl} characterId={message.characterId} />
+          </Pressable>
         ) : null}
+
+        {editing ? (
+          <TextInput
+            accessibilityLabel={CHAT_COPY.editMessage}
+            multiline
+            autoFocus
+            value={draft}
+            onChangeText={setDraft}
+            placeholderTextColor={theme.textMuted}
+            cursorColor={theme.primary}
+            selectionColor={theme.primary}
+            className="font-main text-base text-text-primary"
+            style={{ minHeight: 44, textAlignVertical: "top", includeFontPadding: false }}
+          />
+        ) : body.length > 0 ? (
+          <RoleplayText text={body} />
+        ) : null}
+
+        {editing ? (
+          <View className="mt-2.5">
+            <AuthorActions
+              characterId={message.characterId}
+              {...textAuthorActions(author, draft, setDraft)}
+            />
+          </View>
+        ) : null}
+
+        <View className="mt-2.5 flex-row items-center justify-end gap-1.5">
+          {isUser ? <View className="h-1 w-1 rounded-full bg-success" /> : null}
+          <Text
+            className="font-ui text-xs text-text-muted"
+            style={{ fontVariant: ["tabular-nums"] }}
+          >
+            {isUser ? `${message.timestamp} • Delivered` : message.timestamp}
+          </Text>
+        </View>
       </GlassSurface>
 
       {showsOptions ? (
@@ -191,7 +171,24 @@ function MessageCardBase({
           onReroll={() => requestReplyOptions(message.characterId)}
           onCancel={clearReplyOptions}
         />
-      ) : null}
+      ) : isUser || !showsActions ? null : (
+        <MessageActions
+          characterId={message.characterId}
+          isEditing={editing}
+          isBusy={isLastReply && isBusy}
+          canRevise={isLastReply}
+          canEdit={canEdit}
+          canSpeak={canSpeak}
+          hasAudio={message.audioUrl !== null}
+          isSpeaking={isLastReply && isSpeaking}
+          onRegenerate={() => requestReplyOptions(message.characterId)}
+          onAnother={() => regenerateReply(message.characterId)}
+          onSpeak={() => refreshAudio(message.id)}
+          onEdit={beginEdit}
+          onSave={commitEdit}
+          onCancel={() => setEditing(false)}
+        />
+      )}
     </View>
   );
 }

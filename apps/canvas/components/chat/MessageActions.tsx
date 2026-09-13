@@ -1,7 +1,8 @@
-import { CHAT_COPY, MIND_COPY } from "@eidolon/config";
+import { CHAT, CHAT_COPY, MIND_COPY } from "@eidolon/config";
 import { Text, View } from "react-native";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import {
   ArrowRight01Icon,
   Cancel01Icon,
@@ -49,6 +50,7 @@ export function MessageActions({
   onCancel,
 }: MessageActionsProps) {
   const theme = useResolvedTheme(characterId);
+  const overlap = CHAT.audioTabOverlapPx;
 
   const button = (
     label: string,
@@ -91,39 +93,60 @@ export function MessageActions({
   );
 
   return (
-    <View
-      className="flex-row items-center gap-1 px-2 py-1"
-      style={{
-        borderTopWidth: theme.borderWidth,
-        borderTopColor: theme.cardBorder,
-      }}
-    >
-      {isEditing ? (
-        <>
-          {button(MIND_COPY.cancel, Cancel01Icon, theme.textMuted, onCancel, true)}
-          {button(CHAT_COPY.saveMessage, CheckmarkCircle01Icon, theme.primary, onSave, true)}
-        </>
-      ) : (
-        <>
-          {canRevise
-            ? button(CHAT_COPY.regenerate, RefreshIcon, theme.primary, onRegenerate)
-            : null}
-          {canRevise
-            ? button(CHAT_COPY.anotherReply, ArrowRight01Icon, theme.textMuted, onAnother)
-            : null}
-          {canSpeak
-            ? button(
-                hasAudio ? CHAT_COPY.respeakMessage : CHAT_COPY.speakMessage,
-                VolumeHighIcon,
-                isSpeaking ? theme.primary : theme.textMuted,
-                onSpeak,
-              )
-            : null}
-          {canEdit
-            ? button(CHAT_COPY.editMessage, PencilEdit02Icon, theme.textMuted, onEdit)
-            : null}
-        </>
-      )}
+    <View className="self-start" style={{ marginTop: -overlap }}>
+      <GlassSurface
+        tint="card"
+        characterId={characterId}
+        pointerEvents="none"
+        className="absolute"
+        style={{
+          top: Math.max(0, overlap - theme.borderWidth),
+          left: 0,
+          right: 0,
+          bottom: 0,
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
+          borderBottomLeftRadius: theme.radius,
+          borderBottomRightRadius: theme.radius,
+          borderColor: theme.cardBorder,
+          borderTopWidth: 0,
+          borderLeftWidth: theme.borderWidth,
+          borderRightWidth: theme.borderWidth,
+          borderBottomWidth: theme.borderWidth,
+        }}
+      />
+
+      <View
+        className="flex-row items-center gap-1 px-1.5 pb-0.5"
+        style={{ paddingTop: overlap + 2 }}
+      >
+        {isEditing ? (
+          <>
+            {button(MIND_COPY.cancel, Cancel01Icon, theme.textMuted, onCancel, true)}
+            {button(CHAT_COPY.saveMessage, CheckmarkCircle01Icon, theme.primary, onSave, true)}
+          </>
+        ) : (
+          <>
+            {canRevise
+              ? button(CHAT_COPY.regenerate, RefreshIcon, theme.primary, onRegenerate)
+              : null}
+            {canRevise
+              ? button(CHAT_COPY.anotherReply, ArrowRight01Icon, theme.textMuted, onAnother)
+              : null}
+            {canSpeak
+              ? button(
+                  hasAudio ? CHAT_COPY.respeakMessage : CHAT_COPY.speakMessage,
+                  VolumeHighIcon,
+                  isSpeaking ? theme.primary : theme.textMuted,
+                  onSpeak,
+                )
+              : null}
+            {canEdit
+              ? button(CHAT_COPY.editMessage, PencilEdit02Icon, theme.textMuted, onEdit)
+              : null}
+          </>
+        )}
+      </View>
     </View>
   );
 }
