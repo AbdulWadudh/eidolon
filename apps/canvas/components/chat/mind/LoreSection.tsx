@@ -99,7 +99,7 @@ export function LoreSection({
       placeholderTextColor={theme.textMuted}
       cursorColor={theme.primary}
       selectionColor={theme.primary}
-      className="rounded-button border border-border px-2.5 py-2 font-main text-sm text-text-primary"
+      className="rounded-button border border-border px-3.5 py-2.5 font-main text-sm text-text-primary"
       style={
         multiline
           ? { minHeight: 64, textAlignVertical: "top", includeFontPadding: false }

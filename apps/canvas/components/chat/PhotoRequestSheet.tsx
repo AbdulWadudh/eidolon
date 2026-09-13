@@ -200,7 +200,7 @@ function Situation({
           placeholderTextColor={theme.textMuted}
           cursorColor={theme.primary}
           selectionColor={theme.primary}
-          className="flex-1 border border-border bg-input px-3 font-main text-base text-text-primary"
+          className="flex-1 border border-border bg-input px-4 font-main text-base text-text-primary"
           style={{
             borderRadius: theme.radius,
             maxHeight: 96,

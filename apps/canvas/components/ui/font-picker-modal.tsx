@@ -286,7 +286,7 @@ export function FontPickerModal({
             onChangeText={setQuery}
             placeholder="Search installed and Google Fonts"
             placeholderTextColor={mutedColor}
-            className="h-11 rounded-input border border-border bg-input px-3 font-ui text-sm text-text-primary"
+            className="h-11 rounded-input border border-border bg-input px-4 font-ui text-sm text-text-primary"
             style={{ paddingVertical: 0, includeFontPadding: false, textAlignVertical: "center" }}
             autoCorrect={false}
             autoCapitalize="words"

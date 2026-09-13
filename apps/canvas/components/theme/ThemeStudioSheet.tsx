@@ -382,7 +382,7 @@ export function ThemeStudioSheet({
                     value={String(resolvedTheme.radius)}
                     onChangeText={handleRadiusChange}
                     keyboardType="numeric"
-                    className="h-10 rounded border border-border bg-input px-3 font-ui-bold text-sm text-text-primary"
+                    className="h-10 rounded border border-border bg-input px-3.5 font-ui-bold text-sm text-text-primary"
                     style={{
                       textAlign: "center",
                       paddingVertical: 0,

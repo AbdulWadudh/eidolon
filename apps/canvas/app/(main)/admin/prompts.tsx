@@ -250,7 +250,7 @@ export default function AdminPromptsScreen() {
                         cursorColor={theme.primary}
                         selectionColor={theme.primary}
                         style={{ minHeight: 180, textAlignVertical: "top" }}
-                        className="rounded-input border border-border bg-input-surface p-3 font-ui text-xs text-text-primary leading-5"
+                        className="rounded-input border border-border bg-input-surface px-3.5 py-3 font-ui text-xs text-text-primary leading-5"
                       />
                     </EditableRow>
                   ))}

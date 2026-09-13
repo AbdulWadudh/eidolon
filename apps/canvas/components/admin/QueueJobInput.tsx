@@ -142,7 +142,7 @@ export function QueueJobInput({
                 cursorColor={theme.primary}
                 selectionColor={theme.primary}
                 style={{ minHeight: MULTILINE_MIN_PX }}
-                className="rounded-input border border-border bg-input-surface p-3 font-ui text-[11px] text-text-primary leading-4"
+                className="rounded-input border border-border bg-input-surface px-3.5 py-3 font-ui text-[11px] text-text-primary leading-4"
               />
             ) : (
               <Input
