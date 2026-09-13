@@ -28,6 +28,7 @@ export const CONNECT_COPY = {
   addressHint: "The computer running your conductor",
   reachable: "Your Eidolon answered.",
   changeAddress: "Change",
+  hideAddress: "Done",
   checking: "Looking for it…",
   connect: "Connect",
   missingFields: "Fill in the address before you sign in.",

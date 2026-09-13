@@ -58,6 +58,7 @@ export default function SignInScreen() {
     try {
       await pingHealth(host);
       setReach("reachable");
+      setAddressOpen(false);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (err) {
       setReach("unreachable");
@@ -100,7 +101,22 @@ export default function SignInScreen() {
           <Animated.View entering={reveal(1)}>
             {addressOpen ? (
               <Card className="flex-col gap-1.5">
-                <Text className="font-ui text-xs text-text-muted">{CONNECT_COPY.addressLabel}</Text>
+                <View className="flex-row items-center justify-between">
+                  <Text className="font-ui text-xs text-text-muted">
+                    {CONNECT_COPY.addressLabel}
+                  </Text>
+                  <PressableScale
+                    accessibilityRole="button"
+                    accessibilityLabel={CONNECT_COPY.hideAddress}
+                    hitSlop={10}
+                    onPress={() => setAddressOpen(false)}
+                    className="px-1 py-0.5"
+                  >
+                    <Text className="font-ui-bold text-[11px]" style={{ color: theme.primary }}>
+                      {CONNECT_COPY.hideAddress}
+                    </Text>
+                  </PressableScale>
+                </View>
                 <Input
                   leading={HardDriveIcon}
                   placeholder={DEFAULT_HOST || "192.168.1.39:3000"}
