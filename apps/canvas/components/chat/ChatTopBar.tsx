@@ -10,7 +10,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { croppedStyle } from "@/lib/avatar-crop";
 import { ArrowLeft01Icon, Call02Icon, MoreVerticalIcon } from "@/lib/icons";
-import { withAlpha } from "@/lib/translucency";
 import { useAffinityStore } from "@/store/affinity-store";
 import type { MindState } from "@/store/chat-messages";
 import type { AvatarCropRect } from "@/store/chat-photos";
@@ -36,8 +35,6 @@ const AVATAR_PX = 38;
 const ACTION_PX = AVATAR_PX;
 const ICON_PX = 18;
 const ICON_STROKE = 1.6;
-const ACCENT_SURFACE_ALPHA = 0.12;
-const ACCENT_EDGE_ALPHA = 0.35;
 
 export function ChatTopBar({
   characterName,
@@ -177,14 +174,8 @@ export function ChatTopBar({
         disabled={!onCall}
         hitSlop={8}
         onPress={onCall}
-        className="items-center justify-center rounded-button border"
-        style={{
-          height: ACTION_PX,
-          width: ACTION_PX,
-          borderColor: withAlpha(theme.primary, ACCENT_EDGE_ALPHA),
-          backgroundColor: withAlpha(theme.primary, ACCENT_SURFACE_ALPHA),
-          opacity: onCall ? 1 : 0.4,
-        }}
+        className="items-center justify-center rounded-button active:bg-card"
+        style={{ height: ACTION_PX, width: ACTION_PX, opacity: onCall ? 1 : 0.4 }}
       >
         <AppIcon icon={Call02Icon} size={ICON_PX} color={theme.primary} strokeWidth={ICON_STROKE} />
       </PressableScale>
