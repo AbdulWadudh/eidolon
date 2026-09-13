@@ -472,6 +472,11 @@ export const ADMIN_COPY = {
     "Off, only her newest reply can be rewritten. Changing an older one leaves everything she said after it answering something that is no longer there.",
   speakAnyLabel: "Read any message aloud",
   speakAnyHint: "Shows the speaker on every one of her replies, not just the newest.",
+  momentBackgroundLabel: "Let a moment repaint the background",
+  momentBackgroundHint:
+    "Off, a background you set by hand is kept and a moment only says where it took you. On, the moment's painting replaces it. Applies to every chat.",
+  momentBackgroundPath: "STAGE.backdropOverridesChosenBackground",
+  ownerOnly: "Only the owner of this conductor can change this.",
 } as const;
 
 export const CHARACTER_TASTE_COPY = {
