@@ -37,6 +37,7 @@ async function post(host: string, path: string, body: Record<string, string>): P
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+    credentials: "omit",
     signal: AbortSignal.timeout(TIMEOUTS_MS.clientRequest),
   });
 }
@@ -91,6 +92,7 @@ export async function fetchAccount(host: string, token: string): Promise<Account
   try {
     const response = await fetch(`${httpBase(host)}${apiPath("session")}`, {
       headers: { Authorization: `Bearer ${token}` },
+      credentials: "omit",
       signal: AbortSignal.timeout(TIMEOUTS_MS.clientRequest),
     });
     if (!response.ok) return null;
