@@ -50,6 +50,8 @@ function MessageCardBase({
   const canEdit = isLastReply || canEditAnyMessage;
   const canSpeak = isLastReply || canSpeakAnyMessage;
   const showsActions = isLastReply || canEdit || canSpeak;
+  const showsOptions = isLastReply && (options !== null || isBusy);
+  const fusesActions = !isUser && showsActions && !showsOptions;
 
   const [editing, setEditing] = React.useState(false);
   const [draft, setDraft] = React.useState(body);
@@ -106,7 +108,10 @@ function MessageCardBase({
           "w-full rounded-card border border-border p-3.5",
           isUser ? "border-primary/25" : "",
         )}
-        style={message.audioUrl ? { borderTopLeftRadius: 0 } : undefined}
+        style={{
+          ...(message.audioUrl ? { borderTopLeftRadius: 0 } : null),
+          ...(fusesActions ? { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 } : null),
+        }}
       >
         {message.imageUrl ? (
           <Pressable
@@ -157,7 +162,7 @@ function MessageCardBase({
         </View>
       </GlassSurface>
 
-      {isLastReply && (options !== null || isBusy) ? (
+      {showsOptions ? (
         <ReplyOptionsPicker
           characterId={message.characterId}
           options={options ?? []}

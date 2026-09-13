@@ -1,5 +1,5 @@
-import { CHAT_COPY, MIND_COPY } from "@eidolon/config";
-import { Text } from "react-native";
+import { CHAT, CHAT_COPY, MIND_COPY } from "@eidolon/config";
+import { Text, View } from "react-native";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { GlassSurface } from "@/components/ui/glass-surface";
@@ -30,6 +30,9 @@ export interface MessageActionsProps {
   onCancel: () => void;
 }
 
+const ACTION_PX = 28;
+const ICON_PX = 13;
+
 export function MessageActions({
   characterId,
   isEditing,
@@ -47,6 +50,7 @@ export function MessageActions({
   onCancel,
 }: MessageActionsProps) {
   const theme = useResolvedTheme(characterId);
+  const overlap = CHAT.audioTabOverlapPx;
 
   const button = (
     label: string,
@@ -64,12 +68,22 @@ export function MessageActions({
       onPress={onPress}
       className={
         showLabel
-          ? "h-7 flex-row items-center gap-1.5 rounded-button px-2"
-          : "h-7 w-7 items-center justify-center rounded-full"
+          ? "flex-row items-center justify-center gap-1.5 rounded-button px-2"
+          : "items-center justify-center rounded-full"
       }
-      style={{ opacity: isBusy ? 0.4 : 1 }}
+      style={{
+        height: ACTION_PX,
+        width: showLabel ? undefined : ACTION_PX,
+        opacity: isBusy ? 0.4 : 1,
+      }}
     >
-      <AppIcon icon={icon} size={showLabel ? 12 : 13} color={tint} strokeWidth={1.8} />
+      <View
+        className="items-center justify-center"
+        style={{ height: ICON_PX, width: ICON_PX }}
+        pointerEvents="none"
+      >
+        <AppIcon icon={icon} size={ICON_PX} color={tint} strokeWidth={1.8} />
+      </View>
       {showLabel ? (
         <Text className="font-ui-medium text-[11px]" style={{ color: tint }}>
           {label}
@@ -79,37 +93,52 @@ export function MessageActions({
   );
 
   return (
-    <GlassSurface
-      tint="card"
-      characterId={characterId}
-      className="mt-1 flex-row items-center gap-1 self-start overflow-hidden rounded-button border border-border px-1.5"
-    >
-      {isEditing ? (
-        <>
-          {button(MIND_COPY.cancel, Cancel01Icon, theme.textMuted, onCancel, true)}
-          {button(CHAT_COPY.saveMessage, CheckmarkCircle01Icon, theme.primary, onSave, true)}
-        </>
-      ) : (
-        <>
-          {canRevise
-            ? button(CHAT_COPY.regenerate, RefreshIcon, theme.primary, onRegenerate)
-            : null}
-          {canRevise
-            ? button(CHAT_COPY.anotherReply, ArrowRight01Icon, theme.textMuted, onAnother)
-            : null}
-          {canSpeak
-            ? button(
-                hasAudio ? CHAT_COPY.respeakMessage : CHAT_COPY.speakMessage,
-                VolumeHighIcon,
-                isSpeaking ? theme.primary : theme.textMuted,
-                onSpeak,
-              )
-            : null}
-          {canEdit
-            ? button(CHAT_COPY.editMessage, PencilEdit02Icon, theme.textMuted, onEdit)
-            : null}
-        </>
-      )}
-    </GlassSurface>
+    <View className="self-start" style={{ marginTop: -overlap }}>
+      <GlassSurface
+        tint="card"
+        characterId={characterId}
+        pointerEvents="none"
+        className="absolute"
+        style={{
+          top: Math.max(0, overlap - theme.borderWidth),
+          left: 0,
+          right: 0,
+          bottom: 0,
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
+          borderBottomLeftRadius: theme.radius,
+          borderBottomRightRadius: theme.radius,
+        }}
+      />
+
+      <View className="flex-row items-center gap-1 px-1.5 pb-1" style={{ paddingTop: overlap + 4 }}>
+        {isEditing ? (
+          <>
+            {button(MIND_COPY.cancel, Cancel01Icon, theme.textMuted, onCancel, true)}
+            {button(CHAT_COPY.saveMessage, CheckmarkCircle01Icon, theme.primary, onSave, true)}
+          </>
+        ) : (
+          <>
+            {canRevise
+              ? button(CHAT_COPY.regenerate, RefreshIcon, theme.primary, onRegenerate)
+              : null}
+            {canRevise
+              ? button(CHAT_COPY.anotherReply, ArrowRight01Icon, theme.textMuted, onAnother)
+              : null}
+            {canSpeak
+              ? button(
+                  hasAudio ? CHAT_COPY.respeakMessage : CHAT_COPY.speakMessage,
+                  VolumeHighIcon,
+                  isSpeaking ? theme.primary : theme.textMuted,
+                  onSpeak,
+                )
+              : null}
+            {canEdit
+              ? button(CHAT_COPY.editMessage, PencilEdit02Icon, theme.textMuted, onEdit)
+              : null}
+          </>
+        )}
+      </View>
+    </View>
   );
 }
