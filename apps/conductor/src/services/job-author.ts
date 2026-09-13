@@ -8,7 +8,7 @@ import { ask, isPromptLike } from "@/services/prompt-writer";
 const FENCE = /^```[a-z]*\s*|\s*```$/gi;
 const LABEL = /^\s*(?:prompt|rewritten|output|result|current)\s*:\s*/i;
 
-export const AUTHORABLE_FIELD = /prompt/i;
+export const AUTHORABLE_FIELD = /prompt|request/i;
 
 export function isAuthorableField(field: string): boolean {
   return AUTHORABLE_FIELD.test(field);

@@ -125,7 +125,6 @@ export async function handleClientMessage(
         clientMsg.prompt_override,
         clientMsg.orientation,
         clientMsg.reference_url,
-        sessionManager.getAbortSignal(ws),
       );
       break;
     }

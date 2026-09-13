@@ -2,7 +2,7 @@ import * as React from "react";
 import { tap } from "@/services/haptics";
 import { authorQueueJobField } from "@/store/admin-api";
 
-const AUTHORABLE = /prompt/i;
+const AUTHORABLE = /prompt|request/i;
 
 export interface JobAuthor {
   busyField: string | null;

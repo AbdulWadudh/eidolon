@@ -1,19 +1,11 @@
-import { PHOTO_COPY } from "@eidolon/config";
-import { IMAGE } from "@/config";
-import { appendMessage, getCharacterCard, getRecentMessages, setMessageImage } from "@/db";
-import { ComfyUnavailableError } from "@/services/comfyui";
+import { PHOTO_COPY, QUEUE_JOBS } from "@eidolon/config";
+import { getCharacterCard, getRecentMessages } from "@/db";
+import { enqueueGpuJob } from "@/queue/queues";
 import { generatePhotoIdeas } from "@/services/photo-ideas";
-import { ASPECT_FOR, paintSelfie } from "@/services/selfie";
+import { formatPhotoScene } from "@/services/selfie";
 import { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
 
 const DEFAULT_REQUEST = "a photo of yourself, right now, wherever you are";
-
-function formatScene(turns: { role: string; content: string }[], name: string): string {
-  return turns
-    .slice(-IMAGE.sceneTurns)
-    .map((turn) => `${turn.role === "user" ? "PLAYER" : name}: ${turn.content}`)
-    .join("\n");
-}
 
 function speak(ws: WebSocketSender, status: "painting" | "idle", detail?: string): void {
   sendServerMessage(ws, { type: "status_update", payload: { status, detail } });
@@ -29,7 +21,7 @@ export async function handlePhotoIdeas(
   const card = getCharacterCard(characterId, userId);
   const ideas = await generatePhotoIdeas(
     card.name,
-    formatScene(getRecentMessages(characterId, userId), card.name),
+    formatPhotoScene(getRecentMessages(characterId, userId), card.name),
     signal,
     isEditing,
   );
@@ -44,61 +36,23 @@ export async function handleImageRequest(
   promptOverride: string | undefined,
   orientation: "portrait" | "landscape" | "square" | undefined,
   referenceUrl: string | undefined,
-  signal: AbortSignal,
 ): Promise<void> {
-  const card = getCharacterCard(characterId, userId);
   speak(ws, "painting", PHOTO_COPY.framing);
 
   try {
-    const selfie = await paintSelfie(
-      {
-        characterId,
-        name: card.name,
-        personality: card.personality,
-        pronouns: card.pronouns,
-        scene: formatScene(getRecentMessages(characterId, userId), card.name),
-        request: promptOverride?.trim() || DEFAULT_REQUEST,
-        orientation,
-        referenceUrl,
-      },
-      {
-        onProgress: (progress) => {
-          sendServerMessage(ws, {
-            type: "image_preview",
-            payload: { step: progress.value, total_steps: progress.max },
-          });
-        },
-      },
-      signal,
-    );
-
-    if (signal.aborted) return;
-
-    const spoken = selfie.message.trim();
-    const messageId = appendMessage(characterId, "assistant", spoken, userId);
-    setMessageImage(messageId, selfie.imageUrl, selfie.caption || null);
-
-    sendServerMessage(ws, {
-      type: "image_ready",
-      payload: {
-        image_url: selfie.imageUrl,
-        aspect_ratio: ASPECT_FOR[selfie.orientation],
-        prompt_used: selfie.promptUsed,
-        caption: selfie.message.trim(),
-      },
+    await enqueueGpuJob(QUEUE_JOBS.generateChatPhoto, {
+      characterId,
+      userId,
+      request: promptOverride?.trim() || DEFAULT_REQUEST,
+      orientation,
+      referenceUrl,
     });
   } catch (error) {
-    const offline = error instanceof ComfyUnavailableError;
-    console.error("[image-turn]", error);
+    console.error("[image-turn] the photo could not be queued", error);
     sendServerMessage(ws, {
       type: "image_failed",
-      payload: {
-        reason: offline ? PHOTO_COPY.noCamera : PHOTO_COPY.didNotCome,
-      },
+      payload: { reason: PHOTO_COPY.didNotCome },
     });
     speak(ws, "idle");
-    return;
   }
-
-  speak(ws, "idle");
 }

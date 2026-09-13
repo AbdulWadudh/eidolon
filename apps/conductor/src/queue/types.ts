@@ -13,6 +13,14 @@ export interface PortraitJob {
   prompt: string;
 }
 
+export interface ChatPhotoJob {
+  characterId: string;
+  userId: string;
+  request: string;
+  orientation?: "portrait" | "landscape" | "square";
+  referenceUrl?: string;
+}
+
 export interface ChronicleSummaryJob {
   characterId: string;
   userId: string;
@@ -36,6 +44,7 @@ export interface ProactiveMessageJob {
 export interface GpuJobMap {
   [QUEUE_JOBS.generateStageBackdrop]: StageBackdropJob;
   [QUEUE_JOBS.generatePortrait]: PortraitJob;
+  [QUEUE_JOBS.generateChatPhoto]: ChatPhotoJob;
   [QUEUE_JOBS.summarizeChronicle]: ChronicleSummaryJob;
 }
 
@@ -70,6 +79,12 @@ export function isPortraitJob(
   job: GpuJob,
 ): job is Job<PortraitJob, void, typeof QUEUE_JOBS.generatePortrait> {
   return job.name === QUEUE_JOBS.generatePortrait;
+}
+
+export function isChatPhotoJob(
+  job: GpuJob,
+): job is Job<ChatPhotoJob, void, typeof QUEUE_JOBS.generateChatPhoto> {
+  return job.name === QUEUE_JOBS.generateChatPhoto;
 }
 
 export function isChronicleSummaryJob(

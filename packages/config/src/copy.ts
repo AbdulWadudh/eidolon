@@ -409,7 +409,8 @@ export const DASHBOARD_COPY = {
   healthTitle: "Services",
   healthBlurb: "What the conductor can reach right now.",
   queuesTitle: "Queues",
-  queuesBlurb: "Work waiting on the GPU, on storage, and on a quiet moment.",
+  queuesBlurb:
+    "Photos, portraits, backdrops and uploads, waiting their turn. Work here survives a closed app.",
   queuesEmpty: "Nothing queued.",
   queueRetry: "Try again",
   queueRemove: "Drop it",

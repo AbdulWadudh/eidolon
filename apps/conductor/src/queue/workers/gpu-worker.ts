@@ -1,4 +1,5 @@
 import {
+  PHOTO_COPY,
   pronounsFor,
   QUEUE_CONCURRENCY,
   QUEUE_LOCK,
@@ -7,17 +8,19 @@ import {
 } from "@eidolon/config";
 import { Worker } from "bullmq";
 import { PORTRAIT, STAGE } from "@/config";
-import { getCharacterCard } from "@/db";
+import { appendMessage, getCharacterCard, getRecentMessages, setMessageImage } from "@/db";
 import { appendChronicle, nextChapterIndex } from "@/db/chronicles";
 import { setCharacterAvatar, setCharacterFace } from "@/db/look";
 import { addPortrait } from "@/db/portraits";
 import { saveStageBackdrop } from "@/db/stages";
 import { queueConnection } from "@/queue/connection";
 import {
+  type ChatPhotoJob,
   type ChronicleSummaryJob,
   type GpuJob,
   type GpuJobData,
   type GpuJobName,
+  isChatPhotoJob,
   isChronicleSummaryJob,
   isPortraitJob,
   isStageBackdropJob,
@@ -25,8 +28,9 @@ import {
   type StageBackdropJob,
 } from "@/queue/types";
 import { summarizeMessages } from "@/services/chronicle-writer";
-import { generateImage } from "@/services/comfyui";
+import { ComfyUnavailableError, generateImage } from "@/services/comfyui";
 import { describeAppearance } from "@/services/photo-look";
+import { ASPECT_FOR, formatPhotoScene, paintSelfie } from "@/services/selfie";
 import { isStorageConnected, uploadImage } from "@/services/storage";
 import { broadcastToCharacter } from "@/ws/registry";
 
@@ -118,7 +122,56 @@ async function renderPortrait(data: PortraitJob): Promise<void> {
   setCharacterFace(data.characterId, url);
 }
 
+async function renderChatPhoto(data: ChatPhotoJob): Promise<void> {
+  const { characterId, userId } = data;
+  const card = getCharacterCard(characterId, userId);
+
+  const say = (message: unknown) => broadcastToCharacter(characterId, userId, message);
+
+  try {
+    const selfie = await paintSelfie({
+      characterId,
+      name: card.name,
+      personality: card.personality,
+      pronouns: card.pronouns,
+      scene: formatPhotoScene(getRecentMessages(characterId, userId), card.name),
+      request: data.request,
+      orientation: data.orientation,
+      referenceUrl: data.referenceUrl,
+    });
+
+    const messageId = appendMessage(characterId, "assistant", selfie.message.trim(), userId);
+    setMessageImage(messageId, selfie.imageUrl, selfie.caption || null);
+
+    say({
+      type: "image_ready",
+      payload: {
+        image_url: selfie.imageUrl,
+        aspect_ratio: ASPECT_FOR[selfie.orientation],
+        prompt_used: selfie.promptUsed,
+        caption: selfie.message.trim(),
+      },
+    });
+    say({ type: "status_update", payload: { status: "idle" } });
+  } catch (error) {
+    console.error("[chat-photo]", error);
+    say({
+      type: "image_failed",
+      payload: {
+        reason:
+          error instanceof ComfyUnavailableError ? PHOTO_COPY.noCamera : PHOTO_COPY.didNotCome,
+      },
+    });
+    say({ type: "status_update", payload: { status: "idle" } });
+    throw error;
+  }
+}
+
 export async function processGpuJob(job: GpuJob): Promise<void> {
+  if (isChatPhotoJob(job)) {
+    await renderChatPhoto(job.data);
+    return;
+  }
   if (isStageBackdropJob(job)) {
     await renderStageBackdrop(job.data);
     return;

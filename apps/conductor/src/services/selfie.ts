@@ -22,6 +22,16 @@ import {
 import { ask } from "@/services/prompt-writer";
 import { uploadImage } from "@/services/storage";
 import { safeJsonParse } from "@/utils/json";
+
+const SCENE_BREAK = String.fromCharCode(10);
+
+export function formatPhotoScene(turns: { role: string; content: string }[], name: string): string {
+  return turns
+    .slice(-IMAGE.sceneTurns)
+    .map((turn) => `${turn.role === "user" ? "PLAYER" : name}: ${turn.content}`)
+    .join(SCENE_BREAK);
+}
+
 export interface SelfieRequest {
   characterId: string;
   name: string;

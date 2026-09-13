@@ -15,6 +15,7 @@ export const QUEUE_PREFIXES = {
 export const QUEUE_JOBS = {
   generateStageBackdrop: "generate-stage-backdrop",
   generatePortrait: "generate-portrait",
+  generateChatPhoto: "generate-chat-photo",
   summarizeChronicle: "summarize-chronicle",
   uploadImage: "upload-image",
   uploadAudio: "upload-audio",
