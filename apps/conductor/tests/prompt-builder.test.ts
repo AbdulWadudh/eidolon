@@ -16,6 +16,8 @@ import { hasTemporalMarker, shouldSearchWeb } from "@/orchestrator/search-trigge
 import { loadPrompts } from "@/prompts/store";
 import { PROFILE } from "@/services/llm-profile";
 
+const TEST_USER = "user:prompt-builder";
+
 const CHARACTER_ID = "prompt-builder-test";
 const NEWLINE = String.fromCharCode(10);
 
@@ -29,9 +31,18 @@ function wipe(): void {
 beforeEach(async () => {
   await loadPrompts();
   wipe();
-  ensureCharacter(CHARACTER_ID);
-  saveCharacterMind(CHARACTER_ID, { score: 74, tier: "Trusted Confidant", mood: "Playful" });
-  appendChronicle(CHARACTER_ID, 1, `- She took the Lisbon job.${NEWLINE}- He heard it first.`);
+  ensureCharacter(CHARACTER_ID, TEST_USER);
+  saveCharacterMind(CHARACTER_ID, TEST_USER, {
+    score: 74,
+    tier: "Trusted Confidant",
+    mood: "Playful",
+  });
+  appendChronicle(
+    CHARACTER_ID,
+    TEST_USER,
+    1,
+    `- She took the Lisbon job.${NEWLINE}- He heard it first.`,
+  );
   upsertLoreEntry(CHARACTER_ID, {
     keys: ["pendant"],
     content: "The pendant was her mother's.",
@@ -45,6 +56,7 @@ describe("assembly order", () => {
   it("lays the sections down in the order the spec names", async () => {
     const assembled = await assemblePrompt({
       characterId: CHARACTER_ID,
+      userId: TEST_USER,
       userText: "tell me about the pendant",
       allowSearch: false,
     });
@@ -99,6 +111,7 @@ describe("injected context", () => {
   it("injects the chronicle recap", async () => {
     const assembled = await assemblePrompt({
       characterId: CHARACTER_ID,
+      userId: TEST_USER,
       userText: "hey",
       allowSearch: false,
     });
@@ -108,11 +121,13 @@ describe("injected context", () => {
   it("injects lore only when a keyword fires", async () => {
     const hit = await assemblePrompt({
       characterId: CHARACTER_ID,
+      userId: TEST_USER,
       userText: "where did the pendant come from?",
       allowSearch: false,
     });
     const miss = await assemblePrompt({
       characterId: CHARACTER_ID,
+      userId: TEST_USER,
       userText: "how was your day?",
       allowSearch: false,
     });
@@ -124,6 +139,7 @@ describe("injected context", () => {
   it("ends with the hidden state block directive", async () => {
     const assembled = await assemblePrompt({
       characterId: CHARACTER_ID,
+      userId: TEST_USER,
       userText: "hey",
       allowSearch: false,
     });
@@ -136,18 +152,24 @@ describe("injected context", () => {
 describe("working context window", () => {
   it("carries at most the last 20 messages verbatim", () => {
     for (let index = 0; index < 40; index += 1) {
-      appendMessage(CHARACTER_ID, index % 2 === 0 ? "user" : "assistant", `line ${index}`);
+      appendMessage(
+        CHARACTER_ID,
+        index % 2 === 0 ? "user" : "assistant",
+        `line ${index}`,
+        TEST_USER,
+      );
     }
 
-    const history = workingHistory(CHARACTER_ID, PROFILE.historyMaxChars);
+    const history = workingHistory(CHARACTER_ID, TEST_USER, PROFILE.historyMaxChars);
     expect(history.length).toBeLessThanOrEqual(PROFILE.historyTurns);
     expect(history.at(-1)?.content).toBe("line 39");
   });
 
   it("puts the user turn last, after the history", async () => {
-    appendMessage(CHARACTER_ID, "user", "older line");
+    appendMessage(CHARACTER_ID, "user", "older line", TEST_USER);
     const assembled = await assemblePrompt({
       characterId: CHARACTER_ID,
+      userId: TEST_USER,
       userText: "the newest thing",
       allowSearch: false,
     });
@@ -219,11 +241,17 @@ describe("token budget", () => {
 
   it("keeps a real assembled prompt inside the budget", async () => {
     for (let index = 0; index < 60; index += 1) {
-      appendMessage(CHARACTER_ID, index % 2 === 0 ? "user" : "assistant", "x".repeat(300));
+      appendMessage(
+        CHARACTER_ID,
+        index % 2 === 0 ? "user" : "assistant",
+        "x".repeat(300),
+        TEST_USER,
+      );
     }
 
     const assembled = await assemblePrompt({
       characterId: CHARACTER_ID,
+      userId: TEST_USER,
       userText: "tell me about the pendant",
       allowSearch: false,
     });

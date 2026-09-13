@@ -6,6 +6,8 @@ import { jobKey } from "@/queue/job-id";
 import { shapeOpener } from "@/queue/workers/proactive-worker";
 import { toBullets } from "@/services/chronicle-writer";
 
+const TEST_USER = "user:chronicle";
+
 describe("chronicle bullets", () => {
   it("reads the structured JSON the schema asks for", () => {
     const raw = JSON.stringify({
@@ -51,7 +53,7 @@ describe("job keys", () => {
     for (const key of [
       jobKey("backdrop", "aria:main", "the rooftop"),
       chronicleJobId("aria", 30),
-      proactiveJobId("aria"),
+      proactiveJobId("aria", TEST_USER),
     ]) {
       expect(key).not.toContain(":");
     }

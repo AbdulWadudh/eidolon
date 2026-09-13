@@ -6,6 +6,8 @@ import { loadPrompts } from "@/prompts/store";
 import { buildSystemPrompt } from "@/services/persona";
 import { AUTHED, BASE, remember, wipe } from "./support/characters";
 
+const TEST_USER = "user:characters";
+
 beforeEach(async () => {
   await loadPrompts();
 });
@@ -58,7 +60,7 @@ describe("creating and editing", () => {
   it("rejects a nameless character over HTTP", async () => {
     const res = await app.request(BASE, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: AUTHED,
       body: JSON.stringify({ tagline: "no name" }),
     });
     expect(res.status).toBe(400);
@@ -67,7 +69,7 @@ describe("creating and editing", () => {
   it("creates and then edits over HTTP", async () => {
     const response = await app.request(BASE, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: AUTHED,
       body: JSON.stringify({ name: "Http Made", personality: "curious" }),
     });
     const created = (await response.json()) as {
@@ -87,7 +89,7 @@ describe("creating and editing", () => {
   });
 
   it("answers 404 for a character that does not exist", async () => {
-    expect((await app.request(`${BASE}/nobody-here`)).status).toBe(404);
+    expect((await app.request(`${BASE}/nobody-here`, { headers: AUTHED })).status).toBe(404);
     const patched = await app.request(`${BASE}/nobody-here`, {
       method: "PATCH",
       headers: AUTHED,
@@ -110,7 +112,7 @@ describe("the card reaches the prompt", () => {
     );
 
     const system = buildSystemPrompt({
-      ...getCharacterCard(created.id),
+      ...getCharacterCard(created.id, TEST_USER),
       mood: "Warm",
       tier: "Close",
     });
@@ -123,7 +125,7 @@ describe("the card reaches the prompt", () => {
   it("leaves the block out entirely when a field is blank", () => {
     const created = remember(createCharacter({ name: "Bare", personality: "plain" }));
     const system = buildSystemPrompt({
-      ...getCharacterCard(created.id),
+      ...getCharacterCard(created.id, TEST_USER),
       mood: "Warm",
       tier: "Close",
     });
@@ -139,7 +141,7 @@ describe("lorebook over HTTP", () => {
 
     const posted = await app.request(`${BASE}/${created.id}/lore`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: AUTHED,
       body: JSON.stringify({
         keys: ["pendant"],
         content: "It was her mother's.",
@@ -148,7 +150,7 @@ describe("lorebook over HTTP", () => {
     });
     expect(posted.status).toBe(201);
 
-    const listed = await app.request(`${BASE}/${created.id}/lore`);
+    const listed = await app.request(`${BASE}/${created.id}/lore`, { headers: AUTHED });
     const read = (await listed.json()) as {
       lore: Array<{ keys: string[]; requiredAffinity: number }>;
     };
@@ -167,7 +169,7 @@ describe("lorebook over HTTP", () => {
     ]) {
       const res = await app.request(`${BASE}/${created.id}/lore`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: AUTHED,
         body: JSON.stringify(body),
       });
       expect(res.status).toBe(400);

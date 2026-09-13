@@ -8,6 +8,10 @@ export interface OwnerEnv {
   Variables: { owner: Owner; auditDetail?: string };
 }
 
+export interface UserEnv {
+  Variables: { user: Owner };
+}
+
 const READ_ONLY = new Set(["GET", "HEAD", "OPTIONS"]);
 
 export function credentialFrom(c: Context): string | null {
@@ -34,6 +38,17 @@ function audit(c: Context<OwnerEnv>, account: Owner | null, status: number): voi
     console.error("[audit] Could not record an admin mutation:", error);
   }
 }
+
+export const requireUser: MiddlewareHandler<UserEnv> = async (c, next) => {
+  const account = await accountFor(c);
+
+  if (!account) {
+    return c.json({ error: AUTH_COPY.signInRequired }, 401);
+  }
+
+  c.set("user", account);
+  await next();
+};
 
 export const requireOwner: MiddlewareHandler<OwnerEnv> = async (c, next) => {
   const account = await accountFor(c);

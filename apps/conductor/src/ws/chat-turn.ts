@@ -23,6 +23,7 @@ export { hasTemporalMarker as shouldSearch } from "@/orchestrator/search-trigger
 
 export async function handleChatTurn(
   ws: WebSocketSender,
+  userId: string,
   event: ChatTurnEvent,
   signal: AbortSignal,
   options: { recordUserTurn?: boolean } = {},
@@ -34,6 +35,7 @@ export async function handleChatTurn(
 
   const assembled = await assemblePrompt({
     characterId,
+    userId,
     userText: spoken,
     allowSearch: event.allow_search,
     moodOverride: event.mood,
@@ -74,8 +76,9 @@ export async function handleChatTurn(
   if (signal.aborted) return;
 
   const reply = outcome.reply.trim();
-  if (options.recordUserTurn !== false) appendMessage(characterId, "user", userText);
-  const assistantId = reply.length > 0 ? appendMessage(characterId, "assistant", reply) : null;
+  if (options.recordUserTurn !== false) appendMessage(characterId, "user", userText, userId);
+  const assistantId =
+    reply.length > 0 ? appendMessage(characterId, "assistant", reply, userId) : null;
 
   if (assistantId) {
     sendServerMessage(ws, {
@@ -95,15 +98,17 @@ export async function handleChatTurn(
     },
   );
 
-  void maybeSummarizeChronicle(characterId).catch((error: unknown) => {
+  void maybeSummarizeChronicle(characterId, userId).catch((error: unknown) => {
     console.error("[chronicle] could not queue a summary", error);
   });
 
-  void scheduleProactiveFollowUp(characterId, formatScene(turn, assembled.characterName)).catch(
-    (error: unknown) => {
-      console.error("[proactive] could not arm the follow-up", error);
-    },
-  );
+  void scheduleProactiveFollowUp(
+    characterId,
+    userId,
+    formatScene(turn, assembled.characterName),
+  ).catch((error: unknown) => {
+    console.error("[proactive] could not arm the follow-up", error);
+  });
 
   sendServerMessage(ws, { type: "status_update", payload: { status: "speaking" } });
 
@@ -144,6 +149,7 @@ export async function handleChatTurn(
 
   await settleMind(ws, {
     characterId,
+    userId,
     characterName: assembled.characterName,
     mindBlock: outcome.mindBlock,
     scene: formatScene(turn, assembled.characterName),
@@ -155,11 +161,12 @@ export async function handleChatTurn(
 
 export async function handleRegenerateSuggestions(
   ws: WebSocketSender,
+  userId: string,
   characterId: string,
   signal: AbortSignal,
 ): Promise<void> {
-  const card = getCharacterCard(characterId);
-  const recent = getRecentMessages(characterId, SUGGESTIONS.sceneTurns)
+  const card = getCharacterCard(characterId, userId);
+  const recent = getRecentMessages(characterId, userId, SUGGESTIONS.sceneTurns)
     .map((entry) => ({
       role: entry.role,
       content: forHistory(entry.role, entry.content, entry.imageCaption),

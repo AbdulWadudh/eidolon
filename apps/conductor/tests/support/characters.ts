@@ -30,6 +30,7 @@ export function wipe(): void {
     db.query("DELETE FROM chronicles WHERE character_id = ?").run(id);
     db.query("DELETE FROM character_portraits WHERE character_id = ?").run(id);
     db.query("DELETE FROM stages WHERE character_id = ?").run(id);
+    db.query("DELETE FROM character_state WHERE character_id = ?").run(id);
     db.query("DELETE FROM characters WHERE id = ?").run(id);
   }
   MADE.clear();

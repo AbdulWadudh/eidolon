@@ -20,39 +20,46 @@ export function chapterForMilestone(milestone: number): number {
   return Math.floor(milestone / CHRONICLE.batchSize);
 }
 
-export function batchForMilestone(characterId: string): string[] {
+export function batchForMilestone(characterId: string, userId: string): string[] {
   const window = Math.min(CHRONICLE.batchSize, TRANSCRIPT.pageSize);
-  return getTranscript(characterId, window).map(
+  return getTranscript(characterId, userId, window).map(
     (message) => `${message.role === "user" ? "PLAYER" : "THEM"}: ${message.content}`,
   );
 }
 
-export async function maybeSummarizeChronicle(characterId: string): Promise<string | null> {
-  const total = countMessages(characterId);
+export async function maybeSummarizeChronicle(
+  characterId: string,
+  userId: string,
+): Promise<string | null> {
+  const total = countMessages(characterId, userId);
   if (!isChronicleMilestone(total)) return null;
 
-  const messageBatch = batchForMilestone(characterId);
+  const messageBatch = batchForMilestone(characterId, userId);
   if (messageBatch.length === 0) return null;
 
   const data: ChronicleSummaryJob = {
     characterId,
+    userId,
     messageBatch,
     chapterIndex: chapterForMilestone(total),
   };
 
   const jobId = await enqueueGpuJob(QUEUE_JOBS.summarizeChronicle, data, {
-    jobId: chronicleJobId(characterId, total),
+    jobId: chronicleJobId(characterId, `${userId}-${total}`),
   });
 
   return jobId ?? null;
 }
 
-export async function summarizeChronicleNow(characterId: string): Promise<string | null> {
-  const messageBatch = batchForMilestone(characterId);
+export async function summarizeChronicleNow(
+  characterId: string,
+  userId: string,
+): Promise<string | null> {
+  const messageBatch = batchForMilestone(characterId, userId);
   if (messageBatch.length === 0) return null;
 
-  const chapterIndex = nextChapterIndex(characterId);
-  const data: ChronicleSummaryJob = { characterId, messageBatch, chapterIndex };
+  const chapterIndex = nextChapterIndex(characterId, userId);
+  const data: ChronicleSummaryJob = { characterId, userId, messageBatch, chapterIndex };
 
   const jobId = await enqueueGpuJob(QUEUE_JOBS.summarizeChronicle, data, {
     jobId: chronicleJobId(characterId, `manual-${chapterIndex}-${Date.now()}`),
@@ -61,8 +68,8 @@ export async function summarizeChronicleNow(characterId: string): Promise<string
   return jobId ?? null;
 }
 
-export function getActiveChronicle(characterId: string): string {
-  const chapters = getChronicles(characterId, CHRONICLE_CONTEXT.activeChapters);
+export function getActiveChronicle(characterId: string, userId: string): string {
+  const chapters = getChronicles(characterId, userId, CHRONICLE_CONTEXT.activeChapters);
   if (chapters.length === 0) return "";
 
   const body = [...chapters]

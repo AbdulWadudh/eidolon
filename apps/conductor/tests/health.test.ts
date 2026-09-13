@@ -71,8 +71,15 @@ describe("Conductor Health & REST Endpoints", () => {
     }
   });
 
+  it("refuses the pairing secret to a caller with no credential", async () => {
+    expect((await app.request(apiPath("pairing"))).status).toBe(401);
+    expect((await app.request(apiPath("pairingQr"))).status).toBe(401);
+  });
+
   it("GET /api/pairing returns pairing payload and secret", async () => {
-    const res = await app.request(apiPath("pairing"));
+    const res = await app.request(apiPath("pairing"), {
+      headers: { Authorization: `Bearer ${PAIRING_SECRET}` },
+    });
     expect(res.status).toBe(200);
 
     const body = (await res.json()) as {

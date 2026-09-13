@@ -5,8 +5,8 @@ import { jobKey } from "@/queue/job-id";
 import { enqueueProactiveJob, proactiveQueue } from "@/queue/queues";
 import type { ProactiveMessageJob } from "@/queue/types";
 
-export function proactiveJobId(characterId: string): string {
-  return jobKey("proactive", characterId);
+export function proactiveJobId(characterId: string, userId: string): string {
+  return jobKey("proactive", characterId, userId);
 }
 
 export function nextSilenceMs(): number {
@@ -15,14 +15,15 @@ export function nextSilenceMs(): number {
 
 export async function scheduleProactiveFollowUp(
   characterId: string,
+  userId: string,
   contextPrompt: string,
 ): Promise<string | null> {
-  const jobId = proactiveJobId(characterId);
+  const jobId = proactiveJobId(characterId, userId);
 
   const pending = await proactiveQueue.getJob(jobId);
   if (pending) await pending.remove();
 
-  const data: ProactiveMessageJob = { characterId, contextPrompt };
+  const data: ProactiveMessageJob = { characterId, userId, contextPrompt };
 
   const queued = await enqueueProactiveJob(QUEUE_JOBS.proactiveMessage, data, {
     jobId,
@@ -38,9 +39,12 @@ export interface PendingProactive {
   contextPrompt: string;
 }
 
-export async function pendingProactive(characterId: string): Promise<PendingProactive | null> {
+export async function pendingProactive(
+  characterId: string,
+  userId: string,
+): Promise<PendingProactive | null> {
   try {
-    const job = await proactiveQueue.getJob(proactiveJobId(characterId));
+    const job = await proactiveQueue.getJob(proactiveJobId(characterId, userId));
     if (!job) return null;
 
     return {
@@ -53,9 +57,9 @@ export async function pendingProactive(characterId: string): Promise<PendingProa
   }
 }
 
-export async function cancelProactive(characterId: string): Promise<boolean> {
+export async function cancelProactive(characterId: string, userId: string): Promise<boolean> {
   try {
-    const job = await proactiveQueue.getJob(proactiveJobId(characterId));
+    const job = await proactiveQueue.getJob(proactiveJobId(characterId, userId));
     if (!job) return false;
 
     await job.remove();

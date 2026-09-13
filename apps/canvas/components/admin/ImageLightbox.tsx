@@ -1,6 +1,6 @@
 import { MEDIA_PREVIEW, MIND_COPY, UI_MS } from "@eidolon/config";
 import * as React from "react";
-import { Modal, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { Gesture, GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -21,7 +21,7 @@ export function ImageLightbox({ url, onClose }: ImageLightboxProps) {
   const stage = Math.max(0, width - MEDIA_PREVIEW.lightboxPaddingPx * 2);
   const reduced = useReducedMotion();
   const pager = React.useMemo(() => Gesture.Native(), []);
-  const [, setZoomed] = React.useState(false);
+  const [isZoomed, setZoomed] = React.useState(false);
 
   if (url === null) return null;
 
@@ -56,20 +56,31 @@ export function ImageLightbox({ url, onClose }: ImageLightboxProps) {
               </PressableScale>
             </View>
 
-            <View
-              className="flex-1 items-center justify-center"
-              style={{ paddingHorizontal: MEDIA_PREVIEW.lightboxPaddingPx }}
-            >
-              {url ? (
-                <ZoomableImage
-                  uri={url}
-                  width={stage}
-                  accessibilityLabel={filenameOf(url)}
-                  pager={pager}
-                  isActive
-                  onZoomChange={setZoomed}
-                />
-              ) : null}
+            <View className="flex-1">
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={MIND_COPY.closeLabel}
+                disabled={isZoomed}
+                onPress={onClose}
+                style={StyleSheet.absoluteFill}
+              />
+
+              <View
+                pointerEvents="box-none"
+                className="flex-1 items-center justify-center"
+                style={{ paddingHorizontal: MEDIA_PREVIEW.lightboxPaddingPx }}
+              >
+                {url ? (
+                  <ZoomableImage
+                    uri={url}
+                    width={stage}
+                    accessibilityLabel={filenameOf(url)}
+                    pager={pager}
+                    isActive
+                    onZoomChange={setZoomed}
+                  />
+                ) : null}
+              </View>
             </View>
           </SafeAreaView>
         </Animated.View>

@@ -5,7 +5,9 @@ import { countGallery, listGallery } from "@/db/gallery";
 import { setCharacterAvatar, setCharacterFace } from "@/db/look";
 import { addPortrait, listPortraits } from "@/db/portraits";
 import { app } from "@/index";
-import { BASE, remember, wipe } from "./support/characters";
+import { AUTHED, BASE, remember, wipe } from "./support/characters";
+
+const TEST_USER = "user:gallery";
 
 afterEach(wipe);
 
@@ -13,7 +15,7 @@ function withPhotos(name: string, count: number): string {
   const character = remember(createCharacter({ name }));
 
   for (let index = 0; index < count; index += 1) {
-    const messageId = appendMessage(character.id, "assistant", `line ${index}`);
+    const messageId = appendMessage(character.id, "assistant", `line ${index}`, TEST_USER);
     setMessageImage(
       messageId,
       `https://media.test/${character.id}-${index}.png`,
@@ -37,7 +39,7 @@ describe("what the gallery collects", () => {
 
   it("ignores a message that carries no picture", () => {
     const character = remember(createCharacter({ name: "Gallery Talk Only" }));
-    appendMessage(character.id, "assistant", "just talking");
+    appendMessage(character.id, "assistant", "just talking", TEST_USER);
 
     expect(listGallery(character.id, 10)).toHaveLength(0);
     expect(countGallery(character.id)).toBe(0);
@@ -119,7 +121,7 @@ describe("the gallery over HTTP", () => {
   it("returns the page and the true total", async () => {
     const id = withPhotos("Gallery Http", 5);
 
-    const res = await app.request(`${BASE}/${id}/gallery?limit=2`);
+    const res = await app.request(`${BASE}/${id}/gallery?limit=2`, { headers: AUTHED });
     const body = (await res.json()) as { images: unknown[]; total: number };
 
     expect(res.status).toBe(200);
@@ -130,7 +132,7 @@ describe("the gallery over HTTP", () => {
   it("caps a caller asking for everything at once", async () => {
     const id = withPhotos("Gallery Greedy", 2);
 
-    const res = await app.request(`${BASE}/${id}/gallery?limit=99999`);
+    const res = await app.request(`${BASE}/${id}/gallery?limit=99999`, { headers: AUTHED });
     const body = (await res.json()) as { images: unknown[] };
 
     expect(res.status).toBe(200);
@@ -140,7 +142,7 @@ describe("the gallery over HTTP", () => {
   it("answers for a character with nothing rather than failing", async () => {
     const character = remember(createCharacter({ name: "Gallery Empty" }));
 
-    const res = await app.request(`${BASE}/${character.id}/gallery`);
+    const res = await app.request(`${BASE}/${character.id}/gallery`, { headers: AUTHED });
     const body = (await res.json()) as { images: unknown[]; total: number };
 
     expect(res.status).toBe(200);

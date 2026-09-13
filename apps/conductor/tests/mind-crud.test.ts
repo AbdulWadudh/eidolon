@@ -11,6 +11,8 @@ import {
 } from "@/db/chronicles";
 import { deleteLoreEntry, getLoreEntries, upsertLoreEntry } from "@/db/lorebook";
 
+const TEST_USER = "user:mind-crud";
+
 const CHARACTER_ID = "mind-crud-test";
 
 beforeEach(() => {
@@ -18,52 +20,52 @@ beforeEach(() => {
   db.query("DELETE FROM lorebook_entries WHERE character_id = ?").run(CHARACTER_ID);
   db.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
   db.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
-  ensureCharacter(CHARACTER_ID);
+  ensureCharacter(CHARACTER_ID, TEST_USER);
 });
 
 describe("Chronicle chapters", () => {
   it("edits a chapter in place without moving its index", () => {
-    appendChronicle(CHARACTER_ID, 1, "first cut");
-    const [chapter] = getChronicles(CHARACTER_ID, 10);
+    appendChronicle(CHARACTER_ID, TEST_USER, 1, "first cut");
+    const [chapter] = getChronicles(CHARACTER_ID, TEST_USER, 10);
     if (!chapter) throw new Error("expected a chapter");
 
-    expect(updateChronicle(chapter.id, "a truer cut")).toBe(true);
+    expect(updateChronicle(chapter.id, "a truer cut", TEST_USER)).toBe(true);
 
-    const after = getChronicle(chapter.id);
+    const after = getChronicle(chapter.id, TEST_USER);
     expect(after?.summaryText).toBe("a truer cut");
     expect(after?.chapterIndex).toBe(1);
   });
 
   it("deletes a chapter and leaves the others alone", () => {
-    appendChronicle(CHARACTER_ID, 1, "one");
-    appendChronicle(CHARACTER_ID, 2, "two");
-    const chapters = getChronicles(CHARACTER_ID, 10);
+    appendChronicle(CHARACTER_ID, TEST_USER, 1, "one");
+    appendChronicle(CHARACTER_ID, TEST_USER, 2, "two");
+    const chapters = getChronicles(CHARACTER_ID, TEST_USER, 10);
     const second = chapters.find((entry) => entry.chapterIndex === 2);
     if (!second) throw new Error("expected chapter two");
 
-    expect(deleteChronicle(second.id)).toBe(true);
+    expect(deleteChronicle(second.id, TEST_USER)).toBe(true);
 
-    const left = getChronicles(CHARACTER_ID, 10);
+    const left = getChronicles(CHARACTER_ID, TEST_USER, 10);
     expect(left).toHaveLength(1);
     expect(left[0]?.chapterIndex).toBe(1);
   });
 
   it("reports a miss rather than pretending it worked", () => {
-    expect(updateChronicle("nope", "text")).toBe(false);
-    expect(deleteChronicle("nope")).toBe(false);
+    expect(updateChronicle("nope", "text", TEST_USER)).toBe(false);
+    expect(deleteChronicle("nope", TEST_USER)).toBe(false);
   });
 
   it("hands the next index out above the highest kept chapter", () => {
-    appendChronicle(CHARACTER_ID, 1, "one");
-    appendChronicle(CHARACTER_ID, 2, "two");
-    expect(nextChapterIndex(CHARACTER_ID)).toBe(3);
+    appendChronicle(CHARACTER_ID, TEST_USER, 1, "one");
+    appendChronicle(CHARACTER_ID, TEST_USER, 2, "two");
+    expect(nextChapterIndex(CHARACTER_ID, TEST_USER)).toBe(3);
   });
 
   it("surfaces chapters through the mind view newest first", () => {
-    appendChronicle(CHARACTER_ID, 1, "one");
-    appendChronicle(CHARACTER_ID, 2, "two");
+    appendChronicle(CHARACTER_ID, TEST_USER, 1, "one");
+    appendChronicle(CHARACTER_ID, TEST_USER, 2, "two");
 
-    const view = buildMindView(CHARACTER_ID);
+    const view = buildMindView(CHARACTER_ID, TEST_USER);
     expect(view.chapters[0]?.chapterIndex).toBe(2);
     expect(view.chapters).toHaveLength(2);
   });
@@ -103,12 +105,12 @@ describe("Lore entries", () => {
 describe("Manual summarise", () => {
   it("has a batch to work from once anything has been said", async () => {
     const { batchForMilestone } = await import("@/orchestrator/chronicle");
-    expect(batchForMilestone(CHARACTER_ID)).toHaveLength(0);
+    expect(batchForMilestone(CHARACTER_ID, TEST_USER)).toHaveLength(0);
 
-    appendMessage(CHARACTER_ID, "user", "hello");
-    appendMessage(CHARACTER_ID, "assistant", "hi");
+    appendMessage(CHARACTER_ID, "user", "hello", TEST_USER);
+    appendMessage(CHARACTER_ID, "assistant", "hi", TEST_USER);
 
-    expect(batchForMilestone(CHARACTER_ID).length).toBeGreaterThan(0);
+    expect(batchForMilestone(CHARACTER_ID, TEST_USER).length).toBeGreaterThan(0);
   });
 });
 

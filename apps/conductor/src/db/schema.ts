@@ -16,6 +16,59 @@ function adoptExistingPortraits(db: Database): void {
   `);
 }
 
+function claimOrphans(db: Database): void {
+  const hasUsers = db
+    .query<{ name: string }, []>(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'user'",
+    )
+    .get();
+  if (!hasUsers) return;
+
+  const first = db
+    .query<{ id: string }, []>("SELECT id FROM user ORDER BY createdAt ASC, id ASC LIMIT 1")
+    .get();
+  if (!first) return;
+
+  db.query("UPDATE characters SET owner_id = ?1 WHERE owner_id IS NULL").run(first.id);
+
+  db.run(
+    "UPDATE messages SET user_id = (SELECT owner_id FROM characters WHERE characters.id = messages.character_id) WHERE user_id IS NULL",
+  );
+
+  db.query("UPDATE messages SET user_id = ?1 WHERE user_id IS NULL").run(first.id);
+
+  db.run(
+    "UPDATE chronicles SET user_id = (SELECT owner_id FROM characters WHERE characters.id = chronicles.character_id) WHERE user_id IS NULL",
+  );
+
+  db.query("UPDATE chronicles SET user_id = ?1 WHERE user_id IS NULL").run(first.id);
+}
+
+function seedCharacterState(db: Database): void {
+  const hasUsers = db
+    .query<{ name: string }, []>(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'user'",
+    )
+    .get();
+  if (!hasUsers) return;
+
+  const claimed = db.query<{ n: number }, []>("SELECT COUNT(*) as n FROM character_state").get();
+  if ((claimed?.n ?? 0) > 0) return;
+
+  db.run(
+    `INSERT OR IGNORE INTO character_state
+       (character_id, user_id, affinity_score, affinity_tier, current_mood, affinity_locked, updated_at)
+     SELECT id, owner_id,
+            COALESCE(affinity_score, 0),
+            COALESCE(affinity_tier, 'Neutral'),
+            COALESCE(current_mood, 'Curious'),
+            COALESCE(affinity_locked, 0),
+            created_at
+       FROM characters
+      WHERE owner_id IS NOT NULL`,
+  );
+}
+
 function addColumnIfMissing(db: Database, table: string, column: string, definition: string): void {
   const columns = db.query<{ name: string }, []>(`PRAGMA table_info(${table})`).all();
   if (columns.some((entry) => entry.name === column)) return;
@@ -118,6 +171,18 @@ export function applySchema(db: Database): void {
     CREATE INDEX IF NOT EXISTS idx_admin_audit_time
       ON admin_audit(created_at DESC);
 
+    CREATE TABLE IF NOT EXISTS character_state (
+      character_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      affinity_score INTEGER NOT NULL,
+      affinity_tier TEXT NOT NULL,
+      current_mood TEXT NOT NULL,
+      affinity_locked INTEGER DEFAULT 0,
+      updated_at INTEGER NOT NULL,
+      PRIMARY KEY (character_id, user_id),
+      FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE
+    );
+
     CREATE TABLE IF NOT EXISTS config_overrides (
       path TEXT PRIMARY KEY,
       value TEXT NOT NULL,
@@ -144,6 +209,21 @@ export function applySchema(db: Database): void {
   addColumnIfMissing(db, "characters", "face_url", "TEXT");
   addColumnIfMissing(db, "characters", "theme_pigment", "TEXT");
   addColumnIfMissing(db, "characters", "pronouns", "TEXT");
+  addColumnIfMissing(db, "messages", "user_id", "TEXT");
+  addColumnIfMissing(db, "chronicles", "user_id", "TEXT");
+  addColumnIfMissing(db, "characters", "default_affinity", "INTEGER");
+  addColumnIfMissing(db, "characters", "default_mood", "TEXT");
+
+  db.run(
+    "CREATE INDEX IF NOT EXISTS idx_messages_reader ON messages(character_id, user_id, created_at DESC)",
+  );
+
+  db.run("DROP INDEX IF EXISTS idx_chronicles_chapter");
+  db.run(
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_chronicles_reader_chapter ON chronicles(character_id, user_id, chapter_index)",
+  );
 
   adoptExistingPortraits(db);
+  claimOrphans(db);
+  seedCharacterState(db);
 }

@@ -11,8 +11,10 @@ import { readLorebook, writeCardChunk } from "@/services/tavern-card";
 import { remember, wipe } from "./support/characters";
 import { blankPng, cardPng, V2_CARD } from "./support/tavern-cards";
 
+const TEST_USER = "user:card-parser";
+
 async function importCard(card: unknown = V2_CARD) {
-  const result = await parseTavernCard(await cardPng(card));
+  const result = await parseTavernCard(await cardPng(card), { ownerId: TEST_USER });
   remember(result.character);
   return result;
 }
@@ -39,7 +41,7 @@ describe("parseTavernCard", () => {
 
   it("writes the greeting in as message zero", async () => {
     const imported = await importCard();
-    const transcript = getTranscript(imported.character.id, 10);
+    const transcript = getTranscript(imported.character.id, TEST_USER, 10);
 
     expect(transcript).toHaveLength(1);
     expect(transcript[0]?.role).toBe("assistant");
@@ -62,7 +64,7 @@ describe("parseTavernCard", () => {
 
     expect(listStages(id).map((stage) => stage.name)).toEqual(["Reading room", "Harbour wall"]);
     expect(getCharacterPigment(id)).toBe("#3B7A9E");
-    expect(getCharacterMind(id).score).toBe(35);
+    expect(getCharacterMind(id, TEST_USER).score).toBe(35);
   });
 
   it("gives two cards with the same name two ids", async () => {
@@ -86,7 +88,7 @@ describe("parseTavernCard", () => {
   it("imports a card that carries no greeting at all", async () => {
     const imported = await importCard({ spec: "chara_card_v2", data: { name: "Mute" } });
     expect(imported.greetingMessageId).toBeNull();
-    expect(getTranscript(imported.character.id, 10)).toEqual([]);
+    expect(getTranscript(imported.character.id, TEST_USER, 10)).toEqual([]);
   });
 
   it("reports the anchor as absent when object storage is offline", async () => {
@@ -123,7 +125,7 @@ describe("buildTavernCard", () => {
 
     expect(reimported.name).toBe("Marisol Vega");
     expect(getLoreEntries(reimported.id)).toHaveLength(2);
-    expect(getCharacterMind(reimported.id).score).toBe(35);
+    expect(getCharacterMind(reimported.id, TEST_USER).score).toBe(35);
   });
 
   it("refuses to build a card for a character that does not exist", () => {

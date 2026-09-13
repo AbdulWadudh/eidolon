@@ -14,6 +14,7 @@ export interface PortraitJob {
 
 export interface ChronicleSummaryJob {
   characterId: string;
+  userId: string;
   messageBatch: string[];
   chapterIndex?: number;
 }
@@ -27,6 +28,7 @@ export interface MediaUploadJob {
 
 export interface ProactiveMessageJob {
   characterId: string;
+  userId: string;
   contextPrompt: string;
 }
 

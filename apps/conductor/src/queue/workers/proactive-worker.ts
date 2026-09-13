@@ -24,8 +24,8 @@ export function shapeOpener(raw: string): string {
 }
 
 export async function processProactiveJob(job: ProactiveJob): Promise<void> {
-  const { characterId, contextPrompt } = job.data;
-  const card = getCharacterCard(characterId);
+  const { characterId, userId, contextPrompt } = job.data;
+  const card = getCharacterCard(characterId, userId);
 
   const messages: ChatMessage[] = [
     {
@@ -59,9 +59,9 @@ export async function processProactiveJob(job: ProactiveJob): Promise<void> {
     throw new Error("The model produced no spontaneous message worth sending.");
   }
 
-  appendMessage(characterId, "assistant", opener);
+  appendMessage(characterId, "assistant", opener, userId);
 
-  const delivered = broadcastToCharacter(characterId, {
+  const delivered = broadcastToCharacter(characterId, userId, {
     type: "text_replace",
     payload: { text: opener },
   });

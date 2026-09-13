@@ -15,7 +15,7 @@ import { forgetLocalOwner } from "@/auth/session";
 
 export const adminUsers = new Hono<OwnerEnv>();
 
-function isLastOwner(userId: string): boolean {
+export function isLastOwner(userId: string): boolean {
   const account = getAccount(userId);
   return account !== null && isOwnerRole(account.role) && countOwners() <= 1;
 }

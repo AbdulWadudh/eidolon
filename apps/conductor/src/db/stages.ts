@@ -56,7 +56,7 @@ export function listStages(characterId: string): StoredStage[] {
 }
 
 export function registerStage(characterId: string, stageName: string): void {
-  ensureCharacter(characterId);
+  ensureCharacter(characterId, null);
 
   db.query(
     `INSERT INTO stages (id, character_id, name, backdrop_url, lighting_tint, soundscape_stems, updated_at)
@@ -77,7 +77,7 @@ export function saveStageBackdrop(
   stageName: string,
   backdropUrl: string,
 ): StoredStage {
-  ensureCharacter(characterId);
+  ensureCharacter(characterId, null);
 
   db.query(
     `INSERT INTO stages (id, character_id, name, backdrop_url, lighting_tint, soundscape_stems, updated_at)

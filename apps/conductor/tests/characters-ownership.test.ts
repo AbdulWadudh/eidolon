@@ -85,8 +85,8 @@ describe("ownership", () => {
 
     expect((await read(mine.id, AUTHED)).isMine).toBe(true);
     expect((await read(theirs.id, AUTHED)).isMine).toBe(false);
-    expect((await read(unclaimed.id, AUTHED)).isMine).toBe(true);
-    expect((await read(mine.id)).isMine).toBe(false);
+    expect((await read(unclaimed.id, AUTHED)).isMine).toBe(false);
+    expect((await app.request(`${BASE}/${mine.id}`)).status).toBe(401);
   });
 
   it("forks a published character into a private copy, which its new owner may publish", async () => {

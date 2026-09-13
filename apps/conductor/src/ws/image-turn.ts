@@ -21,13 +21,14 @@ function speak(ws: WebSocketSender, status: "painting" | "idle", detail?: string
 
 export async function handlePhotoIdeas(
   ws: WebSocketSender,
+  userId: string,
   characterId: string,
   signal: AbortSignal,
 ): Promise<void> {
-  const card = getCharacterCard(characterId);
+  const card = getCharacterCard(characterId, userId);
   const ideas = await generatePhotoIdeas(
     card.name,
-    formatScene(getRecentMessages(characterId), card.name),
+    formatScene(getRecentMessages(characterId, userId), card.name),
     signal,
   );
   if (signal.aborted) return;
@@ -36,13 +37,14 @@ export async function handlePhotoIdeas(
 
 export async function handleImageRequest(
   ws: WebSocketSender,
+  userId: string,
   characterId: string,
   promptOverride: string | undefined,
   orientation: "portrait" | "landscape" | "square" | undefined,
   referenceUrl: string | undefined,
   signal: AbortSignal,
 ): Promise<void> {
-  const card = getCharacterCard(characterId);
+  const card = getCharacterCard(characterId, userId);
   speak(ws, "painting", PHOTO_COPY.framing);
 
   try {
@@ -51,7 +53,7 @@ export async function handleImageRequest(
         characterId,
         name: card.name,
         personality: card.personality,
-        scene: formatScene(getRecentMessages(characterId), card.name),
+        scene: formatScene(getRecentMessages(characterId, userId), card.name),
         request: promptOverride?.trim() || DEFAULT_REQUEST,
         orientation,
         referenceUrl,
@@ -70,7 +72,7 @@ export async function handleImageRequest(
     if (signal.aborted) return;
 
     const spoken = selfie.message.trim();
-    const messageId = appendMessage(characterId, "assistant", spoken);
+    const messageId = appendMessage(characterId, "assistant", spoken, userId);
     setMessageImage(messageId, selfie.imageUrl, selfie.caption || null);
 
     sendServerMessage(ws, {

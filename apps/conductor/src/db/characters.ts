@@ -104,7 +104,7 @@ export function listCharacters(ownerId?: string): CharacterSummary[] {
     ? db
         .query<CharacterRow, [string]>(
           `SELECT ${COLUMNS} FROM characters
-           WHERE owner_id = ?1 OR owner_id IS NULL OR is_public = 1
+           WHERE owner_id = ?1 OR is_public = 1
            ORDER BY created_at DESC`,
         )
         .all(ownerId)
@@ -205,7 +205,7 @@ export function ownsCharacter(id: string, ownerId: string): boolean {
     .query<{ owner_id: string | null }, [string]>("SELECT owner_id FROM characters WHERE id = ?")
     .get(id);
 
-  return row !== null && (row.owner_id === null || row.owner_id === ownerId);
+  return row !== null && row.owner_id === ownerId;
 }
 
 export function adopt(id: string, ownerId: string): void {

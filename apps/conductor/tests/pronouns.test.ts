@@ -5,6 +5,8 @@ import { createCharacter, deleteCharacter, getCharacter, updateCharacter } from 
 import { loadPrompts } from "@/prompts/store";
 import { buildSystemPrompt } from "@/services/persona";
 
+const TEST_USER = "user:pronouns";
+
 const NAME = "Pronoun Probe";
 
 beforeEach(async () => {
@@ -57,7 +59,7 @@ describe("Pronouns on the character", () => {
 
   it("carries through to the prompt the model reads", () => {
     const card = createCharacter({ name: NAME, pronouns: "he" });
-    const stored = getCharacterCard(card.id);
+    const stored = getCharacterCard(card.id, TEST_USER);
     expect(stored.pronouns).toBe("he");
 
     const prompt = buildSystemPrompt(stored);
@@ -71,7 +73,7 @@ describe("Pronouns on the character", () => {
     const card = createCharacter({ name: NAME });
     db.query("UPDATE characters SET pronouns = NULL WHERE id = ?").run(card.id);
 
-    const prompt = buildSystemPrompt(getCharacterCard(card.id));
+    const prompt = buildSystemPrompt(getCharacterCard(card.id, TEST_USER));
     expect(prompt).toContain("they/them/their");
 
     deleteCharacter(card.id);

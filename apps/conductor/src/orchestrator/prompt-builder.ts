@@ -34,6 +34,7 @@ export const REQUIRED_SECTIONS = ["persona", "state", "directive"] as const;
 
 export interface AssembleOptions {
   characterId: string;
+  userId: string;
   userText: string;
   allowSearch: boolean;
   moodOverride?: string;
@@ -74,8 +75,8 @@ export function fitHistory(messages: ChatMessage[], budget: number): ChatMessage
   return kept.reverse();
 }
 
-export function workingHistory(characterId: string, budget: number): ChatMessage[] {
-  const recent = getRecentMessages(characterId, PROFILE.historyTurns)
+export function workingHistory(characterId: string, userId: string, budget: number): ChatMessage[] {
+  const recent = getRecentMessages(characterId, userId, PROFILE.historyTurns)
     .map((entry) => ({
       role: entry.role,
       content:
@@ -147,10 +148,10 @@ async function gatherWeb(
 }
 
 export async function assemblePrompt(options: AssembleOptions): Promise<AssembledPrompt> {
-  const { characterId, userText, allowSearch } = options;
+  const { characterId, userId, userText, allowSearch } = options;
 
-  const card = getCharacterCard(characterId);
-  const stored = getCharacterMind(characterId);
+  const card = getCharacterCard(characterId, userId);
+  const stored = getCharacterMind(characterId, userId);
   const mind = { ...stored, mood: resolveMood(options.moodOverride) ?? stored.mood };
 
   const [web, lore, recall] = await Promise.all([
@@ -162,7 +163,7 @@ export async function assemblePrompt(options: AssembleOptions): Promise<Assemble
   const sections: Record<string, string> = {
     persona: buildSystemPrompt(card),
     state: stateDirective(mind.score, mind.tier, mind.mood),
-    chronicle: getActiveChronicle(characterId),
+    chronicle: getActiveChronicle(characterId, userId),
     recall,
     lore,
     web: web.block,
@@ -210,7 +211,7 @@ export async function assemblePrompt(options: AssembleOptions): Promise<Assemble
       role: "system",
       content: [system, influenceNote, webVoice].filter(Boolean).join(SECTION_BREAK),
     },
-    ...workingHistory(characterId, historyBudget),
+    ...workingHistory(characterId, userId, historyBudget),
     { role: "user", content: spokenTurn },
   ];
 

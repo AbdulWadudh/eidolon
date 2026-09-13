@@ -3,6 +3,8 @@ import { db, ensureCharacter } from "@/db";
 import { addPortrait } from "@/db/portraits";
 import { referencedKeys, storedKey } from "@/services/storage-sweep";
 
+const TEST_USER = "user:storage-sweep";
+
 const BUCKET = "eidolon-media";
 const CHARACTER_ID = "storage-sweep-test";
 
@@ -10,7 +12,7 @@ beforeEach(() => {
   db.query("DELETE FROM character_portraits WHERE character_id = ?").run(CHARACTER_ID);
   db.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
   db.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
-  ensureCharacter(CHARACTER_ID);
+  ensureCharacter(CHARACTER_ID, TEST_USER);
 });
 
 describe("storedKey", () => {

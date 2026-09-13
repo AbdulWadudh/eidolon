@@ -14,10 +14,11 @@ function nothingToRedo(ws: WebSocketSender): void {
 
 export async function handleReplyVariants(
   ws: WebSocketSender,
+  userId: string,
   event: ReplyVariantsEvent,
   signal: AbortSignal,
 ): Promise<void> {
-  const previous = lastExchange(event.character_id);
+  const previous = lastExchange(event.character_id, userId);
   if (!previous) {
     nothingToRedo(ws);
     return;
@@ -25,6 +26,7 @@ export async function handleReplyVariants(
 
   const options = await generateReplyVariants({
     characterId: event.character_id,
+    userId,
     userText: previous.userText,
     allowSearch: event.allow_search,
     mood: event.mood,
@@ -47,10 +49,11 @@ export async function handleReplyVariants(
 
 export async function handleRegenerateReply(
   ws: WebSocketSender,
+  userId: string,
   event: RegenerateReplyEvent,
   signal: AbortSignal,
 ): Promise<void> {
-  const previous = lastExchange(event.character_id);
+  const previous = lastExchange(event.character_id, userId);
   if (!previous) {
     nothingToRedo(ws);
     return;
@@ -58,6 +61,7 @@ export async function handleRegenerateReply(
 
   await handleChatTurn(
     ws,
+    userId,
     {
       type: "chat_turn",
       character_id: event.character_id,

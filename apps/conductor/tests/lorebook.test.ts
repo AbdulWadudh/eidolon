@@ -13,6 +13,8 @@ import {
 } from "@/orchestrator/lorebook";
 import { affinityTier } from "@/services/affinity-ladder";
 
+const TEST_USER = "user:lorebook";
+
 const CHARACTER_ID = "lorebook-test";
 
 function entry(over: Partial<StoredLoreEntry> = {}): StoredLoreEntry {
@@ -26,7 +28,7 @@ function entry(over: Partial<StoredLoreEntry> = {}): StoredLoreEntry {
 }
 
 function seed(): void {
-  ensureCharacter(CHARACTER_ID);
+  ensureCharacter(CHARACTER_ID, TEST_USER);
   upsertLoreEntry(CHARACTER_ID, {
     keys: ["pendant", "necklace"],
     content: "The pendant was her mother's, and she has not taken it off since the funeral.",

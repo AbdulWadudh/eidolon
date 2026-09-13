@@ -3,7 +3,7 @@ import { CARD_UPLOAD, characterExportPath, characterImportPath } from "@eidolon/
 import { db } from "@/db";
 import { app } from "@/index";
 import { readCardData, readCardJson } from "@/services/tavern-card";
-import { remember, wipeNamed } from "./support/characters";
+import { AUTHED, remember, wipeNamed } from "./support/characters";
 import { blankPng, cardPng, V2_CARD } from "./support/tavern-cards";
 
 function upload(png: Buffer, field = CARD_UPLOAD.fieldNames[0] ?? "card"): FormData {
@@ -13,7 +13,11 @@ function upload(png: Buffer, field = CARD_UPLOAD.fieldNames[0] ?? "card"): FormD
 }
 
 async function post(body: FormData): Promise<Response> {
-  return app.request(characterImportPath(), { method: "POST", body });
+  return app.request(characterImportPath(), {
+    method: "POST",
+    body,
+    headers: { Authorization: AUTHED.Authorization },
+  });
 }
 
 function forget(characterId: unknown): void {
@@ -78,7 +82,7 @@ describe("GET /characters/:id/export", () => {
     const { characterId } = (await imported.json()) as { characterId?: string };
     forget(characterId);
 
-    const response = await app.request(characterExportPath(characterId ?? ""));
+    const response = await app.request(characterExportPath(characterId ?? ""), { headers: AUTHED });
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toBe(CARD_UPLOAD.exportContentType);
     expect(response.headers.get("Content-Disposition")).toContain(`${characterId}.png`);
@@ -88,7 +92,7 @@ describe("GET /characters/:id/export", () => {
   });
 
   it("answers 404 for a character nobody imported", async () => {
-    const response = await app.request(characterExportPath("nobody-at-all"));
+    const response = await app.request(characterExportPath("nobody-at-all"), { headers: AUTHED });
     expect(response.status).toBe(404);
   });
 });

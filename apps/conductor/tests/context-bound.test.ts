@@ -11,6 +11,8 @@ import { assemblePrompt, clip, fitHistory } from "@/orchestrator/prompt-builder"
 import { loadPrompts } from "@/prompts/store";
 import { PROFILE } from "@/services/llm-profile";
 
+const TEST_USER = "user:context-bound";
+
 const CHARACTER_ID = "context-bound-test";
 
 function wipe(): void {
@@ -21,7 +23,7 @@ function wipe(): void {
 beforeEach(async () => {
   await loadPrompts();
   wipe();
-  ensureCharacter(CHARACTER_ID);
+  ensureCharacter(CHARACTER_ID, TEST_USER);
 });
 
 afterEach(wipe);
@@ -82,11 +84,17 @@ describe("bounding a pasted wall of text", () => {
 
   it("keeps a real assembled prompt inside the character budget however long the paste", async () => {
     for (let index = 0; index < PROFILE.historyTurns; index += 1) {
-      appendMessage(CHARACTER_ID, index % 2 === 0 ? "user" : "assistant", "p".repeat(20_000));
+      appendMessage(
+        CHARACTER_ID,
+        index % 2 === 0 ? "user" : "assistant",
+        "p".repeat(20_000),
+        TEST_USER,
+      );
     }
 
     const assembled = await assemblePrompt({
       characterId: CHARACTER_ID,
+      userId: TEST_USER,
       userText: "q".repeat(20_000),
       allowSearch: false,
     });

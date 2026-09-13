@@ -5,6 +5,7 @@ import { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
 
 export interface SettleMindOptions {
   characterId: string;
+  userId: string;
   characterName: string;
   mindBlock: string;
   scene: string;
@@ -26,9 +27,9 @@ export async function settleMind(
   ws: WebSocketSender,
   options: SettleMindOptions,
 ): Promise<SettledMind> {
-  const previous = getCharacterMind(options.characterId);
+  const previous = getCharacterMind(options.characterId, options.userId);
   const inline = parseMindBlock(options.mindBlock);
-  const locked = isAffinityLocked(options.characterId);
+  const locked = isAffinityLocked(options.characterId, options.userId);
 
   let source: MindSource = inline ? "inline" : "appraisal";
   let appraisal: MindAppraisal = inline
@@ -44,7 +45,7 @@ export async function settleMind(
   console.log(
     `[mind] ${options.characterName}: ${source} delta=${appraisal.delta} mood=${appraisal.mood}`,
   );
-  saveCharacterMind(options.characterId, {
+  saveCharacterMind(options.characterId, options.userId, {
     score: mind.score,
     tier: mind.tier,
     mood: mind.mood,

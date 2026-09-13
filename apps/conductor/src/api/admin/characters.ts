@@ -61,12 +61,15 @@ adminCharacters.delete("/:id", (c) => {
 
 adminCharacters.get("/:id/operations", async (c) => {
   const id = c.req.param("id");
-  if (!getCharacter(id)) return c.json({ error: NO_SUCH }, 404);
+  const character = getCharacter(id);
+  if (!character) return c.json({ error: NO_SUCH }, 404);
+
+  const userId = character.ownerId ?? c.get("owner").id;
 
   return c.json({
-    messages: countMessages(id),
-    chapters: countChronicles(id),
-    proactive: await pendingProactive(id),
+    messages: countMessages(id, userId),
+    chapters: countChronicles(id, userId),
+    proactive: await pendingProactive(id, userId),
   });
 });
 
@@ -74,7 +77,7 @@ adminCharacters.post("/:id/summarize", async (c) => {
   const id = c.req.param("id");
   if (!getCharacter(id)) return c.json({ error: NO_SUCH }, 404);
 
-  const jobId = await summarizeChronicleNow(id);
+  const jobId = await summarizeChronicleNow(id, getCharacter(id)?.ownerId ?? c.get("owner").id);
   if (!jobId) return c.json({ error: "There is nothing said yet to summarise." }, 400);
 
   c.set("auditDetail", `queued a chapter for ${id}`);
@@ -85,7 +88,7 @@ adminCharacters.delete("/:id/proactive", async (c) => {
   const id = c.req.param("id");
   if (!getCharacter(id)) return c.json({ error: NO_SUCH }, 404);
 
-  const cancelled = await cancelProactive(id);
+  const cancelled = await cancelProactive(id, getCharacter(id)?.ownerId ?? c.get("owner").id);
   if (!cancelled) return c.json({ error: "Nothing is waiting to be sent." }, 404);
 
   c.set("auditDetail", `cancelled the pending message for ${id}`);

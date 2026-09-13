@@ -6,6 +6,7 @@ import { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
 
 export async function handleVoiceInput(
   ws: WebSocketSender,
+  userId: string,
   event: VoiceInputEvent,
   signal: AbortSignal,
 ): Promise<void> {
@@ -47,6 +48,7 @@ export async function handleVoiceInput(
 
   await handleChatTurn(
     ws,
+    userId,
     {
       type: "chat_turn",
       character_id: event.character_id,

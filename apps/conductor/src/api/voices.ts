@@ -1,5 +1,6 @@
 import { API_ROUTES } from "@eidolon/config";
 import { Hono } from "hono";
+import type { UserEnv } from "@/auth/guard";
 import { VOICE } from "@/config";
 import { synthesizeSpeech } from "@/services/tts";
 import { listVoices } from "@/services/voices";
@@ -18,6 +19,6 @@ voices.get("/:id/preview", async (c) => {
   return c.json({ voice: c.req.param("id"), format: "mp3", data: audio });
 });
 
-export function mountVoices(app: Hono): void {
+export function mountVoices(app: Hono<UserEnv>): void {
   app.route(API_ROUTES.voices, voices);
 }

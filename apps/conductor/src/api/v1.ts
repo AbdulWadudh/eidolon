@@ -1,4 +1,4 @@
-import { API_ROUTES, API_VERSION } from "@eidolon/config";
+import { API_ROUTES, API_VERSION, AUTH_COPY } from "@eidolon/config";
 import { getPairingHost, SQLITE_DB_PATH } from "@eidolon/config/server";
 import { COLORS } from "@eidolon/tokens";
 import { Hono } from "hono";
@@ -7,9 +7,10 @@ import { readLoreBody } from "@/api/lore-body";
 import { applyAffinityOverride, buildMindView } from "@/api/mind";
 import { mountVoices } from "@/api/voices";
 import { generatePairingPayload, PAIRING_SECRET, validateToken } from "@/auth";
-import { accountFor, requireOwner } from "@/auth/guard";
+import { accountFor, requireOwner, requireUser, type UserEnv } from "@/auth/guard";
 import { AFFINITY, TRANSCRIPT } from "@/config";
 import {
+  appendMessage,
   checkDatabaseHealth,
   deleteMessage,
   forgetCharacter,
@@ -18,6 +19,7 @@ import {
   getTranscript,
   updateMessageContent,
 } from "@/db";
+import { getCharacter } from "@/db/characters";
 import {
   appendChronicle,
   deleteChronicle,
@@ -46,7 +48,7 @@ import { checkTranscribeHealth, isTranscriptionConfigured } from "@/services/tra
 import { checkTtsHealth } from "@/services/tts";
 import { getConnectedDeviceCount, setupWebSocketRoutes } from "@/ws";
 
-export const v1 = new Hono();
+export const v1 = new Hono<UserEnv>();
 
 export async function buildHealthReport() {
   const [sqliteOk, lancedbOk, llmOk, comfyOk, cacheOk, ttsOk, sttOk] = await Promise.all([
@@ -95,6 +97,10 @@ export async function buildHealthReport() {
 v1.get(API_ROUTES.health, async (c) => c.json(await buildHealthReport()));
 
 v1.get(API_ROUTES.pairing, (c) => {
+  if (!validateToken(c.req.header("Authorization") ?? c.req.query("token"))) {
+    return c.json({ error: AUTH_COPY.signInRequired }, 401);
+  }
+
   return c.json({
     pairing_url: generatePairingPayload(),
     secret: PAIRING_SECRET,
@@ -118,6 +124,10 @@ v1.get(API_ROUTES.pairVerify, (c) => {
 });
 
 v1.get(API_ROUTES.pairingQr, (c) => {
+  if (!validateToken(c.req.header("Authorization") ?? c.req.query("token"))) {
+    return c.text(AUTH_COPY.signInRequired, 401);
+  }
+
   const payload = generatePairingPayload();
 
   return c.html(renderPairingPage(payload, getPairingHost(), PAIRING_SECRET));
@@ -131,6 +141,9 @@ setupWebSocketRoutes(v1);
 
 v1.use(`${API_ROUTES.prompts}/*`, requireOwner);
 v1.use(API_ROUTES.prompts, requireOwner);
+
+v1.use(API_ROUTES.characters, requireUser);
+v1.use(`${API_ROUTES.characters}/*`, requireUser);
 
 v1.get(API_ROUTES.prompts, (c) => c.json({ prompts: listPrompts() }));
 
@@ -161,19 +174,42 @@ v1.delete(`${API_ROUTES.prompts}/:key`, async (c) => {
   }
 });
 
+function openingTranscript(characterId: string, userId: string) {
+  const transcript = getTranscript(characterId, userId, TRANSCRIPT.pageSize);
+  if (transcript.length > 0) return transcript;
+
+  const greeting = getCharacter(characterId)?.greeting?.trim() ?? "";
+  if (greeting.length === 0) return transcript;
+
+  return [
+    {
+      id: appendMessage(characterId, "assistant", greeting, userId),
+      role: "assistant",
+      content: greeting,
+      audioUrl: null,
+      audioDuration: null,
+      imageUrl: null,
+      createdAt: Date.now(),
+    },
+  ];
+}
+
 v1.get(`${API_ROUTES.characters}/:id/messages`, (c) => {
   const characterId = c.req.param("id");
-  const card = getCharacterCard(characterId);
-  const mind = getCharacterMind(characterId);
+  const userId = c.get("user").id;
+  const card = getCharacterCard(characterId, userId);
+  const mind = getCharacterMind(characterId, userId);
 
   return c.json({
     character: { id: characterId, name: card.name, ...mind, ...getCharacterLook(characterId) },
-    messages: getTranscript(characterId, TRANSCRIPT.pageSize),
+    messages: openingTranscript(characterId, userId),
   });
 });
 
 v1.delete(`${API_ROUTES.characters}/:id/messages/:messageId`, (c) => {
-  deleteMessage(c.req.param("messageId"));
+  if (!deleteMessage(c.req.param("messageId"), c.get("user").id)) {
+    return c.json({ error: "No such message." }, 404);
+  }
   return c.json({ ok: true });
 });
 
@@ -204,7 +240,9 @@ v1.patch(`${API_ROUTES.characters}/:id/look`, async (c) => {
   return c.json({ character: { id: characterId, ...getCharacterLook(characterId) } });
 });
 
-v1.get(`${API_ROUTES.characters}/:id/mind`, (c) => c.json(buildMindView(c.req.param("id"))));
+v1.get(`${API_ROUTES.characters}/:id/mind`, (c) =>
+  c.json(buildMindView(c.req.param("id"), c.get("user").id)),
+);
 
 v1.patch(`${API_ROUTES.characters}/:id/affinity`, async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as {
@@ -225,13 +263,16 @@ v1.patch(`${API_ROUTES.characters}/:id/affinity`, async (c) => {
     return c.json({ error: `Unknown mood. Expected one of: ${AFFINITY.moods.join(", ")}.` }, 400);
   }
 
-  return c.json(applyAffinityOverride(c.req.param("id"), { score, locked, mood }));
+  return c.json(
+    applyAffinityOverride(c.req.param("id"), c.get("user").id, { score, locked, mood }),
+  );
 });
 
 v1.delete(`${API_ROUTES.characters}/:id/memory`, (c) => {
   const characterId = c.req.param("id");
-  forgetCharacter(characterId);
-  const mind = getCharacterMind(characterId);
+  const userId = c.get("user").id;
+  forgetCharacter(characterId, userId);
+  const mind = getCharacterMind(characterId, userId);
 
   return c.json({ character: { id: characterId, ...mind }, messages: [] });
 });
@@ -241,13 +282,14 @@ mountVoices(v1);
 
 v1.post(`${API_ROUTES.characters}/:id/chronicle/summarize`, async (c) => {
   const characterId = c.req.param("id");
-  const jobId = await summarizeChronicleNow(characterId);
+  const userId = c.get("user").id;
+  const jobId = await summarizeChronicleNow(characterId, userId);
 
   if (!jobId) {
     return c.json({ error: "There is nothing said yet to summarise." }, 400);
   }
 
-  return c.json({ ok: true, jobId, mind: buildMindView(characterId) });
+  return c.json({ ok: true, jobId, mind: buildMindView(characterId, userId) });
 });
 
 v1.post(`${API_ROUTES.characters}/:id/chronicle`, async (c) => {
@@ -258,8 +300,14 @@ v1.post(`${API_ROUTES.characters}/:id/chronicle`, async (c) => {
     return c.json({ error: "Body must carry a non-empty summaryText." }, 400);
   }
 
-  appendChronicle(characterId, nextChapterIndex(characterId), body.summaryText.trim());
-  return c.json(buildMindView(characterId));
+  const userId = c.get("user").id;
+  appendChronicle(
+    characterId,
+    userId,
+    nextChapterIndex(characterId, userId),
+    body.summaryText.trim(),
+  );
+  return c.json(buildMindView(characterId, userId));
 });
 
 v1.patch(`${API_ROUTES.characters}/:id/chronicle/:chapterId`, async (c) => {
@@ -269,19 +317,21 @@ v1.patch(`${API_ROUTES.characters}/:id/chronicle/:chapterId`, async (c) => {
     return c.json({ error: "Body must carry a non-empty summaryText." }, 400);
   }
 
-  if (!updateChronicle(c.req.param("chapterId"), body.summaryText.trim())) {
+  const userId = c.get("user").id;
+  if (!updateChronicle(c.req.param("chapterId"), body.summaryText.trim(), userId)) {
     return c.json({ error: "No such chapter." }, 404);
   }
 
-  return c.json(buildMindView(c.req.param("id")));
+  return c.json(buildMindView(c.req.param("id"), userId));
 });
 
 v1.delete(`${API_ROUTES.characters}/:id/chronicle/:chapterId`, (c) => {
-  if (!deleteChronicle(c.req.param("chapterId"))) {
+  const userId = c.get("user").id;
+  if (!deleteChronicle(c.req.param("chapterId"), userId)) {
     return c.json({ error: "No such chapter." }, 404);
   }
 
-  return c.json(buildMindView(c.req.param("id")));
+  return c.json(buildMindView(c.req.param("id"), userId));
 });
 
 v1.post(`${API_ROUTES.characters}/:id/lore`, async (c) => {
@@ -290,7 +340,7 @@ v1.post(`${API_ROUTES.characters}/:id/lore`, async (c) => {
   if ("error" in entry) return c.json({ error: entry.error }, 400);
 
   upsertLoreEntry(characterId, entry.value);
-  return c.json(buildMindView(characterId));
+  return c.json(buildMindView(characterId, c.get("user").id));
 });
 
 v1.patch(`${API_ROUTES.characters}/:id/lore/:entryId`, async (c) => {
@@ -299,12 +349,12 @@ v1.patch(`${API_ROUTES.characters}/:id/lore/:entryId`, async (c) => {
   if ("error" in entry) return c.json({ error: entry.error }, 400);
 
   upsertLoreEntry(characterId, entry.value, c.req.param("entryId"));
-  return c.json(buildMindView(characterId));
+  return c.json(buildMindView(characterId, c.get("user").id));
 });
 
 v1.delete(`${API_ROUTES.characters}/:id/lore/:entryId`, (c) => {
   deleteLoreEntry(c.req.param("entryId"));
-  return c.json(buildMindView(c.req.param("id")));
+  return c.json(buildMindView(c.req.param("id"), c.get("user").id));
 });
 
 v1.patch(`${API_ROUTES.characters}/:id/messages/:messageId`, async (c) => {
@@ -314,7 +364,7 @@ v1.patch(`${API_ROUTES.characters}/:id/messages/:messageId`, async (c) => {
     return c.json({ error: "Body must carry non-empty content." }, 400);
   }
 
-  if (!updateMessageContent(c.req.param("messageId"), body.content.trim())) {
+  if (!updateMessageContent(c.req.param("messageId"), body.content.trim(), c.get("user").id)) {
     return c.json({ error: "No such message." }, 404);
   }
 

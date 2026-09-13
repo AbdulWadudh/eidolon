@@ -8,6 +8,8 @@ import {
 } from "@/services/transcribe";
 import { handleVoiceInput } from "@/ws/voice-input";
 
+const TEST_USER = "user:transcribe";
+
 const saved = process.env.STT_API_URL;
 
 function setStt(value: string | undefined): void {
@@ -153,7 +155,7 @@ describe("the voice_input socket event", () => {
 
   it("refuses when no transcription node is configured", async () => {
     const { ws, sent } = collect();
-    await handleVoiceInput(ws, input("QUJD"), new AbortController().signal);
+    await handleVoiceInput(ws, TEST_USER, input("QUJD"), new AbortController().signal);
 
     expect(sent).toHaveLength(1);
     expect(sent[0]?.type).toBe("error");
@@ -163,7 +165,7 @@ describe("the voice_input socket event", () => {
   it("refuses a recording with no audio in it", async () => {
     setStt("http://127.0.0.1:9999/v1");
     const { ws, sent } = collect();
-    await handleVoiceInput(ws, input(""), new AbortController().signal);
+    await handleVoiceInput(ws, TEST_USER, input(""), new AbortController().signal);
 
     expect(sent[0]?.payload?.code).toBe("STT_BAD_AUDIO");
   });
@@ -173,7 +175,7 @@ describe("the voice_input socket event", () => {
     setStt(`http://127.0.0.1:${server.port}/v1`);
 
     const { ws, sent } = collect();
-    await handleVoiceInput(ws, input("QUJDRA=="), new AbortController().signal);
+    await handleVoiceInput(ws, TEST_USER, input("QUJDRA=="), new AbortController().signal);
     server.stop(true);
 
     expect(sent.map((entry) => entry.type)).toEqual(["status_update", "transcript", "error"]);
@@ -190,7 +192,7 @@ describe("the voice_input socket event", () => {
 
     const controller = new AbortController();
     const { ws, sent } = collect();
-    const pending = handleVoiceInput(ws, input("QUJDRA=="), controller.signal);
+    const pending = handleVoiceInput(ws, TEST_USER, input("QUJDRA=="), controller.signal);
     controller.abort();
     await pending;
     server.stop(true);

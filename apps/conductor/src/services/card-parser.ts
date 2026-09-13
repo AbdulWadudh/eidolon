@@ -3,7 +3,7 @@ import type { TavernV2Card } from "@eidolon/protocol";
 import { COLORS } from "@eidolon/tokens";
 import sharp from "sharp";
 import { CARD_UPLOAD, TIMEOUTS_MS } from "@/config";
-import { appendMessage, getCharacterMind, saveCharacterMind } from "@/db";
+import { appendMessage, getCharacterMind, setCharacterDefaults } from "@/db";
 import { type CharacterCard, createCharacter, getCharacter } from "@/db/characters";
 import {
   getCharacterLook,
@@ -14,7 +14,6 @@ import {
 } from "@/db/look";
 import { getLoreEntries, upsertLoreEntry } from "@/db/lorebook";
 import { listStages, registerStage } from "@/db/stages";
-import { affinityTier } from "@/services/affinity-ladder";
 import { forgetFace } from "@/services/selfie";
 import { characterKey, isStorageConnected, uploadFile } from "@/services/storage";
 import { parseCardBuffer, type TavernCardData, writeCardChunk } from "@/services/tavern-card";
@@ -85,7 +84,9 @@ export async function parseTavernCard(
 
   const greeting = data.first_mes.trim();
   const greetingMessageId =
-    greeting.length > 0 ? appendMessage(character.id, "assistant", greeting) : null;
+    greeting.length > 0 && options.ownerId
+      ? appendMessage(character.id, "assistant", greeting, options.ownerId)
+      : null;
 
   for (const entry of lore) {
     upsertLoreEntry(character.id, {
@@ -105,12 +106,7 @@ export async function parseTavernCard(
   }
 
   if (metadata.affinity_score !== 0) {
-    const mind = getCharacterMind(character.id);
-    saveCharacterMind(character.id, {
-      score: metadata.affinity_score,
-      tier: affinityTier(metadata.affinity_score),
-      mood: mind.mood,
-    });
+    setCharacterDefaults(character.id, metadata.affinity_score);
   }
 
   const anchorUrl = await storeAnchor(character.id, pngBuffer);
@@ -162,7 +158,7 @@ export function buildTavernCard(characterId: string): TavernV2Card {
   const character = getCharacter(characterId);
   if (!character) throw new Error(`No character "${characterId}" to export.`);
 
-  const mind = getCharacterMind(characterId);
+  const mind = getCharacterMind(characterId, null);
   const entries = getLoreEntries(characterId).map((entry, index) => ({
     keys: entry.keys,
     secondary_keys: [] as string[],

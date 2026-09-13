@@ -53,7 +53,7 @@ export interface NewLoreEntry {
 }
 
 export function upsertLoreEntry(characterId: string, entry: NewLoreEntry, id?: string): string {
-  ensureCharacter(characterId);
+  ensureCharacter(characterId, null);
   const entryId = id ?? crypto.randomUUID();
 
   db.query(

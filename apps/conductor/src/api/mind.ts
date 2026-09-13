@@ -55,8 +55,8 @@ export function toChapterView(entry: StoredChronicle): ChapterView {
   };
 }
 
-export function buildMindView(characterId: string): MindView {
-  const mind = getCharacterMind(characterId);
+export function buildMindView(characterId: string, userId: string): MindView {
+  const mind = getCharacterMind(characterId, userId);
 
   return {
     character: {
@@ -64,12 +64,12 @@ export function buildMindView(characterId: string): MindView {
       affinity: mind.score,
       tier: mind.tier,
       mood: mind.mood,
-      pronouns: getCharacterCard(characterId).pronouns,
-      isLocked: isAffinityLocked(characterId),
+      pronouns: getCharacterCard(characterId, userId).pronouns,
+      isLocked: isAffinityLocked(characterId, userId),
       min: AFFINITY.min,
       max: AFFINITY.max,
     },
-    chapters: getChronicles(characterId, TRANSCRIPT.pageSize).map(toChapterView),
+    chapters: getChronicles(characterId, userId, TRANSCRIPT.pageSize).map(toChapterView),
     lore: getLoreEntries(characterId).map((entry) => {
       const isUnlocked = entry.requiredAffinity <= mind.score;
       return {
@@ -91,23 +91,27 @@ export interface AffinityOverride {
   mood?: string;
 }
 
-export function applyAffinityOverride(characterId: string, override: AffinityOverride): MindView {
+export function applyAffinityOverride(
+  characterId: string,
+  userId: string,
+  override: AffinityOverride,
+): MindView {
   if (typeof override.locked === "boolean") {
-    setAffinityLock(characterId, override.locked);
+    setAffinityLock(characterId, userId, override.locked);
   }
 
   const mood = resolveMood(override.mood);
   const hasScore = typeof override.score === "number" && Number.isFinite(override.score);
 
   if (hasScore || mood) {
-    const current = getCharacterMind(characterId);
+    const current = getCharacterMind(characterId, userId);
     const score = hasScore ? clampScore(Math.round(override.score as number)) : current.score;
-    saveCharacterMind(characterId, {
+    saveCharacterMind(characterId, userId, {
       score,
       tier: hasScore ? affinityTier(score) : current.tier,
       mood: mood ?? current.mood,
     });
   }
 
-  return buildMindView(characterId);
+  return buildMindView(characterId, userId);
 }

@@ -38,6 +38,7 @@ export { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
 export async function handleClientMessage(
   ws: WebSocketSender,
   rawMessage: WSMessageReceive,
+  userId: string,
 ): Promise<void> {
   const rawString =
     typeof rawMessage === "string"
@@ -87,7 +88,7 @@ export async function handleClientMessage(
     }
 
     case "chat_turn": {
-      await handleChatTurn(ws, clientMsg, sessionManager.getAbortSignal(ws));
+      await handleChatTurn(ws, userId, clientMsg, sessionManager.getAbortSignal(ws));
       break;
     }
 
@@ -97,18 +98,19 @@ export async function handleClientMessage(
     }
 
     case "reply_variants": {
-      await handleReplyVariants(ws, clientMsg, sessionManager.getAbortSignal(ws));
+      await handleReplyVariants(ws, userId, clientMsg, sessionManager.getAbortSignal(ws));
       break;
     }
 
     case "regenerate_reply": {
-      await handleRegenerateReply(ws, clientMsg, sessionManager.getAbortSignal(ws));
+      await handleRegenerateReply(ws, userId, clientMsg, sessionManager.getAbortSignal(ws));
       break;
     }
 
     case "regenerate_suggestions": {
       await handleRegenerateSuggestions(
         ws,
+        userId,
         clientMsg.character_id,
         sessionManager.getAbortSignal(ws),
       );
@@ -118,6 +120,7 @@ export async function handleClientMessage(
     case "request_image": {
       await handleImageRequest(
         ws,
+        userId,
         clientMsg.character_id,
         clientMsg.prompt_override,
         clientMsg.orientation,
@@ -133,12 +136,12 @@ export async function handleClientMessage(
     }
 
     case "voice_input": {
-      await handleVoiceInput(ws, clientMsg, sessionManager.getAbortSignal(ws));
+      await handleVoiceInput(ws, userId, clientMsg, sessionManager.getAbortSignal(ws));
       break;
     }
 
     case "request_photo_ideas": {
-      await handlePhotoIdeas(ws, clientMsg.character_id, sessionManager.getAbortSignal(ws));
+      await handlePhotoIdeas(ws, userId, clientMsg.character_id, sessionManager.getAbortSignal(ws));
       break;
     }
   }

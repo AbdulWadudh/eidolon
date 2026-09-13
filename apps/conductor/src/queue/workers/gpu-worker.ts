@@ -22,7 +22,7 @@ import { summarizeMessages } from "@/services/chronicle-writer";
 import { generateImage } from "@/services/comfyui";
 import { describeAppearance } from "@/services/photo-look";
 import { isStorageConnected, uploadImage } from "@/services/storage";
-import { broadcastToCharacter } from "@/ws/registry";
+import { broadcastToEveryUser } from "@/ws/registry";
 
 const NEWLINE = String.fromCharCode(10);
 
@@ -47,7 +47,7 @@ async function renderStageBackdrop(data: StageBackdropJob): Promise<void> {
   );
   const stage = saveStageBackdrop(data.characterId, data.stageName, backdropUrl);
 
-  broadcastToCharacter(data.characterId, {
+  broadcastToEveryUser(data.characterId, {
     type: "stage_shift",
     payload: {
       location_name: stage.name,
@@ -59,15 +59,15 @@ async function renderStageBackdrop(data: StageBackdropJob): Promise<void> {
 }
 
 async function summarizeChronicle(data: ChronicleSummaryJob): Promise<void> {
-  const card = getCharacterCard(data.characterId);
+  const card = getCharacterCard(data.characterId, data.userId);
   const bullets = await summarizeMessages(card.name, data.messageBatch);
 
   if (bullets.length === 0) {
     throw new Error("The model returned nothing that could be read as a chronicle entry.");
   }
 
-  const chapterIndex = data.chapterIndex ?? nextChapterIndex(data.characterId);
-  appendChronicle(data.characterId, chapterIndex, bullets.join(NEWLINE));
+  const chapterIndex = data.chapterIndex ?? nextChapterIndex(data.characterId, data.userId);
+  appendChronicle(data.characterId, data.userId, chapterIndex, bullets.join(NEWLINE));
 }
 
 async function renderPortrait(data: PortraitJob): Promise<void> {
@@ -75,7 +75,7 @@ async function renderPortrait(data: PortraitJob): Promise<void> {
     throw new Error("Object storage is offline, so the portrait would have nowhere to live.");
   }
 
-  const card = getCharacterCard(data.characterId);
+  const card = getCharacterCard(data.characterId, null);
   const look = await describeAppearance({
     characterId: data.characterId,
     name: card.name,

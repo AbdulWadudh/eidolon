@@ -9,6 +9,7 @@ const SILENT: WebSocketSender = { send: () => {} };
 
 export interface VariantRequest {
   characterId: string;
+  userId: string;
   userText: string;
   allowSearch: boolean;
   mood?: string | undefined;
@@ -34,6 +35,7 @@ function distinct(texts: string[], avoid: string): string[] {
 export async function generateReplyVariants(request: VariantRequest): Promise<string[]> {
   const assembled = await assemblePrompt({
     characterId: request.characterId,
+    userId: request.userId,
     userText: request.userText,
     allowSearch: request.allowSearch,
     moodOverride: request.mood,

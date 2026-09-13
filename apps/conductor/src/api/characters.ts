@@ -3,6 +3,7 @@ import { type Context, Hono } from "hono";
 import { authoring } from "@/api/authoring";
 import { cards } from "@/api/cards";
 import { gallery } from "@/api/gallery";
+import type { UserEnv } from "@/auth/guard";
 import { ownerFor } from "@/auth/session";
 import {
   adopt,
@@ -250,6 +251,6 @@ characters.route("/author", authoring);
 characters.route("/", cards);
 characters.route("/", gallery);
 
-export function mountCharacters(app: Hono): void {
+export function mountCharacters(app: Hono<UserEnv>): void {
   app.route(API_ROUTES.characters, characters);
 }

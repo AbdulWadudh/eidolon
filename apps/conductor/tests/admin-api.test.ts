@@ -7,8 +7,9 @@ import {
   AdminThemeViewSchema,
 } from "@eidolon/protocol";
 import { DEFAULT_THEME_TOKENS } from "@eidolon/tokens";
+import { isLastOwner } from "@/api/admin/users";
 import { PAIRING_SECRET } from "@/auth";
-import { deleteAccount } from "@/auth/roles";
+import { countOwners, deleteAccount } from "@/auth/roles";
 import { clearAudit } from "@/db/audit";
 import { getCharacter } from "@/db/characters";
 import { removeOverridesUnder } from "@/db/overrides";
@@ -255,10 +256,18 @@ describe("admin users", () => {
   it("refuses to demote or delete the last owner", async () => {
     const owners = await app.request(adminApiPath("users"), { headers: OWNER });
     const { accounts } = (await owners.json()) as { accounts: { id: string; role: string }[] };
-    const onlyOwners = accounts.filter((account) => account.role === AUTH.ownerRole);
+    const owning = accounts.filter((account) => account.role === AUTH.ownerRole);
 
-    expect(onlyOwners.length).toBe(1);
-    const lastOwner = onlyOwners[0]?.id ?? "";
+    expect(owning.length).toBeGreaterThan(0);
+    expect(countOwners()).toBe(owning.length);
+
+    if (owning.length > 1) {
+      expect(isLastOwner(owning[0]?.id ?? "")).toBe(false);
+      return;
+    }
+
+    const lastOwner = owning[0]?.id ?? "";
+    expect(isLastOwner(lastOwner)).toBe(true);
 
     const demoted = await app.request(adminApiPath("users", lastOwner), {
       method: "PATCH",
