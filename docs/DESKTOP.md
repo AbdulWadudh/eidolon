@@ -1,5 +1,12 @@
 # The desktop application
 
+> **Stale in one respect.** This plan was written while the app paired by QR
+> code. Pairing has since been removed: the app signs in with an email and a
+> password, and `app/(auth)/pairing.tsx` is now `app/(auth)/sign-in.tsx`. Every
+> section below about cameras, deep links and pairing screens needs rereading
+> against [SIGNING_IN.md](./SIGNING_IN.md) before any of it is built. Nothing
+> else here has changed.
+
 Eidolon needs a native, installable desktop client. This document records the
 decision, the evidence in this repository that produced it, and the phased plan
 to build it.

@@ -321,31 +321,6 @@ export default function MainCharactersScreen() {
             </View>
           </Card>
         </Animated.View>
-
-        {/* Lab Link Card */}
-        <Animated.View entering={revealAt(2)}>
-          <Card className="border-border p-4">
-            <View className="flex-row items-center justify-between">
-              <View className="flex-1 pr-3">
-                <View className="flex-row items-center gap-2">
-                  <AppIcon icon={SparklesIcon} size={14} color={theme.textMuted} />
-                  <Text className="flex-1 font-main-bold text-sm text-text-primary">
-                    {HOME_COPY.typeTitle}
-                  </Text>
-                </View>
-                <Text className="mt-1 font-ui text-xs text-text-muted">{HOME_COPY.typeBlurb}</Text>
-              </View>
-              <Button
-                variant="secondary"
-                size="sm"
-                className="shrink-0"
-                onPress={() => router.push("/demo")}
-              >
-                {HOME_COPY.open}
-              </Button>
-            </View>
-          </Card>
-        </Animated.View>
       </ScrollView>
 
       {confirmation.sheet}

@@ -31,7 +31,12 @@ export const Input = React.forwardRef<React.ElementRef<typeof TextInput>, InputP
           cursorColor={cursorColor ?? theme.primary}
           selectionColor={selectionColor ?? theme.primary}
           style={[
-            { paddingVertical: 0, includeFontPadding: false, textAlignVertical: "center" },
+            {
+              paddingVertical: 0,
+              includeFontPadding: false,
+              textAlignVertical: "center",
+              borderWidth: theme.borderWidth,
+            },
             props.style,
           ]}
           className={cn(

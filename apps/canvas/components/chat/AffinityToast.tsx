@@ -53,7 +53,7 @@ export function AffinityToast({ characterId }: AffinityToastProps) {
         exiting={reduced ? undefined : FadeOut.duration(AFFINITY_HUD.toastExitMs)}
         accessibilityLiveRegion="polite"
         accessibilityLabel={affinityToastAnnouncement(toast.delta, toast.score, toast.tier)}
-        className="flex-row items-center overflow-hidden rounded-full border px-3 py-1"
+        className="flex-row items-center overflow-hidden rounded-button border px-3 py-1"
         style={{
           borderColor: isGain ? theme.primary : theme.danger,
           transform: [{ translateY: lift }],

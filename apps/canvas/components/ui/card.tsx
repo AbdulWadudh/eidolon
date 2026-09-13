@@ -2,16 +2,22 @@ import * as React from "react";
 import { Text, type TextProps, View, type ViewProps } from "react-native";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { cn } from "@/lib/utils";
+import { useResolvedTheme } from "@/store/theme-store";
 
 export const Card = React.forwardRef<React.ElementRef<typeof View>, ViewProps>(
-  ({ className, ...props }, ref) => (
-    <GlassSurface
-      ref={ref}
-      tint="card"
-      className={cn("rounded-card border border-card-border p-4 shadow-none", className)}
-      {...props}
-    />
-  ),
+  ({ className, style, ...props }, ref) => {
+    const theme = useResolvedTheme();
+
+    return (
+      <GlassSurface
+        ref={ref}
+        tint="card"
+        className={cn("rounded-card border border-card-border p-4 shadow-none", className)}
+        style={[{ borderWidth: theme.borderWidth }, style]}
+        {...props}
+      />
+    );
+  },
 );
 Card.displayName = "Card";
 

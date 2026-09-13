@@ -3,13 +3,13 @@
 Snapshot for anyone — human or model — picking this up cold. Read this before
 [AGENTS.md](./AGENTS.md) and [RULES.md](./RULES.md).
 
-**Last updated:** 2026-09-05 · **Version:** `expo.version` in `apps/canvas/app.json`
+**Last updated:** 2026-09-14 · **Version:** `expo.version` in `apps/canvas/app.json`
 
 ## Shape
 
 ```
 apps/canvas       Expo / React Native client (Android, iOS, web)
-apps/conductor    Bun + Hono gateway: REST, WebSocket, LLM, ComfyUI, SearXNG
+apps/conductor    Bun + Hono gateway: REST, WebSocket, LLM, ComfyUI, web search
 packages/protocol Zod schemas; all socket traffic validates through these
 packages/tokens   Design tokens and the dark/light palettes
 scripts/          doctor.ts (toolchain preflight), release.ts (bump + publish)
@@ -21,11 +21,15 @@ Everything is Bun + TypeScript. Biome is the only linter and formatter.
 
 - Theme engine: 12 tokens, global scope plus per-character overrides, dark/light
   palettes, per-token reset.
-- Theme Studio and Theme & Font Lab (`/demo`) — collapsed accordions, live preview.
+- Theme Studio — collapsed accordions, live preview. Global, or scoped to one
+  character when opened from that character's chat.
 - Fonts: separate dialogue and interface families, derived bold/italic/medium,
   Google Fonts browser with lazy previews, `fontScale` text scaling.
-- Pairing: QR or manual, token verified before storage, live WebSocket with
-  backoff reconnect, honest status pill.
+- Accounts: email sign-in and sign-up, session tokens, first account on a
+  conductor becomes its owner. Every `/characters` route and the socket require
+  one. Pairing by QR or shared secret is gone.
+- Live WebSocket with backoff reconnect and an honest status line; a credential
+  the conductor refuses ends the loop and returns you to sign-in.
 - Chat: streaming roleplay screen on a FlashList feed, editable reply
   suggestions with reroll, solid input dock, voice-note chip. One socket for the
   whole app, owned by `apps/canvas/services/websocket.ts`; `store/connection.ts`
@@ -38,14 +42,12 @@ Everything is Bun + TypeScript. Biome is the only linter and formatter.
 | Thing | State |
 |---|---|
 | Release signing | debug keystore; fine for sideloading, not distribution |
-| `PAIRING_SECRET` | committed dev placeholder; the only gate on the socket |
-| `betterAuth()` in `apps/conductor/src/auth/index.ts` | instantiated, **never used** — nothing imports it, no routes mount it. Build on it or delete it |
-| `origin` remote | none, so `bun run release` cannot publish yet |
+| `BETTER_AUTH_SECRET` | falls back to `PAIRING_SECRET` if unset, which is a short dev placeholder. better-auth warns on every boot. Changing it signs everyone out |
 | CI | no workflow; releases are local |
 | Voice notes | wired end to end: Kokoro synthesises each reply, `audio_chunk` carries base64 mp3, the client auto-plays it once. Unverified on a handset |
-| Web search | the SearXNG instance has no working engines (brave/google suspended, ddg/startpage CAPTCHA), so `searchWeb` correctly returns nothing |
-| Voice call route | the call button in the chat top bar has nowhere to go yet |
-| Chat tool bar | mood, selfie, mic, lorebook, action and plus buttons render and are labelled, but `onAction` is a no-op |
+| Web search | DuckDuckGo first, then Serper, then Exa. The last two need keys, so an unconfigured install falls through and returns nothing |
+| Mic button | `InputToolbar` offers `voice`, but the chat screen's `onAction` never handles it, so it does nothing |
+| Outfit and Moment | in the actions sheet, `ready: false` with a Soon badge and no handler |
 | `.gitattributes` | absent. `core.autocrlf=true` rewrites endings on checkout and Biome wants LF, so `bun run lint` fails on a fresh clone until someone re-runs `bun run format`. `* text=auto eol=lf` would end it |
 
 ## Traps already paid for

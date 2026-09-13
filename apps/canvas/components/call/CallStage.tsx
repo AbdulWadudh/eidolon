@@ -79,7 +79,7 @@ export function CallStage({
       <GlassSurface
         tint="card"
         characterId={characterId}
-        className="mt-4 overflow-hidden rounded-full border border-border px-4 py-2"
+        className="mt-4 overflow-hidden rounded-button border border-border px-4 py-2"
       >
         <Text
           accessibilityLiveRegion="polite"

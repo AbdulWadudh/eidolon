@@ -12,10 +12,13 @@ overrides** that shadow it.
 
 ## Editing tokens
 
-Two surfaces, same components: **Theme Studio** (the sheet, 12 tokens grouped
-into surfaces / accents / semantics) and **Theme & Font Lab** (`/demo`, one
-section per token). Both are accordions, collapsed by default, so the live
-preview stays on screen while editing.
+**Theme Studio** is the sheet: 12 tokens grouped into surfaces / accents /
+semantics, as accordions collapsed by default so the live preview stays on
+screen while editing. Opened from the roster it edits the global palette;
+opened from a character's chat it edits that character's overrides.
+
+The admin dashboard has a second editor over the same tokens, and is the only
+place `borderWidth` ("Card edges") can be set.
 
 Every token has a reset button. In global scope it restores the factory value
 **for the active mode** — the surface and text tokens differ between the dark and

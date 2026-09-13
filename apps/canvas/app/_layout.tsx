@@ -49,8 +49,7 @@ export default function RootLayout() {
 
   React.useEffect(() => {
     const inAuthGroup = segments[0] === "(auth)";
-    const isDemoRoute = segments.includes("demo");
-    if (!isSignedIn && !inAuthGroup && !isDemoRoute && segments[0] !== undefined) {
+    if (!isSignedIn && !inAuthGroup && segments[0] !== undefined) {
       router.replace("/(auth)/sign-in");
     } else if (isSignedIn && inAuthGroup) {
       router.replace("/(main)");

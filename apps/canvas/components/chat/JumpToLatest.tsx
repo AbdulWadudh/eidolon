@@ -30,7 +30,7 @@ export function JumpToLatest({ isStreaming, characterId, onPress }: JumpToLatest
         accessibilityLabel={label}
         hitSlop={8}
         onPress={onPress}
-        className="flex-row items-center gap-2 overflow-hidden rounded-full border border-border px-3.5 py-2"
+        className="flex-row items-center gap-2 overflow-hidden rounded-button border border-border px-3.5 py-2"
       >
         <GlassSurface tint="card" pointerEvents="none" style={StyleSheet.absoluteFill} />
         {isStreaming ? <View className="h-1.5 w-1.5 rounded-full bg-primary" /> : null}

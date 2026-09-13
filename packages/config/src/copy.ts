@@ -58,8 +58,6 @@ export const HOME_COPY = {
   sayHello: "Say hello",
   lookTitle: "Look & feel",
   lookBlurb: "Set the colours, type and corners — for everyone, or for one character.",
-  typeTitle: "Type & fonts",
-  typeBlurb: "Browse fonts and see them in place before you keep them.",
   open: "Open",
 } as const;
 

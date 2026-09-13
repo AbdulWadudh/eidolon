@@ -104,7 +104,7 @@ New tokens need all five steps in [docs/THEMING.md](./docs/THEMING.md#adding-a-t
 `EXPO_PUBLIC_*` values are **inlined into the JS bundle** and readable by anyone
 holding the APK. Never put a real secret behind that prefix.
 
-`PAIRING_SECRET` is the only thing gating the WebSocket. It must never be
+`BETTER_AUTH_SECRET` signs every session and password. It must never be
 committed with a real value, and the development default must not reach any
 network you do not control.
 
@@ -155,7 +155,6 @@ Six files were already over the limit when this rule landed, and are recorded in
 
 | File | Lines |
 |---|---|
-| `apps/canvas/app/(main)/demo.tsx` | 886 |
 | `apps/canvas/components/theme/ThemeStudioSheet.tsx` | 865 |
 | `apps/canvas/store/theme-store.ts` | 420 |
 | `apps/canvas/components/ui/font-picker-modal.tsx` | 345 |

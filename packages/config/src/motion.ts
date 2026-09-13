@@ -65,4 +65,4 @@ export const EASING_BEZIER = {
   inOut: [0.77, 0, 0.175, 1],
 } as const;
 
-export const PRESS_SCALE = 0.97;
+export const PRESS_SCALE = 0.96;

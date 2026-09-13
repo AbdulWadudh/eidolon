@@ -95,8 +95,9 @@ To add an icon, add a line to `lib/icons.ts`.
 - Native libs and the Hermes bundle are stored **uncompressed**
   (`expo.useLegacyPackaging=false`). Enabling legacy packaging would cut roughly
   another 15 MB of download at the cost of a larger on-device install.
-- `libbarhopper_v3.so` plus the ML Kit models (~5.5 MB) are ML Kit barcode
-  scanning, required by QR pairing. They stay.
+- `libbarhopper_v3.so` plus the ML Kit models (~5.5 MB) were ML Kit barcode
+  scanning for QR pairing. Pairing is gone and `expo-camera` with it, so the
+  next clean build should no longer carry them.
 
 ## Releasing
 
