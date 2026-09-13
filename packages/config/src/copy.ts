@@ -77,6 +77,8 @@ export const HOME_COPY = {
   signedOutAccount: "Not signed in",
   servedFrom: "Served from",
   whosHere: "Who's here",
+  rosterFailed: "The roster could not be read. Pull down to try again.",
+  rosterRetry: "Try again",
   ready: "Ready when you are",
   sayHello: "Say hello",
   lookTitle: "Look & feel",

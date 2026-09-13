@@ -11,7 +11,7 @@ import {
 } from "@eidolon/config";
 import { useFocusEffect, useRouter } from "expo-router";
 import * as React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CharacterRosterCard } from "@/components/characters/CharacterCard";
@@ -35,10 +35,12 @@ import {
   SparklesIcon,
   UserIcon,
 } from "@/lib/icons";
+import { tap } from "@/services/haptics";
 import { useAuthStore, useIsOwner } from "@/store/auth-store";
 import { type CharacterSummary, fetchCharacters } from "@/store/character-api";
 import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme } from "@/store/theme-store";
+import { useToastStore } from "@/store/toast-store";
 
 const ACCOUNT_PX = 34;
 const HEADER_TOP_PX = 6;
@@ -66,11 +68,29 @@ export default function MainCharactersScreen() {
   const [roster, setRoster] = React.useState<CharacterSummary[]>([]);
   const [isLoadingRoster, setLoadingRoster] = React.useState(true);
   const [managing, setManaging] = React.useState<CharacterSummary | null>(null);
+  const [isRefreshing, setRefreshing] = React.useState(false);
+  const [rosterFailed, setRosterFailed] = React.useState(false);
 
   const refreshRoster = React.useCallback(
     () => fetchCharacters(serverHost).then(setRoster),
     [serverHost],
   );
+
+  const reload = React.useCallback(() => {
+    setRefreshing(true);
+    tap("light");
+
+    void Promise.all([refreshRoster(), refreshAccount(serverHost, sessionToken)])
+      .then(() => setRosterFailed(false))
+      .catch(() => {
+        setRosterFailed(true);
+        useToastStore.getState().notify(CONNECTION_COPY.disconnected, "bad");
+      })
+      .finally(() => {
+        setRefreshing(false);
+        setLoadingRoster(false);
+      });
+  }, [refreshRoster, refreshAccount, serverHost, sessionToken]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -82,11 +102,18 @@ export default function MainCharactersScreen() {
     React.useCallback(() => {
       let live = true;
 
-      void fetchCharacters(serverHost).then((next) => {
-        if (!live) return;
-        setRoster(next);
-        setLoadingRoster(false);
-      });
+      void fetchCharacters(serverHost)
+        .then((next) => {
+          if (!live) return;
+          setRoster(next);
+          setRosterFailed(false);
+        })
+        .catch(() => {
+          if (live) setRosterFailed(true);
+        })
+        .finally(() => {
+          if (live) setLoadingRoster(false);
+        });
 
       return () => {
         live = false;
@@ -181,6 +208,15 @@ export default function MainCharactersScreen() {
 
       <ScrollView
         contentContainerStyle={{ padding: 14, paddingBottom: insets.bottom + 14, gap: 10 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={reload}
+            tintColor={theme.primary}
+            colors={[theme.primary]}
+            progressBackgroundColor={theme.card}
+          />
+        }
       >
         {}
         {showSettings && (
@@ -252,10 +288,16 @@ export default function MainCharactersScreen() {
           <LoadingState label={GALLERY_COPY.loadingRoster} fill={false} />
         ) : roster.length === 0 ? (
           <Animated.View entering={revealAt(0)}>
-            <Card className="border-border p-5">
+            <Card className={rosterFailed ? "border-danger/40 p-5" : "border-border p-5"}>
               <Text className="font-main text-sm text-text-muted leading-5">
-                {CHARACTER_COPY.emptyRoster}
+                {rosterFailed ? HOME_COPY.rosterFailed : CHARACTER_COPY.emptyRoster}
               </Text>
+
+              {rosterFailed ? (
+                <Button variant="secondary" size="sm" className="mt-3" onPress={reload}>
+                  {HOME_COPY.rosterRetry}
+                </Button>
+              ) : null}
             </Card>
           </Animated.View>
         ) : (

@@ -1,5 +1,5 @@
 import { API_ROUTES, CARD_UPLOAD, PERSONA_COPY } from "@eidolon/config";
-import type { Hono } from "hono";
+import type { Context, Hono } from "hono";
 import type { UserEnv } from "@/auth/guard";
 import {
   addChapter,
@@ -36,6 +36,44 @@ export function readPersonaDraft(body: Record<string, unknown>): PersonaDraft {
   }
 
   return draft as PersonaDraft;
+}
+
+type Picture = { bytes: Buffer; filename: string } | { error: string; status: 400 | 413 };
+
+async function readPicture(c: Context<UserEnv>): Promise<Picture> {
+  const type = c.req.header("content-type") ?? "";
+
+  if (type.includes("application/json")) {
+    const body = (await c.req.json().catch(() => ({}))) as {
+      data?: unknown;
+      filename?: unknown;
+    };
+
+    if (typeof body.data !== "string" || body.data.length === 0) {
+      return { error: "Send the picture as base64 in data.", status: 400 };
+    }
+
+    const bytes = Buffer.from(body.data, "base64");
+    if (bytes.byteLength === 0) return { error: "That picture arrived empty.", status: 400 };
+    if (bytes.byteLength > CARD_UPLOAD.maxBytes) {
+      return { error: "That picture is too big.", status: 413 };
+    }
+
+    return {
+      bytes,
+      filename: typeof body.filename === "string" && body.filename ? body.filename : "photo.png",
+    };
+  }
+
+  const body = await c.req.parseBody().catch(() => null);
+  const file = CARD_UPLOAD.fieldNames
+    .map((field) => body?.[field])
+    .find((value) => value instanceof File) as File | undefined;
+
+  if (!file) return { error: "Send the picture as a file.", status: 400 };
+  if (file.size > CARD_UPLOAD.maxBytes) return { error: "That picture is too big.", status: 413 };
+
+  return { bytes: Buffer.from(await file.arrayBuffer()), filename: file.name || "photo.png" };
 }
 
 export function mountPersonas(app: Hono<UserEnv>): void {
@@ -94,24 +132,17 @@ export function mountPersonas(app: Hono<UserEnv>): void {
       );
     }
 
-    const body = await c.req.parseBody().catch(() => null);
-    const file = CARD_UPLOAD.fieldNames
-      .map((field) => body?.[field])
-      .find((value) => value instanceof File) as File | undefined;
+    const picture = await readPicture(c);
+    if ("error" in picture) return c.json({ error: picture.error }, picture.status);
 
-    if (!file) return c.json({ error: "Send the picture as a file." }, 400);
-    if (file.size > CARD_UPLOAD.maxBytes) return c.json({ error: "That picture is too big." }, 413);
-
-    const bytes = Buffer.from(await file.arrayBuffer());
     const photoUrl = await uploadPersonaPhoto(
       reader.email,
       personaId,
-      file.name || "photo.png",
-      bytes,
+      picture.filename,
+      picture.bytes,
     );
-    const persona = updatePersona(personaId, reader.id, { photoUrl });
 
-    return c.json({ persona });
+    return c.json({ persona: updatePersona(personaId, reader.id, { photoUrl }) });
   });
 
   app.delete(`${base}/:id/photo`, (c) => {

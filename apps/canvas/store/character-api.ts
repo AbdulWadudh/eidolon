@@ -49,14 +49,11 @@ function signal(): AbortSignal {
 export async function fetchCharacters(host: string): Promise<CharacterSummary[]> {
   if (!host) return [];
 
-  try {
-    const res = await authedFetch(charactersUrl(host), { signal: signal() });
-    if (!res.ok) return [];
-    const body = (await res.json()) as { characters: CharacterSummary[] };
-    return body.characters;
-  } catch {
-    return [];
-  }
+  const res = await authedFetch(charactersUrl(host), { signal: signal() });
+  if (!res.ok) throw new Error(`The conductor said ${res.status}.`);
+
+  const body = (await res.json()) as { characters: CharacterSummary[] };
+  return body.characters;
 }
 
 export async function fetchPresets(host: string): Promise<Preset[]> {

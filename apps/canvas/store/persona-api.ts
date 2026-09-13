@@ -1,4 +1,5 @@
 import { apiPath, TIMEOUTS_MS } from "@eidolon/config";
+import { readFileAsBase64 } from "@/lib/local-file";
 import { authedFetch } from "@/store/connection";
 
 export interface PersonaChapter {
@@ -153,13 +154,14 @@ export async function uploadPhoto(
 ): Promise<PhotoResult> {
   if (!host) return { ok: false, error: "Not connected to a conductor." };
 
-  const form = new FormData();
-  form.append("image", { uri: pick.uri, name: pick.name, type: pick.type } as unknown as Blob);
+  const file = await readFileAsBase64(pick.uri);
+  if (!file) return { ok: false, error: "That picture could not be read off the device." };
 
   try {
     const response = await authedFetch(`${host}${BASE}/${personaId}/photo`, {
       method: "POST",
-      body: form,
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ data: file.base64, filename: pick.name, contentType: pick.type }),
       signal: AbortSignal.timeout(TIMEOUTS_MS.generation),
     });
 
