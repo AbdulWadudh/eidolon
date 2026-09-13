@@ -31,10 +31,16 @@ interface Tile {
 
 const TILES: Tile[] = [
   {
-    href: "/(main)/admin/prompts",
-    icon: Book02Icon,
-    title: DASHBOARD_COPY.promptsTitle,
-    blurb: DASHBOARD_COPY.promptsBlurb,
+    href: "/(main)/admin/storage",
+    icon: HardDriveIcon,
+    title: DASHBOARD_COPY.storageTitle,
+    blurb: DASHBOARD_COPY.storageBlurb,
+  },
+  {
+    href: "/(main)/admin/queues",
+    icon: Queue01Icon,
+    title: DASHBOARD_COPY.queuesTitle,
+    blurb: DASHBOARD_COPY.queuesBlurb,
   },
   {
     href: "/(main)/admin/characters",
@@ -55,22 +61,10 @@ const TILES: Tile[] = [
     blurb: DASHBOARD_COPY.healthBlurb,
   },
   {
-    href: "/(main)/admin/queues",
-    icon: Queue01Icon,
-    title: DASHBOARD_COPY.queuesTitle,
-    blurb: DASHBOARD_COPY.queuesBlurb,
-  },
-  {
-    href: "/(main)/admin/storage",
-    icon: HardDriveIcon,
-    title: DASHBOARD_COPY.storageTitle,
-    blurb: DASHBOARD_COPY.storageBlurb,
-  },
-  {
-    href: "/(main)/admin/audit",
-    icon: ClipboardIcon,
-    title: DASHBOARD_COPY.auditTitle,
-    blurb: DASHBOARD_COPY.auditBlurb,
+    href: "/(main)/admin/prompts",
+    icon: Book02Icon,
+    title: DASHBOARD_COPY.promptsTitle,
+    blurb: DASHBOARD_COPY.promptsBlurb,
   },
   {
     href: "/(main)/admin/config",
@@ -83,6 +77,12 @@ const TILES: Tile[] = [
     icon: PaintBoardIcon,
     title: DASHBOARD_COPY.themeTitle,
     blurb: DASHBOARD_COPY.themeBlurb,
+  },
+  {
+    href: "/(main)/admin/audit",
+    icon: ClipboardIcon,
+    title: DASHBOARD_COPY.auditTitle,
+    blurb: DASHBOARD_COPY.auditBlurb,
   },
 ];
 
