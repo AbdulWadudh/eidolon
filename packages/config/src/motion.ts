@@ -4,11 +4,17 @@ export const FIELD_PADDING = {
   multilineTop: 16,
   lineHeightPx: 24,
   basePx: 30,
-  compactHorizontal: 12,
-  compactVertical: 9,
-  compactMultilineTop: 10,
+  compactHorizontal: 14,
+  compactVertical: 11,
+  compactMultilineTop: 13,
   compactLineHeightPx: 17,
-  compactBasePx: 16,
+  compactBasePx: 22,
+} as const;
+
+export const SEGMENTED = {
+  trackPx: 34,
+  padPx: 3,
+  hitSlopPx: 6,
 } as const;
 
 export const GALLERY = {
@@ -26,6 +32,7 @@ export const MEDIA_PREVIEW = {
   imageHeightPx: 180,
   thumbPx: 52,
   loaderBlockPx: 180,
+  loaderChromePx: 260,
   buttonPx: 36,
   lightboxPaddingPx: 16,
 } as const;

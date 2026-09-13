@@ -207,6 +207,7 @@ export {
   MEDIA_PREVIEW,
   PORTRAIT_POLL_MS,
   PRESS_SCALE,
+  SEGMENTED,
   UI_MS,
 } from "./motion";
 export {

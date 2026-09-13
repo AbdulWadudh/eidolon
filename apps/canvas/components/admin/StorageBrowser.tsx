@@ -7,7 +7,14 @@ import {
 } from "@eidolon/config";
 import type { IconSvgElement } from "@hugeicons/react-native";
 import * as React from "react";
-import { ActivityIndicator, ScrollView, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
 import { AdminEmpty } from "@/components/admin/AdminScreen";
 import { revealAt } from "@/components/admin/admin-motion";
@@ -78,6 +85,7 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
   const theme = useResolvedTheme();
   const reduced = useReducedMotion();
   const confirmation = useConfirm();
+  const { height } = useWindowDimensions();
 
   const [view, setView] = React.useState<BrowseView | null>(null);
   const [objects, setObjects] = React.useState<BrowsedObject[]>([]);
@@ -200,7 +208,7 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
           </View>
         )}
 
-        {isBusy ? <ActivityIndicator size="small" color={theme.primary} /> : null}
+        {isBusy && hasLoaded ? <ActivityIndicator size="small" color={theme.primary} /> : null}
 
         <View
           className="h-8 flex-row overflow-hidden rounded-button border"
@@ -338,7 +346,9 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
       {!hasLoaded || (isBusy && objects.length === 0) ? (
         <View
           className="items-center justify-center"
-          style={{ minHeight: MEDIA_PREVIEW.loaderBlockPx }}
+          style={{
+            minHeight: Math.max(MEDIA_PREVIEW.loaderBlockPx, height - MEDIA_PREVIEW.loaderChromePx),
+          }}
         >
           <LoadingState label={DASHBOARD_COPY.storageScanning} fill={false} />
         </View>

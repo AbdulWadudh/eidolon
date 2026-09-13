@@ -29,6 +29,7 @@ import {
   MEDIA_PREVIEW,
   PORTRAIT_POLL_MS,
   PRESS_SCALE,
+  SEGMENTED,
   UI_MS,
 } from "../motion";
 import { VOICE_COPY } from "../voice";
@@ -185,6 +186,13 @@ export const INTERFACE_GROUPS: ConfigGroup[] = [
     name: "GALLERY",
     source: "motion.ts",
     value: GALLERY,
+    bucket: "boot-bound",
+    reason: REASONS.canvasBundled,
+  },
+  {
+    name: "SEGMENTED",
+    source: "motion.ts",
+    value: SEGMENTED,
     bucket: "boot-bound",
     reason: REASONS.canvasBundled,
   },

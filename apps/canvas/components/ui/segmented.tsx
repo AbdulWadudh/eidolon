@@ -1,12 +1,9 @@
-import { EASING_BEZIER, UI_MS } from "@eidolon/config";
+import { EASING_BEZIER, SEGMENTED, UI_MS } from "@eidolon/config";
 import * as React from "react";
 import { type LayoutChangeEvent, Pressable, View } from "react-native";
 import Animated, { cubicBezier, useReducedMotion } from "react-native-reanimated";
 import { select } from "@/services/haptics";
 import { useResolvedTheme } from "@/store/theme-store";
-
-const PADDING = 4;
-const TRACK_HEIGHT = 44;
 
 export interface SegmentedOption<T extends string> {
   value: T;
@@ -36,7 +33,7 @@ export function Segmented<T extends string>({
     0,
     options.findIndex((option) => option.value === value),
   );
-  const track = Math.max(0, width - PADDING * 2);
+  const track = Math.max(0, width - SEGMENTED.padPx * 2);
   const slot = options.length > 0 ? track / options.length : 0;
 
   const onLayout = React.useCallback((event: LayoutChangeEvent) => {
@@ -56,9 +53,10 @@ export function Segmented<T extends string>({
       accessibilityRole="tablist"
       accessibilityLabel={accessibilityLabel}
       onLayout={onLayout}
-      className="flex-row rounded-button border p-1"
+      className="flex-row rounded-button border"
       style={{
-        height: TRACK_HEIGHT,
+        height: SEGMENTED.trackPx,
+        padding: SEGMENTED.padPx,
         backgroundColor: theme.inputSurface,
         borderColor: theme.cardBorder,
       }}
@@ -68,9 +66,9 @@ export function Segmented<T extends string>({
           pointerEvents="none"
           className="absolute rounded-button"
           style={{
-            left: PADDING,
-            top: PADDING,
-            bottom: PADDING,
+            left: SEGMENTED.padPx,
+            top: SEGMENTED.padPx,
+            bottom: SEGMENTED.padPx,
             width: slot,
             backgroundColor: theme.primary,
             transform: [{ translateX: index * slot }],
@@ -87,6 +85,7 @@ export function Segmented<T extends string>({
             accessibilityRole="tab"
             accessibilityLabel={option.label}
             accessibilityState={{ selected: isActive }}
+            hitSlop={{ top: SEGMENTED.hitSlopPx, bottom: SEGMENTED.hitSlopPx }}
             onPress={() => {
               if (isActive) return;
               select();
@@ -97,7 +96,7 @@ export function Segmented<T extends string>({
           >
             <Animated.Text
               numberOfLines={1}
-              className="font-ui-medium text-[12px]"
+              className="font-ui-medium text-[11px]"
               style={{
                 color: isActive ? theme.primaryForeground : theme.textMuted,
                 includeFontPadding: false,
