@@ -240,6 +240,20 @@ export const STORAGE = {
   requiredEnv: ["S3_ENDPOINT", "S3_BUCKET", "S3_ACCESS_KEY", "S3_SECRET_KEY"],
 } as const;
 
+export const STORAGE_SWEEP = {
+  intervalMs: 6 * 60 * 60 * 1000,
+  graceMs: 60 * 60 * 1000,
+  startupDelayMs: 60 * 1000,
+  pageSize: 1000,
+  sources: [
+    { table: "characters", columns: ["avatar_url", "face_url", "background_url"] },
+    { table: "messages", columns: ["audio_url", "image_url"] },
+    { table: "character_portraits", columns: ["url"] },
+    { table: "stages", columns: ["backdrop_url"] },
+    { table: "user", columns: ["image"] },
+  ],
+} as const;
+
 export const DATA_FILES = {
   sqlite: "eidolon.db",
   lancedb: "lancedb",

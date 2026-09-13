@@ -23,6 +23,7 @@ import { createQueueBoard } from "@/queue/board";
 import { closeQueues } from "@/queue/queues";
 import { startWorkers, stopWorkers } from "@/queue/workers";
 import { initStorage } from "@/services/storage";
+import { startStorageSweep } from "@/services/storage-sweep";
 import { websocket } from "@/ws";
 
 export const app = new Hono();
@@ -63,7 +64,9 @@ const { port } = getServerConfig();
 const pairingPayload = generatePairingPayload();
 
 if (!isTestEnv()) {
-  void initStorage();
+  void initStorage().then((ready) => {
+    if (ready) startStorageSweep();
+  });
   startWorkers();
 
   for (const signal of ["SIGINT", "SIGTERM"] as const) {
