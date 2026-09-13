@@ -113,16 +113,15 @@ export default function MainCharactersScreen() {
         </Text>
 
         {}
-        <GlassSurface
-          tint="card"
+        <View
           style={{ flexShrink: 1, minWidth: 0 }}
-          className="mx-2 flex-1 flex-row items-center gap-2 overflow-hidden rounded-button border border-border px-2.5 py-1"
+          className="mx-2.5 flex-1 flex-row items-center gap-2"
         >
-          <View className="h-2 w-2 rounded-full" style={{ backgroundColor: status.color }} />
-          <Text className="font-ui text-xs text-text-muted" numberOfLines={1}>
+          <View className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: status.color }} />
+          <Text className="font-ui text-[11px] text-text-muted" numberOfLines={1}>
             {status.label}
           </Text>
-        </GlassSurface>
+        </View>
 
         {}
         <View className="shrink-0 flex-row items-center gap-2">
@@ -137,7 +136,7 @@ export default function MainCharactersScreen() {
               <AppIcon
                 icon={DashboardSquare01Icon}
                 size={18}
-                color={theme.primary}
+                color={theme.textMuted}
                 strokeWidth={1.6}
               />
             </Pressable>
@@ -150,7 +149,7 @@ export default function MainCharactersScreen() {
             className="items-center justify-center rounded-button p-2 active:bg-card"
             onPress={() => setShowThemeStudio(true)}
           >
-            <AppIcon icon={PaintBoardIcon} size={18} color={theme.primary} strokeWidth={1.6} />
+            <AppIcon icon={PaintBoardIcon} size={18} color={theme.textMuted} strokeWidth={1.6} />
           </Pressable>
 
           <Pressable
@@ -165,7 +164,7 @@ export default function MainCharactersScreen() {
             onPress={() => setShowSettings((prev) => !prev)}
           >
             {account?.name ? (
-              <Text className="font-main-bold text-[13px]" style={{ color: theme.primary }}>
+              <Text className="font-main-bold text-[13px]" style={{ color: theme.textPrimary }}>
                 {account.name.trim().slice(0, 1).toUpperCase()}
               </Text>
             ) : (
@@ -222,7 +221,7 @@ export default function MainCharactersScreen() {
 
         {}
         <View className="flex-row items-center gap-2">
-          <AppIcon icon={SparklesIcon} size={16} color={theme.primary} />
+          <AppIcon icon={SparklesIcon} size={14} color={theme.textMuted} />
           <Text className="font-ui-medium text-xs text-text-muted uppercase tracking-wider">
             {HOME_COPY.whosHere}
           </Text>
@@ -329,7 +328,7 @@ export default function MainCharactersScreen() {
             <View className="flex-row items-center justify-between">
               <View className="flex-1 pr-3">
                 <View className="flex-row items-center gap-2">
-                  <AppIcon icon={SparklesIcon} size={16} color={theme.primary} />
+                  <AppIcon icon={SparklesIcon} size={14} color={theme.textMuted} />
                   <Text className="flex-1 font-main-bold text-sm text-text-primary">
                     {HOME_COPY.typeTitle}
                   </Text>
