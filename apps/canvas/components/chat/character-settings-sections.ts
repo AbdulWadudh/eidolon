@@ -17,7 +17,17 @@ interface SectionSpec {
 
 export const SECTIONS: Record<SectionKey, SectionSpec> = {
   identity: { fields: ["name", "tagline", "greeting"] },
-  mind: { fields: ["personality", "scenario", "rules", "exampleDialogue", "systemPrompt"] },
+  mind: {
+    fields: [
+      "personality",
+      "likes",
+      "dislikes",
+      "scenario",
+      "rules",
+      "exampleDialogue",
+      "systemPrompt",
+    ],
+  },
   voice: { fields: [] },
   misc: { fields: [] },
 };

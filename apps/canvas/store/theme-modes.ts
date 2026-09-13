@@ -47,6 +47,7 @@ export interface ThemePalettes {
 }
 
 export interface CharacterOverrides {
+  mode?: ThemeMode;
   dark?: Partial<ColorTokens>;
   light?: Partial<ColorTokens>;
   shared?: Partial<SharedTokens>;
@@ -126,8 +127,13 @@ export function migratePalettes(raw: unknown): ThemePalettes {
 export function migrateCharacterOverrides(raw: unknown, mode: ThemeMode): CharacterOverrides {
   if (!raw || typeof raw !== "object") return {};
   const value = raw as CharacterOverrides & Partial<ThemeTokens>;
-  if ("dark" in value || "light" in value || "shared" in value) {
-    return { dark: value.dark, light: value.light, shared: value.shared };
+  if ("dark" in value || "light" in value || "shared" in value || "mode" in value) {
+    return {
+      mode: value.mode === "light" || value.mode === "dark" ? value.mode : undefined,
+      dark: value.dark,
+      light: value.light,
+      shared: value.shared,
+    };
   }
 
   const colors = pick(value, COLOR_TOKEN_KEYS);

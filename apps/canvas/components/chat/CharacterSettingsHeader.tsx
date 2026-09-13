@@ -40,9 +40,8 @@ export function CharacterSettingsHeader({
   const barTop = useBarTopInset();
   const theme = useResolvedTheme(characterId);
   const reduced = useReducedMotion();
-  const mode = useThemeStore((state) => state.palettes.mode);
-  const toggleColorMode = useThemeStore((state) => state.toggleColorMode);
-  const isDark = mode === "dark";
+  const setCharacterColorMode = useThemeStore((state) => state.setCharacterColorMode);
+  const isDark = theme.mode === "dark";
   const crop = usableCrop(avatarCrop);
 
   const swap = reduced
@@ -105,7 +104,7 @@ export function CharacterSettingsHeader({
         hitSlop={8}
         onPress={() => {
           tap("light");
-          toggleColorMode();
+          setCharacterColorMode(characterId, isDark ? "light" : "dark");
         }}
         className="items-center justify-center overflow-hidden rounded-button active:bg-card"
         style={{ height: ACTION_PX, width: ACTION_PX }}

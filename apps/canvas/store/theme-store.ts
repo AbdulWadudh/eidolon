@@ -76,9 +76,10 @@ function resolveTheme(
   const cached = byOverride.get(key);
   if (cached) return cached;
 
-  const base = composeTheme(palettes);
+  const mode = overrides?.mode ?? palettes.mode;
+  const base = composeTheme(palettes, mode);
   const merged: ThemeTokens = overrides
-    ? { ...base, ...overrides[palettes.mode], ...overrides.shared }
+    ? { ...base, ...overrides[mode], ...overrides.shared }
     : base;
   byOverride.set(key, merged);
   return merged;
@@ -101,6 +102,8 @@ export interface ThemeStore {
   getDynamicCssVars: (characterId?: string) => Record<string, string>;
 
   setColorMode: (mode: ThemeMode) => void;
+  setCharacterColorMode: (characterId: string, mode: ThemeMode) => void;
+  characterColorMode: (characterId: string) => ThemeMode;
   toggleColorMode: () => void;
   updateGlobalToken: <K extends keyof ThemeTokens>(key: K, value: ThemeTokens[K]) => void;
   updateCharacterToken: <K extends keyof ThemeTokens>(
@@ -167,6 +170,25 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     get().setColorMode(get().palettes.mode === "light" ? "dark" : "light");
   },
 
+  characterColorMode: (characterId) => {
+    const state = get();
+    return state.characterThemes[characterId]?.mode ?? state.palettes.mode;
+  },
+
+  setCharacterColorMode: (characterId, mode) => {
+    set((state) => {
+      const existing = state.characterThemes[characterId] ?? {};
+      if ((existing.mode ?? state.palettes.mode) === mode) return state;
+
+      const characterThemes = {
+        ...state.characterThemes,
+        [characterId]: { ...existing, mode },
+      };
+      schedulePersist(STORAGE_KEYS.CHARACTER_THEMES, characterThemes);
+      return { characterThemes };
+    });
+  },
+
   updateGlobalToken: (key, value) => {
     set((state) => {
       const slot: "shared" | ThemeMode = isSharedToken(key) ? "shared" : state.palettes.mode;
@@ -180,8 +202,9 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
 
   updateCharacterToken: (characterId, key, value) => {
     set((state) => {
-      const slot: "shared" | ThemeMode = isSharedToken(key) ? "shared" : state.palettes.mode;
       const existing = state.characterThemes[characterId] ?? {};
+      const mode = existing.mode ?? state.palettes.mode;
+      const slot: "shared" | ThemeMode = isSharedToken(key) ? "shared" : mode;
       const current = (existing[slot] ?? {}) as Partial<ThemeTokens>;
       if (current[key] === value) return state;
       const characterThemes = {
@@ -196,8 +219,9 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
   resetToken: (key, characterId) => {
     if (characterId) {
       set((state) => {
-        const slot: "shared" | ThemeMode = isSharedToken(key) ? "shared" : state.palettes.mode;
         const existing = state.characterThemes[characterId];
+        const mode = existing?.mode ?? state.palettes.mode;
+        const slot: "shared" | ThemeMode = isSharedToken(key) ? "shared" : mode;
         const slotOverrides = existing?.[slot] as Partial<ThemeTokens> | undefined;
         if (!slotOverrides || !(key in slotOverrides)) return state;
         const updated = { ...slotOverrides };
@@ -238,6 +262,7 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
       const overrides = state.characterThemes[characterId] ?? {};
       const palettes: ThemePalettes = {
         ...state.palettes,
+        mode: overrides.mode ?? state.palettes.mode,
         dark: { ...state.palettes.dark, ...overrides.dark },
         light: { ...state.palettes.light, ...overrides.light },
         shared: { ...state.palettes.shared, ...overrides.shared },

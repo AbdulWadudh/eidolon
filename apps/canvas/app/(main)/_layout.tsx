@@ -1,12 +1,14 @@
 import { Stack } from "expo-router";
+import * as React from "react";
+import { useResolvedTheme } from "@/store/theme-store";
 
 export default function MainLayout() {
-  return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: "#0D0E11" },
-      }}
-    />
+  const theme = useResolvedTheme();
+
+  const screenOptions = React.useMemo(
+    () => ({ headerShown: false, contentStyle: { backgroundColor: theme.canvas } }),
+    [theme.canvas],
   );
+
+  return <Stack screenOptions={screenOptions} />;
 }

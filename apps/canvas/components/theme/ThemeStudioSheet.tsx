@@ -72,6 +72,7 @@ export function ThemeStudioSheet({
   const promoteCharacterToGlobal = useThemeStore((state) => state.promoteCharacterToGlobal);
   const resetGlobalTheme = useThemeStore((state) => state.resetGlobalTheme);
   const setColorMode = useThemeStore((state) => state.setColorMode);
+  const setCharacterColorMode = useThemeStore((state) => state.setCharacterColorMode);
   const confirmation = useConfirm(characterId);
 
   const scopedCharacter =
@@ -127,7 +128,11 @@ export function ThemeStudioSheet({
   );
 
   const characterOverrides = useThemeStore((state) =>
-    scopedCharacter ? state.characterThemes[scopedCharacter.id]?.[state.palettes.mode] : undefined,
+    scopedCharacter
+      ? state.characterThemes[scopedCharacter.id]?.[
+          state.characterThemes[scopedCharacter.id]?.mode ?? state.palettes.mode
+        ]
+      : undefined,
   );
   const characterOverrideKeys = React.useMemo(
     () => Object.keys(characterOverrides ?? {}) as (keyof ThemeTokens)[],
@@ -141,6 +146,10 @@ export function ThemeStudioSheet({
   );
 
   const handleSetColorMode = (mode: "dark" | "light") => {
+    if (scope === "character" && scopedCharacter) {
+      setCharacterColorMode(scopedCharacter.id, mode);
+      return;
+    }
     setColorMode(mode);
   };
 

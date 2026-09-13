@@ -9,7 +9,6 @@ import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useBarTopInset } from "@/lib/bar-inset";
 import { AddCircleIcon, ArrowLeft01Icon, Delete02Icon, UserIcon } from "@/lib/icons";
@@ -122,11 +121,23 @@ export default function PersonasScreen() {
             <ActivityIndicator color={theme.primary} />
           </View>
         ) : personas.length === 0 ? (
-          <Card className="border-border border-dashed p-6">
-            <Text className="text-center font-main text-sm text-text-muted leading-5">
+          <Animated.View
+            entering={reduced ? undefined : FadeInDown.duration(UI_MS.disclosure)}
+            className="items-center gap-3 rounded-card border border-border border-dashed px-6 py-10"
+          >
+            <View
+              className="h-12 w-12 items-center justify-center rounded-full"
+              style={{ backgroundColor: theme.inputSurface }}
+            >
+              <AppIcon icon={UserIcon} size={22} color={theme.textMuted} strokeWidth={1.5} />
+            </View>
+            <Text className="text-center font-main text-[14px] text-text-primary leading-5">
+              {PERSONA_COPY.title}
+            </Text>
+            <Text className="text-center font-ui text-[12px] text-text-muted leading-[17px]">
               {PERSONA_COPY.empty}
             </Text>
-          </Card>
+          </Animated.View>
         ) : (
           personas.map((persona, position) => (
             <Animated.View
