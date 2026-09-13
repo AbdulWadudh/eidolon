@@ -10,11 +10,12 @@ import { STORAGE } from "@eidolon/config";
 import { getStorageConfig, missingStorageConfig, type StorageConfig } from "@eidolon/config/server";
 import sharp from "sharp";
 import { IMAGE_ENCODE } from "@/config";
+import { ownerEmail } from "@/db/owner";
 
 export { getStorageConfig, missingStorageConfig, type StorageConfig };
 
 export function characterKey(characterId: string, folder: string, filename: string): string {
-  return `${STORAGE.characterPrefix}/${characterId}/${folder}/${filename}`;
+  return `${ownerEmail(characterId)}/${STORAGE.characterPrefix}/${characterId}/${folder}/${filename}`;
 }
 
 export function imageKey(characterId: string, filename: string): string {
