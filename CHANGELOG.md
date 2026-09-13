@@ -36,6 +36,30 @@ and publishes it as the GitHub release notes.
 - **Export a character card.** Any character can be written back out as a PNG
   that other apps can read, carrying her affinity, her voice and her stages with
   her.
+- **Tell her who you are.** A persona carries your name, a few lines about you,
+  how you are to talk to, what you do with your time, what you are drawn to and
+  put off by, your pronouns, a picture, and the chapters of your life. Write
+  several and keep one in use everywhere, or pin a different one to a particular
+  character. She reads it, and answers the person in front of her rather than a
+  stranger.
+- **Have yourself drawn.** A persona can be painted from what you wrote, on the
+  same queue as everything else.
+- Reply suggestions are written in your voice now, and the rewrite keeps it.
+- **Characters gained likes and dislikes**, alongside their rules.
+- **Work on the GPU says where it is.** A portrait tells you it is on the GPU
+  now, or next, or third of three, and the number moves as the queue drains.
+  Photos asked for in a chat stay quiet unless you turn them on in admin.
+- A photo asked for in a chat **survives a dropped connection** — it is queued,
+  so closing the app or losing the tunnel no longer costs the picture.
+- **A moment says where it took you**, and the backdrop dissolves into place
+  instead of snapping.
+- A **chat background you set by hand is kept**; moments stop repainting it
+  until you hand it back. Per chat, from the admin sheet.
+- Every text field has **Suggest and Improve**, and the buttons sit inside the
+  box. What they write is informed by the character or persona around them,
+  rather than by nothing at all.
+- A profile picture can take **the whole photo or a part you frame**, and a
+  persona's picture opens full screen with pinch, pan and save to your phone.
 
 ### Fixed
 
@@ -52,6 +76,26 @@ and publishes it as the GitHub release notes.
   more than fits.
 - A voice note built from several sentences showed the wrong length — the first
   sentence's, not the whole note's.
+- **Photos were soft, and then woven through with a pattern.** A refinement pass
+  that had never been switched on was doing both. It is off.
+- A **she/her character came back a man**. The prompt named features with no
+  nouns attached and never said who it was drawing. It does both now, and the
+  same applies to a persona.
+- A **portrait never stopped loading** until you left the screen and came back.
+  Reading a character's look answered 404 — that route had never existed.
+- A new portrait was **stretched** to the shape of the crop drawn on the old one.
+  A crop belongs to its picture and is forgotten with it.
+- In light mode the **status bar stayed dark** and the clock disappeared into it.
+  The app draws behind the bar now, so it takes the colour of whatever is there.
+- The **gallery and the personas screen stayed dark** in light mode, and a screen
+  opened after a chat borrowed that character's colours.
+- **Likes and dislikes never saved.** The database wrote through a list they were
+  not on, and dropped them without complaint.
+- Media is filed **under the account that owns it** rather than at the root.
+- Errors the conductor sent over the socket were **written down and shown to
+  nobody**, so a thing that could not work looked exactly like a thing that was
+  not wired.
+- A message that stayed on screen **took every touch with it**.
 
 ## [1.1.0] - 2026-09-06
 
