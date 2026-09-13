@@ -1,8 +1,7 @@
 import { CHAT_COPY, MIND_COPY } from "@eidolon/config";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
-import { GlassSurface } from "@/components/ui/glass-surface";
 import {
   ArrowRight01Icon,
   Cancel01Icon,
@@ -79,11 +78,7 @@ export function MessageActions({
   );
 
   return (
-    <GlassSurface
-      tint="card"
-      characterId={characterId}
-      className="mt-1 ml-1 flex-row items-center gap-1 self-start overflow-hidden rounded-full border border-border px-1.5"
-    >
+    <View className="mt-1 ml-1 flex-row items-center gap-1 self-start rounded-button border border-border px-1.5">
       {isEditing ? (
         <>
           {button(MIND_COPY.cancel, Cancel01Icon, theme.textMuted, onCancel, true)}
@@ -110,6 +105,6 @@ export function MessageActions({
             : null}
         </>
       )}
-    </GlassSurface>
+    </View>
   );
 }
