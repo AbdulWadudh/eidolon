@@ -1,5 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
+import { characterDefaults, setCharacterDefaults } from "@/db";
 import { createCharacter, getCharacter, listCharacters } from "@/db/characters";
+import {
+  getCharacterAppearance,
+  getCharacterLook,
+  getCharacterPigment,
+  setCharacterAppearance,
+  setCharacterAvatar,
+  setCharacterAvatarCrop,
+  setCharacterBackground,
+  setCharacterFace,
+  setCharacterPigment,
+} from "@/db/look";
 import { getLoreEntries, upsertLoreEntry } from "@/db/lorebook";
 import { app } from "@/index";
 import { loadPrompts } from "@/prompts/store";
@@ -70,6 +82,36 @@ describe("ownership", () => {
 
     expect(getCharacter(created.id)?.rules).toBe("Original");
     expect(getLoreEntries(body.character.id)).toHaveLength(1);
+  });
+
+  it("carries the original's face and backdrop onto the fork", async () => {
+    const created = remember(createCharacter({ name: "Has A Face", ownerId: "another-account" }));
+
+    setCharacterAvatar(created.id, "https://media.test/face.webp");
+    setCharacterAvatarCrop(created.id, { x: 0.1, y: 0.2, size: 0.6 });
+    setCharacterBackground(created.id, "https://media.test/backdrop.webp");
+    setCharacterFace(created.id, "https://media.test/reference.webp");
+    setCharacterPigment(created.id, "#AABBCC");
+    setCharacterAppearance(created.id, "auburn hair, dark shirt");
+    setCharacterDefaults(created.id, 30, "Curious");
+
+    const res = await app.request(`${BASE}/${created.id}`, {
+      method: "PATCH",
+      headers: AUTHED,
+      body: JSON.stringify({ rules: "Changed" }),
+    });
+    const body = (await res.json()) as { character: { id: string } };
+    remember(body.character);
+
+    const look = getCharacterLook(body.character.id);
+    expect(look.avatarUrl).toBe("https://media.test/face.webp");
+    expect(look.avatarCrop).toEqual({ x: 0.1, y: 0.2, size: 0.6 });
+    expect(look.backgroundUrl).toBe("https://media.test/backdrop.webp");
+    expect(look.faceUrl).toBe("https://media.test/reference.webp");
+
+    expect(getCharacterPigment(body.character.id)).toBe("#AABBCC");
+    expect(getCharacterAppearance(body.character.id)).toBe("auburn hair, dark shirt");
+    expect(characterDefaults(body.character.id).score).toBe(30);
   });
 
   it("tells the caller whether an edit would change or fork a character", async () => {

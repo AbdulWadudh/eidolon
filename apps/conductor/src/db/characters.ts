@@ -246,12 +246,23 @@ export function setPublic(id: string, isPublic: boolean): CharacterCard | null {
   return getCharacter(id);
 }
 
+const AUTHORED_COLUMNS = {
+  avatarUrl: characters.avatarUrl,
+  avatarCrop: characters.avatarCrop,
+  faceUrl: characters.faceUrl,
+  backgroundUrl: characters.backgroundUrl,
+  themePigment: characters.themePigment,
+  appearance: characters.appearance,
+  defaultAffinity: characters.defaultAffinity,
+  defaultMood: characters.defaultMood,
+};
+
 export function forkCharacter(
   source: CharacterCard,
   ownerId: string,
   patch: Partial<Omit<CharacterCard, "id">>,
 ): CharacterCard {
-  return createCharacter({
+  const created = createCharacter({
     ...source,
     ...patch,
     name: patch.name ?? source.name,
@@ -259,6 +270,17 @@ export function forkCharacter(
     isPublic: false,
     forkedFrom: source.id,
   });
+
+  const authored = db
+    .select(AUTHORED_COLUMNS)
+    .from(characters)
+    .where(eq(characters.id, source.id))
+    .get();
+
+  if (!authored) return created;
+
+  db.update(characters).set(authored).where(eq(characters.id, created.id)).run();
+  return created;
 }
 
 export function deleteCharacter(id: string): boolean {
