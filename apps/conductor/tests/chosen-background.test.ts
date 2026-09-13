@@ -4,6 +4,8 @@ import {
   getCharacterLook,
   hasChosenBackground,
   setBackgroundChosen,
+  setCharacterAvatar,
+  setCharacterAvatarCrop,
   setCharacterBackground,
   setStageBackground,
 } from "@/db/look";
@@ -84,5 +86,29 @@ describe("who paints the background for a chat", () => {
     setBackgroundChosen(id, true);
 
     expect(getCharacterLook(id).backgroundChosen).toBe(true);
+  });
+});
+
+describe("a crop belongs to the picture it was drawn on", () => {
+  it("is forgotten when a different picture takes its place", () => {
+    const id = fresh("crop probe");
+
+    setCharacterAvatar(id, "https://example.com/first.webp");
+    setCharacterAvatarCrop(id, { cx: 0.5, cy: 0.4, widthRatio: 1.4, heightRatio: 2 });
+    expect(getCharacterLook(id).avatarCrop).not.toBeNull();
+
+    setCharacterAvatar(id, "https://example.com/second.webp");
+
+    expect(getCharacterLook(id).avatarCrop).toBeNull();
+    expect(getCharacterLook(id).avatarUrl).toBe("https://example.com/second.webp");
+  });
+
+  it("survives while the picture stays the same", () => {
+    const id = fresh("crop kept probe");
+
+    setCharacterAvatar(id, "https://example.com/only.webp");
+    setCharacterAvatarCrop(id, { cx: 0.5, cy: 0.4, widthRatio: 1.4, heightRatio: 2 });
+
+    expect(getCharacterLook(id).avatarCrop).not.toBeNull();
   });
 });

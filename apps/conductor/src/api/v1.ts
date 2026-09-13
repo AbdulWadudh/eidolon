@@ -191,6 +191,11 @@ v1.delete(`${API_ROUTES.characters}/:id/messages/:messageId`, (c) => {
   return c.json({ ok: true });
 });
 
+v1.get(`${API_ROUTES.characters}/:id/look`, (c) => {
+  const characterId = c.req.param("id");
+  return c.json({ character: { id: characterId, ...getCharacterLook(characterId) } });
+});
+
 v1.patch(`${API_ROUTES.characters}/:id/look`, async (c) => {
   const characterId = c.req.param("id");
   const body = (await c.req.json().catch(() => ({}))) as {

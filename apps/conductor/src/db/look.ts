@@ -81,7 +81,7 @@ export function getCharacterAvatar(characterId: string): string | null {
 }
 
 export function setCharacterAvatar(characterId: string, avatarUrl: string): void {
-  write(characterId, { avatarUrl });
+  write(characterId, { avatarUrl, avatarCrop: null });
 }
 
 export function setCharacterPigment(characterId: string, pigment: string | null): void {
