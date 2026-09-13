@@ -5,6 +5,7 @@ import {
   QUEUE_LOCK,
   QUEUE_NAMES,
   QUEUE_PREFIXES,
+  TIMEOUTS_MS,
 } from "@eidolon/config";
 import { type Job, Worker } from "bullmq";
 import { PORTRAIT, STAGE } from "@/config";
@@ -16,6 +17,7 @@ import { getPersona, updatePersona } from "@/db/personas";
 import { addPortrait } from "@/db/portraits";
 import { saveStageBackdrop } from "@/db/stages";
 import { queueConnection } from "@/queue/connection";
+import { announceQueuePlaces } from "@/queue/queue-place";
 import {
   type ChatPhotoJob,
   type ChronicleSummaryJob,
@@ -36,7 +38,7 @@ import { ComfyUnavailableError, generateImage } from "@/services/comfyui";
 import { composeAppearance, describeAppearance, describePersonaLook } from "@/services/photo-look";
 import { ASPECT_FOR, formatPhotoScene, paintSelfie } from "@/services/selfie";
 import { isStorageConnected, uploadImage, uploadPersonaPhoto } from "@/services/storage";
-import { broadcastToCharacter } from "@/ws/registry";
+import { broadcastToCharacter, broadcastToReader } from "@/ws/registry";
 
 const NEWLINE = String.fromCharCode(10);
 
@@ -100,17 +102,7 @@ async function renderPortrait(data: PortraitJob): Promise<void> {
     pronouns: card.pronouns,
   });
 
-  const described = [
-    pronounsFor(card.pronouns).figure,
-    look.age,
-    look.face,
-    look.eyes,
-    look.hair,
-    look.skin,
-    look.build,
-  ]
-    .filter((part) => part.trim().length > 0)
-    .join(", ");
+  const described = composeAppearance(look, "", pronounsFor(card.pronouns).figure);
 
   const prompt = [described, data.prompt.trim(), PORTRAIT.framing]
     .filter((part) => part.length > 0)
@@ -219,12 +211,15 @@ async function renderPersonaPortrait(data: PersonaPortraitJob): Promise<void> {
   if (!persona) throw new Error(`Persona "${data.personaId}" is gone.`);
 
   const reader = readerEmail(data.userId);
-  const look = await describePersonaLook({
-    name: persona.name,
-    about: personaBrief(persona),
-    extra: data.extra,
-    pronouns: persona.pronouns,
-  });
+  const look = await describePersonaLook(
+    {
+      name: persona.name,
+      about: personaBrief(persona),
+      extra: data.extra,
+      pronouns: persona.pronouns,
+    },
+    AbortSignal.timeout(TIMEOUTS_MS.generation),
+  );
 
   const prompt = [
     composeAppearance(look, "", pronounsFor(persona.pronouns).figure),
@@ -243,6 +238,11 @@ async function renderPersonaPortrait(data: PersonaPortraitJob): Promise<void> {
   );
 
   updatePersona(data.personaId, data.userId, { photoUrl });
+
+  broadcastToReader(data.userId, {
+    type: "persona_updated",
+    payload: { persona_id: data.personaId, photo_url: photoUrl },
+  });
 }
 
 export async function processGpuJob(job: GpuJob): Promise<void> {
@@ -279,7 +279,12 @@ export function createGpuWorker(): Worker<GpuJobData, void, GpuJobName> {
     maxStalledCount: QUEUE_LOCK.maxStalledCount,
   });
 
+  worker.on("completed", () => {
+    void announceQueuePlaces();
+  });
+
   worker.on("failed", (job, error) => {
+    void announceQueuePlaces();
     console.error(`[queue:gpu] ${job?.name ?? "job"} ${job?.id ?? "?"} failed: ${error.message}`);
   });
 
