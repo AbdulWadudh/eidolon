@@ -68,6 +68,7 @@ export interface ChatStore {
   rerollSuggestions: (characterId: string) => void;
   selectSuggestion: (suggestion: string) => void;
   enhanceInput: (characterId: string) => void;
+  sendVoiceNote: (characterId: string, base64: string, format: string) => void;
   revertEnhance: () => void;
   interrupt: (characterId: string) => void;
   regenerateReply: (characterId: string) => void;

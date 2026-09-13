@@ -29,6 +29,13 @@
       "when": 1789329326839,
       "tag": "0003_personas",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1789332606664,
+      "tag": "0004_background_chosen",
+      "breakpoints": true
     }
   ]
 }

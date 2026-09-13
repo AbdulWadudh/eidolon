@@ -58,6 +58,7 @@ export interface InputToolbarProps {
   characterId?: string;
   suggestionsOpen?: boolean;
   moodActive?: boolean;
+  isRecording?: boolean;
   canEnhance?: boolean;
   isEnhancing?: boolean;
   revertSteps?: number;
@@ -115,6 +116,7 @@ export function InputToolbar({
   characterId,
   suggestionsOpen,
   moodActive = false,
+  isRecording = false,
   canEnhance = false,
   isEnhancing = false,
   revertSteps = 0,
@@ -131,8 +133,14 @@ export function InputToolbar({
             key={spec.action}
             spec={spec}
             color={theme.textMuted}
-            active={spec.action === "mood" ? moodActive : undefined}
-            activeColor={theme.primary}
+            active={
+              spec.action === "mood"
+                ? moodActive
+                : spec.action === "voice"
+                  ? isRecording
+                  : undefined
+            }
+            activeColor={spec.action === "voice" && isRecording ? theme.danger : theme.primary}
             onAction={onAction}
           />
         ))}

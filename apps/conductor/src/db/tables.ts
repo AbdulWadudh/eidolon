@@ -41,6 +41,7 @@ export const characters = sqliteTable("characters", {
   likes: text(),
   dislikes: text(),
   personaId: text("persona_id"),
+  backgroundChosen: integer("background_chosen").default(0),
 });
 
 export const messages = sqliteTable(

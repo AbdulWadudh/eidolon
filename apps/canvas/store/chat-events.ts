@@ -7,6 +7,7 @@ import {
   isLiveSentence,
 } from "./chat-messages";
 import { type ChatSetter, HEARTBEAT_DETAIL } from "./chat-types";
+import { useToastStore } from "./toast-store";
 
 export function reduceServerMessage(
   msg: ServerMessage,
@@ -189,6 +190,10 @@ export function reduceServerMessage(
         isSynthesizingAudio: false,
         lastError: source.message,
       }));
+
+      if (typeof source.message === "string" && source.message.length > 0) {
+        useToastStore.getState().notify(source.message, "bad");
+      }
       break;
     }
 

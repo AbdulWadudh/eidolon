@@ -16,6 +16,7 @@ export interface InputDockProps {
   characterId: string;
   suggestionsOpen?: boolean;
   moodActive?: boolean;
+  isRecording?: boolean;
   isEnhancing?: boolean;
   revertSteps?: number;
   inputRef?: React.RefObject<TextInput | null>;
@@ -31,6 +32,7 @@ export function InputDock({
   characterId,
   suggestionsOpen,
   moodActive = false,
+  isRecording = false,
   isEnhancing = false,
   revertSteps = 0,
   inputRef,
@@ -100,6 +102,7 @@ export function InputDock({
         characterId={characterId}
         suggestionsOpen={suggestionsOpen}
         moodActive={moodActive}
+        isRecording={isRecording}
         canEnhance={canSend}
         isEnhancing={isEnhancing}
         revertSteps={revertSteps}

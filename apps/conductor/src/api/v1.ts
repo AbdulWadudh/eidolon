@@ -8,7 +8,7 @@ import { applyAffinityOverride, buildMindView } from "@/api/mind";
 import { mountPersonas } from "@/api/personas";
 import { mountVoices } from "@/api/voices";
 import { accountFor, requireOwner, requireUser, type UserEnv } from "@/auth/guard";
-import { AFFINITY, TRANSCRIPT } from "@/config";
+import { AFFINITY, STAGE, TRANSCRIPT } from "@/config";
 import {
   appendMessage,
   checkDatabaseHealth,
@@ -28,6 +28,7 @@ import {
 } from "@/db/chronicles";
 import {
   getCharacterLook,
+  hasChosenBackground,
   setCharacterAvatar,
   setCharacterAvatarCrop,
   setCharacterBackground,
@@ -139,6 +140,11 @@ v1.delete(`${API_ROUTES.prompts}/:key`, async (c) => {
   }
 });
 
+function backdropWins(characterId: string): boolean {
+  if (STAGE.backdropOverridesChosenBackground) return true;
+  return !hasChosenBackground(characterId);
+}
+
 function openingTranscript(characterId: string, userId: string) {
   const transcript = getTranscript(characterId, userId, TRANSCRIPT.pageSize);
   if (transcript.length > 0) return transcript;
@@ -174,7 +180,9 @@ v1.get(`${API_ROUTES.characters}/:id/messages`, (c) => {
       name: card.name,
       ...mind,
       ...look,
-      backgroundUrl: scene?.backdropUrl ?? look.backgroundUrl,
+      backgroundUrl: backdropWins(characterId)
+        ? (scene?.backdropUrl ?? look.backgroundUrl)
+        : (look.backgroundUrl ?? scene?.backdropUrl),
     },
     messages: openingTranscript(characterId, userId),
   });

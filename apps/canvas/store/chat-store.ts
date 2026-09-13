@@ -104,6 +104,21 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     sendMessage({ type: "enhance_message", character_id: characterId, text: draft });
   },
 
+  sendVoiceNote: (characterId, base64, format) => {
+    if (base64.length === 0) return;
+
+    set({ isStreaming: true, activeStatus: "thinking", statusDetail: null });
+    sendMessage({
+      type: "voice_input",
+      character_id: characterId,
+      format,
+      data: base64,
+      allow_search: true,
+      user_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+      live_voice: false,
+    });
+  },
+
   revertEnhance: () => {
     const history = get().enhanceHistory;
     const previous = history.at(-1);

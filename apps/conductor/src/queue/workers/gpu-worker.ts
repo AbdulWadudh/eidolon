@@ -10,7 +10,7 @@ import { type Job, Worker } from "bullmq";
 import { PORTRAIT, STAGE } from "@/config";
 import { appendMessage, getCharacterCard, getRecentMessages, setMessageImage } from "@/db";
 import { appendChronicle, nextChapterIndex } from "@/db/chronicles";
-import { setCharacterAvatar, setCharacterFace } from "@/db/look";
+import { hasChosenBackground, setCharacterAvatar, setCharacterFace } from "@/db/look";
 import { addPortrait } from "@/db/portraits";
 import { saveStageBackdrop } from "@/db/stages";
 import { queueConnection } from "@/queue/connection";
@@ -57,11 +57,14 @@ async function renderStageBackdrop(data: StageBackdropJob): Promise<void> {
   );
   const stage = saveStageBackdrop(data.characterId, data.userId, data.stageName, backdropUrl);
 
+  const keepsTheirOwn =
+    !STAGE.backdropOverridesChosenBackground && hasChosenBackground(data.characterId);
+
   broadcastToCharacter(data.characterId, data.userId, {
     type: "stage_shift",
     payload: {
       location_name: stage.name,
-      backdrop_url: backdropUrl,
+      backdrop_url: keepsTheirOwn ? null : backdropUrl,
       lighting_tint: stage.lightingTint,
       soundscape_stems: stage.soundscapeStems,
     },

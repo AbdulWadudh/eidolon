@@ -51,7 +51,19 @@ export function setCharacterFace(characterId: string, faceUrl: string | null): v
 }
 
 export function setCharacterBackground(characterId: string, backgroundUrl: string | null): void {
+  write(characterId, { backgroundUrl, backgroundChosen: backgroundUrl ? 1 : 0 });
+}
+
+export function setStageBackground(characterId: string, backgroundUrl: string | null): void {
   write(characterId, { backgroundUrl });
+}
+
+export function hasChosenBackground(characterId: string): boolean {
+  return (
+    field<{ backgroundChosen: number | null }>(characterId, {
+      backgroundChosen: characters.backgroundChosen,
+    })?.backgroundChosen === 1
+  );
 }
 
 export function getCharacterAvatar(characterId: string): string | null {
