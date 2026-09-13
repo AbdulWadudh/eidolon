@@ -91,5 +91,4 @@ export const STAGE = {
   defaultLightingTint: "#F08C00",
   defaultSoundscapeStems: [] as readonly string[],
   backdropFileExtension: "webp",
-  backdropOverridesChosenBackground: false,
 } as const;

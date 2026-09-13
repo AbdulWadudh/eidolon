@@ -8,6 +8,7 @@ export interface CharacterLook {
   backgroundUrl: string | null;
   faceUrl: string | null;
   outfit: string | null;
+  backgroundChosen: boolean;
 }
 
 function field<T>(characterId: string, column: Parameters<typeof db.select>[0]): T | undefined {
@@ -28,6 +29,7 @@ export function getCharacterLook(characterId: string): CharacterLook {
       backgroundUrl: characters.backgroundUrl,
       faceUrl: characters.faceUrl,
       outfit: characters.outfit,
+      backgroundChosen: characters.backgroundChosen,
     })
     .from(characters)
     .where(eq(characters.id, characterId))
@@ -39,6 +41,7 @@ export function getCharacterLook(characterId: string): CharacterLook {
     backgroundUrl: row?.backgroundUrl ?? null,
     faceUrl: row?.faceUrl ?? null,
     outfit: row?.outfit ?? null,
+    backgroundChosen: row?.backgroundChosen === 1,
   };
 }
 
@@ -52,6 +55,10 @@ export function setCharacterFace(characterId: string, faceUrl: string | null): v
 
 export function setCharacterBackground(characterId: string, backgroundUrl: string | null): void {
   write(characterId, { backgroundUrl, backgroundChosen: backgroundUrl ? 1 : 0 });
+}
+
+export function setBackgroundChosen(characterId: string, chosen: boolean): void {
+  write(characterId, { backgroundChosen: chosen ? 1 : 0 });
 }
 
 export function setStageBackground(characterId: string, backgroundUrl: string | null): void {

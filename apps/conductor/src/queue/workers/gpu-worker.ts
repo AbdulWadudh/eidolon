@@ -57,8 +57,7 @@ async function renderStageBackdrop(data: StageBackdropJob): Promise<void> {
   );
   const stage = saveStageBackdrop(data.characterId, data.userId, data.stageName, backdropUrl);
 
-  const keepsTheirOwn =
-    !STAGE.backdropOverridesChosenBackground && hasChosenBackground(data.characterId);
+  const keepsTheirOwn = hasChosenBackground(data.characterId);
 
   broadcastToCharacter(data.characterId, data.userId, {
     type: "stage_shift",

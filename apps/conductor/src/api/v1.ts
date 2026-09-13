@@ -8,7 +8,7 @@ import { applyAffinityOverride, buildMindView } from "@/api/mind";
 import { mountPersonas } from "@/api/personas";
 import { mountVoices } from "@/api/voices";
 import { accountFor, requireOwner, requireUser, type UserEnv } from "@/auth/guard";
-import { AFFINITY, STAGE, TRANSCRIPT } from "@/config";
+import { AFFINITY, TRANSCRIPT } from "@/config";
 import {
   appendMessage,
   checkDatabaseHealth,
@@ -29,6 +29,7 @@ import {
 import {
   getCharacterLook,
   hasChosenBackground,
+  setBackgroundChosen,
   setCharacterAvatar,
   setCharacterAvatarCrop,
   setCharacterBackground,
@@ -140,11 +141,6 @@ v1.delete(`${API_ROUTES.prompts}/:key`, async (c) => {
   }
 });
 
-function backdropWins(characterId: string): boolean {
-  if (STAGE.backdropOverridesChosenBackground) return true;
-  return !hasChosenBackground(characterId);
-}
-
 function openingTranscript(characterId: string, userId: string) {
   const transcript = getTranscript(characterId, userId, TRANSCRIPT.pageSize);
   if (transcript.length > 0) return transcript;
@@ -180,9 +176,9 @@ v1.get(`${API_ROUTES.characters}/:id/messages`, (c) => {
       name: card.name,
       ...mind,
       ...look,
-      backgroundUrl: backdropWins(characterId)
-        ? (scene?.backdropUrl ?? look.backgroundUrl)
-        : (look.backgroundUrl ?? scene?.backdropUrl),
+      backgroundUrl: hasChosenBackground(characterId)
+        ? (look.backgroundUrl ?? scene?.backdropUrl)
+        : (scene?.backdropUrl ?? look.backgroundUrl),
     },
     messages: openingTranscript(characterId, userId),
   });
@@ -203,6 +199,7 @@ v1.patch(`${API_ROUTES.characters}/:id/look`, async (c) => {
     backgroundUrl?: string | null;
     faceUrl?: string | null;
     outfit?: string | null;
+    backgroundChosen?: boolean;
   };
 
   if (typeof body.avatarUrl === "string" && body.avatarUrl.length > 0) {
@@ -221,6 +218,9 @@ v1.patch(`${API_ROUTES.characters}/:id/look`, async (c) => {
   }
   if (body.outfit !== undefined) {
     setCharacterOutfit(characterId, body.outfit?.trim() || null);
+  }
+  if (typeof body.backgroundChosen === "boolean") {
+    setBackgroundChosen(characterId, body.backgroundChosen);
   }
 
   return c.json({ character: { id: characterId, ...getCharacterLook(characterId) } });

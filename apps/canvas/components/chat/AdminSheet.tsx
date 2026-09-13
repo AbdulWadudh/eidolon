@@ -7,12 +7,11 @@ import { PressableScale } from "@/components/common/pressable-scale";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { SwitchRow } from "@/components/ui/switch";
 import { Cancel01Icon } from "@/lib/icons";
-import { fetchConfig, saveConfigValue } from "@/store/admin-api";
 import { useAdminStore } from "@/store/admin-store";
-import { useIsOwner } from "@/store/auth-store";
+import { saveLook } from "@/store/chat-photos";
+import { useChatStore } from "@/store/chat-store";
 import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme } from "@/store/theme-store";
-import { useToastStore } from "@/store/toast-store";
 
 export interface AdminSheetProps {
   isOpen: boolean;
@@ -29,45 +28,15 @@ export function AdminSheet({ isOpen, characterId, onClose }: AdminSheetProps) {
   const setEditAnyMessage = useAdminStore((state) => state.setEditAnyMessage);
   const setSpeakAnyMessage = useAdminStore((state) => state.setSpeakAnyMessage);
 
-  const isOwner = useIsOwner();
   const serverHost = useConnectionStore((state) => state.serverHost);
-  const sessionToken = useConnectionStore((state) => state.sessionToken);
-  const [momentRepaints, setMomentRepaints] = React.useState<boolean | null>(null);
+  const look = useChatStore((state) => state.characterLook);
+  const momentsPaint = look.backgroundChosen !== true;
 
-  React.useEffect(() => {
-    if (!isOpen || !isOwner || !serverHost || !sessionToken) return;
-
-    let live = true;
-    void fetchConfig(serverHost, sessionToken)
-      .then((view) => {
-        if (!live) return;
-        const setting = view.settings.find(
-          (entry) => entry.path === ADMIN_COPY.momentBackgroundPath,
-        );
-        setMomentRepaints(setting?.value === true);
-      })
-      .catch(() => undefined);
-
-    return () => {
-      live = false;
-    };
-  }, [isOpen, isOwner, serverHost, sessionToken]);
-
-  const setMomentBackground = React.useCallback(
+  const setMomentsPaint = React.useCallback(
     (enabled: boolean) => {
-      setMomentRepaints(enabled);
-
-      void saveConfigValue(
-        serverHost,
-        sessionToken,
-        ADMIN_COPY.momentBackgroundPath,
-        enabled,
-      ).catch(() => {
-        setMomentRepaints(!enabled);
-        useToastStore.getState().notify(ADMIN_COPY.ownerOnly, "bad");
-      });
+      void saveLook(serverHost, characterId, { backgroundChosen: !enabled });
     },
-    [serverHost, sessionToken],
+    [serverHost, characterId],
   );
 
   return (
@@ -125,16 +94,14 @@ export function AdminSheet({ isOpen, characterId, onClose }: AdminSheetProps) {
               accessibilityLabel={ADMIN_COPY.speakAnyLabel}
             />
 
-            {isOwner && momentRepaints !== null ? (
-              <SwitchRow
-                characterId={characterId}
-                label={ADMIN_COPY.momentBackgroundLabel}
-                hint={ADMIN_COPY.momentBackgroundHint}
-                value={momentRepaints}
-                onValueChange={setMomentBackground}
-                accessibilityLabel={ADMIN_COPY.momentBackgroundLabel}
-              />
-            ) : null}
+            <SwitchRow
+              characterId={characterId}
+              label={ADMIN_COPY.momentBackgroundLabel}
+              hint={ADMIN_COPY.momentBackgroundHint}
+              value={momentsPaint}
+              onValueChange={setMomentsPaint}
+              accessibilityLabel={ADMIN_COPY.momentBackgroundLabel}
+            />
           </View>
         </Animated.View>
       </Animated.View>

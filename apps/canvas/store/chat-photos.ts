@@ -17,6 +17,7 @@ export interface CharacterLook {
   backgroundUrl: string | null;
   faceUrl: string | null;
   outfit: string | null;
+  backgroundChosen?: boolean;
 }
 
 export interface LookPatch {
@@ -25,6 +26,7 @@ export interface LookPatch {
   backgroundUrl?: string | null;
   faceUrl?: string | null;
   outfit?: string | null;
+  backgroundChosen?: boolean;
 }
 
 export async function fetchLook(host: string, characterId: string): Promise<CharacterLook | null> {
