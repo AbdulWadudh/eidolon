@@ -22,11 +22,12 @@ interface Row {
   seq: number;
 }
 
-const sources = (characterId: string) => sql`
+const sources = (characterId: string, userId: string) => sql`
   SELECT m.id AS id, m.image_url AS url, m.image_caption AS caption,
          'photo' AS kind, m.created_at AS created_at, m.rowid AS seq
     FROM messages m
-   WHERE m.character_id = ${characterId} AND m.image_url IS NOT NULL AND m.image_url != ''
+   WHERE m.character_id = ${characterId} AND m.user_id = ${userId}
+     AND m.image_url IS NOT NULL AND m.image_url != ''
   UNION ALL
   SELECT p.id, p.url, p.prompt, 'portrait', p.created_at, p.rowid
     FROM character_portraits p
@@ -48,12 +49,17 @@ function currentAvatar(characterId: string): string | null {
   );
 }
 
-export function listGallery(characterId: string, limit: number, offset = 0): GalleryImage[] {
+export function listGallery(
+  characterId: string,
+  userId: string,
+  limit: number,
+  offset = 0,
+): GalleryImage[] {
   const avatar = currentAvatar(characterId);
 
   return db
     .all<Row>(
-      sql`SELECT * FROM (${sources(characterId)})
+      sql`SELECT * FROM (${sources(characterId, userId)})
           ORDER BY created_at DESC, seq DESC, id DESC
           LIMIT ${limit} OFFSET ${offset}`,
     )
@@ -67,9 +73,9 @@ export function listGallery(characterId: string, limit: number, offset = 0): Gal
     }));
 }
 
-export function countGallery(characterId: string): number {
+export function countGallery(characterId: string, userId: string): number {
   const [row] = db.all<{ total: number }>(
-    sql`SELECT COUNT(*) AS total FROM (${sources(characterId)})`,
+    sql`SELECT COUNT(*) AS total FROM (${sources(characterId, userId)})`,
   );
 
   return row?.total ?? 0;

@@ -6,16 +6,17 @@ import { setCharacterAvatar, setCharacterFace } from "@/db/look";
 import { addPortrait, listPortraits } from "@/db/portraits";
 import { app } from "@/index";
 import { AUTHED, BASE, remember, wipe } from "./support/characters";
+import { TEST_OWNER_ID } from "./support/session";
 
 const TEST_USER = "user:gallery";
 
 afterEach(wipe);
 
-function withPhotos(name: string, count: number): string {
+function withPhotos(name: string, count: number, reader: string = TEST_USER): string {
   const character = remember(createCharacter({ name }));
 
   for (let index = 0; index < count; index += 1) {
-    const messageId = appendMessage(character.id, "assistant", `line ${index}`, TEST_USER);
+    const messageId = appendMessage(character.id, "assistant", `line ${index}`, reader);
     setMessageImage(
       messageId,
       `https://media.test/${character.id}-${index}.png`,
@@ -27,22 +28,42 @@ function withPhotos(name: string, count: number): string {
 }
 
 describe("what the gallery collects", () => {
+  it("keeps one reader's photos out of another reader's gallery", () => {
+    const character = remember(createCharacter({ name: "Shared Character", isPublic: true }));
+
+    const mine = appendMessage(character.id, "assistant", "for me", TEST_USER);
+    setMessageImage(mine, "https://media.test/mine.png", "mine");
+
+    const theirs = appendMessage(character.id, "assistant", "for them", "user:somebody-else");
+    setMessageImage(theirs, "https://media.test/theirs.png", "theirs");
+
+    const seen = listGallery(character.id, TEST_USER, 10);
+    const urls = seen.map((image) => image.url);
+
+    expect(urls).toContain("https://media.test/mine.png");
+    expect(urls).not.toContain("https://media.test/theirs.png");
+    expect(countGallery(character.id, TEST_USER)).toBe(1);
+
+    const stranger = listGallery(character.id, "user:nobody", 10);
+    expect(stranger).toHaveLength(0);
+  });
+
   it("finds every photo she sent, newest first", () => {
     const id = withPhotos("Gallery Photos", 3);
 
-    const images = listGallery(id, 10);
+    const images = listGallery(id, TEST_USER, 10);
     expect(images).toHaveLength(3);
     expect(images.every((image) => image.kind === "photo")).toBe(true);
     expect(images[0]?.caption).toBe("caption 2");
-    expect(countGallery(id)).toBe(3);
+    expect(countGallery(id, TEST_USER)).toBe(3);
   });
 
   it("ignores a message that carries no picture", () => {
     const character = remember(createCharacter({ name: "Gallery Talk Only" }));
     appendMessage(character.id, "assistant", "just talking", TEST_USER);
 
-    expect(listGallery(character.id, 10)).toHaveLength(0);
-    expect(countGallery(character.id)).toBe(0);
+    expect(listGallery(character.id, TEST_USER, 10)).toHaveLength(0);
+    expect(countGallery(character.id, TEST_USER)).toBe(0);
   });
 
   it("includes her portrait and her backdrops alongside the photos", () => {
@@ -53,11 +74,11 @@ describe("what the gallery collects", () => {
       .query("INSERT INTO stages (id, character_id, name, backdrop_url) VALUES (?1, ?2, ?3, ?4)")
       .run(`${id}-stage`, id, "The kitchen", "https://media.test/backdrop.png");
 
-    const kinds = listGallery(id, 10).map((image) => image.kind);
+    const kinds = listGallery(id, TEST_USER, 10).map((image) => image.kind);
     expect(kinds).toContain("photo");
     expect(kinds).toContain("portrait");
     expect(kinds).toContain("backdrop");
-    expect(countGallery(id)).toBe(3);
+    expect(countGallery(id, TEST_USER)).toBe(3);
   });
 
   it("does not list the same picture twice when it is both avatar and face", () => {
@@ -67,7 +88,7 @@ describe("what the gallery collects", () => {
     setCharacterAvatar(character.id, "https://media.test/one.png");
     setCharacterFace(character.id, "https://media.test/one.png");
 
-    expect(countGallery(character.id)).toBe(1);
+    expect(countGallery(character.id, TEST_USER)).toBe(1);
   });
 
   it("keeps a portrait that is no longer in use", () => {
@@ -78,7 +99,7 @@ describe("what the gallery collects", () => {
     addPortrait(character.id, "https://media.test/second.png", null);
     setCharacterAvatar(character.id, "https://media.test/second.png");
 
-    const portraits = listGallery(character.id, 10).filter((i) => i.kind === "portrait");
+    const portraits = listGallery(character.id, TEST_USER, 10).filter((i) => i.kind === "portrait");
     expect(portraits).toHaveLength(2);
     expect(portraits.map((i) => i.url)).toContain("https://media.test/first.png");
     expect(listPortraits(character.id)).toHaveLength(2);
@@ -90,7 +111,7 @@ describe("what the gallery collects", () => {
     addPortrait(character.id, "https://media.test/new.png", null);
     setCharacterAvatar(character.id, "https://media.test/new.png");
 
-    const images = listGallery(character.id, 10);
+    const images = listGallery(character.id, TEST_USER, 10);
     expect(images.find((i) => i.url.endsWith("new.png"))?.isAvatar).toBe(true);
     expect(images.find((i) => i.url.endsWith("old.png"))?.isAvatar).toBe(false);
   });
@@ -99,17 +120,19 @@ describe("what the gallery collects", () => {
     const mine = withPhotos("Gallery Mine", 2);
     const theirs = withPhotos("Gallery Theirs", 5);
 
-    expect(countGallery(mine)).toBe(2);
-    expect(countGallery(theirs)).toBe(5);
-    expect(listGallery(mine, 10).every((image) => image.url.includes("gallery-mine"))).toBe(true);
+    expect(countGallery(mine, TEST_USER)).toBe(2);
+    expect(countGallery(theirs, TEST_USER)).toBe(5);
+    expect(
+      listGallery(mine, TEST_USER, 10).every((image) => image.url.includes("gallery-mine")),
+    ).toBe(true);
   });
 
   it("pages without repeating or skipping", () => {
     const id = withPhotos("Gallery Paged", 7);
 
-    const first = listGallery(id, 3, 0);
-    const second = listGallery(id, 3, 3);
-    const third = listGallery(id, 3, 6);
+    const first = listGallery(id, TEST_USER, 3, 0);
+    const second = listGallery(id, TEST_USER, 3, 3);
+    const third = listGallery(id, TEST_USER, 3, 6);
 
     const ids = [...first, ...second, ...third].map((image) => image.id);
     expect(ids).toHaveLength(7);
@@ -119,7 +142,7 @@ describe("what the gallery collects", () => {
 
 describe("the gallery over HTTP", () => {
   it("returns the page and the true total", async () => {
-    const id = withPhotos("Gallery Http", 5);
+    const id = withPhotos("Gallery Http", 5, TEST_OWNER_ID);
 
     const res = await app.request(`${BASE}/${id}/gallery?limit=2`, { headers: AUTHED });
     const body = (await res.json()) as { images: unknown[]; total: number };
@@ -130,7 +153,7 @@ describe("the gallery over HTTP", () => {
   });
 
   it("caps a caller asking for everything at once", async () => {
-    const id = withPhotos("Gallery Greedy", 2);
+    const id = withPhotos("Gallery Greedy", 2, TEST_OWNER_ID);
 
     const res = await app.request(`${BASE}/${id}/gallery?limit=99999`, { headers: AUTHED });
     const body = (await res.json()) as { images: unknown[] };
