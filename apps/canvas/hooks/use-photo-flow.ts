@@ -25,7 +25,7 @@ export interface PhotoFlow {
   view: (message: ChatMessage) => void;
   closeViewer: () => void;
   act: (action: PhotoAction) => void;
-  crop: (rect: AvatarCropRect) => void;
+  crop: (rect: AvatarCropRect | null) => void;
   editing: string | null;
   avatarUri: string | null;
   viewAvatar: (uri: string | null) => void;
@@ -99,7 +99,7 @@ export function usePhotoFlow(characterId: string, serverHost: string): PhotoFlow
   );
 
   const crop = React.useCallback(
-    (rect: AvatarCropRect) => {
+    (rect: AvatarCropRect | null) => {
       if (!activeUri) return;
       void saveLook(serverHost, characterId, { avatarUrl: activeUri, avatarCrop: rect });
       dismiss();

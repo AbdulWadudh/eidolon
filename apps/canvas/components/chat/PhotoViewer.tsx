@@ -31,7 +31,7 @@ export interface PhotoViewerProps {
   characterId: string;
   onClose: () => void;
   onAction: (action: PhotoAction) => void;
-  onCrop: (crop: AvatarCropRect) => void;
+  onCrop: (crop: AvatarCropRect | null) => void;
   actions?: PhotoAction[];
 }
 

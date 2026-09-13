@@ -12,8 +12,15 @@ export interface AvatarCropProps {
   uri: string;
   characterId: string;
   onCancel: () => void;
-  onConfirm: (crop: AvatarCropRect) => void;
+  onConfirm: (crop: AvatarCropRect | null) => void;
 }
+
+type Framing = "part" | "whole";
+
+const FRAMINGS: { value: Framing; label: string; hint: string }[] = [
+  { value: "part", label: "Pick a part", hint: "Drag and pinch to frame it" },
+  { value: "whole", label: "Use it all", hint: "The photo, filled from the top" },
+];
 
 const DIM = "rgba(0,0,0,0.72)";
 
@@ -33,45 +40,37 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
   const circleTop = (height - circle) / 2;
   const half = circle / 2;
 
+  const shownWidth = shown.width;
+  const shownHeight = shown.height;
   const floorScale = Math.max(
     PHOTO.minZoom,
-    circle / Math.max(shown.width, 1),
-    circle / Math.max(shown.height, 1),
+    circle / Math.max(shownWidth, 1),
+    circle / Math.max(shownHeight, 1),
   );
 
-  const scale = useSharedValue(floorScale);
-  const savedScale = useSharedValue(floorScale);
+  const scale = useSharedValue(1);
+  const savedScale = useSharedValue(1);
   const offsetX = useSharedValue(0);
   const offsetY = useSharedValue(0);
   const savedX = useSharedValue(0);
   const savedY = useSharedValue(0);
 
-  const slack = React.useCallback(
-    (drawn: number) => {
-      "worklet";
-      return Math.max(0, (drawn - circle) / 2);
-    },
-    [circle],
-  );
+  const [framing, setFraming] = React.useState<Framing>("part");
 
-  const settle = React.useCallback(() => {
-    "worklet";
-    const next = Math.min(PHOTO.maxZoom, Math.max(floorScale, scale.get()));
-    scale.set(next);
-    savedScale.set(next);
+  React.useEffect(() => {
+    const atTop = Math.max(0, (shownHeight * floorScale - circle) / 2);
 
-    const limitX = slack(shown.width * next);
-    const limitY = slack(shown.height * next);
-
-    offsetX.set(Math.min(limitX, Math.max(-limitX, offsetX.get())));
-    offsetY.set(Math.min(limitY, Math.max(-limitY, offsetY.get())));
-    savedX.set(offsetX.get());
-    savedY.set(offsetY.get());
+    scale.set(floorScale);
+    savedScale.set(floorScale);
+    offsetX.set(0);
+    savedX.set(0);
+    offsetY.set(framing === "whole" ? atTop : 0);
+    savedY.set(framing === "whole" ? atTop : 0);
   }, [
+    framing,
     floorScale,
-    shown.width,
-    shown.height,
-    slack,
+    shownHeight,
+    circle,
     scale,
     savedScale,
     offsetX,
@@ -80,16 +79,38 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
     savedY,
   ]);
 
-  React.useEffect(() => settle(), [settle]);
-
   const pinch = React.useMemo(
     () =>
       Gesture.Pinch()
         .onUpdate((event) => {
-          scale.set(Math.min(PHOTO.maxZoom, Math.max(floorScale, savedScale.get() * event.scale)));
+          const next = Math.min(
+            PHOTO.maxZoom,
+            Math.max(floorScale, savedScale.get() * event.scale),
+          );
+          scale.set(next);
+
+          const limitX = Math.max(0, (shownWidth * next - circle) / 2);
+          const limitY = Math.max(0, (shownHeight * next - circle) / 2);
+          offsetX.set(Math.min(limitX, Math.max(-limitX, offsetX.get())));
+          offsetY.set(Math.min(limitY, Math.max(-limitY, offsetY.get())));
         })
-        .onEnd(() => settle()),
-    [scale, savedScale, floorScale, settle],
+        .onEnd(() => {
+          savedScale.set(scale.get());
+          savedX.set(offsetX.get());
+          savedY.set(offsetY.get());
+        }),
+    [
+      scale,
+      savedScale,
+      offsetX,
+      offsetY,
+      savedX,
+      savedY,
+      floorScale,
+      shownWidth,
+      shownHeight,
+      circle,
+    ],
   );
 
   const pan = React.useMemo(
@@ -97,17 +118,24 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
       Gesture.Pan()
         .averageTouches(true)
         .onUpdate((event) => {
-          const limitX = slack(shown.width * scale.get());
-          const limitY = slack(shown.height * scale.get());
+          const drawn = scale.get();
+          const limitX = Math.max(0, (shownWidth * drawn - circle) / 2);
+          const limitY = Math.max(0, (shownHeight * drawn - circle) / 2);
 
           offsetX.set(Math.min(limitX, Math.max(-limitX, savedX.get() + event.translationX)));
           offsetY.set(Math.min(limitY, Math.max(-limitY, savedY.get() + event.translationY)));
         })
-        .onEnd(() => settle()),
-    [offsetX, offsetY, savedX, savedY, scale, shown.width, shown.height, slack, settle],
+        .onEnd(() => {
+          savedX.set(offsetX.get());
+          savedY.set(offsetY.get());
+        }),
+    [offsetX, offsetY, savedX, savedY, scale, shownWidth, shownHeight, circle],
   );
 
-  const gesture = React.useMemo(() => Gesture.Simultaneous(pinch, pan), [pinch, pan]);
+  const gesture = React.useMemo(
+    () => Gesture.Simultaneous(pinch.enabled(framing === "part"), pan.enabled(framing === "part")),
+    [pinch, pan, framing],
+  );
 
   const imageStyle = useAnimatedStyle(() => ({
     transform: [
@@ -118,6 +146,11 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
   }));
 
   const confirm = React.useCallback(() => {
+    if (framing === "whole") {
+      onConfirm(null);
+      return;
+    }
+
     const s = savedScale.get();
     const drawnWidth = shown.width * s;
     const drawnHeight = shown.height * s;
@@ -128,7 +161,7 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
       widthRatio: drawnWidth / circle,
       heightRatio: drawnHeight / circle,
     });
-  }, [shown.width, shown.height, circle, onConfirm, savedScale, savedX, savedY]);
+  }, [framing, shown.width, shown.height, circle, onConfirm, savedScale, savedX, savedY]);
 
   return (
     <View className="flex-1">
@@ -258,7 +291,7 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
         className="pt-16"
       >
         <Text className="font-ui text-text-primary text-xs uppercase tracking-wider">
-          Drag and pinch to frame it
+          {FRAMINGS.find((option) => option.value === framing)?.hint}
         </Text>
       </View>
 
@@ -267,6 +300,37 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
         style={{ position: "absolute", bottom: 0, left: 0, right: 0, alignItems: "center" }}
         className="gap-3 pb-12"
       >
+        <View
+          className="flex-row gap-1 border border-border p-1"
+          style={{ borderRadius: theme.radius, backgroundColor: theme.card }}
+        >
+          {FRAMINGS.map((option) => {
+            const isOn = framing === option.value;
+
+            return (
+              <PressableScale
+                key={option.value}
+                accessibilityRole="button"
+                accessibilityLabel={`${option.label}. ${option.hint}`}
+                accessibilityState={{ selected: isOn }}
+                onPress={() => setFraming(option.value)}
+                className="px-4 py-2"
+                style={{
+                  borderRadius: Math.max(0, theme.radius - 4),
+                  backgroundColor: isOn ? theme.primary : "transparent",
+                }}
+              >
+                <Text
+                  className={isOn ? "font-ui-bold text-xs" : "font-ui text-text-muted text-xs"}
+                  style={isOn ? { color: theme.primaryForeground } : undefined}
+                >
+                  {option.label}
+                </Text>
+              </PressableScale>
+            );
+          })}
+        </View>
+
         <View className="flex-row gap-3">
           <PressableScale
             accessibilityRole="button"
@@ -291,7 +355,9 @@ export function AvatarCrop({ uri, characterId, onCancel, onConfirm }: AvatarCrop
           </PressableScale>
         </View>
 
-        <Text className="font-ui text-text-muted text-xs">Only the circle is used</Text>
+        <Text className="font-ui text-text-muted text-xs">
+          {framing === "part" ? "Only the circle is used" : "Nothing is cropped away by hand"}
+        </Text>
       </View>
     </View>
   );
