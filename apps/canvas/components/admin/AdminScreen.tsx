@@ -33,7 +33,7 @@ export function AdminScreen({
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.canvas }} className="flex-1 bg-canvas">
-      <View className="flex-row items-center gap-3 border-b border-border px-4 py-2.5">
+      <View className="flex-row items-center gap-3 border-b border-border px-4 py-3">
         <PressableScale
           accessibilityRole="button"
           accessibilityLabel={DASHBOARD_COPY.back}
@@ -58,7 +58,7 @@ export function AdminScreen({
         <LoadingState label={DASHBOARD_COPY.loading} />
       ) : (
         <ScrollView
-          contentContainerStyle={{ padding: 14, gap: 10, paddingBottom: 40 }}
+          contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 48 }}
           keyboardShouldPersistTaps="handled"
         >
           {error ? (

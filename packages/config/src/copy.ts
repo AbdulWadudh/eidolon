@@ -370,6 +370,7 @@ export const DASHBOARD_COPY = {
   storageNext: "Next",
   storagePage: (page: number, pages: number) => `Page ${page} of ${pages}`,
   storageShowing: (shown: number, matched: number) => `${shown} of ${matched}`,
+  storageFolders: (count: number) => (count === 1 ? "1 folder" : `${count} folders`),
   storageDeleteOne: "Delete this object?",
   storageDeleteOneBody: "It is removed from the bucket immediately. Nothing points at it.",
   copy: "Copy the link",

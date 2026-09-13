@@ -54,6 +54,16 @@ function megabytes(bytes: number): string {
   return (bytes / 1024 / 1024).toFixed(1);
 }
 
+function tally(view: BrowseView, shown: number): string {
+  const folders = view.folders.length;
+  const size = `${megabytes(view.bytes)} MB`;
+
+  if (folders === 0) return `${DASHBOARD_COPY.storageShowing(shown, view.matched)} · ${size}`;
+  if (view.matched === 0) return `${DASHBOARD_COPY.storageFolders(folders)} · ${size}`;
+
+  return `${DASHBOARD_COPY.storageFolders(folders)} · ${DASHBOARD_COPY.storageShowing(shown, view.matched)} · ${size}`;
+}
+
 function crumbsFor(prefix: string): { name: string; prefix: string }[] {
   const parts = prefix.split("/").filter(Boolean);
   let walked = "";
@@ -152,8 +162,8 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
   const pages = view === null ? 1 : Math.max(1, Math.ceil(view.matched / STORAGE_BROWSER.pageSize));
 
   return (
-    <View className="gap-1.5">
-      <View className="h-9 flex-row items-center gap-2">
+    <View className="gap-3">
+      <View className="min-h-9 flex-row items-center gap-2">
         {isSearchOpen ? (
           <Animated.View
             className="flex-1"
@@ -178,12 +188,42 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
             />
           </Animated.View>
         ) : (
-          <Text className="flex-1 font-ui-bold text-[11px] text-text-muted uppercase tracking-wider">
-            {DASHBOARD_COPY.storageBrowse}
-          </Text>
+          <View className="flex-1">
+            <Text className="font-ui-bold text-[11px] text-text-muted uppercase tracking-wider">
+              {DASHBOARD_COPY.storageBrowse}
+            </Text>
+            {view ? (
+              <Text className="mt-0.5 font-ui text-[10px] text-text-muted" numberOfLines={1}>
+                {tally(view, objects.length)}
+              </Text>
+            ) : null}
+          </View>
         )}
 
         {isBusy ? <ActivityIndicator size="small" color={theme.primary} /> : null}
+
+        <View
+          className="h-8 flex-row overflow-hidden rounded-button border"
+          style={{ borderColor: theme.cardBorder, backgroundColor: theme.inputSurface }}
+        >
+          <ModeChip
+            label={DASHBOARD_COPY.storageFlatMode}
+            icon={Queue01Icon}
+            active={!folderMode}
+            onPress={() =>
+              narrow(() => {
+                setFolderMode(false);
+                setPrefix("");
+              })
+            }
+          />
+          <ModeChip
+            label={DASHBOARD_COPY.storageFolderMode}
+            icon={Folder01Icon}
+            active={folderMode}
+            onPress={() => narrow(() => setFolderMode(true))}
+          />
+        </View>
 
         <PressableScale
           accessibilityRole="button"
@@ -208,30 +248,10 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
         </PressableScale>
       </View>
 
-      <View className="flex-row gap-1.5">
-        <ModeChip
-          label={DASHBOARD_COPY.storageFlatMode}
-          icon={Queue01Icon}
-          active={!folderMode}
-          onPress={() =>
-            narrow(() => {
-              setFolderMode(false);
-              setPrefix("");
-            })
-          }
-        />
-        <ModeChip
-          label={DASHBOARD_COPY.storageFolderMode}
-          icon={Folder01Icon}
-          active={folderMode}
-          onPress={() => narrow(() => setFolderMode(true))}
-        />
-      </View>
-
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 6, paddingVertical: 2 }}
+        contentContainerStyle={{ gap: 8, paddingVertical: 2 }}
       >
         <Chip
           label={`${DASHBOARD_COPY.storageAll} ${view?.total ?? 0}`}
@@ -279,13 +299,13 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ alignItems: "center", gap: 4 }}
+          contentContainerStyle={{ alignItems: "center", gap: 6 }}
         >
           <PressableScale
             accessibilityRole="button"
             accessibilityLabel={view?.bucket ?? DASHBOARD_COPY.storageTitle}
             onPress={() => narrow(() => setPrefix(""))}
-            className="flex-row items-center gap-1.5 rounded-button border border-border px-2.5 py-1"
+            className="flex-row items-center gap-1.5 rounded-button border border-border px-3 py-1.5"
           >
             <AppIcon icon={HardDriveIcon} size={12} color={theme.primary} />
             <Text className="font-ui-medium text-[10px] text-text-primary">
@@ -300,19 +320,13 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
                 accessibilityRole="button"
                 accessibilityLabel={crumb.name}
                 onPress={() => narrow(() => setPrefix(crumb.prefix))}
-                className="rounded-button border border-border px-2.5 py-1"
+                className="rounded-button border border-border px-3 py-1.5"
               >
                 <Text className="font-ui-medium text-[10px] text-text-primary">{crumb.name}</Text>
               </PressableScale>
             </View>
           ))}
         </ScrollView>
-      ) : null}
-
-      {view ? (
-        <Text className="font-ui text-[11px] text-text-muted">
-          {`${DASHBOARD_COPY.storageShowing(objects.length, view.matched)} · ${megabytes(view.bytes)} MB`}
-        </Text>
       ) : null}
 
       {(view?.folders ?? []).map((folder, index) => (
@@ -428,27 +442,17 @@ function ModeChip({
   return (
     <PressableScale
       accessibilityRole="button"
+      accessibilityLabel={label}
       accessibilityState={{ selected: active }}
+      hitSlop={{ top: 8, bottom: 8 }}
       onPress={() => {
         select();
         onPress();
       }}
+      className="h-full w-10 items-center justify-center"
+      style={{ backgroundColor: active ? theme.primary : "transparent" }}
     >
-      <View
-        className="flex-row items-center gap-1.5 rounded-button border px-2.5 py-1.5"
-        style={{
-          backgroundColor: theme.inputSurface,
-          borderColor: active ? theme.primary : theme.cardBorder,
-        }}
-      >
-        <AppIcon icon={icon} size={12} color={active ? theme.primary : theme.textMuted} />
-        <Text
-          className="font-ui-medium text-[10px]"
-          style={{ color: active ? theme.primary : theme.textMuted }}
-        >
-          {label}
-        </Text>
-      </View>
+      <AppIcon icon={icon} size={14} color={active ? theme.primaryForeground : theme.textMuted} />
     </PressableScale>
   );
 }
@@ -504,7 +508,7 @@ function Chip({
       }}
     >
       <View
-        className="flex-row items-center gap-1.5 rounded-button border px-2.5 py-1"
+        className="flex-row items-center gap-1.5 rounded-button border px-3 py-1.5"
         style={{
           backgroundColor: active ? colour : theme.inputSurface,
           borderColor: active ? colour : theme.cardBorder,
