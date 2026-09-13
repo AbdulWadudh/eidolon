@@ -367,6 +367,12 @@ export const DASHBOARD_COPY = {
   queueSaveRetry: "Save and try again",
   queueSave: "Save",
   queueNotEditable: "Set when the job was made",
+  queueStatePending: "Open",
+  queueStateActive: "Running",
+  queueStateWaiting: "Waiting",
+  queueStateDelayed: "Later",
+  queueStateFailed: "Failed",
+  queueStateCompleted: "Done",
   summarizeNow: "Write a chapter now",
   summarizeQueued: "Queued. The chapter appears when the GPU is done.",
 } as const;

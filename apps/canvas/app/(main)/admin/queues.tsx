@@ -5,20 +5,20 @@ import Animated, { useReducedMotion } from "react-native-reanimated";
 import { AdminEmpty, AdminScreen } from "@/components/admin/AdminScreen";
 import { revealAt } from "@/components/admin/admin-motion";
 import { QueueJobRow } from "@/components/admin/QueueJobRow";
+import { QueueStateTabs } from "@/components/admin/QueueStateTabs";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Button } from "@/components/ui/button";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
-import { Segmented, type SegmentedOption } from "@/components/ui/segmented";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useJobAuthor } from "@/hooks/use-job-author";
 import { Queue01Icon, RefreshIcon } from "@/lib/icons";
+import { countFor, isPending, PENDING_TAB, type QueueTab } from "@/lib/queue-tabs";
 import {
   AdminRequestError,
   editQueueJob,
   fetchQueues,
   type QueueJobView,
-  type QueueState,
   type QueueView,
   removeQueueJob,
   retryQueue,
@@ -26,9 +26,6 @@ import {
 } from "@/store/admin-api";
 import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme } from "@/store/theme-store";
-
-const ALL_STATES: QueueState[] = ["active", "waiting", "delayed", "failed", "completed"];
-const PENDING_STATES: QueueState[] = ["active", "waiting", "delayed", "failed"];
 
 export default function AdminQueuesScreen() {
   const theme = useResolvedTheme();
@@ -41,7 +38,7 @@ export default function AdminQueuesScreen() {
   const [error, setError] = React.useState<string | null>(null);
   const [openQueue, setOpenQueue] = React.useState<string | null>(null);
   const [openJob, setOpenJob] = React.useState<string | null>(null);
-  const [stateTab, setStateTab] = React.useState<Record<string, QueueState>>({});
+  const [stateTab, setStateTab] = React.useState<Record<string, QueueTab>>({});
   const jobAuthor = useJobAuthor(serverHost, pairingToken);
 
   const report = React.useCallback((cause: unknown) => {
@@ -83,17 +80,6 @@ export default function AdminQueuesScreen() {
     [apply, confirmation.ask, pairingToken, serverHost],
   );
 
-  const pending = React.useCallback(
-    (queue: QueueView) => PENDING_STATES.reduce((total, state) => total + queue.counts[state], 0),
-    [],
-  );
-
-  const tabsFor = React.useCallback(
-    (queue: QueueView): SegmentedOption<QueueState>[] =>
-      ALL_STATES.map((state) => ({ value: state, label: `${state} ${queue.counts[state]}` })),
-    [],
-  );
-
   const saveJob = React.useCallback(
     (queue: QueueView, job: QueueJobView, patch: Record<string, unknown>, retry: boolean) => {
       setError(null);
@@ -105,8 +91,10 @@ export default function AdminQueuesScreen() {
 
   const visibleJobs = React.useCallback(
     (queue: QueueView) => {
-      const state = stateTab[queue.key] ?? "active";
-      return queue.jobs.filter((job) => job.state === state);
+      const tab = stateTab[queue.key] ?? PENDING_TAB;
+      return tab === PENDING_TAB
+        ? queue.jobs.filter((job) => isPending(job.state))
+        : queue.jobs.filter((job) => job.state === tab);
     },
     [stateTab],
   );
@@ -141,7 +129,7 @@ export default function AdminQueuesScreen() {
                 className="font-ui-bold text-[11px]"
                 style={{ color: queue.counts.failed > 0 ? theme.danger : theme.primary }}
               >
-                {queue.reachable ? pending(queue) : DASHBOARD_COPY.failed}
+                {queue.reachable ? countFor(queue, PENDING_TAB) : DASHBOARD_COPY.failed}
               </Text>
             }
             expanded={openQueue === queue.key}
@@ -150,11 +138,10 @@ export default function AdminQueuesScreen() {
             className="rounded-card border border-border bg-card p-3"
           >
             <View className="gap-3">
-              <Segmented
-                options={tabsFor(queue)}
-                value={stateTab[queue.key] ?? "active"}
+              <QueueStateTabs
+                queue={queue}
+                value={stateTab[queue.key] ?? PENDING_TAB}
                 onChange={(next) => setStateTab((current) => ({ ...current, [queue.key]: next }))}
-                accessibilityLabel={queue.name}
               />
 
               {queue.counts.failed > 0 ? (

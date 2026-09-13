@@ -1,11 +1,15 @@
 import { AUTHOR_COPY, DASHBOARD_COPY } from "@eidolon/config";
 import * as React from "react";
-import { Text, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 import { FieldAuthorRow } from "@/components/characters/FieldAuthorRow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SwitchRow } from "@/components/ui/switch";
 import type { QueueField } from "@/store/admin-api";
+import { useResolvedTheme } from "@/store/theme-store";
+
+const MULTILINE_AT = 60;
+const MULTILINE_MIN_PX = 120;
 
 export interface QueueJobInputProps {
   fields: QueueField[];
@@ -49,6 +53,7 @@ export function QueueJobInput({
   onRevert,
   onSave,
 }: QueueJobInputProps) {
+  const theme = useResolvedTheme();
   const [draft, setDraft] = React.useState<Draft>(() => seed(fields));
 
   React.useEffect(() => setDraft(seed(fields)), [fields]);
@@ -122,6 +127,22 @@ export function QueueJobInput({
                 }
                 accessibilityLabel={field.label}
               />
+            ) : field.kind === "string" && field.value.length > MULTILINE_AT ? (
+              <TextInput
+                accessibilityLabel={field.label}
+                value={String(draft[field.label] ?? "")}
+                onChangeText={(next) =>
+                  setDraft((current) => ({ ...current, [field.label]: next }))
+                }
+                multiline
+                scrollEnabled
+                textAlignVertical="top"
+                placeholderTextColor={theme.textMuted}
+                cursorColor={theme.primary}
+                selectionColor={theme.primary}
+                style={{ minHeight: MULTILINE_MIN_PX }}
+                className="rounded-input border border-border bg-input-surface p-3 font-ui text-[11px] text-text-primary leading-4"
+              />
             ) : (
               <Input
                 value={String(draft[field.label] ?? "")}
@@ -131,7 +152,6 @@ export function QueueJobInput({
                 keyboardType={field.kind === "number" ? "numeric" : "default"}
                 autoCapitalize="none"
                 autoCorrect={false}
-                multiline={field.kind === "string" && field.value.length > 60}
               />
             )}
           </View>
