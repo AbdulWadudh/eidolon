@@ -366,3 +366,36 @@ current the graph they are trusting actually is.
 derived, and derived data is a claim about the tree rather than the tree itself.
 Some of its edges are marked `INFERRED` or `AMBIGUOUS` precisely because they are
 guesses. Verify anything load-bearing by opening the file, then rebuild.
+
+---
+
+## 21. Any text a person can write, the model can write too
+
+Every field a person types into gets both **Suggest** (write it from nothing) and
+**Improve** (rework what is there). Character fields, lore entries, chronicle
+chapters and her replies all carry the pair. A box with no assist is the
+exception and needs a reason.
+
+Route it through the authoring service. Add a key to `AuthorField` and a spec to
+`AUTHOR_FIELDS` in `packages/config/src/authoring.ts`, then call it — the
+conductor's `/characters/author` route and `services/character-author.ts` are
+generic over the field and need no change. On the client, `useTextAuthor` plus
+`AuthorButtons` is the whole wiring for a standalone box; `useFieldAuthor` is
+for the character draft, where fields read each other for context.
+
+The spec is the lever that matters. `guidance` is the only thing telling the
+model what shape the answer takes, so write it as an instruction about form —
+length, person, tense, what never to include — not as a description of the
+field. `maxChars` is enforced after generation, so set it to what the UI can
+actually hold.
+
+**Generating is never saving.** The result lands in the draft the person is
+already editing, for them to accept, change or discard. Nothing reaches the
+database until they commit it. This is why `AuthorButtons` takes an `onText`
+that writes to draft state rather than a persist call: a model that writes
+straight to storage has taken a decision that was the person's to make.
+
+When rewriting something that already exists, pass the current text as the
+draft and offer the alternatives rather than overwriting in place. `Improve`
+replaces the draft because the person asked it to; a reply regenerated behind
+their back does not.

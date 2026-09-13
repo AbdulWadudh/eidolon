@@ -14,7 +14,7 @@ import {
   resolveUserTimezone,
 } from "./chat-messages";
 import type { CharacterLook } from "./chat-photos";
-import type { ChatStore } from "./chat-types";
+import type { ChatStore, ReplyOptions } from "./chat-types";
 import { appStorage } from "./storage";
 
 export type { ActiveStatus, ChatMessage, MindState } from "./chat-messages";
@@ -37,6 +37,10 @@ export const INITIAL_CHAT = {
   isSuggestionsLoading: false,
   isTrayOpen: false,
   inputText: "",
+  moodOverride: null,
+  replyOptions: null as ReplyOptions | null,
+  isRegenerating: false,
+  pendingAssistantId: null as string | null,
   enhanceHistory: [] as string[],
   isEnhancing: false,
   mind: null as MindState | null,
@@ -86,6 +90,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   setInputText: (text) => set({ inputText: text }),
+  setMoodOverride: (override) => set({ moodOverride: override }),
 
   enhanceInput: (characterId) => {
     const draft = get().inputText;
@@ -111,11 +116,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     const trimmed = text.trim();
     if (trimmed.length === 0) return;
 
+    const override = get().moodOverride;
     const message = createMessage({ characterId, role: "user", text: trimmed });
     set((state) => ({
       activeCharacterId: characterId,
       messages: [...state.messages, message],
       inputText: "",
+      moodOverride: override?.hold ? override : null,
       enhanceHistory: [],
       isEnhancing: false,
       suggestions: [],
@@ -136,6 +143,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       allow_search: useAffinityStore.getState().allowWebSearch,
       user_timezone: resolveUserTimezone(),
       live_voice: isCallLive(characterId),
+      ...(override ? { mood: override.mood } : {}),
     });
   },
 
@@ -180,6 +188,55 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   selectSuggestion: (suggestion) =>
     set({ inputText: suggestion, isTrayOpen: false, enhanceHistory: [], isEnhancing: false }),
 
+  requestReplyOptions: (characterId) => {
+    const override = get().moodOverride;
+    set({ replyOptions: null, isRegenerating: true, lastError: null });
+    sendMessage({
+      type: "reply_variants",
+      character_id: characterId,
+      allow_search: useAffinityStore.getState().allowWebSearch,
+      user_timezone: resolveUserTimezone(),
+      ...(override ? { mood: override.mood } : {}),
+    });
+  },
+
+  clearReplyOptions: () => set({ replyOptions: null, isRegenerating: false }),
+
+  regenerateReply: (characterId) => {
+    const override = get().moodOverride;
+    set({
+      isStreaming: true,
+      streamingText: "",
+      streamingIsNarration: false,
+      activeStatus: "thinking",
+      statusDetail: null,
+      lastError: null,
+    });
+    sendMessage({
+      type: "regenerate_reply",
+      character_id: characterId,
+      allow_search: useAffinityStore.getState().allowWebSearch,
+      user_timezone: resolveUserTimezone(),
+      ...(override ? { mood: override.mood } : {}),
+    });
+  },
+
+  editMessage: (messageId, text) =>
+    set((state) => ({
+      messages: state.messages.map((entry) =>
+        entry.id === messageId ? { ...entry, text, audioUrl: null, audioDuration: null } : entry,
+      ),
+    })),
+
+  refreshAudio: (messageId) => {
+    set({ isSynthesizingAudio: true });
+    sendMessage({
+      type: "resynthesize_audio",
+      character_id: get().activeCharacterId,
+      message_id: messageId,
+    });
+  },
+
   interrupt: (characterId) => {
     sendMessage({ type: "interrupt", character_id: characterId });
     set({ isStreaming: false, activeStatus: "idle", statusDetail: null });
@@ -204,7 +261,7 @@ export function commitStreamingTurn(): void {
     return;
   }
 
-  const message = createMessage({
+  const drafted = createMessage({
     characterId: state.activeCharacterId,
     role: "assistant",
     text,
@@ -213,12 +270,15 @@ export function commitStreamingTurn(): void {
     audioDuration: state.pendingAudio?.audioDuration ?? null,
   });
 
+  const message = state.pendingAssistantId ? { ...drafted, id: state.pendingAssistantId } : drafted;
+
   useChatStore.setState((current) => ({
     messages: [...current.messages, message],
     isStreaming: false,
     streamingText: "",
     streamingIsNarration: false,
     pendingAudio: null,
+    pendingAssistantId: null,
     isSynthesizingAudio: false,
     autoPlayMessageId:
       message.audioUrl && !isCallLive(current.activeCharacterId)

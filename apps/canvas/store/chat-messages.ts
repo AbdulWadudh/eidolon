@@ -127,3 +127,19 @@ export function resolveUserTimezone(): string {
     return "UTC";
   }
 }
+
+export function attachAudioToMessage(
+  messages: ChatMessage[],
+  messageId: string,
+  attachment: AudioAttachment,
+): ChatMessage[] {
+  return messages.map((message) =>
+    message.id === messageId
+      ? {
+          ...message,
+          audioUrl: attachment.audioUrl || message.audioUrl,
+          audioDuration: attachment.audioDuration ?? message.audioDuration,
+        }
+      : message,
+  );
+}

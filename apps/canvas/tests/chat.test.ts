@@ -186,6 +186,40 @@ describe("chat-store actions", () => {
     expect(useChatStore.getState().suggestions[0]).toBe("*d* Four.");
   });
 
+  it("takes the conductor's id for a streamed reply so it can be edited later", () => {
+    feed(delta("Hello."), { type: "message_committed", payload: { message_id: "srv-42" } }, IDLE);
+
+    const committed = useChatStore.getState().messages.at(-1);
+    expect(committed?.id).toBe("srv-42");
+    expect(useChatStore.getState().pendingAssistantId).toBeNull();
+  });
+
+  it("still commits a reply when the conductor sends no id", () => {
+    feed(delta("Hello."), IDLE);
+
+    const committed = useChatStore.getState().messages.at(-1);
+    expect(committed?.text).toBe("Hello.");
+    expect(committed?.id).toBeTruthy();
+  });
+
+  it("stays open when a fresh batch lands that the reader did not ask for", () => {
+    feed({ type: "reply_suggestions", suggestions: ["*a* One.", "*b* Two.", "*c* Three."] });
+    useChatStore.getState().revealSuggestions();
+    expect(isSuggestionTrayVisible(useChatStore.getState())).toBe(true);
+
+    feed({ type: "reply_suggestions", suggestions: ["*d* Four.", "*e* Five.", "*f* Six."] });
+
+    expect(isSuggestionTrayVisible(useChatStore.getState())).toBe(true);
+    expect(useChatStore.getState().suggestions[0]).toBe("*d* Four.");
+  });
+
+  it("does not prise the tray open when options arrive unasked", () => {
+    useChatStore.getState().dismissSuggestions();
+    feed({ type: "reply_suggestions", suggestions: ["*a* One.", "*b* Two.", "*c* Three."] });
+
+    expect(isSuggestionTrayVisible(useChatStore.getState())).toBe(false);
+  });
+
   it("will not open once reply options are turned off", () => {
     feed({ type: "reply_suggestions", suggestions: ["*a* One.", "*b* Two.", "*c* Three."] });
     useChatStore.getState().setSuggestionsHidden(true);

@@ -1,6 +1,7 @@
 import type { ServerMessage } from "@eidolon/protocol";
 import {
   attachAudioToLastAssistant,
+  attachAudioToMessage,
   audioChunkToAttachment,
   createMessage,
   isLiveSentence,
@@ -25,11 +26,10 @@ export function reduceServerMessage(
     }
 
     case "reply_suggestions": {
-      set((state) => ({
+      set({
         suggestions: msg.payload?.suggestions ?? msg.suggestions,
         isSuggestionsLoading: false,
-        isTrayOpen: state.isSuggestionsLoading ? state.isTrayOpen : false,
-      }));
+      });
       break;
     }
 
@@ -96,6 +96,17 @@ export function reduceServerMessage(
       if (isLiveSentence(msg)) break;
       const attachment = audioChunkToAttachment(msg);
       if (!attachment) break;
+
+      const target = msg.payload?.message_id ?? msg.message_id;
+      if (target) {
+        set((state) => ({
+          messages: attachAudioToMessage(state.messages, target, attachment),
+          isSynthesizingAudio: false,
+          autoPlayMessageId: attachment.audioUrl ? target : state.autoPlayMessageId,
+        }));
+        break;
+      }
+
       set((state) =>
         state.isStreaming
           ? { pendingAudio: attachment, isSynthesizingAudio: false }
@@ -118,6 +129,19 @@ export function reduceServerMessage(
           status === "speaking" ? true : status === "idle" ? false : state.isSynthesizingAudio,
       }));
       if (status === "idle") commitStreamingTurn();
+      break;
+    }
+
+    case "message_committed": {
+      set({ pendingAssistantId: msg.payload.message_id });
+      break;
+    }
+
+    case "reply_options": {
+      set({
+        replyOptions: { messageId: msg.payload.message_id, options: msg.payload.options },
+        isRegenerating: false,
+      });
       break;
     }
 
@@ -151,6 +175,8 @@ export function reduceServerMessage(
         isSuggestionsLoading: failedToEnhance ? state.isSuggestionsLoading : false,
         isEnhancing: false,
         enhanceHistory: failedToEnhance ? state.enhanceHistory.slice(0, -1) : state.enhanceHistory,
+        isRegenerating: false,
+        isSynthesizingAudio: false,
         lastError: source.message,
       }));
       break;

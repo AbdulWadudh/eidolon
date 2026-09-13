@@ -40,8 +40,9 @@ export const CHAT = {
   shimmerBarHeightPx: 12,
   shimmerBarRadiusPx: 3,
   imageAspectRatio: 832 / 1216,
-  imageSweepWidthRatio: 0.45,
-  imageSheenOpacity: 0.22,
+  imageSweepWidthRatio: 1.15,
+  imageSheenOpacity: 0.26,
+  imageGlowOpacity: 0.14,
   focusScrollDelayMs: 250,
   focusScrollAttempts: 6,
   focusSettleMs: 700,
@@ -72,7 +73,8 @@ export const CHAT_MS = {
   trayCollapse: 220,
   shimmer: 1200,
   imageFade: 220,
-  imageSweep: 1600,
+  imageSweep: 3400,
+  imageGlow: 5200,
 } as const;
 
 export const SUGGESTIONS = {
@@ -246,4 +248,59 @@ export const DATA_FILES = {
 
 export const MOCK = {
   aspectRatio: "9:16",
+} as const;
+
+export const PRONOUN_SETS = {
+  she: {
+    subject: "she",
+    object: "her",
+    possessive: "her",
+    label: "She / her",
+    s: "s",
+    es: "es",
+    has: "has",
+    is: "is",
+    was: "was",
+  },
+  he: {
+    subject: "he",
+    object: "him",
+    possessive: "his",
+    label: "He / him",
+    s: "s",
+    es: "es",
+    has: "has",
+    is: "is",
+    was: "was",
+  },
+  they: {
+    subject: "they",
+    object: "them",
+    possessive: "their",
+    label: "They / them",
+    s: "",
+    es: "",
+    has: "have",
+    is: "are",
+    was: "were",
+  },
+} as const;
+
+export type PronounKey = keyof typeof PRONOUN_SETS;
+
+export const DEFAULT_PRONOUNS: PronounKey = "they";
+
+export function pronounsFor(key: string | null | undefined): (typeof PRONOUN_SETS)[PronounKey] {
+  const wanted = (key ?? "").trim().toLowerCase();
+  return wanted in PRONOUN_SETS
+    ? PRONOUN_SETS[wanted as PronounKey]
+    : PRONOUN_SETS[DEFAULT_PRONOUNS];
+}
+
+export function isPronounKey(key: string | null | undefined): key is PronounKey {
+  return (key ?? "").trim().toLowerCase() in PRONOUN_SETS;
+}
+
+export const REPLY_VARIANTS = {
+  count: 3,
 } as const;

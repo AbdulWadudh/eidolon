@@ -1,19 +1,22 @@
 import { CONNECTION_COPY, MIND_COPY, STATUS_COPY } from "@eidolon/config";
-import { capitalize, isString } from "es-toolkit";
+import { isString } from "es-toolkit";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import * as React from "react";
 import type { TextInput } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ActionsSheet, type ChatAction } from "@/components/chat/ActionsSheet";
+import { AdminSheet } from "@/components/chat/AdminSheet";
 import { ChatBackdrop } from "@/components/chat/ChatBackdrop";
 import { ChatFeed } from "@/components/chat/ChatFeed";
 import { ChatSheets } from "@/components/chat/ChatSheets";
 import { ChatTopBar } from "@/components/chat/ChatTopBar";
 import { InputDock } from "@/components/chat/InputDock";
+import { MoodSheet } from "@/components/chat/MoodSheet";
 import { PhotoRequestSheet } from "@/components/chat/PhotoRequestSheet";
 import { type PhotoAction, PhotoViewer } from "@/components/chat/PhotoViewer";
 import { SuggestionTray } from "@/components/chat/SuggestionTray";
+import { AlertSheet } from "@/components/ui/alert-sheet";
 import { useChatSocket } from "@/hooks/use-chat-socket";
 import { useChatView } from "@/hooks/use-chat-view";
 import { usePhotoFlow } from "@/hooks/use-photo-flow";
@@ -24,7 +27,7 @@ import { type CharacterCard, fetchCharacter } from "@/store/character-api";
 import { forgetCharacter, loadHistory } from "@/store/chat-history";
 import { useChatStore } from "@/store/chat-store";
 import { useConnectionStore } from "@/store/connection";
-import { fetchMind } from "@/store/mind-api";
+import { fetchMind, patchAffinity, summarizeNow } from "@/store/mind-api";
 import { useResolvedTheme, useThemeStore } from "@/store/theme-store";
 
 const AVATAR_ACTIONS: PhotoAction[] = ["adjust", "save"];
@@ -59,11 +62,14 @@ export default function ChatScreen() {
     });
   }, [serverHost, characterId, pairingToken]);
 
-  const characterName = card?.name.trim() || capitalize(characterId);
+  const characterName = card?.name.trim() ?? "";
   const [actionsOpen, setActionsOpen] = React.useState(false);
   const [mindOpen, setMindOpen] = React.useState(false);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [themeOpen, setThemeOpen] = React.useState(false);
+  const [moodOpen, setMoodOpen] = React.useState(false);
+  const [notice, setNotice] = React.useState<string | null>(null);
+  const [adminOpen, setAdminOpen] = React.useState(false);
   const applyMindUpdate = useAffinityStore((state) => state.applyMindUpdate);
   const resetAffinity = useAffinityStore((state) => state.reset);
   const photos = usePhotoFlow(characterId, serverHost);
@@ -116,15 +122,28 @@ export default function ChatScreen() {
     chat.sendUserMessage(view.inputText, characterId);
   }, [chat.sendUserMessage, view.inputText, characterId]);
 
+  const handleMood = React.useCallback(
+    (mood: string, hold: boolean) => {
+      setMoodOpen(false);
+      chat.setMoodOverride({ mood, hold });
+      if (hold) void patchAffinity(serverHost, characterId, { mood });
+    },
+    [chat.setMoodOverride, serverHost, characterId],
+  );
+
   const handleAction = React.useCallback(
     (action: ChatAction) => {
       setActionsOpen(false);
       if (action === "refresh") loadHistory(serverHost, characterId);
       if (action === "reset") forgetCharacter(serverHost, characterId);
-      if (action === "replies") chat.setSuggestionsHidden(!chat.areSuggestionsHidden);
-      if (action === "lorebook") setMindOpen(true);
+      if (action === "admin") setAdminOpen(true);
+      if (action === "summarize") {
+        void Promise.resolve(summarizeNow(serverHost, characterId)).then((next) => {
+          setNotice(next ? MIND_COPY.chapterSummarize : MIND_COPY.chapterSummarizeFailed);
+        });
+      }
     },
-    [chat.setSuggestionsHidden, chat.areSuggestionsHidden, serverHost, characterId],
+    [serverHost, characterId],
   );
 
   return (
@@ -158,6 +177,7 @@ export default function ChatScreen() {
         <VoiceNotesProvider autoPlay={autoPlay} onAutoPlayed={chat.clearAutoPlay}>
           <ChatFeed
             messages={view.messages}
+            serverHost={serverHost}
             isStreaming={view.isStreaming}
             streamingText={view.streamingText}
             activeStatus={view.activeStatus}
@@ -197,6 +217,7 @@ export default function ChatScreen() {
             onSend={handleSend}
             onInterrupt={() => chat.interrupt(characterId)}
             suggestionsOpen={replies.isTrayVisible}
+            moodActive={chat.moodOverride !== null}
             onAction={(action) => {
               if (action === "more") setActionsOpen(true);
               if (action === "lorebook") setMindOpen(true);
@@ -204,10 +225,37 @@ export default function ChatScreen() {
               if (action === "revert") chat.revertEnhance();
               if (action === "suggestions") replies.toggle();
               if (action === "gallery") photos.openSheet();
+              if (action === "mood") setMoodOpen(true);
             }}
           />
         </VoiceNotesProvider>
       </KeyboardAvoidingView>
+
+      <AlertSheet
+        isOpen={notice !== null}
+        characterId={characterId}
+        title={notice ?? ""}
+        onClose={() => setNotice(null)}
+      />
+
+      <AdminSheet
+        isOpen={adminOpen}
+        characterId={characterId}
+        onClose={() => setAdminOpen(false)}
+      />
+
+      <MoodSheet
+        isOpen={moodOpen}
+        characterId={characterId}
+        currentMood={view.mind?.mood ?? ""}
+        override={chat.moodOverride}
+        onClose={() => setMoodOpen(false)}
+        onApply={handleMood}
+        onClear={() => {
+          chat.setMoodOverride(null);
+          setMoodOpen(false);
+        }}
+      />
 
       <PhotoRequestSheet
         isOpen={photos.isSheetOpen}
@@ -266,7 +314,6 @@ export default function ChatScreen() {
       <ActionsSheet
         isOpen={actionsOpen}
         characterId={characterId}
-        repliesHidden={chat.areSuggestionsHidden}
         onClose={() => setActionsOpen(false)}
         onAction={handleAction}
       />

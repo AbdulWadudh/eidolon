@@ -9,6 +9,16 @@ export type ChatSetter = (
   partial: Partial<ChatStore> | ((state: ChatStore) => Partial<ChatStore>),
 ) => void;
 
+export interface ReplyOptions {
+  messageId: string;
+  options: string[];
+}
+
+export interface MoodOverride {
+  mood: string;
+  hold: boolean;
+}
+
 export interface ChatStore {
   activeCharacterId: string;
   messages: ChatMessage[];
@@ -22,6 +32,10 @@ export interface ChatStore {
   isTrayOpen: boolean;
   areSuggestionsHidden: boolean;
   inputText: string;
+  moodOverride: MoodOverride | null;
+  replyOptions: ReplyOptions | null;
+  isRegenerating: boolean;
+  pendingAssistantId: string | null;
   enhanceHistory: string[];
   isEnhancing: boolean;
   mind: MindState | null;
@@ -35,6 +49,7 @@ export interface ChatStore {
   revealSuggestions: () => void;
   setSuggestionsHidden: (hidden: boolean) => void;
   setInputText: (text: string) => void;
+  setMoodOverride: (override: MoodOverride | null) => void;
   sendUserMessage: (text: string, characterId: string) => void;
   requestImage: (
     characterId: string,
@@ -55,6 +70,11 @@ export interface ChatStore {
   enhanceInput: (characterId: string) => void;
   revertEnhance: () => void;
   interrupt: (characterId: string) => void;
+  regenerateReply: (characterId: string) => void;
+  requestReplyOptions: (characterId: string) => void;
+  clearReplyOptions: () => void;
+  editMessage: (messageId: string, text: string) => void;
+  refreshAudio: (messageId: string) => void;
   resetChat: () => void;
   clearAutoPlay: () => void;
   focusMessage: (messageId: string) => void;

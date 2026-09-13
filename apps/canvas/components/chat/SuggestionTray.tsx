@@ -1,6 +1,6 @@
-import { CHAT_MS, EASING_BEZIER } from "@eidolon/config";
+import { CHAT_COPY, CHAT_MS, EASING_BEZIER } from "@eidolon/config";
 import * as React from "react";
-import { Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Animated, {
   Easing,
   FadeInDown,
@@ -12,6 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { Cancel01Icon, RefreshIcon } from "@/lib/icons";
 import { useResolvedTheme } from "@/store/theme-store";
 import { SuggestionRow } from "./SuggestionRow";
@@ -59,8 +60,14 @@ export function SuggestionTray({
     <Animated.View
       entering={reduced ? undefined : FadeInDown.duration(CHAT_MS.trayCollapse)}
       exiting={reduced ? undefined : FadeOutDown.duration(CHAT_MS.trayCollapse)}
-      className="mx-4 mb-2 overflow-hidden rounded-card border border-border bg-card"
+      className="mx-4 mb-2 overflow-hidden rounded-card border border-border"
     >
+      <GlassSurface
+        tint="card"
+        characterId={characterId}
+        pointerEvents="none"
+        style={StyleSheet.absoluteFill}
+      />
       <View className="flex-row items-center justify-between border-border border-b px-3.5 py-2.5">
         <Text className="font-ui-bold text-xs text-text-muted uppercase tracking-[1.5px]">
           Choose one to reply
@@ -96,6 +103,10 @@ export function SuggestionTray({
 
       {isLoading ? (
         <SuggestionShimmer characterId={characterId} />
+      ) : suggestions.length === 0 ? (
+        <Text className="px-3.5 py-3 font-ui text-text-muted text-xs">
+          {CHAT_COPY.noSuggestions}
+        </Text>
       ) : (
         suggestions.map((suggestion, index) => (
           <SuggestionRow

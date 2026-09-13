@@ -24,6 +24,7 @@ export async function handleChatTurn(
   ws: WebSocketSender,
   event: ChatTurnEvent,
   signal: AbortSignal,
+  options: { recordUserTurn?: boolean } = {},
 ): Promise<void> {
   const characterId = event.character_id;
   const userText = event.text;
@@ -34,6 +35,7 @@ export async function handleChatTurn(
     characterId,
     userText: spoken,
     allowSearch: event.allow_search,
+    moodOverride: event.mood,
     influences,
     signal,
     onStatus: (status, detail) => {
@@ -71,8 +73,15 @@ export async function handleChatTurn(
   if (signal.aborted) return;
 
   const reply = outcome.reply.trim();
-  appendMessage(characterId, "user", userText);
+  if (options.recordUserTurn !== false) appendMessage(characterId, "user", userText);
   const assistantId = reply.length > 0 ? appendMessage(characterId, "assistant", reply) : null;
+
+  if (assistantId) {
+    sendServerMessage(ws, {
+      type: "message_committed",
+      payload: { message_id: assistantId },
+    });
+  }
 
   const turn: ChatMessage[] = [
     { role: "user", content: spoken },

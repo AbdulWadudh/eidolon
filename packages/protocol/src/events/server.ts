@@ -37,6 +37,7 @@ export const AudioChunkSchema = z.object({
   url: z.string().optional(),
   duration: z.number().nonnegative().optional(),
   sentence_index: z.number().int().nonnegative(),
+  message_id: z.string().optional(),
   text: z.string().optional(),
   live: z.boolean().optional(),
   payload: z
@@ -46,6 +47,7 @@ export const AudioChunkSchema = z.object({
       url: z.string().optional(),
       duration: z.number().nonnegative().optional(),
       sentence_index: z.number().int().nonnegative(),
+      message_id: z.string().optional(),
       text: z.string().optional(),
       live: z.boolean().optional(),
     })
@@ -144,6 +146,21 @@ export const ReplySuggestionsSchema = z.object({
     .optional(),
 });
 
+export const MessageCommittedSchema = z.object({
+  type: z.literal("message_committed"),
+  payload: z.object({
+    message_id: z.string(),
+  }),
+});
+
+export const ReplyOptionsSchema = z.object({
+  type: z.literal("reply_options"),
+  payload: z.object({
+    message_id: z.string(),
+    options: z.array(z.string()),
+  }),
+});
+
 export const MessageEnhancedSchema = z.object({
   type: z.literal("message_enhanced"),
   text: z.string(),
@@ -203,6 +220,8 @@ export const ServerMessageSchema = z.discriminatedUnion("type", [
   MindUpdateSchema,
   ReplySuggestionsSchema,
   MessageEnhancedSchema,
+  ReplyOptionsSchema,
+  MessageCommittedSchema,
   TranscriptSchema,
   ErrorSchema,
   PongSchema,
@@ -223,6 +242,8 @@ export type ImageFailedEvent = z.infer<typeof ImageFailedSchema>;
 export type MindUpdateEvent = z.infer<typeof MindUpdateSchema>;
 export type ReplySuggestionsEvent = z.infer<typeof ReplySuggestionsSchema>;
 export type MessageEnhancedEvent = z.infer<typeof MessageEnhancedSchema>;
+export type ReplyOptionsEvent = z.infer<typeof ReplyOptionsSchema>;
+export type MessageCommittedEvent = z.infer<typeof MessageCommittedSchema>;
 export type TranscriptEvent = z.infer<typeof TranscriptSchema>;
 export type ErrorEvent = z.infer<typeof ErrorSchema>;
 export type PongEvent = z.infer<typeof PongSchema>;

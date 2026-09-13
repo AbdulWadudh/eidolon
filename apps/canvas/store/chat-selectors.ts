@@ -8,17 +8,8 @@ export interface TrayState {
   isSuggestionsLoading: boolean;
 }
 
-export function hasSuggestions(state: TrayState): boolean {
-  return state.suggestions.length > 0 || state.isSuggestionsLoading;
-}
-
 export function isSuggestionTrayVisible(state: TrayState): boolean {
-  return (
-    !state.areSuggestionsHidden &&
-    state.isTrayOpen &&
-    state.inputText.length === 0 &&
-    hasSuggestions(state)
-  );
+  return !state.areSuggestionsHidden && state.isTrayOpen && state.inputText.length === 0;
 }
 
 export type { ChatStore };

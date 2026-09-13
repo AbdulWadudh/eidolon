@@ -4,7 +4,9 @@ import { handleChatTurn, handleRegenerateSuggestions } from "@/ws/chat-turn";
 import { handleEnhanceMessage } from "@/ws/enhance-turn";
 import { handleImageRequest, handlePhotoIdeas } from "@/ws/image-turn";
 import { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
+import { handleRegenerateReply, handleReplyVariants } from "@/ws/regenerate";
 import { bindCharacter } from "@/ws/registry";
+import { handleResynthesizeAudio } from "@/ws/resynthesize";
 import { handleVoiceInput } from "@/ws/voice-input";
 export class ClientSessionManager {
   private abortControllers = new Map<WebSocketSender, AbortController>();
@@ -86,6 +88,21 @@ export async function handleClientMessage(
 
     case "chat_turn": {
       await handleChatTurn(ws, clientMsg, sessionManager.getAbortSignal(ws));
+      break;
+    }
+
+    case "resynthesize_audio": {
+      await handleResynthesizeAudio(ws, clientMsg, sessionManager.getAbortSignal(ws));
+      break;
+    }
+
+    case "reply_variants": {
+      await handleReplyVariants(ws, clientMsg, sessionManager.getAbortSignal(ws));
+      break;
+    }
+
+    case "regenerate_reply": {
+      await handleRegenerateReply(ws, clientMsg, sessionManager.getAbortSignal(ws));
       break;
     }
 

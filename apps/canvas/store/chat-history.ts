@@ -1,3 +1,4 @@
+import { characterMessageUrl, TIMEOUTS_MS } from "@eidolon/config";
 import { fetchTranscript, forgetCharacter as requestForget } from "./chat-api";
 import { INITIAL_CHAT, useChatStore } from "./chat-store";
 
@@ -61,5 +62,26 @@ export async function forgetCharacter(host: string, characterId: string): Promis
       isLoadingHistory: false,
       lastError: err instanceof Error ? err.message : "Could not reset the conversation.",
     });
+  }
+}
+
+export async function saveMessageEdit(
+  host: string,
+  characterId: string,
+  messageId: string,
+  content: string,
+): Promise<boolean> {
+  if (!host) return false;
+
+  try {
+    const res = await fetch(characterMessageUrl(host, characterId, messageId), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content }),
+      signal: AbortSignal.timeout(TIMEOUTS_MS.clientRequest),
+    });
+    return res.ok;
+  } catch {
+    return false;
   }
 }
