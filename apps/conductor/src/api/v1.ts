@@ -34,6 +34,7 @@ import {
   setCharacterOutfit,
 } from "@/db/look";
 import { deleteLoreEntry, upsertLoreEntry } from "@/db/lorebook";
+import { currentStage } from "@/db/stages";
 import { summarizeChronicleNow } from "@/orchestrator/chronicle";
 import { resolveMood } from "@/orchestrator/prompt-builder";
 import { describePrompt, listPrompts, resetPrompt, setPrompt } from "@/prompts/store";
@@ -160,8 +161,17 @@ v1.get(`${API_ROUTES.characters}/:id/messages`, (c) => {
   const card = getCharacterCard(characterId, userId);
   const mind = getCharacterMind(characterId, userId);
 
+  const look = getCharacterLook(characterId);
+  const scene = currentStage(characterId, userId);
+
   return c.json({
-    character: { id: characterId, name: card.name, ...mind, ...getCharacterLook(characterId) },
+    character: {
+      id: characterId,
+      name: card.name,
+      ...mind,
+      ...look,
+      backgroundUrl: scene?.backdropUrl ?? look.backgroundUrl,
+    },
     messages: openingTranscript(characterId, userId),
   });
 });

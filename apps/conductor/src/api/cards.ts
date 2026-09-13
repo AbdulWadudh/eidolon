@@ -64,8 +64,10 @@ cards.get("/:id/export", async (c) => {
   const id = c.req.param("id");
   if (!getCharacter(id)) return c.json({ error: "No such character." }, 404);
 
+  const owner = await ownerFor(c.req.header("Authorization") ?? c.req.query("token"));
+
   try {
-    const png = await exportTavernCard(id);
+    const png = await exportTavernCard(id, owner?.id);
     return new Response(new Uint8Array(png), {
       headers: {
         "Content-Type": CARD_UPLOAD.exportContentType,

@@ -1,4 +1,4 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { STAGE } from "@/config";
 import { db, ensureCharacter } from "@/db";
 import { stages } from "@/db/tables";
@@ -38,29 +38,45 @@ function toStage(row: StageRow): StoredStage {
   };
 }
 
-export function getStage(characterId: string, stageName: string): StoredStage | null {
+export function getStage(
+  characterId: string,
+  userId: string,
+  stageName: string,
+): StoredStage | null {
   const row = db
     .select(COLUMNS)
     .from(stages)
-    .where(and(eq(stages.characterId, characterId), eq(stages.name, stageName)))
+    .where(
+      and(
+        eq(stages.characterId, characterId),
+        eq(stages.userId, userId),
+        eq(stages.name, stageName),
+      ),
+    )
     .get();
   return row ? toStage(row) : null;
 }
 
-export function listStages(characterId: string): StoredStage[] {
+export function listStages(characterId: string, userId: string): StoredStage[] {
   return db
     .select(COLUMNS)
     .from(stages)
-    .where(eq(stages.characterId, characterId))
+    .where(and(eq(stages.characterId, characterId), eq(stages.userId, userId)))
     .orderBy(asc(sql`rowid`))
     .all()
     .map(toStage);
 }
 
-function stageValues(characterId: string, stageName: string, backdropUrl: string | null) {
+function stageValues(
+  characterId: string,
+  userId: string,
+  stageName: string,
+  backdropUrl: string | null,
+) {
   return {
     id: crypto.randomUUID(),
     characterId,
+    userId,
     name: stageName,
     backdropUrl,
     lightingTint: STAGE.defaultLightingTint,
@@ -69,34 +85,45 @@ function stageValues(characterId: string, stageName: string, backdropUrl: string
   };
 }
 
-export function registerStage(characterId: string, stageName: string): void {
-  ensureCharacter(characterId, null);
+export function registerStage(characterId: string, userId: string, stageName: string): void {
+  ensureCharacter(characterId, userId);
 
   db.insert(stages)
-    .values(stageValues(characterId, stageName, null))
-    .onConflictDoNothing({ target: [stages.characterId, stages.name] })
+    .values(stageValues(characterId, userId, stageName, null))
+    .onConflictDoNothing({ target: [stages.characterId, stages.userId, stages.name] })
     .run();
 }
 
 export function saveStageBackdrop(
   characterId: string,
+  userId: string,
   stageName: string,
   backdropUrl: string,
 ): StoredStage {
-  ensureCharacter(characterId, null);
+  ensureCharacter(characterId, userId);
   const updatedAt = Date.now();
 
   db.insert(stages)
-    .values({ ...stageValues(characterId, stageName, backdropUrl), updatedAt })
+    .values({ ...stageValues(characterId, userId, stageName, backdropUrl), updatedAt })
     .onConflictDoUpdate({
-      target: [stages.characterId, stages.name],
+      target: [stages.characterId, stages.userId, stages.name],
       set: { backdropUrl, updatedAt },
     })
     .run();
 
-  const saved = getStage(characterId, stageName);
+  const saved = getStage(characterId, userId, stageName);
   if (!saved) {
     throw new Error(`Stage "${stageName}" vanished immediately after being written.`);
   }
   return saved;
+}
+
+export function currentStage(characterId: string, userId: string): StoredStage | null {
+  const row = db
+    .select(COLUMNS)
+    .from(stages)
+    .where(and(eq(stages.characterId, characterId), eq(stages.userId, userId)))
+    .orderBy(desc(stages.updatedAt), desc(sql`rowid`))
+    .get();
+  return row ? toStage(row) : null;
 }

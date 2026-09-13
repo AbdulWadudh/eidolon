@@ -192,3 +192,27 @@ export async function requestPortrait(host: string, id: string, prompt: string):
     return false;
   }
 }
+
+export async function requestMoment(
+  host: string,
+  characterId: string,
+  place: string,
+): Promise<string | null> {
+  if (!host) return null;
+
+  try {
+    const res = await authedFetch(`${characterUrl(host, characterId)}/moment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ place }),
+      signal: signal(),
+    });
+
+    if (res.ok) return null;
+
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    return body.error ?? "That did not work.";
+  } catch {
+    return "Could not reach your Eidolon.";
+  }
+}

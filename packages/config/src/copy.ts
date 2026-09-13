@@ -13,6 +13,17 @@ export const CONNECTION_COPY = {
   disconnected: "Out of reach",
 } as const;
 
+export const MOMENT_COPY = {
+  title: "Where are you?",
+  blurb:
+    "Paint the place behind the conversation. It is rendered on the GPU and takes a minute or two.",
+  placeholder: "the bar at closing time, rain on the windows",
+  send: "Take us there",
+  working: "Painting it…",
+  queued: "It is being painted. It will appear behind the conversation.",
+  needPlace: "Say where first.",
+} as const;
+
 export const OUTFIT_COPY = {
   title: "What are they wearing?",
   blurb: "Keep the same clothes across photos. Leave it empty and every photo picks its own.",

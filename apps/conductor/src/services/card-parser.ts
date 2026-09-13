@@ -97,8 +97,10 @@ export async function parseTavernCard(
     });
   }
 
-  for (const stageName of metadata.stage_deck) {
-    registerStage(character.id, stageName);
+  if (options.ownerId) {
+    for (const stageName of metadata.stage_deck) {
+      registerStage(character.id, options.ownerId, stageName);
+    }
   }
 
   if (metadata.theme_pigment) {
@@ -154,7 +156,7 @@ async function readAnchorPng(characterId: string): Promise<Buffer> {
     .toBuffer();
 }
 
-export function buildTavernCard(characterId: string): TavernV2Card {
+export function buildTavernCard(characterId: string, userId?: string): TavernV2Card {
   const character = getCharacter(characterId);
   if (!character) throw new Error(`No character "${characterId}" to export.`);
 
@@ -202,7 +204,7 @@ export function buildTavernCard(characterId: string): TavernV2Card {
       creator: "eidolon",
       character_version: "2.0",
       eidolon_metadata: {
-        stage_deck: listStages(characterId).map((stage) => stage.name),
+        stage_deck: userId ? listStages(characterId, userId).map((stage) => stage.name) : [],
         voice_id: character.voice,
         theme_pigment: getCharacterPigment(characterId) ?? undefined,
         affinity_score: mind.score,
@@ -211,8 +213,8 @@ export function buildTavernCard(characterId: string): TavernV2Card {
   };
 }
 
-export async function exportTavernCard(characterId: string): Promise<Buffer> {
-  const card = buildTavernCard(characterId);
+export async function exportTavernCard(characterId: string, userId?: string): Promise<Buffer> {
+  const card = buildTavernCard(characterId, userId);
   const png = await readAnchorPng(characterId);
   return writeCardChunk(png, card);
 }

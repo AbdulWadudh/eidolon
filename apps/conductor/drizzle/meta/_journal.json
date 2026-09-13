@@ -15,6 +15,13 @@
       "when": 1789324978518,
       "tag": "0001_character_outfit",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789325693819,
+      "tag": "0002_stage_reader",
+      "breakpoints": true
     }
   ]
 }

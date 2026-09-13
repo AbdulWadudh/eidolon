@@ -74,8 +74,11 @@ export const stages = sqliteTable(
     lightingTint: text("lighting_tint"),
     soundscapeStems: text("soundscape_stems"),
     updatedAt: integer("updated_at"),
+    userId: text("user_id"),
   },
-  (table) => [uniqueIndex("idx_stages_character_name").on(table.characterId, table.name)],
+  (table) => [
+    uniqueIndex("idx_stages_reader_name").on(table.characterId, table.userId, table.name),
+  ],
 );
 
 export const prompts = sqliteTable("prompts", {

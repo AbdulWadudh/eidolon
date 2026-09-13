@@ -6,11 +6,11 @@ import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import {
-  AddCircleIcon,
   Book02Icon,
   Cancel01Icon,
   ClothesIcon,
   Delete02Icon,
+  Image01Icon,
   RefreshIcon,
   Settings01Icon,
 } from "@/lib/icons";
@@ -34,7 +34,7 @@ const ACTIONS: ActionSpec[] = [
   { action: "admin", icon: Settings01Icon, label: ADMIN_COPY.tile, ready: true },
   { action: "reset", icon: Delete02Icon, label: "Reset", ready: true, destructive: true },
   { action: "outfit", icon: ClothesIcon, label: "Outfit", ready: true },
-  { action: "moment", icon: AddCircleIcon, label: "Moment", badge: "Soon", ready: false },
+  { action: "moment", icon: Image01Icon, label: "Moment", ready: true },
 ];
 
 const TILE_PX = 56;

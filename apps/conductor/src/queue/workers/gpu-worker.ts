@@ -22,7 +22,7 @@ import { summarizeMessages } from "@/services/chronicle-writer";
 import { generateImage } from "@/services/comfyui";
 import { describeAppearance } from "@/services/photo-look";
 import { isStorageConnected, uploadImage } from "@/services/storage";
-import { broadcastToEveryUser } from "@/ws/registry";
+import { broadcastToCharacter } from "@/ws/registry";
 
 const NEWLINE = String.fromCharCode(10);
 
@@ -45,9 +45,9 @@ async function renderStageBackdrop(data: StageBackdropJob): Promise<void> {
     backdropFilename(data.stageName),
     image.bytes,
   );
-  const stage = saveStageBackdrop(data.characterId, data.stageName, backdropUrl);
+  const stage = saveStageBackdrop(data.characterId, data.userId, data.stageName, backdropUrl);
 
-  broadcastToEveryUser(data.characterId, {
+  broadcastToCharacter(data.characterId, data.userId, {
     type: "stage_shift",
     payload: {
       location_name: stage.name,

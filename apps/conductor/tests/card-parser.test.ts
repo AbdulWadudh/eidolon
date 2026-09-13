@@ -62,7 +62,10 @@ describe("parseTavernCard", () => {
     const imported = await importCard();
     const id = imported.character.id;
 
-    expect(listStages(id).map((stage) => stage.name)).toEqual(["Reading room", "Harbour wall"]);
+    expect(listStages(id, TEST_USER).map((stage) => stage.name)).toEqual([
+      "Reading room",
+      "Harbour wall",
+    ]);
     expect(getCharacterPigment(id)).toBe("#3B7A9E");
     expect(getCharacterMind(id, TEST_USER).score).toBe(35);
   });
@@ -99,7 +102,7 @@ describe("parseTavernCard", () => {
 describe("buildTavernCard", () => {
   it("round-trips a character back into a valid V2 card", async () => {
     const imported = await importCard();
-    const card = buildTavernCard(imported.character.id);
+    const card = buildTavernCard(imported.character.id, TEST_USER);
 
     expect(TavernV2CardSchema.safeParse(card).success).toBe(true);
     expect(card.data.name).toBe("Marisol Vega");

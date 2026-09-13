@@ -1,4 +1,11 @@
-import { API_ROUTES, CHARACTER_PRESETS, presetByKey, QUEUE_JOBS } from "@eidolon/config";
+import {
+  API_ROUTES,
+  CHARACTER_PRESETS,
+  MOMENT_COPY,
+  presetByKey,
+  QUEUE_JOBS,
+  STAGE,
+} from "@eidolon/config";
 import { type Context, Hono } from "hono";
 import { authoring } from "@/api/authoring";
 import { cards } from "@/api/cards";
@@ -18,6 +25,7 @@ import {
   updateCharacter,
 } from "@/db/characters";
 import { deleteLoreEntry, getLoreEntries, upsertLoreEntry } from "@/db/lorebook";
+import { requestStageBackdrop } from "@/orchestrator/stage-manager";
 import { jobKey } from "@/queue/job-id";
 import { enqueueGpuJob } from "@/queue/queues";
 
@@ -59,6 +67,27 @@ characters.get("/", async (c) => {
 });
 
 characters.get("/presets", (c) => c.json({ presets: CHARACTER_PRESETS }));
+
+characters.post("/:id/moment", async (c) => {
+  const characterId = c.req.param("id");
+  const owner = await requireOwner(c);
+  if (!owner) return c.json({ error: "Sign in to change the scene." }, 401);
+
+  const body = (await c.req.json().catch(() => ({}))) as { place?: unknown };
+  const place = typeof body.place === "string" ? body.place.trim() : "";
+  if (place.length === 0) return c.json({ error: MOMENT_COPY.needPlace }, 400);
+
+  const stageName = place.slice(0, STAGE.maxNameChars);
+  const jobId = await requestStageBackdrop({
+    characterId,
+    userId: owner.id,
+    stageName,
+    prompt: `${place}, ${STAGE.promptSuffix}`,
+  });
+
+  if (!jobId) return c.json({ error: "The painter is not reachable." }, 503);
+  return c.json({ queued: true, stageName }, 202);
+});
 
 characters.post("/presets/:key", async (c) => {
   const preset = presetByKey(c.req.param("key"));

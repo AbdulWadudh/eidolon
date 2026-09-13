@@ -85,6 +85,8 @@ export const PORTRAIT = {
 
 export const STAGE = {
   orientation: "landscape",
+  promptSuffix: "empty establishing shot, nobody in frame, wide",
+  maxNameChars: 60,
   defaultLightingTint: "#F08C00",
   defaultSoundscapeStems: [] as readonly string[],
   backdropFileExtension: "webp",

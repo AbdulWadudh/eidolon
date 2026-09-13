@@ -3,6 +3,7 @@ import type { Job } from "bullmq";
 
 export interface StageBackdropJob {
   characterId: string;
+  userId: string;
   stageName: string;
   prompt: string;
 }
