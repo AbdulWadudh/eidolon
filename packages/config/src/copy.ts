@@ -22,6 +22,8 @@ export const MOMENT_COPY = {
   working: "Painting it…",
   queued: "It is being painted. It will appear behind the conversation.",
   needPlace: "Say where first.",
+  arrived: "You are now at",
+  keptYourBackground: "kept your own background",
 } as const;
 
 export const OUTFIT_COPY = {

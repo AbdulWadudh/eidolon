@@ -1,3 +1,4 @@
+import { MOMENT_COPY } from "@eidolon/config";
 import type { ServerMessage } from "@eidolon/protocol";
 import {
   attachAudioToLastAssistant,
@@ -62,14 +63,26 @@ export function reduceServerMessage(
 
     case "stage_shift": {
       const source = msg.payload ?? msg;
-      if (
+      const repaints =
         source.replaces_background !== false &&
         typeof source.backdrop_url === "string" &&
-        source.backdrop_url.length > 0
-      ) {
+        source.backdrop_url.length > 0;
+
+      if (repaints) {
         set((state) => ({
           characterLook: { ...state.characterLook, backgroundUrl: source.backdrop_url },
         }));
+      }
+
+      if (typeof source.location_name === "string" && source.location_name.length > 0) {
+        useToastStore
+          .getState()
+          .notify(
+            repaints
+              ? `${MOMENT_COPY.arrived} ${source.location_name}`
+              : `${MOMENT_COPY.arrived} ${source.location_name} — ${MOMENT_COPY.keptYourBackground}`,
+            "good",
+          );
       }
       break;
     }
