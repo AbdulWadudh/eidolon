@@ -54,6 +54,12 @@ export const QUEUE_SHUTDOWN = {
   drainTimeoutMs: 10000,
 } as const;
 
+export const QUEUE_VIEW = {
+  perState: 20,
+  maxRetryAtOnce: 50,
+  pollMs: 5000,
+} as const;
+
 export const CHRONICLE = {
   batchSize: 30,
   bulletCount: 3,

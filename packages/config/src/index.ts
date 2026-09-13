@@ -16,6 +16,9 @@ export {
   adminPath,
   adminPromptAuthorPath,
   adminPromptAuthorUrl,
+  adminQueueJobPath,
+  adminQueueRetryPath,
+  adminStorageSweepPath,
   adminUrl,
   apiPath,
   apiUrl,
@@ -225,6 +228,7 @@ export {
   QUEUE_RETENTION,
   QUEUE_SHUTDOWN,
   QUEUE_UPLOAD_RETRY,
+  QUEUE_VIEW,
   type QueueKey,
   STAGE,
 } from "./queue";

@@ -19,6 +19,7 @@ import {
   QUEUE_RETENTION,
   QUEUE_SHUTDOWN,
   QUEUE_UPLOAD_RETRY,
+  QUEUE_VIEW,
 } from "../queue";
 import { REASONS } from "./reasons";
 import type { ConfigGroup } from "./types";
@@ -112,7 +113,16 @@ const SECRETS: ConfigGroup = {
   },
 };
 
+const QUEUE_READ: ConfigGroup = {
+  name: "QUEUE_VIEW",
+  source: "queue.ts",
+  value: QUEUE_VIEW,
+  bucket: "editable",
+  reason: REASONS.requestRead,
+};
+
 export const SYSTEM_GROUPS: ConfigGroup[] = [
+  QUEUE_READ,
   ...ROUTE_GROUPS,
   ...QUEUE_KEYS,
   ...QUEUE_BOOT,

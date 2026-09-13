@@ -3,6 +3,9 @@ import {
   adminApiPath,
   adminConfigReloadPath,
   adminPromptAuthorPath,
+  adminQueueJobPath,
+  adminQueueRetryPath,
+  adminStorageSweepPath,
   stripAuthority,
   TIMEOUTS_MS,
 } from "@eidolon/config";
@@ -58,6 +61,25 @@ async function request<T>(
   }
 
   return body as T;
+}
+
+async function send<T>(host: string, token: string, path: string, method: string): Promise<T> {
+  const response = await fetch(`${httpBase(host)}${path}`, {
+    method,
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(TIMEOUTS_MS.generation),
+  });
+
+  const body = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+  if (!response.ok) {
+    throw new AdminRequestError(response.status, typeof body?.error === "string" ? body.error : "");
+  }
+
+  return body as T;
+}
+
+function post<T>(host: string, token: string, path: string): Promise<T> {
+  return send<T>(host, token, path, "POST");
 }
 
 export function fetchPrompts(host: string, token: string): Promise<{ prompts: AdminPrompt[] }> {
@@ -249,4 +271,96 @@ export function fetchAudit(host: string, token: string, offset = 0): Promise<Adm
 
 export function clearAudit(host: string, token: string): Promise<{ ok: true; removed: number }> {
   return request(host, token, "audit", { method: "DELETE" });
+}
+
+export interface StoredObjectView {
+  key: string;
+  bytes: number;
+  modifiedAt: number;
+}
+
+export interface StorageView {
+  connected: boolean;
+  endpoint: string;
+  bucket: string;
+  scanned: number;
+  referenced: number;
+  skipped: "not-connected" | "no-references" | null;
+  freedBytes: number;
+  removed: string[];
+  orphans: StoredObjectView[];
+  orphanBytes: number;
+}
+
+export function fetchStorage(host: string, token: string): Promise<StorageView> {
+  return request(host, token, "storage");
+}
+
+export function sweepStorage(host: string, token: string): Promise<StorageView> {
+  return post(host, token, adminStorageSweepPath());
+}
+
+export type QueueState = "waiting" | "active" | "delayed" | "failed" | "completed";
+
+export interface QueueJobView {
+  id: string;
+  name: string;
+  state: QueueState;
+  attemptsMade: number;
+  characterId: string | null;
+  failedReason: string | null;
+  createdAt: number;
+  runAt: number | null;
+}
+
+export interface QueueView {
+  key: string;
+  name: string;
+  reachable: boolean;
+  counts: Record<QueueState, number>;
+  jobs: QueueJobView[];
+}
+
+export interface QueuesView {
+  queues: QueueView[];
+}
+
+export function fetchQueues(host: string, token: string): Promise<QueuesView> {
+  return request(host, token, "queues");
+}
+
+export function retryQueue(host: string, token: string, key: string): Promise<QueuesView> {
+  return post(host, token, adminQueueRetryPath(key));
+}
+
+export function retryQueueJob(
+  host: string,
+  token: string,
+  key: string,
+  jobId: string,
+): Promise<QueuesView> {
+  return post(host, token, `${adminQueueJobPath(key, jobId)}/retry`);
+}
+
+export function removeQueueJob(
+  host: string,
+  token: string,
+  key: string,
+  jobId: string,
+): Promise<QueuesView> {
+  return send(host, token, adminQueueJobPath(key, jobId), "DELETE");
+}
+
+export interface HealthView {
+  status: string;
+  version: string;
+  uptime: number;
+  services: Record<string, string>;
+  storage: { type: string; endpoint: string; bucket: string; status: string };
+  webSearch: { primary: string; hasSerperFallback: boolean; hasExaFallback: boolean };
+  databaseLocation: string;
+}
+
+export function fetchHealth(host: string, token: string): Promise<HealthView> {
+  return request(host, token, "health");
 }

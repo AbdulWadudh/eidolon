@@ -42,6 +42,9 @@ export const ADMIN_API_ROUTES = {
   theme: "/theme",
   config: "/config",
   audit: "/audit",
+  storage: "/storage",
+  queues: "/queues",
+  health: "/health",
 } as const;
 
 export type AdminApiRoute = keyof typeof ADMIN_API_ROUTES;
@@ -66,6 +69,18 @@ export function adminPromptAuthorPath(key: string): string {
 
 export function adminPromptAuthorUrl(host: string, key: string, scheme = httpScheme(host)): string {
   return `${scheme}://${stripAuthority(host)}${adminPromptAuthorPath(key)}`;
+}
+
+export function adminStorageSweepPath(): string {
+  return `${adminApiPath("storage")}/sweep`;
+}
+
+export function adminQueueRetryPath(queueKey: string): string {
+  return `${adminApiPath("queues", queueKey)}/retry`;
+}
+
+export function adminQueueJobPath(queueKey: string, jobId: string): string {
+  return `${adminApiPath("queues", queueKey)}/jobs/${encodeURIComponent(jobId)}`;
 }
 
 export function adminConfigReloadPath(): string {
