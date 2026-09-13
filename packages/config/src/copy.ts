@@ -29,6 +29,7 @@ export const CONNECT_COPY = {
   connect: "Connect",
   missingFields: "Fill in the address before you sign in.",
   refused: "That email and password were not accepted.",
+  sessionExpired: "Your session ended. Sign in again.",
   serverError: "Your Eidolon answered, but something went wrong at its end. Check it is running.",
   unreachable:
     "Could not reach that address. Check it matches your computer and that you are both on the same network.",
@@ -37,6 +38,7 @@ export const CONNECT_COPY = {
 export const CONNECT_MESSAGES: readonly string[] = [
   CONNECT_COPY.missingFields,
   CONNECT_COPY.refused,
+  CONNECT_COPY.sessionExpired,
   CONNECT_COPY.serverError,
   CONNECT_COPY.unreachable,
 ];

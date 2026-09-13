@@ -9,10 +9,10 @@ import {
   resetSocketBackoff,
   type SocketStatus,
 } from "@/services/websocket";
-import { pingHealth } from "./connection-api";
+import { pingHealth, verifySession } from "./connection-api";
 import { appStorage } from "./storage";
 
-export { pingHealth };
+export { pingHealth, verifySession };
 
 export type ConnectionState = "disconnected" | "connecting" | "connected" | "error";
 
@@ -138,13 +138,18 @@ onSocketStatus((status) => {
   });
 });
 
-onSocketRetry((attempt) => {
+export async function reviewSessionAfterRetries(attempt: number): Promise<void> {
   if (attempt !== SOCKET.reVerifyAfterAttempts) return;
+
   const { serverHost, sessionToken } = useConnectionStore.getState();
   if (!serverHost || !sessionToken) return;
-  pingHealth(serverHost, sessionToken).catch((err: unknown) => {
-    const message = err instanceof Error ? err.message : String(err);
-    closeSocket();
-    useConnectionStore.setState({ connectionState: "error", lastError: message });
-  });
+
+  if ((await verifySession(serverHost, sessionToken)) !== "rejected") return;
+
+  useConnectionStore.getState().signOut();
+  useConnectionStore.setState({ lastError: CONNECT_COPY.sessionExpired });
+}
+
+onSocketRetry((attempt) => {
+  void reviewSessionAfterRetries(attempt);
 });
