@@ -5,6 +5,7 @@ import * as React from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AvatarFraming } from "@/components/characters/AvatarFraming";
 import { GalleryGrid } from "@/components/characters/GalleryGrid";
 import { GalleryViewer } from "@/components/characters/GalleryViewer";
 import { PortraitSheet } from "@/components/characters/PortraitSheet";
@@ -99,6 +100,16 @@ export default function CharacterProfileScreen() {
         />
 
         <View style={{ paddingHorizontal: PADDING_PX }}>
+          <AvatarFraming
+            characterId={characterId}
+            serverHost={serverHost}
+            avatarUrl={character?.avatarUrl ?? null}
+            avatarCrop={character?.avatarCrop ?? null}
+            onFramed={(crop) =>
+              setCharacter((held) => (held ? { ...held, avatarCrop: crop } : held))
+            }
+          />
+
           <Text className="mt-6 mb-3 font-main-bold text-base text-text-primary">
             {GALLERY_COPY.title}
           </Text>

@@ -14,6 +14,7 @@ export { default as CheckmarkCircle01Icon } from "@hugeicons/core-free-icons/Che
 export { default as ClipboardIcon } from "@hugeicons/core-free-icons/ClipboardIcon";
 export { default as ClothesIcon } from "@hugeicons/core-free-icons/ClothesIcon";
 export { default as ColorPickerIcon } from "@hugeicons/core-free-icons/ColorPickerIcon";
+export { default as CropIcon } from "@hugeicons/core-free-icons/CropIcon";
 export { default as DashboardSquare01Icon } from "@hugeicons/core-free-icons/DashboardSquare01Icon";
 export { default as Delete02Icon } from "@hugeicons/core-free-icons/Delete02Icon";
 export { default as Download01Icon } from "@hugeicons/core-free-icons/Download01Icon";
