@@ -31,7 +31,7 @@ export function OutfitSheet({
 }: OutfitSheetProps) {
   const theme = useResolvedTheme(characterId);
   const reduced = useReducedMotion();
-  const author = useTextAuthor(serverHost, "outfit");
+  const author = useTextAuthor(serverHost, "outfit", { characterId });
   const [draft, setDraft] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
 

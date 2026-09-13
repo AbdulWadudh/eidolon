@@ -9,7 +9,7 @@ function line(label: string, value: string | null): string {
   return trimmed.length > 0 ? `${label}: ${trimmed}` : "";
 }
 
-export function readerContext(characterId: string, userId: string): string {
+export function readerProfile(characterId: string, userId: string): string {
   const persona = personaForCharacter(characterId, userId);
   if (!persona) return "";
 
@@ -41,7 +41,19 @@ export function readerContext(characterId: string, userId: string): string {
     .filter((part) => part.length > 0)
     .join(NEWLINE);
 
-  if (reader.trim().length === 0) return "";
+  return reader.trim();
+}
+
+export function readerContext(characterId: string, userId: string): string {
+  const reader = readerProfile(characterId, userId);
+  if (reader.length === 0) return "";
 
   return render(getPrompt("persona.reader"), { reader });
+}
+
+export function readerVoice(characterId: string, userId: string): string {
+  const reader = readerProfile(characterId, userId);
+  if (reader.length === 0) return "";
+
+  return render(getPrompt("persona.readerVoice"), { reader });
 }

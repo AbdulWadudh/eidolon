@@ -22,12 +22,18 @@ export function contextFrom(draft: Record<string, unknown>, exclude: AuthorField
   return context;
 }
 
+export interface AuthorScope {
+  characterId?: string;
+  personaId?: string;
+}
+
 export async function authorField(
   host: string,
   field: AuthorField,
   mode: AuthorMode,
   draft: string,
   context: AuthorContext,
+  scope: AuthorScope = {},
 ): Promise<AuthorResult> {
   if (!host) return { text: null, error: null };
 
@@ -35,7 +41,7 @@ export async function authorField(
     const res = await authedFetch(`${charactersUrl(host)}/author`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ field, mode, draft, context }),
+      body: JSON.stringify({ field, mode, draft, context, ...scope }),
       signal: AbortSignal.timeout(TIMEOUTS_MS.generation),
     });
 

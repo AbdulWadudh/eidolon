@@ -7,6 +7,7 @@ import { maybeSummarizeChronicle } from "@/orchestrator/chronicle";
 import { rememberExchange } from "@/orchestrator/memory-manager";
 import { scheduleProactiveFollowUp } from "@/orchestrator/proactive";
 import { assemblePrompt } from "@/orchestrator/prompt-builder";
+import { readerVoice } from "@/orchestrator/reader";
 import { settleMind } from "@/orchestrator/turn-mind";
 import type { ChatMessage } from "@/services/llm";
 import { forHistory } from "@/services/photo-line";
@@ -117,7 +118,11 @@ export async function handleChatTurn(
     SUGGESTIONS.autoGenerate
       ? generateReplySuggestions(
           turn,
-          { characterName: assembled.characterName, tier: assembled.tier },
+          {
+            characterName: assembled.characterName,
+            tier: assembled.tier,
+            reader: readerVoice(characterId, userId),
+          },
           signal,
         )
       : Promise.resolve(null),
@@ -177,7 +182,11 @@ export async function handleRegenerateSuggestions(
     recent.length > 0
       ? await generateReplySuggestions(
           recent,
-          { characterName: card.name, tier: card.tier },
+          {
+            characterName: card.name,
+            tier: card.tier,
+            reader: readerVoice(characterId, userId),
+          },
           signal,
         )
       : fallbackSuggestions();

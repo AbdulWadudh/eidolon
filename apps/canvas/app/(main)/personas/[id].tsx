@@ -77,7 +77,7 @@ export default function PersonaEditorScreen() {
     setDraft((current) => ({ ...current, ...patch }));
   }, []);
 
-  const author = useFieldAuthor(serverHost, draft, change);
+  const author = useFieldAuthor(serverHost, draft, change, { personaId });
 
   const save = React.useCallback(async () => {
     if (draft.personaName.trim().length === 0) {
@@ -184,6 +184,7 @@ export default function PersonaEditorScreen() {
 
               <ChapterList
                 serverHost={serverHost}
+                personaId={personaId}
                 chapters={persona.chapters}
                 onAdd={(chapter) => {
                   void addChapter(serverHost, personaId, chapter).then((next) => {

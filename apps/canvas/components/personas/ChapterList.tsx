@@ -13,16 +13,24 @@ import { useResolvedTheme } from "@/store/theme-store";
 
 export interface ChapterListProps {
   serverHost: string;
+  personaId: string;
   chapters: PersonaChapter[];
   onAdd: (chapter: { title: string | null; body: string }) => void;
   onSave: (chapterId: string, patch: { title?: string | null; body?: string }) => void;
   onRemove: (chapter: PersonaChapter) => void;
 }
 
-export function ChapterList({ serverHost, chapters, onAdd, onSave, onRemove }: ChapterListProps) {
+export function ChapterList({
+  serverHost,
+  personaId,
+  chapters,
+  onAdd,
+  onSave,
+  onRemove,
+}: ChapterListProps) {
   const theme = useResolvedTheme();
   const reduced = useReducedMotion();
-  const author = useTextAuthor(serverHost, "personaChapter");
+  const author = useTextAuthor(serverHost, "personaChapter", { personaId });
 
   const [title, setTitle] = React.useState("");
   const [body, setBody] = React.useState("");

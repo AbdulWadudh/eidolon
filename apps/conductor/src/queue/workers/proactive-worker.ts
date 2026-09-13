@@ -8,6 +8,7 @@ import {
 import { Worker } from "bullmq";
 import { PROACTIVE } from "@/config";
 import { appendMessage, getCharacterCard } from "@/db";
+import { readerContext } from "@/orchestrator/reader";
 import { getPrompt } from "@/prompts/store";
 import { queueConnection } from "@/queue/connection";
 import type { ProactiveJob, ProactiveJobData, ProactiveJobName } from "@/queue/types";
@@ -35,6 +36,7 @@ export async function processProactiveJob(job: ProactiveJob): Promise<void> {
         mood: card.mood,
         tier: card.tier,
         maxChars: PROACTIVE.maxChars,
+        reader: readerContext(characterId, userId),
       }),
     },
     {

@@ -15,8 +15,9 @@ Keep it under {{maxSentences}} sentences and under 18 spoken words. Be brief. Ma
   {
     key: "suggestions.user",
     description: "The scene handed to the suggestion writer, plus the ask.",
-    variables: ["scene", "intent", "player", "character", "tier"],
+    variables: ["scene", "intent", "player", "character", "tier", "reader"],
     value: `{{player}} is texting {{character}}. What they are to each other: {{tier}}.
+{{reader}}
 
 Recent messages:
 {{scene}}

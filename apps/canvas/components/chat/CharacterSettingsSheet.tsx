@@ -153,7 +153,7 @@ export function CharacterSettingsSheet({
 
   const [portrait, setPortrait] = React.useState<string | null>(avatarUrl);
 
-  const author = useFieldAuthor(serverHost, draft, change);
+  const author = useFieldAuthor(serverHost, draft, change, { characterId });
 
   const _spec = SECTIONS[section];
 

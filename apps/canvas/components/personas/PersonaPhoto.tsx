@@ -36,20 +36,21 @@ export function PersonaPhoto({ serverHost, persona, onChanged }: PersonaPhotoPro
     if (!asset) return;
 
     setBusy(true);
-    const next = await uploadPhoto(serverHost, persona.id, {
+    const result = await uploadPhoto(serverHost, persona.id, {
       uri: asset.uri,
       name: asset.name || "photo.png",
       type: asset.mimeType || "image/png",
     });
     setBusy(false);
 
-    if (!next) {
-      useToastStore.getState().notify("That picture could not be saved.", "bad");
+    if (!result.ok) {
+      tap("light");
+      useToastStore.getState().notify(result.error, "bad");
       return;
     }
 
     tap("success");
-    onChanged(next);
+    onChanged(result.persona);
   }, [serverHost, persona.id, onChanged]);
 
   const clear = React.useCallback(async () => {

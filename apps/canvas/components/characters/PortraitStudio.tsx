@@ -25,7 +25,7 @@ export function PortraitStudio({
   onPortrait,
 }: PortraitStudioProps) {
   const theme = useResolvedTheme(characterId);
-  const author = useTextAuthor(serverHost, "portrait");
+  const author = useTextAuthor(serverHost, "portrait", { characterId });
   const reduced = useReducedMotion();
 
   const [extra, setExtra] = React.useState("");

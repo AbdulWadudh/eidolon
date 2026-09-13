@@ -131,7 +131,7 @@ export async function handleClientMessage(
     }
 
     case "enhance_message": {
-      await handleEnhanceMessage(ws, clientMsg.text);
+      await handleEnhanceMessage(ws, clientMsg.text, clientMsg.character_id, userId);
       break;
     }
 

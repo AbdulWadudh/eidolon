@@ -55,6 +55,7 @@ export async function handleImageRequest(
         characterId,
         name: card.name,
         personality: card.personality,
+        pronouns: card.pronouns,
         scene: formatScene(getRecentMessages(characterId, userId), card.name),
         request: promptOverride?.trim() || DEFAULT_REQUEST,
         orientation,

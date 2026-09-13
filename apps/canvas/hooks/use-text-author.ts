@@ -1,7 +1,7 @@
 import { AUTHOR_COPY, type AuthorField, type AuthorMode } from "@eidolon/config";
 import * as React from "react";
 import { tap } from "@/services/haptics";
-import { authorField } from "@/store/author-api";
+import { type AuthorScope, authorField } from "@/store/author-api";
 import { useToastStore } from "@/store/toast-store";
 
 export interface TextAuthor {
@@ -9,15 +9,21 @@ export interface TextAuthor {
   run: (mode: AuthorMode, draft: string, onText: (text: string) => void) => void;
 }
 
-export function useTextAuthor(serverHost: string, field: AuthorField): TextAuthor {
+export function useTextAuthor(
+  serverHost: string,
+  field: AuthorField,
+  scope: AuthorScope = {},
+): TextAuthor {
   const [isBusy, setBusy] = React.useState(false);
+  const scopeRef = React.useRef(scope);
+  scopeRef.current = scope;
 
   const run = React.useCallback(
     (mode: AuthorMode, draft: string, onText: (text: string) => void) => {
       if (isBusy || !serverHost) return;
       setBusy(true);
 
-      void authorField(serverHost, field, mode, draft, {}).then((result) => {
+      void authorField(serverHost, field, mode, draft, {}, scopeRef.current).then((result) => {
         setBusy(false);
 
         if (!result.text) {

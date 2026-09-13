@@ -28,7 +28,7 @@ export function ChronicleSection({
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [draft, setDraft] = React.useState("");
   const [shown, setShown] = React.useState(CHRONICLE_PAGING.steps[0] ?? 5);
-  const author = useTextAuthor(serverHost, "chapter");
+  const author = useTextAuthor(serverHost, "chapter", { characterId });
 
   const visible = chapters.slice(0, shown);
   const nextStep = CHRONICLE_PAGING.steps.find((step) => step > shown);

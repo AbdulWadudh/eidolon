@@ -28,7 +28,7 @@ export function MomentSheet({
   onSend,
 }: MomentSheetProps) {
   const theme = useResolvedTheme(characterId);
-  const author = useTextAuthor(serverHost, "place");
+  const author = useTextAuthor(serverHost, "place", { characterId });
   const reduced = useReducedMotion();
   const [place, setPlace] = React.useState("");
   const [isSending, setSending] = React.useState(false);

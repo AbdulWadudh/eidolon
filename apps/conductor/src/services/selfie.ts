@@ -1,4 +1,4 @@
-import { render } from "@eidolon/config";
+import { pronounsFor, render } from "@eidolon/config";
 import { sample } from "es-toolkit";
 import { IMAGE, TIMEOUTS_MS } from "@/config";
 import {
@@ -26,6 +26,7 @@ export interface SelfieRequest {
   characterId: string;
   name: string;
   personality: string;
+  pronouns?: string;
   scene: string;
   request: string;
   orientation?: Orientation;
@@ -169,7 +170,11 @@ export async function paintSelfie(
   const look = await describeAppearance(request, signal);
   const faceName = await ensureFaceReference(request, composeAppearance(look, ""));
   const shot = await composeShot(request, signal);
-  const appearance = composeAppearance(look, shot?.look_change ?? "");
+  const appearance = composeAppearance(
+    look,
+    shot?.look_change ?? "",
+    pronounsFor(request.pronouns).figure,
+  );
 
   const orientation =
     request.orientation ??

@@ -144,12 +144,14 @@ export interface PhotoPick {
   type: string;
 }
 
+export type PhotoResult = { ok: true; persona: Persona } | { ok: false; error: string };
+
 export async function uploadPhoto(
   host: string,
   personaId: string,
   pick: PhotoPick,
-): Promise<Persona | null> {
-  if (!host) return null;
+): Promise<PhotoResult> {
+  if (!host) return { ok: false, error: "Not connected to a conductor." };
 
   const form = new FormData();
   form.append("image", { uri: pick.uri, name: pick.name, type: pick.type } as unknown as Blob);
@@ -158,14 +160,28 @@ export async function uploadPhoto(
     const response = await authedFetch(`${host}${BASE}/${personaId}/photo`, {
       method: "POST",
       body: form,
-      signal: AbortSignal.timeout(TIMEOUTS_MS.transcript),
+      signal: AbortSignal.timeout(TIMEOUTS_MS.generation),
     });
 
-    if (!response.ok) return null;
-    const body = (await response.json()) as { persona: Persona };
-    return body.persona ?? null;
-  } catch {
-    return null;
+    const body = (await response.json().catch(() => ({}))) as {
+      persona?: Persona;
+      error?: string;
+    };
+
+    if (!response.ok || !body.persona) {
+      return { ok: false, error: body.error ?? `The conductor said ${response.status}.` };
+    }
+
+    return { ok: true, persona: body.persona };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    return {
+      ok: false,
+      error:
+        reason.includes("abort") || reason.includes("timed out")
+          ? "The picture took too long to send."
+          : reason,
+    };
   }
 }
 

@@ -117,7 +117,13 @@ export function buildAuthorPrompt(
 
   const parts = [template];
 
-  if (context.length > 0) parts.push("", AUTHORING.contextLabel, context);
+  if (context.length > 0) {
+    parts.push(
+      "",
+      field.startsWith("persona") ? AUTHORING.readerContextLabel : AUTHORING.contextLabel,
+      context,
+    );
+  }
 
   parts.push("", `Field: ${spec.label}`, `Shape: ${spec.guidance}`);
   if (mode === "enhance") parts.push(`${AUTHORING.draftLabel} ${draft}`);

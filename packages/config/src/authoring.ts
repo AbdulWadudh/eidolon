@@ -272,6 +272,7 @@ export const AUTHORING = {
   enhanceGrowthRatio: 3,
   enhanceGrowthFloorChars: 220,
   contextLabel: "The character so far:",
+  readerContextLabel: "What they have written about themselves so far:",
   draftLabel: "Current:",
   writeLabel: "Write the",
   fields: AUTHOR_FIELDS,

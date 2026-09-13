@@ -1,7 +1,7 @@
 import type { AuthorField, AuthorMode } from "@eidolon/config";
 import * as React from "react";
 import { tap } from "@/services/haptics";
-import { authorField, contextFrom } from "@/store/author-api";
+import { type AuthorScope, authorField, contextFrom } from "@/store/author-api";
 export type AuthoredDraft = Record<string, string>;
 
 export interface FieldAuthor<K extends string = string> {
@@ -19,6 +19,7 @@ export function useFieldAuthor<T extends AuthoredDraft>(
   serverHost: string,
   draft: T,
   onChange: (patch: Partial<T>) => void,
+  scope: AuthorScope = {},
 ): FieldAuthor<AuthorField & keyof T & string> {
   type K = AuthorField & keyof T & string;
   const [busyField, setBusyField] = React.useState<K | null>(null);
@@ -27,6 +28,8 @@ export function useFieldAuthor<T extends AuthoredDraft>(
 
   const latest = React.useRef(draft);
   latest.current = draft;
+  const scopeRef = React.useRef(scope);
+  scopeRef.current = scope;
 
   const run = React.useCallback(
     (field: K, mode: AuthorMode) => {
@@ -37,24 +40,29 @@ export function useFieldAuthor<T extends AuthoredDraft>(
       setBusyField(field);
       setError(null);
 
-      void authorField(serverHost, field, mode, before, contextFrom(current, field)).then(
-        (result) => {
-          setBusyField(null);
+      void authorField(
+        serverHost,
+        field,
+        mode,
+        before,
+        contextFrom(current, field),
+        scopeRef.current,
+      ).then((result) => {
+        setBusyField(null);
 
-          if (!result.text) {
-            setError(result.error);
-            tap("light");
-            return;
-          }
+        if (!result.text) {
+          setError(result.error);
+          tap("light");
+          return;
+        }
 
-          history.current = {
-            ...history.current,
-            [field]: [...(history.current[field] ?? []), before],
-          };
-          onChange({ [field]: result.text } as Partial<T>);
-          tap("success");
-        },
-      );
+        history.current = {
+          ...history.current,
+          [field]: [...(history.current[field] ?? []), before],
+        };
+        onChange({ [field]: result.text } as Partial<T>);
+        tap("success");
+      });
     },
     [serverHost, busyField, onChange],
   );

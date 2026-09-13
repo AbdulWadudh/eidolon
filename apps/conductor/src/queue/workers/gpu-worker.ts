@@ -1,4 +1,10 @@
-import { QUEUE_CONCURRENCY, QUEUE_LOCK, QUEUE_NAMES, QUEUE_PREFIXES } from "@eidolon/config";
+import {
+  pronounsFor,
+  QUEUE_CONCURRENCY,
+  QUEUE_LOCK,
+  QUEUE_NAMES,
+  QUEUE_PREFIXES,
+} from "@eidolon/config";
 import { Worker } from "bullmq";
 import { PORTRAIT, STAGE } from "@/config";
 import { getCharacterCard } from "@/db";
@@ -80,9 +86,18 @@ async function renderPortrait(data: PortraitJob): Promise<void> {
     characterId: data.characterId,
     name: card.name,
     personality: card.personality,
+    pronouns: card.pronouns,
   });
 
-  const described = [look.age, look.face, look.eyes, look.hair, look.skin, look.build]
+  const described = [
+    pronounsFor(card.pronouns).figure,
+    look.age,
+    look.face,
+    look.eyes,
+    look.hair,
+    look.skin,
+    look.build,
+  ]
     .filter((part) => part.trim().length > 0)
     .join(", ");
 

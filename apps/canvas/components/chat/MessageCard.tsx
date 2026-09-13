@@ -45,7 +45,7 @@ function MessageCardBase({
   const canSpeakAnyMessage = useAdminStore((state) => state.canSpeakAnyMessage);
 
   const options = replyOptions?.messageId === message.id ? replyOptions.options : null;
-  const author = useTextAuthor(serverHost, "reply");
+  const author = useTextAuthor(serverHost, "reply", { characterId: message.characterId });
 
   const canEdit = isLastReply || canEditAnyMessage;
   const canSpeak = isLastReply || canSpeakAnyMessage;

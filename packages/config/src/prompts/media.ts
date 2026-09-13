@@ -5,8 +5,8 @@ export const MEDIA_PROMPTS: PromptDefinition[] = [
     key: "image.appearance",
     description:
       "Turns a character's written persona into a fixed description of their face and body, used once to seed the face every later photo is matched against.",
-    variables: ["name", "personality"],
-    value: `Read this description of a person called {{name}} and fill in what they look like, for an image model.
+    variables: ["name", "personality", "figure"],
+    value: `Read this description of {{figure}} called {{name}} and fill in what they look like, for an image model.
 
 {{personality}}
 

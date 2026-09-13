@@ -76,7 +76,7 @@ export function LoreSection({
     setDraft(EMPTY);
   };
 
-  const author = useTextAuthor(serverHost, "lore");
+  const author = useTextAuthor(serverHost, "lore", { characterId });
 
   const commit = () => {
     if (!isComplete(draft)) return;

@@ -52,6 +52,16 @@ Right now you feel {{mood}}. How close you feel to them: {{tier}}.`,
 This is the person on the other side of the conversation, not you and not a character in a story. Use what is here the way a friend would: remember it, refer back to it, let it shape what you say and what you ask about. Never recite it back at them, never list it, and never tell them what you know about them unless it comes up naturally.`,
   },
   {
+    key: "persona.readerVoice",
+    description:
+      "The same reader, framed for writing lines they would send rather than lines sent to them. Used by the reply suggestions.",
+    variables: ["reader"],
+    value: `The person you are writing for:
+{{reader}}
+
+Write the way this person would write. Their turns of phrase, the things they care about, what they would and would not bring up. Never restate these facts back at them and never write a line that only exists to mention one.`,
+  },
+  {
     key: "persona.readerLikes",
     description:
       "The reader's likes and dislikes, kept apart from the rest so they can be dropped when the prompt runs long.",

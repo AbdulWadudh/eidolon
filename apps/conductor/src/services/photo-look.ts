@@ -1,4 +1,4 @@
-import { render } from "@eidolon/config";
+import { pronounsFor, render } from "@eidolon/config";
 import { IMAGE } from "@/config";
 import { getCharacterAppearance, setCharacterAppearance } from "@/db/look";
 
@@ -91,10 +91,11 @@ function withNoun(value: string, noun: string): string {
   return new RegExp(`\\b${noun}\\b`, "i").test(text) ? text : `${text} ${noun}`;
 }
 
-export function composeAppearance(look: Look, rawLookChange: string): string {
+export function composeAppearance(look: Look, rawLookChange: string, figure = ""): string {
   const lookChange = usableLookChange(rawLookChange);
   const changesHair = replacesHair(lookChange);
   return [
+    figure,
     look.age,
     withNoun(look.face, "face"),
     withNoun(look.eyes, "eyes"),
@@ -112,6 +113,7 @@ export interface LookRequest {
   characterId: string;
   name: string;
   personality: string;
+  pronouns?: string;
 }
 
 export function forgetLook(characterId: string): void {
@@ -138,6 +140,7 @@ export async function describeAppearance(
     render(getPrompt("image.appearance"), {
       name: request.name,
       personality: request.personality,
+      figure: pronounsFor(request.pronouns).figure,
     }),
     IMAGE.appearanceTemperature,
     signal,

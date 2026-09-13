@@ -38,7 +38,7 @@ export function CharacterForm({
   compact = false,
   onChange,
 }: CharacterFormProps) {
-  const author = useFieldAuthor(serverHost, draft, onChange);
+  const author = useFieldAuthor(serverHost, draft, onChange, { characterId });
 
   return (
     <View className={compact ? "gap-3" : "gap-5"}>
