@@ -39,7 +39,7 @@ export function AdminScreen({
           accessibilityLabel={DASHBOARD_COPY.back}
           hitSlop={12}
           onPress={() => router.back()}
-          className="h-9 w-9 items-center justify-center rounded-full border border-border"
+          className="h-9 w-9 items-center justify-center rounded-button border border-border"
         >
           <AppIcon icon={ArrowLeft01Icon} size={16} color={theme.textPrimary} />
         </PressableScale>

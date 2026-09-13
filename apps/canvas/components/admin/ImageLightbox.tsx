@@ -49,7 +49,7 @@ export function ImageLightbox({ url, onClose }: ImageLightboxProps) {
                 accessibilityLabel={MIND_COPY.closeLabel}
                 hitSlop={12}
                 onPress={onClose}
-                className="h-9 w-9 items-center justify-center rounded-full border"
+                className="h-9 w-9 items-center justify-center rounded-button border"
                 style={{ borderColor: "rgba(255,255,255,0.25)" }}
               >
                 <AppIcon icon={Cancel01Icon} size={16} color="#fff" />

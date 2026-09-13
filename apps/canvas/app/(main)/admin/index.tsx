@@ -104,7 +104,7 @@ export default function AdminHubScreen() {
               tint="card"
               className="flex-row items-center gap-3 overflow-hidden rounded-card border border-border p-4"
             >
-              <View className="h-10 w-10 items-center justify-center rounded-full border border-border">
+              <View className="h-10 w-10 items-center justify-center rounded-button border border-border">
                 <AppIcon icon={tile.icon} size={18} color={theme.primary} />
               </View>
 

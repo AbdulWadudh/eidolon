@@ -137,7 +137,7 @@ export default function AdminConfigScreen() {
           accessibilityLabel={DASHBOARD_COPY.reset}
           hitSlop={12}
           onPress={reload}
-          className="h-9 w-9 items-center justify-center rounded-full border border-border"
+          className="h-9 w-9 items-center justify-center rounded-button border border-border"
         >
           <AppIcon icon={RefreshIcon} size={15} color={theme.textMuted} />
         </PressableScale>

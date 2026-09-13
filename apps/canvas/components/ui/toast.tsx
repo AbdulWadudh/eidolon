@@ -37,7 +37,7 @@ export function Toast() {
         exiting={reduced ? undefined : FadeOutDown.duration(UI_MS.toastExit)}
         accessibilityLiveRegion="polite"
         accessibilityLabel={toast.message}
-        className="max-w-full overflow-hidden rounded-full border"
+        className="max-w-full overflow-hidden rounded-card border"
         style={{ borderColor: edge[toast.tone] }}
       >
         <GlassSurface tint="card" overlay className="px-4 py-2.5">

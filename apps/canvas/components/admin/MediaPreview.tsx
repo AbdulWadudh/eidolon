@@ -272,7 +272,7 @@ function AudioPreview({ url, characterId }: { url: string; characterId?: string 
         accessibilityLabel={isPlaying ? CALL_COPY.mute : VOICE_COPY.preview}
         accessibilityState={{ busy: isLoading }}
         onPress={() => toggle(url)}
-        className="items-center justify-center rounded-full border border-border bg-input"
+        className="items-center justify-center rounded-button border border-border bg-input"
         style={{ width: MEDIA_PREVIEW.buttonPx, height: MEDIA_PREVIEW.buttonPx }}
       >
         {isLoading ? (
