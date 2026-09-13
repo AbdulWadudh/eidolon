@@ -45,7 +45,11 @@ This document establishes non-negotiable coding standards and architectural prin
 
 ## 5. Clean Solid Android Design Tokens
 - The visual language strictly adheres to `@eidolon/tokens`:
-  - **No bubbly radiuses or translucent glassmorphism.**
+  - **No bubbly radiuses.**
+  - Translucency is a theme token, not a style. It ships at `0`, and a surface
+    only becomes a material through `GlassSurface`. Containers and chrome may
+    take it; controls stay solid, so a button never dissolves into what it sits
+    on. Nothing may hardcode a blur or an alpha to fake it.
   - Hairline borders (`1px` with `0.08` opacity white borders) and deep dark canvas backdrops (`#0F1015`, `#161821`, `#1E202C`).
   - Warm amber accent (`#F08C00`, `#FFA94D`).
   - High-legibility typography optimized for dialogue, narration, and system metrics.
@@ -252,8 +256,9 @@ The floor for anything user-visible:
   otherwise select by hand, live status where state can change, a disclosure for
   the failure path.
 - Depth built from the design language — layered surfaces, hairline borders,
-  accent framing, a considered background. Never from glassmorphism or bubbly
-  radii, which §5 forbids.
+  accent framing, a considered background. Never from bubbly radii, which §5
+  forbids, and never from translucency, which is the reader's setting to make
+  and carries no depth of its own at `0`.
 - Typography with contrast: the serif face for display, the sans for interface,
   the mono for values a user copies.
 - Every value in the layout from `@eidolon/tokens` and `@eidolon/config`. A
