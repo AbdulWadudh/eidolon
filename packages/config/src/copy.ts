@@ -62,6 +62,8 @@ export const HOME_COPY = {
 export const THEME_COPY = {
   appliesTo: "Applies to",
   everyone: "Everyone",
+  onlyThem: "only",
+  status: "Status",
   ownLook: "Custom look",
   sameAsEveryone: "Same as everyone",
   corners: "Corners",

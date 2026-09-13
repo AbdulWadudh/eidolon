@@ -1,9 +1,15 @@
 import { THEME_COPY } from "@eidolon/config";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { PressableScale } from "@/components/common/pressable-scale";
 import { Badge } from "@/components/ui/badge";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
+import { withAlpha } from "@/lib/translucency";
+import { useResolvedTheme } from "@/store/theme-store";
 
 export type ThemeScope = "global" | "character";
+
+const OPTIONS: ThemeScope[] = ["global", "character"];
+const SELECTED_ALPHA = 0.14;
 
 export interface ThemeScopeSelectorProps {
   scope: ThemeScope;
@@ -24,6 +30,7 @@ export function ThemeScopeSelector({
   onToggle,
   onChange,
 }: ThemeScopeSelectorProps) {
+  const theme = useResolvedTheme();
   return (
     <CollapsibleSection
       sectionKey="scope"
@@ -39,40 +46,41 @@ export function ThemeScopeSelector({
       className="rounded-card border border-border bg-card p-3"
     >
       <View className="flex-row gap-2">
-        <Pressable
-          className={`flex-1 items-center rounded-button border py-2 ${
-            scope === "global" ? "bg-primary" : "border-border bg-input"
-          }`}
-          onPress={() => onChange("global")}
-        >
-          <Text
-            className={`font-ui-medium text-xs ${
-              scope === "global" ? "font-bold text-primary-foreground" : "text-text-muted"
-            }`}
-          >
-            Global Master Default
-          </Text>
-        </Pressable>
+        {OPTIONS.map((option) => {
+          const label =
+            option === "global" ? THEME_COPY.everyone : `${characterName} ${THEME_COPY.onlyThem}`;
+          const isSelected = scope === option;
 
-        <Pressable
-          className={`flex-1 items-center rounded-button border py-2 ${
-            scope === "character" ? "bg-primary" : "border-border bg-input"
-          }`}
-          onPress={() => onChange("character")}
-        >
-          <Text
-            className={`font-ui-medium text-xs ${
-              scope === "character" ? "font-bold text-primary-foreground" : "text-text-muted"
-            }`}
-          >
-            {characterName} Override
-          </Text>
-        </Pressable>
+          return (
+            <PressableScale
+              key={option}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
+              accessibilityLabel={`${THEME_COPY.appliesTo}: ${label}`}
+              onPress={() => onChange(option)}
+              className="flex-1 items-center rounded-button border py-2"
+              style={{
+                borderColor: isSelected ? theme.primary : theme.cardBorder,
+                backgroundColor: isSelected
+                  ? withAlpha(theme.primary, SELECTED_ALPHA)
+                  : theme.inputSurface,
+              }}
+            >
+              <Text
+                className={isSelected ? "font-ui-bold text-xs" : "font-ui-medium text-xs"}
+                style={{ color: isSelected ? theme.primary : theme.textMuted }}
+                numberOfLines={1}
+              >
+                {label}
+              </Text>
+            </PressableScale>
+          );
+        })}
       </View>
 
       {scope === "character" && (
         <View className="mt-3 flex-row items-center justify-between border-border border-t pt-2">
-          <Text className="font-ui text-text-muted text-xs">Status</Text>
+          <Text className="font-ui text-text-muted text-xs">{THEME_COPY.status}</Text>
           <Badge variant={characterHasOverrides ? "warning" : "muted"}>
             {characterHasOverrides ? THEME_COPY.ownLook : THEME_COPY.sameAsEveryone}
           </Badge>
