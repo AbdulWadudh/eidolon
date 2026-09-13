@@ -262,6 +262,8 @@ export default function ChatScreen() {
       <OutfitSheet
         isOpen={outfitOpen}
         characterId={characterId}
+        characterName={characterName}
+        serverHost={serverHost}
         outfit={view.characterLook.outfit}
         onClose={() => setOutfitOpen(false)}
         onApply={(outfit) => {

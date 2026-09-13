@@ -9,6 +9,7 @@ export type AuthorField =
   | "systemPrompt"
   | "chapter"
   | "lore"
+  | "outfit"
   | "reply";
 
 export type AuthorMode = "suggest" | "enhance";
@@ -28,6 +29,14 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
       "A given name, sometimes with a surname. One or two words. Never a title, a description or a nickname in quotes.",
     maxTokens: 12,
     maxChars: 48,
+    singleLine: true,
+  },
+  outfit: {
+    label: "Outfit",
+    guidance:
+      "What they are wearing, as a short phrase of visual detail: garments, fabric, colour, how it sits on them. Under twelve words, never a sentence. Only clothes — never their face, hair, build or the place they are in.",
+    maxTokens: 28,
+    maxChars: 90,
     singleLine: true,
   },
   tagline: {

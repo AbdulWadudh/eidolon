@@ -1,33 +1,67 @@
-import { OUTFIT_COPY, UI_MS } from "@eidolon/config";
+import { AUTHOR_COPY, OUTFIT_COPY, UI_MS } from "@eidolon/config";
 import * as React from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Button } from "@/components/ui/button";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { Input } from "@/components/ui/input";
-import { Cancel01Icon } from "@/lib/icons";
+import { Cancel01Icon, MagicWand01Icon, SparklesIcon } from "@/lib/icons";
+import { authorField } from "@/store/author-api";
 import { useResolvedTheme } from "@/store/theme-store";
 
 export interface OutfitSheetProps {
   isOpen: boolean;
   characterId: string;
+  characterName: string;
+  serverHost: string;
   outfit: string | null;
   onClose: () => void;
   onApply: (outfit: string | null) => void;
 }
 
-export function OutfitSheet({ isOpen, characterId, outfit, onClose, onApply }: OutfitSheetProps) {
+const AUTHOR_PX = 30;
+
+export function OutfitSheet({
+  isOpen,
+  characterId,
+  characterName,
+  serverHost,
+  outfit,
+  onClose,
+  onApply,
+}: OutfitSheetProps) {
   const theme = useResolvedTheme(characterId);
   const reduced = useReducedMotion();
   const [draft, setDraft] = React.useState("");
+  const [isWriting, setWriting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    if (isOpen) setDraft(outfit ?? "");
+    if (isOpen) {
+      setDraft(outfit ?? "");
+      setError(null);
+    }
   }, [isOpen, outfit]);
 
   const trimmed = draft.trim();
+
+  const write = React.useCallback(
+    async (mode: "suggest" | "enhance") => {
+      setWriting(true);
+      setError(null);
+
+      const result = await authorField(serverHost, "outfit", mode, trimmed, {
+        name: characterName,
+      });
+
+      if (result.text) setDraft(result.text);
+      else if (result.error) setError(result.error);
+      setWriting(false);
+    },
+    [characterName, serverHost, trimmed],
+  );
 
   return (
     <Modal visible={isOpen} transparent animationType="none" onRequestClose={onClose}>
@@ -63,9 +97,42 @@ export function OutfitSheet({ isOpen, characterId, outfit, onClose, onApply }: O
             {OUTFIT_COPY.blurb}
           </Text>
 
+          <View className="mb-1.5 flex-row items-center justify-end gap-1.5">
+            {isWriting ? (
+              <ActivityIndicator size="small" color={theme.primary} />
+            ) : (
+              <>
+                {trimmed.length > 0 ? (
+                  <PressableScale
+                    accessibilityRole="button"
+                    accessibilityLabel={`${AUTHOR_COPY.enhance}: ${OUTFIT_COPY.title}`}
+                    hitSlop={8}
+                    onPress={() => void write("enhance")}
+                    style={{ height: AUTHOR_PX, width: AUTHOR_PX }}
+                    className="items-center justify-center rounded-button border border-border bg-input"
+                  >
+                    <AppIcon icon={MagicWand01Icon} size={14} color={theme.textPrimary} />
+                  </PressableScale>
+                ) : null}
+
+                <PressableScale
+                  accessibilityRole="button"
+                  accessibilityLabel={`${AUTHOR_COPY.suggest}: ${OUTFIT_COPY.title}`}
+                  hitSlop={8}
+                  onPress={() => void write("suggest")}
+                  style={{ height: AUTHOR_PX, width: AUTHOR_PX }}
+                  className="items-center justify-center rounded-button border border-border bg-input"
+                >
+                  <AppIcon icon={SparklesIcon} size={14} color={theme.primary} />
+                </PressableScale>
+              </>
+            )}
+          </View>
+
           <Input
             value={draft}
             onChangeText={setDraft}
+            editable={!isWriting}
             placeholder={OUTFIT_COPY.placeholder}
             accessibilityLabel={OUTFIT_COPY.title}
             autoCapitalize="none"
@@ -73,8 +140,12 @@ export function OutfitSheet({ isOpen, characterId, outfit, onClose, onApply }: O
             onSubmitEditing={() => onApply(trimmed || null)}
           />
 
-          <Text className="mt-2 font-ui text-[11px] text-text-muted">
-            {outfit ? `${OUTFIT_COPY.wearingNow}: ${outfit}` : OUTFIT_COPY.varies}
+          <Text
+            className="mt-2 font-ui text-[11px]"
+            style={{ color: error ? theme.danger : theme.textMuted }}
+            accessibilityLiveRegion={error ? "assertive" : "polite"}
+          >
+            {error ?? (outfit ? `${OUTFIT_COPY.wearingNow}: ${outfit}` : OUTFIT_COPY.varies)}
           </Text>
 
           <View className="mt-3 flex-row gap-2">
