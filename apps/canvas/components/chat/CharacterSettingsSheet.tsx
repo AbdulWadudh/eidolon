@@ -53,6 +53,8 @@ function toDraft(card: CharacterCard): Draft {
     tagline: card.tagline,
     personality: card.personality,
     systemPrompt: card.systemPrompt,
+    likes: card.likes ?? "",
+    dislikes: card.dislikes ?? "",
     scenario: card.scenario,
     rules: card.rules,
     exampleDialogue: card.exampleDialogue,

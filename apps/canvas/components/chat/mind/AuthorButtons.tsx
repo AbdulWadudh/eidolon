@@ -7,7 +7,7 @@ import { MagicWand01Icon, SparklesIcon } from "@/lib/icons";
 import { useResolvedTheme } from "@/store/theme-store";
 
 export interface AuthorButtonsProps {
-  characterId: string;
+  characterId?: string;
   author: TextAuthor;
   draft: string;
   onText: (text: string) => void;

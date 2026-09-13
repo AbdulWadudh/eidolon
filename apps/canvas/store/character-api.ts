@@ -15,11 +15,14 @@ export interface CharacterCard {
   rules: string;
   exampleDialogue: string;
   greeting: string;
+  likes: string;
+  dislikes: string;
   voice: string;
   pronouns: string;
 }
 
 export interface CharacterSummary extends CharacterCard {
+  personaId?: string | null;
   avatarUrl: string | null;
   avatarCrop: AvatarCropRect | null;
   affinity: number;

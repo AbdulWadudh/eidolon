@@ -471,6 +471,13 @@ export const ADMIN_COPY = {
   speakAnyHint: "Shows the speaker on every one of her replies, not just the newest.",
 } as const;
 
+export const CHARACTER_TASTE_COPY = {
+  likesLabel: "Likes",
+  likesHint: "What they are drawn to. A short list, not a sentence.",
+  dislikesLabel: "Dislikes",
+  dislikesHint: "What puts them off. A short list, not a sentence.",
+} as const;
+
 export const PERSONA_COPY = {
   title: "Who you are",
   blurb: "What a character knows about you when you talk to them.",

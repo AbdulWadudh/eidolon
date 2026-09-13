@@ -54,6 +54,8 @@ function draftFrom(character: AdminCharacter): Draft {
     tagline: character.tagline,
     personality: character.personality,
     systemPrompt: character.systemPrompt,
+    likes: character.likes ?? "",
+    dislikes: character.dislikes ?? "",
     scenario: character.scenario,
     rules: character.rules,
     exampleDialogue: character.exampleDialogue,

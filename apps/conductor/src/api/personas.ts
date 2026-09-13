@@ -1,4 +1,4 @@
-import { API_ROUTES, PERSONA_COPY } from "@eidolon/config";
+import { API_ROUTES, CARD_UPLOAD, PERSONA_COPY } from "@eidolon/config";
 import type { Hono } from "hono";
 import type { UserEnv } from "@/auth/guard";
 import {
@@ -14,6 +14,7 @@ import {
   updateChapter,
   updatePersona,
 } from "@/db/personas";
+import { isStorageConnected, uploadPersonaPhoto } from "@/services/storage";
 
 const TEXT_FIELDS = [
   "name",
@@ -79,6 +80,44 @@ export function mountPersonas(app: Hono<UserEnv>): void {
       return c.json({ error: "No such persona." }, 404);
     }
     return c.json({ personas: listPersonas(c.get("user").id) });
+  });
+
+  app.post(`${base}/:id/photo`, async (c) => {
+    const personaId = c.req.param("id");
+    const reader = c.get("user");
+
+    if (!getPersona(personaId, reader.id)) return c.json({ error: "No such persona." }, 404);
+    if (!isStorageConnected()) {
+      return c.json(
+        { error: "Object storage is offline, so the picture has nowhere to live." },
+        503,
+      );
+    }
+
+    const body = await c.req.parseBody().catch(() => null);
+    const file = CARD_UPLOAD.fieldNames
+      .map((field) => body?.[field])
+      .find((value) => value instanceof File) as File | undefined;
+
+    if (!file) return c.json({ error: "Send the picture as a file." }, 400);
+    if (file.size > CARD_UPLOAD.maxBytes) return c.json({ error: "That picture is too big." }, 413);
+
+    const bytes = Buffer.from(await file.arrayBuffer());
+    const photoUrl = await uploadPersonaPhoto(
+      reader.email,
+      personaId,
+      file.name || "photo.png",
+      bytes,
+    );
+    const persona = updatePersona(personaId, reader.id, { photoUrl });
+
+    return c.json({ persona });
+  });
+
+  app.delete(`${base}/:id/photo`, (c) => {
+    const persona = updatePersona(c.req.param("id"), c.get("user").id, { photoUrl: null });
+    if (!persona) return c.json({ error: "No such persona." }, 404);
+    return c.json({ persona });
   });
 
   app.post(`${base}/:id/chapters`, async (c) => {

@@ -47,6 +47,8 @@ export const AdminCharacterSchema = z.object({
   rules: z.string(),
   exampleDialogue: z.string(),
   greeting: z.string(),
+  likes: z.string().default(""),
+  dislikes: z.string().default(""),
   voice: z.string(),
   pronouns: z.string(),
   ownerId: z.string().nullable(),

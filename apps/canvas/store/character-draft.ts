@@ -1,4 +1,4 @@
-import { CHARACTER_COPY, DEFAULT_PRONOUNS, VOICE } from "@eidolon/config";
+import { CHARACTER_COPY, CHARACTER_TASTE_COPY, DEFAULT_PRONOUNS, VOICE } from "@eidolon/config";
 import type { CharacterCard } from "./character-api";
 
 export type Draft = Omit<CharacterCard, "id" | "ownerId" | "isPublic" | "forkedFrom">;
@@ -12,6 +12,8 @@ export const EMPTY_DRAFT: Draft = {
   rules: "",
   exampleDialogue: "",
   greeting: "",
+  likes: "",
+  dislikes: "",
   voice: VOICE.defaultId,
   pronouns: DEFAULT_PRONOUNS,
 };
@@ -62,6 +64,18 @@ export const FIELDS: Record<FieldKey, FieldSpec> = {
     label: CHARACTER_COPY.examplesLabel,
     hint: CHARACTER_COPY.examplesHint,
     lines: 5,
+  },
+  likes: {
+    key: "likes",
+    label: CHARACTER_TASTE_COPY.likesLabel,
+    hint: CHARACTER_TASTE_COPY.likesHint,
+    lines: 2,
+  },
+  dislikes: {
+    key: "dislikes",
+    label: CHARACTER_TASTE_COPY.dislikesLabel,
+    hint: CHARACTER_TASTE_COPY.dislikesHint,
+    lines: 2,
   },
   systemPrompt: {
     key: "systemPrompt",

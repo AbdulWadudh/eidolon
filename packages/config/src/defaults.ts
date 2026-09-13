@@ -249,6 +249,7 @@ export const IMAGE_ENCODE = {
 export const STORAGE = {
   defaultRegion: "us-east-1",
   characterPrefix: "characters",
+  personaPrefix: "personas",
   imageFolder: "images",
   audioFolder: "audio",
   imageContentType: "image/webp",
@@ -267,6 +268,7 @@ export const STORAGE_SWEEP = {
     { table: "character_portraits", columns: ["url"] },
     { table: "stages", columns: ["backdrop_url"] },
     { table: "user", columns: ["image"] },
+    { table: "personas", columns: ["photo_url"] },
   ],
 } as const;
 

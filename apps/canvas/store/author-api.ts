@@ -1,6 +1,5 @@
 import { type AuthorField, type AuthorMode, charactersUrl, TIMEOUTS_MS } from "@eidolon/config";
 import { authedFetch } from "@/store/connection";
-import type { Draft } from "./character-draft";
 
 export type AuthorContext = Partial<Record<AuthorField, string>>;
 
@@ -9,7 +8,7 @@ export interface AuthorResult {
   error: string | null;
 }
 
-export function contextFrom(draft: Draft, exclude: AuthorField): AuthorContext {
+export function contextFrom(draft: Record<string, unknown>, exclude: AuthorField): AuthorContext {
   const { voice: _voice, ...rest } = draft;
   const context: AuthorContext = {};
 

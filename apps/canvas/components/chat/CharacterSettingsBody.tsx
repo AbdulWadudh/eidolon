@@ -15,7 +15,7 @@ export interface CharacterSettingsBodyProps {
   characterId: string;
   serverHost: string;
   draft: Draft;
-  author: FieldAuthor;
+  author: FieldAuthor<never>;
   isPublic: boolean;
   isMine: boolean;
   portrait: string | null;

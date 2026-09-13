@@ -2,26 +2,26 @@ import type { AuthorField, AuthorMode } from "@eidolon/config";
 import * as React from "react";
 import { tap } from "@/services/haptics";
 import { authorField, contextFrom } from "@/store/author-api";
-import type { Draft } from "@/store/character-draft";
-export type DraftField = AuthorField & keyof Draft;
+export type AuthoredDraft = Record<string, string>;
 
-export interface FieldAuthor {
-  busyField: DraftField | null;
+export interface FieldAuthor<K extends string = string> {
+  busyField: string | null;
   error: string | null;
-  run: (field: DraftField, mode: AuthorMode) => void;
-  revert: (field: DraftField) => void;
-  stepsBack: (field: DraftField) => number;
+  run: (field: K, mode: AuthorMode) => void;
+  revert: (field: K) => void;
+  stepsBack: (field: K) => number;
   clearError: () => void;
 }
 
-type History = Partial<Record<DraftField, string[]>>;
+type History = Record<string, string[]>;
 
-export function useFieldAuthor(
+export function useFieldAuthor<T extends AuthoredDraft>(
   serverHost: string,
-  draft: Draft,
-  onChange: (patch: Partial<Draft>) => void,
-): FieldAuthor {
-  const [busyField, setBusyField] = React.useState<DraftField | null>(null);
+  draft: T,
+  onChange: (patch: Partial<T>) => void,
+): FieldAuthor<AuthorField & keyof T & string> {
+  type K = AuthorField & keyof T & string;
+  const [busyField, setBusyField] = React.useState<K | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const history = React.useRef<History>({});
 
@@ -29,11 +29,11 @@ export function useFieldAuthor(
   latest.current = draft;
 
   const run = React.useCallback(
-    (field: DraftField, mode: AuthorMode) => {
+    (field: K, mode: AuthorMode) => {
       if (busyField) return;
 
       const current = latest.current;
-      const before = current[field];
+      const before = current[field] as string;
       setBusyField(field);
       setError(null);
 
@@ -51,7 +51,7 @@ export function useFieldAuthor(
             ...history.current,
             [field]: [...(history.current[field] ?? []), before],
           };
-          onChange({ [field]: result.text } as Partial<Draft>);
+          onChange({ [field]: result.text } as Partial<T>);
           tap("success");
         },
       );
@@ -60,23 +60,20 @@ export function useFieldAuthor(
   );
 
   const revert = React.useCallback(
-    (field: DraftField) => {
+    (field: K) => {
       const stack = history.current[field] ?? [];
       if (stack.length === 0) return;
 
       const previous = stack[stack.length - 1] ?? "";
       history.current = { ...history.current, [field]: stack.slice(0, -1) };
-      onChange({ [field]: previous } as Partial<Draft>);
+      onChange({ [field]: previous } as Partial<T>);
       setError(null);
       tap("light");
     },
     [onChange],
   );
 
-  const stepsBack = React.useCallback(
-    (field: DraftField) => (history.current[field] ?? []).length,
-    [],
-  );
+  const stepsBack = React.useCallback((field: K) => (history.current[field] ?? []).length, []);
 
   const clearError = React.useCallback(() => setError(null), []);
 

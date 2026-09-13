@@ -5,6 +5,7 @@ import {
   DASHBOARD_COPY,
   GALLERY_COPY,
   HOME_COPY,
+  PERSONA_COPY,
   stripAuthority,
   UI_MS,
 } from "@eidolon/config";
@@ -18,6 +19,7 @@ import { ImportCardButton } from "@/components/characters/ImportCardButton";
 import { CharacterSettingsSheet } from "@/components/chat/CharacterSettingsSheet";
 import { AppIcon } from "@/components/common/icon";
 import { LoadingState } from "@/components/common/loading-state";
+import { PressableScale } from "@/components/common/pressable-scale";
 import { ThemeStudioSheet } from "@/components/theme/ThemeStudioSheet";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -25,6 +27,7 @@ import { GlassSurface } from "@/components/ui/glass-surface";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useBarTopInset } from "@/lib/bar-inset";
 import {
+  ArrowRight01Icon,
   DashboardSquare01Icon,
   Logout01Icon,
   PaintBoardIcon,
@@ -216,6 +219,22 @@ export default function MainCharactersScreen() {
                 </Text>
               </Button>
             </View>
+
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel={PERSONA_COPY.tile}
+              onPress={() => router.push("/personas")}
+              className="mt-3 flex-row items-center gap-2.5 rounded-button border border-border bg-input px-3 py-2.5"
+            >
+              <AppIcon icon={UserIcon} size={15} color={theme.primary} strokeWidth={1.6} />
+              <View className="flex-1">
+                <Text className="font-ui-bold text-[12.5px] text-text-primary">
+                  {PERSONA_COPY.tile}
+                </Text>
+                <Text className="font-ui text-[10.5px] text-text-muted">{PERSONA_COPY.blurb}</Text>
+              </View>
+              <AppIcon icon={ArrowRight01Icon} size={14} color={theme.textMuted} />
+            </PressableScale>
           </Card>
         )}
 

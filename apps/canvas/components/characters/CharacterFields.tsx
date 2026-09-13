@@ -3,37 +3,51 @@ import { Text, TextInput, View } from "react-native";
 import Animated, { cubicBezier, FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { FieldAuthorRow } from "@/components/characters/FieldAuthorRow";
 import type { FieldAuthor } from "@/hooks/use-field-author";
-import { type Draft, FIELDS, type FieldKey } from "@/store/character-draft";
+import { type Draft, FIELDS } from "@/store/character-draft";
+
+export interface AuthoredFieldSpec {
+  label: string;
+  hint: string;
+  lines: number;
+}
+
 import { useResolvedTheme } from "@/store/theme-store";
 
 export type { Draft, FieldKey } from "@/store/character-draft";
 export { EMPTY_DRAFT, FIELDS } from "@/store/character-draft";
 
-export interface CharacterFieldsProps {
-  keys: FieldKey[];
-  draft: Draft;
+export interface AuthoredFieldsProps<T extends Record<string, string>> {
+  keys: (keyof T & string)[];
+  fields: Record<string, AuthoredFieldSpec>;
+  draft: T;
   characterId?: string;
-  author?: FieldAuthor;
+  author?: FieldAuthor<never>;
   compact?: boolean;
-  onChange: (patch: Partial<Draft>) => void;
+  onChange: (patch: Partial<T>) => void;
 }
 
-export function CharacterFields({
+export function CharacterFields(props: Omit<AuthoredFieldsProps<Draft>, "fields">) {
+  return <AuthoredFields {...props} fields={FIELDS} />;
+}
+
+export function AuthoredFields<T extends Record<string, string>>({
   keys,
+  fields,
   draft,
   characterId,
   author,
   compact = false,
   onChange,
-}: CharacterFieldsProps) {
+}: AuthoredFieldsProps<T>) {
   const theme = useResolvedTheme(characterId);
   const reduced = useReducedMotion();
 
   return (
     <View className={compact ? "gap-3" : "gap-3.5"}>
       {keys.map((key, position) => {
-        const field = FIELDS[key];
-        const value = draft[key];
+        const field = fields[key];
+        if (!field) return null;
+        const value = draft[key] as string;
         const filled = value.trim().length > 0;
         const isBusy = author?.busyField === key;
 
@@ -87,10 +101,10 @@ export function CharacterFields({
                   hasText={filled}
                   isBusy={isBusy}
                   isLocked={author.busyField !== null && !isBusy}
-                  stepsBack={author.stepsBack(key)}
-                  onSuggest={() => author.run(key, "suggest")}
-                  onEnhance={() => author.run(key, "enhance")}
-                  onRevert={() => author.revert(key)}
+                  stepsBack={author.stepsBack(key as never)}
+                  onSuggest={() => author.run(key as never, "suggest")}
+                  onEnhance={() => author.run(key as never, "enhance")}
+                  onRevert={() => author.revert(key as never)}
                 />
               ) : null}
             </View>
@@ -98,7 +112,7 @@ export function CharacterFields({
             <TextInput
               accessibilityLabel={field.label}
               value={value}
-              onChangeText={(next) => onChange({ [key]: next } as Partial<Draft>)}
+              onChangeText={(next) => onChange({ [key]: next } as Partial<T>)}
               multiline={field.lines > 1}
               editable={!isBusy}
               placeholderTextColor={theme.textMuted}

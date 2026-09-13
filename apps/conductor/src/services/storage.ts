@@ -18,6 +18,10 @@ export function characterKey(characterId: string, folder: string, filename: stri
   return `${ownerEmail(characterId)}/${STORAGE.characterPrefix}/${characterId}/${folder}/${filename}`;
 }
 
+export function personaKey(email: string, personaId: string, filename: string): string {
+  return `${email}/${STORAGE.personaPrefix}/${personaId}/${filename}`;
+}
+
 export function imageKey(characterId: string, filename: string): string {
   return characterKey(characterId, STORAGE.imageFolder, filename);
 }
@@ -203,6 +207,20 @@ export async function uploadImage(
 ): Promise<string> {
   const encoded = await toStoredImage(buffer);
   return uploadFile(imageKey(characterId, asWebpName(filename)), encoded, STORAGE.imageContentType);
+}
+
+export async function uploadPersonaPhoto(
+  email: string,
+  personaId: string,
+  filename: string,
+  buffer: Buffer | Uint8Array,
+): Promise<string> {
+  const encoded = await toStoredImage(buffer);
+  return uploadFile(
+    personaKey(email, personaId, asWebpName(filename)),
+    encoded,
+    STORAGE.imageContentType,
+  );
 }
 
 export async function uploadAudio(

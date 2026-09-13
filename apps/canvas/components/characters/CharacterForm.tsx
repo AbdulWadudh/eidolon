@@ -18,6 +18,8 @@ const ALL_FIELDS: FieldKey[] = [
   "rules",
   "exampleDialogue",
   "greeting",
+  "likes",
+  "dislikes",
   "systemPrompt",
 ];
 
