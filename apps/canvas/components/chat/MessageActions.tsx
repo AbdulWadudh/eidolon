@@ -78,7 +78,7 @@ export function MessageActions({
   );
 
   return (
-    <View className="mt-1 ml-1 flex-row items-center gap-1 self-start rounded-button border border-border px-1.5">
+    <View className="mt-1 flex-row items-center gap-1 self-start rounded-button border border-border px-1.5">
       {isEditing ? (
         <>
           {button(MIND_COPY.cancel, Cancel01Icon, theme.textMuted, onCancel, true)}
