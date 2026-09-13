@@ -79,6 +79,7 @@ export {
   GALLERY_COPY,
   HOME_COPY,
   MOOD_COPY,
+  OUTFIT_COPY,
   PHOTO_COPY,
   STATUS_COPY,
   type StatusKey,

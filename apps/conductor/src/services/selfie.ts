@@ -1,7 +1,12 @@
 import { render } from "@eidolon/config";
 import { sample } from "es-toolkit";
 import { IMAGE, TIMEOUTS_MS } from "@/config";
-import { getCharacterAvatar, getCharacterLook, setCharacterAvatar } from "@/db/look";
+import {
+  getCharacterAvatar,
+  getCharacterLook,
+  getCharacterOutfit,
+  setCharacterAvatar,
+} from "@/db/look";
 
 import { getPrompt } from "@/prompts/store";
 import type { Orientation } from "@/services/comfy-workflow";
@@ -172,11 +177,13 @@ export async function paintSelfie(
     inferOrientation(`${request.request} ${shot?.setting ?? ""}`);
 
   const sourceImageName = await stageSourceImage(request);
+  const chosen = getCharacterOutfit(request.characterId);
+  const outfit = chosen ?? shot?.outfit ?? "";
 
   const parts = sourceImageName
-    ? [appearance, request.request, shot?.look_change ?? "", shot?.outfit ?? ""]
+    ? [appearance, request.request, shot?.look_change ?? "", outfit]
     : shot
-      ? [appearance, shot.outfit, shot.others, shot.action, shot.setting, shot.light, shot.framing]
+      ? [appearance, outfit, shot.others, shot.action, shot.setting, shot.light, shot.framing]
       : [appearance, request.request, sample(IMAGE.framings), sample(IMAGE.flourishes)];
 
   const promptUsed = parts

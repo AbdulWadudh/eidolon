@@ -13,6 +13,16 @@ export const CONNECTION_COPY = {
   disconnected: "Out of reach",
 } as const;
 
+export const OUTFIT_COPY = {
+  title: "What are they wearing?",
+  blurb: "Keep the same clothes across photos. Leave it empty and every photo picks its own.",
+  placeholder: "green linen shirt, sleeves rolled",
+  save: "Keep it",
+  clear: "Let it vary",
+  wearingNow: "Wearing",
+  varies: "Varies with each photo",
+} as const;
+
 export const PHOTO_COPY = {
   framing: "Finding the light",
   taking: "Capturing the moment",

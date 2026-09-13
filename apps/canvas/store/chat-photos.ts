@@ -16,6 +16,7 @@ export interface CharacterLook {
   avatarCrop: AvatarCropRect | null;
   backgroundUrl: string | null;
   faceUrl: string | null;
+  outfit: string | null;
 }
 
 export interface LookPatch {
@@ -23,6 +24,7 @@ export interface LookPatch {
   avatarCrop?: AvatarCropRect | null;
   backgroundUrl?: string | null;
   faceUrl?: string | null;
+  outfit?: string | null;
 }
 
 export async function fetchLook(host: string, characterId: string): Promise<CharacterLook | null> {
@@ -63,6 +65,7 @@ export async function saveLook(host: string, characterId: string, patch: LookPat
           avatarCrop: body.character.avatarCrop ?? null,
           backgroundUrl: body.character.backgroundUrl ?? null,
           faceUrl: body.character.faceUrl ?? null,
+          outfit: body.character.outfit ?? null,
         },
       });
     }

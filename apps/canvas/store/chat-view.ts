@@ -10,6 +10,7 @@ export const EMPTY_LOOK: CharacterLook = {
   avatarCrop: null,
   backgroundUrl: null,
   faceUrl: null,
+  outfit: null,
 };
 
 export interface ChatView {

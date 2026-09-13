@@ -13,6 +13,7 @@ import { ChatSheets } from "@/components/chat/ChatSheets";
 import { ChatTopBar } from "@/components/chat/ChatTopBar";
 import { InputDock } from "@/components/chat/InputDock";
 import { MoodSheet } from "@/components/chat/MoodSheet";
+import { OutfitSheet } from "@/components/chat/OutfitSheet";
 import { PhotoRequestSheet } from "@/components/chat/PhotoRequestSheet";
 import { type PhotoAction, PhotoViewer } from "@/components/chat/PhotoViewer";
 import { SuggestionTray } from "@/components/chat/SuggestionTray";
@@ -26,6 +27,7 @@ import { VoiceNotesProvider } from "@/hooks/use-voice-notes";
 import { useAffinityStore } from "@/store/affinity-store";
 import { type CharacterCard, fetchCharacter } from "@/store/character-api";
 import { forgetCharacter, loadHistory } from "@/store/chat-history";
+import { saveLook } from "@/store/chat-photos";
 import { useChatStore } from "@/store/chat-store";
 import { useConnectionStore } from "@/store/connection";
 import { fetchMind, patchAffinity, summarizeNow } from "@/store/mind-api";
@@ -68,6 +70,7 @@ export default function ChatScreen() {
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [themeOpen, setThemeOpen] = React.useState(false);
   const [moodOpen, setMoodOpen] = React.useState(false);
+  const [outfitOpen, setOutfitOpen] = React.useState(false);
   const [notice, setNotice] = React.useState<string | null>(null);
   const [adminOpen, setAdminOpen] = React.useState(false);
   const applyMindUpdate = useAffinityStore((state) => state.applyMindUpdate);
@@ -137,6 +140,7 @@ export default function ChatScreen() {
     (action: ChatAction) => {
       setActionsOpen(false);
       if (action === "refresh") loadHistory(serverHost, characterId);
+      if (action === "outfit") setOutfitOpen(true);
       if (action === "reset") {
         confirmation.ask({
           title: CONFIRM_COPY.resetChat,
@@ -253,6 +257,17 @@ export default function ChatScreen() {
         isOpen={adminOpen}
         characterId={characterId}
         onClose={() => setAdminOpen(false)}
+      />
+
+      <OutfitSheet
+        isOpen={outfitOpen}
+        characterId={characterId}
+        outfit={view.characterLook.outfit}
+        onClose={() => setOutfitOpen(false)}
+        onApply={(outfit) => {
+          void saveLook(serverHost, characterId, { outfit });
+          setOutfitOpen(false);
+        }}
       />
 
       <MoodSheet

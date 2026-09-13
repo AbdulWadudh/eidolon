@@ -12,6 +12,7 @@ export { default as CallEnd01Icon } from "@hugeicons/core-free-icons/CallEnd01Ic
 export { default as Cancel01Icon } from "@hugeicons/core-free-icons/Cancel01Icon";
 export { default as CheckmarkCircle01Icon } from "@hugeicons/core-free-icons/CheckmarkCircle01Icon";
 export { default as ClipboardIcon } from "@hugeicons/core-free-icons/ClipboardIcon";
+export { default as ClothesIcon } from "@hugeicons/core-free-icons/ClothesIcon";
 export { default as ColorPickerIcon } from "@hugeicons/core-free-icons/ColorPickerIcon";
 export { default as DashboardSquare01Icon } from "@hugeicons/core-free-icons/DashboardSquare01Icon";
 export { default as Delete02Icon } from "@hugeicons/core-free-icons/Delete02Icon";

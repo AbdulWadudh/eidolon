@@ -47,7 +47,7 @@ Everything is Bun + TypeScript. Biome is the only linter and formatter.
 | Voice notes | wired end to end: Kokoro synthesises each reply, `audio_chunk` carries base64 mp3, the client auto-plays it once. Unverified on a handset |
 | Web search | DuckDuckGo first, then Serper, then Exa. The last two need keys, so an unconfigured install falls through and returns nothing |
 | Mic button | `InputToolbar` offers `voice`, but the chat screen's `onAction` never handles it, so it does nothing |
-| Outfit and Moment | in the actions sheet, `ready: false` with a Soon badge and no handler |
+| Moment | in the actions sheet, `ready: false` with a Soon badge. The pipeline behind it exists — `stages`, the `generateStageBackdrop` queue job, the worker that renders and broadcasts `stage_shift` — but nothing enqueues the job and no client listens for the event |
 | `.gitattributes` | absent. `core.autocrlf=true` rewrites endings on checkout and Biome wants LF, so `bun run lint` fails on a fresh clone until someone re-runs `bun run format`. `* text=auto eol=lf` would end it |
 
 ## Traps already paid for

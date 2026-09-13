@@ -7,6 +7,7 @@ export interface CharacterLook {
   avatarCrop: unknown | null;
   backgroundUrl: string | null;
   faceUrl: string | null;
+  outfit: string | null;
 }
 
 function field<T>(characterId: string, column: Parameters<typeof db.select>[0]): T | undefined {
@@ -26,6 +27,7 @@ export function getCharacterLook(characterId: string): CharacterLook {
       avatarCrop: characters.avatarCrop,
       backgroundUrl: characters.backgroundUrl,
       faceUrl: characters.faceUrl,
+      outfit: characters.outfit,
     })
     .from(characters)
     .where(eq(characters.id, characterId))
@@ -36,6 +38,7 @@ export function getCharacterLook(characterId: string): CharacterLook {
     avatarCrop: row?.avatarCrop ? JSON.parse(row.avatarCrop) : null,
     backgroundUrl: row?.backgroundUrl ?? null,
     faceUrl: row?.faceUrl ?? null,
+    outfit: row?.outfit ?? null,
   };
 }
 
@@ -82,5 +85,15 @@ export function getCharacterAppearance(characterId: string): string | null {
   return (
     field<{ appearance: string | null }>(characterId, { appearance: characters.appearance })
       ?.appearance ?? null
+  );
+}
+
+export function setCharacterOutfit(characterId: string, outfit: string | null): void {
+  write(characterId, { outfit });
+}
+
+export function getCharacterOutfit(characterId: string): string | null {
+  return (
+    field<{ outfit: string | null }>(characterId, { outfit: characters.outfit })?.outfit ?? null
   );
 }

@@ -9,8 +9,8 @@ import {
   AddCircleIcon,
   Book02Icon,
   Cancel01Icon,
+  ClothesIcon,
   Delete02Icon,
-  FlashIcon,
   RefreshIcon,
   Settings01Icon,
 } from "@/lib/icons";
@@ -33,7 +33,7 @@ const ACTIONS: ActionSpec[] = [
   { action: "summarize", icon: Book02Icon, label: "New chapter", ready: true },
   { action: "admin", icon: Settings01Icon, label: ADMIN_COPY.tile, ready: true },
   { action: "reset", icon: Delete02Icon, label: "Reset", ready: true, destructive: true },
-  { action: "outfit", icon: FlashIcon, label: "Outfit", badge: "Soon", ready: false },
+  { action: "outfit", icon: ClothesIcon, label: "Outfit", ready: true },
   { action: "moment", icon: AddCircleIcon, label: "Moment", badge: "Soon", ready: false },
 ];
 

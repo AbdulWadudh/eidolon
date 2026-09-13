@@ -76,6 +76,7 @@ export async function fetchTranscript(host: string, characterId: string): Promis
       avatarCrop: usableCrop(body.character?.avatarCrop),
       backgroundUrl: body.character?.backgroundUrl ?? null,
       faceUrl: body.character?.faceUrl ?? null,
+      outfit: null,
     },
   };
 }
@@ -90,6 +91,7 @@ export async function forgetCharacter(host: string, characterId: string): Promis
       avatarCrop: usableCrop(body.character?.avatarCrop),
       backgroundUrl: body.character?.backgroundUrl ?? null,
       faceUrl: body.character?.faceUrl ?? null,
+      outfit: null,
     },
   };
 }

@@ -32,6 +32,7 @@ function open(characterId: string, count: number) {
       avatarCrop: null,
       backgroundUrl: `${characterId}-bg.png`,
       faceUrl: null,
+      outfit: null,
     },
   });
 }

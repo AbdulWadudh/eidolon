@@ -31,6 +31,7 @@ import {
   setCharacterAvatarCrop,
   setCharacterBackground,
   setCharacterFace,
+  setCharacterOutfit,
 } from "@/db/look";
 import { deleteLoreEntry, upsertLoreEntry } from "@/db/lorebook";
 import { summarizeChronicleNow } from "@/orchestrator/chronicle";
@@ -179,6 +180,7 @@ v1.patch(`${API_ROUTES.characters}/:id/look`, async (c) => {
     avatarCrop?: unknown;
     backgroundUrl?: string | null;
     faceUrl?: string | null;
+    outfit?: string | null;
   };
 
   if (typeof body.avatarUrl === "string" && body.avatarUrl.length > 0) {
@@ -194,6 +196,9 @@ v1.patch(`${API_ROUTES.characters}/:id/look`, async (c) => {
   }
   if (body.backgroundUrl !== undefined) {
     setCharacterBackground(characterId, body.backgroundUrl || null);
+  }
+  if (body.outfit !== undefined) {
+    setCharacterOutfit(characterId, body.outfit?.trim() || null);
   }
 
   return c.json({ character: { id: characterId, ...getCharacterLook(characterId) } });

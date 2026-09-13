@@ -37,6 +37,7 @@ export const characters = sqliteTable("characters", {
   pronouns: text(),
   defaultAffinity: integer("default_affinity"),
   defaultMood: text("default_mood"),
+  outfit: text(),
 });
 
 export const messages = sqliteTable(
