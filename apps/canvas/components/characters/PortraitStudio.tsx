@@ -18,6 +18,8 @@ export interface PortraitStudioProps {
   onPortrait: (url: string) => void;
 }
 
+const AUTHOR_SLOT_PX = 72;
+
 export function PortraitStudio({
   characterId,
   serverHost,
@@ -101,24 +103,34 @@ export function PortraitStudio({
           {AUTHOR_COPY.portraitExtraHint}
         </Text>
 
-        <AuthorButtons characterId={characterId} author={author} draft={extra} onText={setExtra} />
+        <View className="relative">
+          <TextInput
+            accessibilityLabel={AUTHOR_COPY.portraitExtraLabel}
+            value={extra}
+            onChangeText={setExtra}
+            editable={!waiting}
+            placeholderTextColor={theme.textMuted}
+            cursorColor={theme.primary}
+            selectionColor={theme.primary}
+            className="rounded-button border border-border bg-input font-main text-[15px] text-text-primary leading-6"
+            style={{
+              minHeight: CHAT.minTouchTargetPx + 8,
+              paddingHorizontal: FIELD_PADDING.horizontal,
+              paddingVertical: FIELD_PADDING.vertical,
+              paddingRight: AUTHOR_SLOT_PX,
+              opacity: waiting ? 0.5 : 1,
+            }}
+          />
 
-        <TextInput
-          accessibilityLabel={AUTHOR_COPY.portraitExtraLabel}
-          value={extra}
-          onChangeText={setExtra}
-          editable={!waiting}
-          placeholderTextColor={theme.textMuted}
-          cursorColor={theme.primary}
-          selectionColor={theme.primary}
-          className="rounded-button border border-border bg-input font-main text-[15px] text-text-primary leading-6"
-          style={{
-            minHeight: CHAT.minTouchTargetPx + 8,
-            paddingHorizontal: FIELD_PADDING.horizontal,
-            paddingVertical: FIELD_PADDING.vertical,
-            opacity: waiting ? 0.5 : 1,
-          }}
-        />
+          <View className="absolute top-0 right-2 bottom-0 justify-center">
+            <AuthorButtons
+              characterId={characterId}
+              author={author}
+              draft={extra}
+              onText={setExtra}
+            />
+          </View>
+        </View>
       </View>
 
       {note ? (

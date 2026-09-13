@@ -46,7 +46,7 @@ export const CHAT = {
   toolButtonPx: 32,
   toolIconPx: 20,
   toolGapPx: 4,
-  sendButtonPx: 42,
+  sendButtonPx: 36,
 } as const;
 
 export const PHOTO = {

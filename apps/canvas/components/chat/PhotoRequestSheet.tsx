@@ -25,6 +25,8 @@ export interface PhotoRequestSheetProps {
   onSubmit: (situation: string, orientation: PhotoOrientation) => void;
 }
 
+const AUTHOR_SLOT_PX = 72;
+
 const ORIENTATIONS: { value: PhotoOrientation; label: string; hint: string; ratio: number }[] = [
   { value: "portrait", label: "Upright", hint: "Close up", ratio: 3 / 4 },
   { value: "landscape", label: "Wide", hint: "The whole scene", ratio: 4 / 3 },
@@ -199,25 +201,35 @@ function Situation({
       </View>
 
       <View className="flex-row items-end gap-2">
-        <AuthorButtons characterId={characterId} author={author} draft={value} onText={onChange} />
+        <View className="relative flex-1">
+          <TextInput
+            accessibilityLabel="Describe the photo"
+            multiline
+            value={value}
+            onChangeText={onChange}
+            placeholder={editing ? "What is different this time" : "Describe it, or leave it open"}
+            placeholderTextColor={theme.textMuted}
+            cursorColor={theme.primary}
+            selectionColor={theme.primary}
+            className="w-full border border-border bg-input px-4 font-main text-base text-text-primary"
+            style={{
+              borderRadius: theme.radius,
+              maxHeight: 96,
+              paddingVertical: 10,
+              paddingRight: AUTHOR_SLOT_PX,
+              includeFontPadding: false,
+            }}
+          />
 
-        <TextInput
-          accessibilityLabel="Describe the photo"
-          multiline
-          value={value}
-          onChangeText={onChange}
-          placeholder={editing ? "What is different this time" : "Describe it, or leave it open"}
-          placeholderTextColor={theme.textMuted}
-          cursorColor={theme.primary}
-          selectionColor={theme.primary}
-          className="flex-1 border border-border bg-input px-4 font-main text-base text-text-primary"
-          style={{
-            borderRadius: theme.radius,
-            maxHeight: 96,
-            paddingVertical: 10,
-            includeFontPadding: false,
-          }}
-        />
+          <View className="absolute right-2 bottom-1.5">
+            <AuthorButtons
+              characterId={characterId}
+              author={author}
+              draft={value}
+              onText={onChange}
+            />
+          </View>
+        </View>
 
         <PressableScale
           accessibilityRole="button"
@@ -230,7 +242,7 @@ function Situation({
             borderRadius: theme.radius,
           }}
         >
-          <AppIcon icon={RefreshIcon} size={18} color={theme.textMuted} strokeWidth={2} />
+          <AppIcon icon={RefreshIcon} size={16} color={theme.textMuted} strokeWidth={1.6} />
         </PressableScale>
 
         <PressableScale
@@ -245,7 +257,7 @@ function Situation({
             backgroundColor: theme.primary,
           }}
         >
-          <AppIcon icon={SentIcon} size={18} color={theme.primaryForeground} strokeWidth={2} />
+          <AppIcon icon={SentIcon} size={16} color={theme.primaryForeground} strokeWidth={1.6} />
         </PressableScale>
       </View>
     </View>
