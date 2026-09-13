@@ -2,7 +2,7 @@ import { PERSONA_COPY, UI_MS } from "@eidolon/config";
 import * as React from "react";
 import { Text, TextInput, View } from "react-native";
 import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
-import { AuthorButtons } from "@/components/chat/mind/AuthorButtons";
+import { AuthoredField, textAuthorActions } from "@/components/common/authored-field";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,6 @@ import { useTextAuthor } from "@/hooks/use-text-author";
 import { AddCircleIcon, Delete02Icon } from "@/lib/icons";
 import type { PersonaChapter } from "@/store/persona-api";
 import { useResolvedTheme } from "@/store/theme-store";
-
-const AUTHOR_SLOT_PX = 72;
 
 export interface ChapterListProps {
   serverHost: string;
@@ -128,30 +126,15 @@ export function ChapterList({ serverHost, chapters, onAdd, onSave, onRemove }: C
           style={{ height: 40, paddingVertical: 0, includeFontPadding: false }}
         />
 
-        <View className="relative">
-          <TextInput
-            accessibilityLabel={PERSONA_COPY.chapterBodyPlaceholder}
-            value={body}
-            onChangeText={setBody}
-            multiline
-            placeholder={PERSONA_COPY.chapterBodyPlaceholder}
-            placeholderTextColor={theme.textMuted}
-            cursorColor={theme.primary}
-            selectionColor={theme.primary}
-            textAlignVertical="top"
-            className="rounded-button border border-border bg-input px-3 font-main text-[13px] text-text-primary leading-5"
-            style={{
-              minHeight: 72,
-              paddingTop: 8,
-              paddingBottom: 8,
-              paddingRight: AUTHOR_SLOT_PX,
-            }}
-          />
-
-          <View className="absolute right-2 bottom-1.5">
-            <AuthorButtons author={author} draft={body} onText={setBody} />
-          </View>
-        </View>
+        <AuthoredField
+          lines={3}
+          minHeight={84}
+          value={body}
+          onChangeText={setBody}
+          placeholder={PERSONA_COPY.chapterBodyPlaceholder}
+          accessibilityLabel={PERSONA_COPY.chapterBodyPlaceholder}
+          actions={textAuthorActions(author, body, setBody)}
+        />
 
         <Button
           variant="secondary"

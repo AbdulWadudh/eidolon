@@ -2,7 +2,7 @@ import { OUTFIT_COPY, UI_MS } from "@eidolon/config";
 import * as React from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
-import { AuthorButtons } from "@/components/chat/mind/AuthorButtons";
+import { AuthorActions, textAuthorActions } from "@/components/common/authored-field";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Button } from "@/components/ui/button";
@@ -87,14 +87,12 @@ export function OutfitSheet({
             returnKeyType="done"
             onSubmitEditing={() => onApply(trimmed || null)}
             trailing={
-              <AuthorButtons
+              <AuthorActions
                 characterId={characterId}
-                author={author}
-                draft={draft}
-                onText={(text) => {
+                {...textAuthorActions(author, draft, (text) => {
                   setDraft(text);
                   setError(null);
-                }}
+                })}
               />
             }
           />

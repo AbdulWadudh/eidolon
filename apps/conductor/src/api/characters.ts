@@ -33,7 +33,7 @@ export const characters = new Hono();
 
 type Draft = Partial<Omit<CharacterCard, "id" | "ownerId" | "isPublic" | "forkedFrom">>;
 
-const TEXT_FIELDS: Array<keyof Draft> = [
+export const TEXT_FIELDS: Array<keyof Draft> = [
   "name",
   "tagline",
   "personality",

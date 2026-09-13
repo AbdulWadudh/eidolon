@@ -1,9 +1,9 @@
-import { AUTHOR_COPY, CHAT, FIELD_PADDING, PORTRAIT_POLL_MS, UI_MS } from "@eidolon/config";
+import { AUTHOR_COPY, CHAT, PORTRAIT_POLL_MS, UI_MS } from "@eidolon/config";
 import { Image } from "expo-image";
 import * as React from "react";
-import { ActivityIndicator, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
-import { AuthorButtons } from "@/components/chat/mind/AuthorButtons";
+import { AuthoredField, textAuthorActions } from "@/components/common/authored-field";
 import { Button } from "@/components/ui/button";
 import { useTextAuthor } from "@/hooks/use-text-author";
 import { tap } from "@/services/haptics";
@@ -17,8 +17,6 @@ export interface PortraitStudioProps {
   avatarUrl: string | null;
   onPortrait: (url: string) => void;
 }
-
-const AUTHOR_SLOT_PX = 72;
 
 export function PortraitStudio({
   characterId,
@@ -108,34 +106,15 @@ export function PortraitStudio({
           {AUTHOR_COPY.portraitExtraHint}
         </Text>
 
-        <View className="relative">
-          <TextInput
-            accessibilityLabel={AUTHOR_COPY.portraitExtraLabel}
-            value={extra}
-            onChangeText={setExtra}
-            editable={!waiting}
-            placeholderTextColor={theme.textMuted}
-            cursorColor={theme.primary}
-            selectionColor={theme.primary}
-            className="rounded-button border border-border bg-input font-main text-[15px] text-text-primary leading-6"
-            style={{
-              minHeight: CHAT.minTouchTargetPx + 8,
-              paddingHorizontal: FIELD_PADDING.horizontal,
-              paddingVertical: FIELD_PADDING.vertical,
-              paddingRight: AUTHOR_SLOT_PX,
-              opacity: waiting ? 0.5 : 1,
-            }}
-          />
-
-          <View className="absolute top-0 right-2 bottom-0 justify-center">
-            <AuthorButtons
-              characterId={characterId}
-              author={author}
-              draft={extra}
-              onText={setExtra}
-            />
-          </View>
-        </View>
+        <AuthoredField
+          characterId={characterId}
+          minHeight={CHAT.minTouchTargetPx + 8}
+          value={extra}
+          onChangeText={setExtra}
+          editable={!waiting}
+          accessibilityLabel={AUTHOR_COPY.portraitExtraLabel}
+          actions={textAuthorActions(author, extra, setExtra)}
+        />
       </View>
 
       {note ? (

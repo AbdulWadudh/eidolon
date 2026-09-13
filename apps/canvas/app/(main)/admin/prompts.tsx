@@ -13,7 +13,7 @@ import Animated, { useReducedMotion } from "react-native-reanimated";
 import { AdminEmpty, AdminScreen } from "@/components/admin/AdminScreen";
 import { revealAt } from "@/components/admin/admin-motion";
 import { EditableRow, useSaveState } from "@/components/admin/EditableRow";
-import { FieldAuthorRow } from "@/components/characters/FieldAuthorRow";
+import { AuthorActions } from "@/components/common/authored-field";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import { Input } from "@/components/ui/input";
 import { usePromptAuthor } from "@/hooks/use-prompt-author";
@@ -206,7 +206,7 @@ export default function AdminPromptsScreen() {
                       canSave={draft.trim().length > 0 && draft !== prompt.value}
                     >
                       <View className="flex-row items-center justify-end gap-2">
-                        <FieldAuthorRow
+                        <AuthorActions
                           label={prompt.key}
                           hasText={draft.trim().length > 0}
                           isBusy={author.busyKey === prompt.key}

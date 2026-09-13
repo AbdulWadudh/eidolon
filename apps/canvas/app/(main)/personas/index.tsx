@@ -10,6 +10,7 @@ import { PressableScale } from "@/components/common/pressable-scale";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/hooks/use-confirm";
+import { useGlobalThemeScope } from "@/hooks/use-global-theme-scope";
 import { useBarTopInset } from "@/lib/bar-inset";
 import { AddCircleIcon, ArrowLeft01Icon, Delete02Icon, UserIcon } from "@/lib/icons";
 import { tap } from "@/services/haptics";
@@ -27,6 +28,7 @@ import { useToastStore } from "@/store/toast-store";
 const AVATAR_PX = 44;
 
 export default function PersonasScreen() {
+  useGlobalThemeScope();
   const router = useRouter();
   const theme = useResolvedTheme();
   const reduced = useReducedMotion();
@@ -97,7 +99,11 @@ export default function PersonasScreen() {
   );
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-canvas">
+    <SafeAreaView
+      edges={["top"]}
+      className="flex-1 bg-canvas"
+      style={{ flex: 1, backgroundColor: theme.canvas }}
+    >
       <View className="flex-row items-center gap-2 px-3 pb-2" style={{ paddingTop: barTop + 6 }}>
         <PressableScale
           accessibilityRole="button"

@@ -1,8 +1,8 @@
 import { MIND_COPY } from "@eidolon/config";
 import * as React from "react";
 import { Text, TextInput, View } from "react-native";
-import { AuthorButtons } from "@/components/chat/mind/AuthorButtons";
 import { AddRowButton, RowActions } from "@/components/chat/mind/RowActions";
+import { AuthorActions, textAuthorActions } from "@/components/common/authored-field";
 import { AppIcon } from "@/components/common/icon";
 import { useTextAuthor } from "@/hooks/use-text-author";
 import { useVoice } from "@/hooks/use-voice";
@@ -129,11 +129,11 @@ export function LoreSection({
           {field(draft.gate, (gate) => setDraft((d) => ({ ...d, gate })), "0")}
         </View>
       </View>
-      <AuthorButtons
+      <AuthorActions
         characterId={characterId}
-        author={author}
-        draft={draft.content}
-        onText={(content) => setDraft((d) => ({ ...d, content }))}
+        {...textAuthorActions(author, draft.content, (content) =>
+          setDraft((d) => ({ ...d, content })),
+        )}
       />
     </View>
   );

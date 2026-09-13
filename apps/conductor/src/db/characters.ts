@@ -178,6 +178,8 @@ export function createCharacter(draft: CharacterDraft): CharacterCard {
       rules: draft.rules ?? "",
       exampleDialogue: draft.exampleDialogue ?? "",
       greeting: draft.greeting ?? "",
+      likes: draft.likes ?? "",
+      dislikes: draft.dislikes ?? "",
       voice: draft.voice ?? VOICE.defaultId,
       pronouns: isPronounKey(draft.pronouns)
         ? draft.pronouns.trim().toLowerCase()
@@ -196,7 +198,7 @@ export function createCharacter(draft: CharacterDraft): CharacterCard {
 
 type EditableField = keyof Omit<CharacterCard, "id" | "ownerId" | "forkedFrom">;
 
-const EDITABLE: EditableField[] = [
+export const EDITABLE: EditableField[] = [
   "name",
   "tagline",
   "personality",
@@ -205,6 +207,8 @@ const EDITABLE: EditableField[] = [
   "rules",
   "exampleDialogue",
   "greeting",
+  "likes",
+  "dislikes",
   "voice",
   "pronouns",
   "isPublic",

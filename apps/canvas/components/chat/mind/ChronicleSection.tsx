@@ -1,8 +1,8 @@
 import { CHRONICLE_PAGING, MIND_COPY } from "@eidolon/config";
 import * as React from "react";
 import { Text, TextInput, View } from "react-native";
-import { AuthorButtons } from "@/components/chat/mind/AuthorButtons";
 import { AddRowButton, RowActions } from "@/components/chat/mind/RowActions";
+import { AuthorActions, textAuthorActions } from "@/components/common/authored-field";
 import { useTextAuthor } from "@/hooks/use-text-author";
 import type { ChapterView } from "@/store/mind-api";
 import { useResolvedTheme } from "@/store/theme-store";
@@ -76,7 +76,7 @@ export function ChronicleSection({
   );
 
   const assist = (
-    <AuthorButtons characterId={characterId} author={author} draft={draft} onText={setDraft} />
+    <AuthorActions characterId={characterId} {...textAuthorActions(author, draft, setDraft)} />
   );
 
   return (

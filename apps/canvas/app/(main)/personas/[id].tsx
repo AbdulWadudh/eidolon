@@ -14,6 +14,7 @@ import { PersonaPhoto } from "@/components/personas/PersonaPhoto";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useFieldAuthor } from "@/hooks/use-field-author";
+import { useGlobalThemeScope } from "@/hooks/use-global-theme-scope";
 import { useBarTopInset } from "@/lib/bar-inset";
 import { ArrowLeft01Icon } from "@/lib/icons";
 import { tap } from "@/services/haptics";
@@ -40,6 +41,7 @@ import { useResolvedTheme } from "@/store/theme-store";
 import { useToastStore } from "@/store/toast-store";
 
 export default function PersonaEditorScreen() {
+  useGlobalThemeScope();
   const router = useRouter();
   const theme = useResolvedTheme();
   const reduced = useReducedMotion();
@@ -116,7 +118,11 @@ export default function PersonaEditorScreen() {
   const dirty = isDirty(draft, persona);
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-canvas">
+    <SafeAreaView
+      edges={["top"]}
+      className="flex-1 bg-canvas"
+      style={{ flex: 1, backgroundColor: theme.canvas }}
+    >
       <View className="flex-row items-center gap-2 px-3 pb-2" style={{ paddingTop: barTop + 6 }}>
         <PressableScale
           accessibilityRole="button"

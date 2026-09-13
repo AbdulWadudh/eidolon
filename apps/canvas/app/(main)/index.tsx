@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { useConfirm } from "@/hooks/use-confirm";
+import { useGlobalThemeScope } from "@/hooks/use-global-theme-scope";
 import { useBarTopInset } from "@/lib/bar-inset";
 import {
   ArrowRight01Icon,
@@ -43,6 +44,7 @@ const ACCOUNT_PX = 34;
 const HEADER_TOP_PX = 6;
 
 export default function MainCharactersScreen() {
+  useGlobalThemeScope();
   const router = useRouter();
   const { serverHost, sessionToken, signOut, connectionState } = useConnectionStore();
   const theme = useResolvedTheme();

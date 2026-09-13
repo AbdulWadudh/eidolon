@@ -1,9 +1,9 @@
 import { CHAT, UI_MS } from "@eidolon/config";
 import * as React from "react";
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
-import { AuthorButtons } from "@/components/chat/mind/AuthorButtons";
+import { AuthoredField, textAuthorActions } from "@/components/common/authored-field";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { GlassSurface } from "@/components/ui/glass-surface";
@@ -24,8 +24,6 @@ export interface PhotoRequestSheetProps {
   onClose: () => void;
   onSubmit: (situation: string, orientation: PhotoOrientation) => void;
 }
-
-const AUTHOR_SLOT_PX = 72;
 
 const ORIENTATIONS: { value: PhotoOrientation; label: string; hint: string; ratio: number }[] = [
   { value: "portrait", label: "Upright", hint: "Close up", ratio: 3 / 4 },
@@ -201,34 +199,17 @@ function Situation({
       </View>
 
       <View className="flex-row items-end gap-2">
-        <View className="relative flex-1">
-          <TextInput
-            accessibilityLabel="Describe the photo"
-            multiline
+        <View className="flex-1">
+          <AuthoredField
+            characterId={characterId}
+            lines={2}
+            minHeight={64}
             value={value}
             onChangeText={onChange}
             placeholder={editing ? "What is different this time" : "Describe it, or leave it open"}
-            placeholderTextColor={theme.textMuted}
-            cursorColor={theme.primary}
-            selectionColor={theme.primary}
-            className="w-full border border-border bg-input px-4 font-main text-base text-text-primary"
-            style={{
-              borderRadius: theme.radius,
-              maxHeight: 96,
-              paddingVertical: 10,
-              paddingRight: AUTHOR_SLOT_PX,
-              includeFontPadding: false,
-            }}
+            accessibilityLabel="Describe the photo"
+            actions={textAuthorActions(author, value, onChange)}
           />
-
-          <View className="absolute right-2 bottom-1.5">
-            <AuthorButtons
-              characterId={characterId}
-              author={author}
-              draft={value}
-              onText={onChange}
-            />
-          </View>
         </View>
 
         <PressableScale

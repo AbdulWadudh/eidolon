@@ -3,8 +3,8 @@ import * as React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { AudioNotePill } from "@/components/audio/AudioNotePill";
 import { MessageActions } from "@/components/chat/MessageActions";
-import { AuthorButtons } from "@/components/chat/mind/AuthorButtons";
 import { ReplyOptionsPicker } from "@/components/chat/ReplyOptionsPicker";
+import { AuthorActions, textAuthorActions } from "@/components/common/authored-field";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { useTextAuthor } from "@/hooks/use-text-author";
 import { cn } from "@/lib/utils";
@@ -142,11 +142,9 @@ function MessageCardBase({
 
         {editing ? (
           <View className="mt-2.5">
-            <AuthorButtons
+            <AuthorActions
               characterId={message.characterId}
-              author={author}
-              draft={draft}
-              onText={setDraft}
+              {...textAuthorActions(author, draft, setDraft)}
             />
           </View>
         ) : null}

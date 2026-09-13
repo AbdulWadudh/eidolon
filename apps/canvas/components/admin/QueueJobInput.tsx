@@ -2,7 +2,7 @@ import { AUTHOR_COPY, DASHBOARD_COPY } from "@eidolon/config";
 import * as React from "react";
 import { Text, TextInput, View } from "react-native";
 import { MediaPreview } from "@/components/admin/MediaPreview";
-import { FieldAuthorRow } from "@/components/characters/FieldAuthorRow";
+import { AuthorActions } from "@/components/common/authored-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SwitchRow } from "@/components/ui/switch";
@@ -107,7 +107,7 @@ export function QueueJobInput({
             <View className="flex-row items-center justify-between gap-2">
               <Text className="flex-1 font-ui text-[10px] text-text-muted">{field.label}</Text>
               {authorable(field.label) ? (
-                <FieldAuthorRow
+                <AuthorActions
                   label={field.label}
                   hasText={String(draft[field.label] ?? "").trim().length > 0}
                   isBusy={busyField === field.label}
