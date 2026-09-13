@@ -26,6 +26,8 @@ export const CONNECT_COPY = {
   connecting: "Connecting…",
   addressLabel: "Address",
   addressHint: "The computer running your conductor",
+  reachable: "Your Eidolon answered.",
+  checking: "Looking for it…",
   connect: "Connect",
   missingFields: "Fill in the address before you sign in.",
   refused: "That email and password were not accepted.",
@@ -61,7 +63,7 @@ export const HOME_COPY = {
 
 export const THEME_COPY = {
   appliesTo: "Applies to",
-  everyone: "Everyone",
+  everyone: "All characters",
   onlyThem: "only",
   status: "Status",
   ownLook: "Custom look",

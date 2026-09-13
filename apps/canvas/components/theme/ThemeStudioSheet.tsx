@@ -62,8 +62,8 @@ const INSPECTED_TOKENS: [string, keyof ThemeTokens][] = [
 export function ThemeStudioSheet({
   isOpen,
   onClose,
-  characterId = "emma",
-  characterName = "Emma",
+  characterId,
+  characterName,
   lockToCharacter = false,
 }: ThemeStudioSheetProps) {
   const updateGlobalToken = useThemeStore((state) => state.updateGlobalToken);
@@ -74,13 +74,17 @@ export function ThemeStudioSheet({
   const setColorMode = useThemeStore((state) => state.setColorMode);
   const confirmation = useConfirm(characterId);
 
+  const scopedCharacter =
+    characterId && characterName ? { id: characterId, name: characterName } : null;
+
   const [scope, setScope] = React.useState<"global" | "character">(
-    lockToCharacter ? "character" : "global",
+    lockToCharacter && scopedCharacter ? "character" : "global",
   );
 
   React.useEffect(() => {
-    if (lockToCharacter) setScope("character");
-  }, [lockToCharacter]);
+    if (!scopedCharacter) setScope("global");
+    else if (lockToCharacter) setScope("character");
+  }, [lockToCharacter, scopedCharacter]);
   const [expandedSection, setExpandedSection] = React.useState<string | null>(null);
   const toggleSection = React.useCallback((key: string) => {
     setExpandedSection((prev) => (prev === key ? null : key));
@@ -93,8 +97,7 @@ export function ThemeStudioSheet({
     initialColor: string;
   } | null>(null);
 
-  const targetCharacterId = characterId || "emma";
-  const scopedCharacterId = scope === "character" ? targetCharacterId : undefined;
+  const scopedCharacterId = scope === "character" ? scopedCharacter?.id : undefined;
   const resolvedTheme = useResolvedTheme(scopedCharacterId);
   const previewCssVars = useThemeCssVars(scopedCharacterId);
 
@@ -123,8 +126,8 @@ export function ThemeStudioSheet({
     [resolvedTheme],
   );
 
-  const characterOverrides = useThemeStore(
-    (state) => state.characterThemes[targetCharacterId]?.[state.palettes.mode],
+  const characterOverrides = useThemeStore((state) =>
+    scopedCharacter ? state.characterThemes[scopedCharacter.id]?.[state.palettes.mode] : undefined,
   );
   const characterOverrideKeys = React.useMemo(
     () => Object.keys(characterOverrides ?? {}) as (keyof ThemeTokens)[],
@@ -143,13 +146,13 @@ export function ThemeStudioSheet({
 
   const updateToken = React.useCallback(
     <K extends keyof ThemeTokens>(key: K, value: ThemeTokens[K]) => {
-      if (scope === "global") {
+      if (scope === "global" || !scopedCharacter) {
         updateGlobalToken(key, value);
       } else {
-        updateCharacterToken(targetCharacterId, key, value);
+        updateCharacterToken(scopedCharacter.id, key, value);
       }
     },
-    [scope, targetCharacterId, updateGlobalToken, updateCharacterToken],
+    [scope, scopedCharacter, updateGlobalToken, updateCharacterToken],
   );
 
   const handleColorChange = React.useCallback(
@@ -217,10 +220,10 @@ export function ThemeStudioSheet({
           </View>
 
           <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-            {lockToCharacter ? null : (
+            {lockToCharacter || !scopedCharacter ? null : (
               <ThemeScopeSelector
                 scope={scope}
-                characterName={characterName}
+                characterName={scopedCharacter.name}
                 characterHasOverrides={characterHasOverrides}
                 expanded={expandedSection === "scope"}
                 chevronColor={resolvedTheme.textMuted}
@@ -276,12 +279,14 @@ export function ThemeStudioSheet({
                   <View className="flex-row items-center gap-2.5">
                     <View className="h-9 w-9 items-center justify-center rounded-full border border-primary bg-input">
                       <Text className="font-main-bold text-xs text-primary">
-                        {characterName.slice(0, 2).toUpperCase()}
+                        {(scopedCharacter?.name ?? "").slice(0, 2).toUpperCase()}
                       </Text>
                     </View>
                     <View>
                       <Text className="font-main-bold text-sm text-text-primary">
-                        {scope === "character" ? characterName : THEME_COPY.everyone}
+                        {scope === "character"
+                          ? (scopedCharacter?.name ?? "")
+                          : THEME_COPY.everyone}
                       </Text>
                       <Text className="font-ui text-[11px] text-text-muted">
                         Radius: {resolvedTheme.radius}px • Accent: {resolvedTheme.primary}
@@ -677,7 +682,8 @@ export function ThemeStudioSheet({
                         body: CONFIRM_COPY.promoteThemeBody,
                         confirmLabel: CONFIRM_COPY.promoteThemeAction,
                         isDestructive: false,
-                        onConfirm: () => promoteCharacterToGlobal(targetCharacterId),
+                        onConfirm: () =>
+                          scopedCharacter && promoteCharacterToGlobal(scopedCharacter.id),
                       })
                     }
                   >
@@ -691,7 +697,7 @@ export function ThemeStudioSheet({
                         title: CONFIRM_COPY.resetTheme,
                         body: CONFIRM_COPY.resetThemeBody,
                         confirmLabel: CONFIRM_COPY.resetThemeAction,
-                        onConfirm: () => resetCharacterTheme(targetCharacterId),
+                        onConfirm: () => scopedCharacter && resetCharacterTheme(scopedCharacter.id),
                       })
                     }
                   >

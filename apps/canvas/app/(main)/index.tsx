@@ -353,8 +353,8 @@ export default function MainCharactersScreen() {
       <ThemeStudioSheet
         isOpen={showThemeStudio}
         onClose={() => setShowThemeStudio(false)}
-        characterId={managing?.id ?? "emma"}
-        characterName={managing?.name ?? "Emma"}
+        characterId={managing?.id}
+        characterName={managing?.name}
       />
     </SafeAreaView>
   );
