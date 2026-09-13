@@ -33,9 +33,9 @@ export interface ChatTopBarProps {
 }
 
 const AVATAR_PX = 38;
-const ACTION_PX = 40;
-const ICON_PX = 20;
-const ICON_STROKE = 1.8;
+const ACTION_PX = AVATAR_PX;
+const ICON_PX = 18;
+const ICON_STROKE = 1.6;
 const ACCENT_SURFACE_ALPHA = 0.12;
 const ACCENT_EDGE_ALPHA = 0.35;
 
