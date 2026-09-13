@@ -23,6 +23,11 @@ export const QUEUE_JOBS = {
   proactiveMessage: "proactive-message",
 } as const;
 
+export const QUEUE_ANNOUNCE = {
+  portraits: true,
+  chatPhotos: false,
+} as const;
+
 export const QUEUE_RETENTION = {
   removeOnComplete: 100,
   removeOnFail: 50,

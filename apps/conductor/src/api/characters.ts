@@ -27,6 +27,7 @@ import {
 import { deleteLoreEntry, getLoreEntries, upsertLoreEntry } from "@/db/lorebook";
 import { requestStageBackdrop } from "@/orchestrator/stage-manager";
 import { jobKey } from "@/queue/job-id";
+import { announceQueuePlaces } from "@/queue/queue-place";
 import { enqueueGpuJob } from "@/queue/queues";
 
 export const characters = new Hono();
@@ -266,15 +267,18 @@ characters.post("/:id/portrait", async (c) => {
   const character = getCharacter(characterId);
   if (!character) return c.json({ error: "No such character." }, 404);
 
+  const owner = await requireOwner(c);
+
   const body = (await c.req.json().catch(() => ({}))) as { prompt?: unknown };
   const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
 
   const jobId = await enqueueGpuJob(
     QUEUE_JOBS.generatePortrait,
-    { characterId, prompt },
+    { characterId, userId: owner?.id, prompt },
     { jobId: jobKey("portrait", characterId, Date.now()) },
   );
 
+  void announceQueuePlaces();
   return c.json({ queued: true, jobId: jobId ?? null }, 202);
 });
 

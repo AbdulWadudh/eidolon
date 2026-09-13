@@ -14,12 +14,17 @@ export function Toast() {
 
   const toastId = toast?.id ?? null;
 
+  const isSticky = toast?.sticky === true;
+
   React.useEffect(() => {
     if (!toastId) return;
 
-    const timer = setTimeout(() => dismiss(toastId), UI_MS.toastHold);
+    const timer = setTimeout(
+      () => dismiss(toastId),
+      isSticky ? UI_MS.toastStickyMax : UI_MS.toastHold,
+    );
     return () => clearTimeout(timer);
-  }, [toastId, dismiss]);
+  }, [toastId, isSticky, dismiss]);
 
   if (!toast) return null;
 
@@ -29,6 +34,28 @@ export function Toast() {
     bad: theme.danger,
   };
 
+  const body = (
+    <View pointerEvents="none" className="absolute inset-x-0 bottom-0 z-50 items-center px-4 pb-8">
+      <Animated.View
+        key={toast.id}
+        entering={reduced ? undefined : FadeInDown.duration(UI_MS.disclosure)}
+        exiting={reduced ? undefined : FadeOutDown.duration(UI_MS.toastExit)}
+        accessibilityLiveRegion="polite"
+        accessibilityLabel={toast.message}
+        className="max-w-full overflow-hidden rounded-card border"
+        style={{ borderColor: edge[toast.tone] }}
+      >
+        <GlassSurface tint="card" overlay className="px-4 py-2.5">
+          <Text className="font-ui-medium text-xs text-text-primary" numberOfLines={3}>
+            {toast.message}
+          </Text>
+        </GlassSurface>
+      </Animated.View>
+    </View>
+  );
+
+  if (isSticky) return body;
+
   return (
     <Modal
       visible
@@ -37,26 +64,7 @@ export function Toast() {
       animationType="none"
       onRequestClose={() => dismiss(toast.id)}
     >
-      <View
-        pointerEvents="none"
-        className="absolute inset-x-0 bottom-0 z-50 items-center px-4 pb-8"
-      >
-        <Animated.View
-          key={toast.id}
-          entering={reduced ? undefined : FadeInDown.duration(UI_MS.disclosure)}
-          exiting={reduced ? undefined : FadeOutDown.duration(UI_MS.toastExit)}
-          accessibilityLiveRegion="polite"
-          accessibilityLabel={toast.message}
-          className="max-w-full overflow-hidden rounded-card border"
-          style={{ borderColor: edge[toast.tone] }}
-        >
-          <GlassSurface tint="card" overlay className="px-4 py-2.5">
-            <Text className="font-ui-medium text-xs text-text-primary" numberOfLines={3}>
-              {toast.message}
-            </Text>
-          </GlassSurface>
-        </Animated.View>
-      </View>
+      {body}
     </Modal>
   );
 }

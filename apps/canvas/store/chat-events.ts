@@ -1,4 +1,4 @@
-import { MOMENT_COPY } from "@eidolon/config";
+import { MOMENT_COPY, QUEUE_COPY } from "@eidolon/config";
 import type { ServerMessage } from "@eidolon/protocol";
 import {
   attachAudioToLastAssistant,
@@ -9,6 +9,8 @@ import {
 } from "./chat-messages";
 import { type ChatSetter, HEARTBEAT_DETAIL } from "./chat-types";
 import { useToastStore } from "./toast-store";
+
+const QUEUE_TOAST = "queue-place";
 
 export function reduceServerMessage(
   msg: ServerMessage,
@@ -51,6 +53,7 @@ export function reduceServerMessage(
     }
 
     case "image_failed": {
+      useToastStore.getState().release(QUEUE_TOAST);
       const source = msg.payload ?? msg;
       set({
         isPainting: false,
@@ -58,6 +61,46 @@ export function reduceServerMessage(
         paintingTotal: 0,
         lastError: source.reason,
       });
+      break;
+    }
+
+    case "queue_place": {
+      const source = msg.payload ?? msg;
+      const position = Number(source.position ?? 0);
+      const total = Number(source.total ?? 0);
+
+      if (position === 0 || total === 0) {
+        useToastStore.getState().release(QUEUE_TOAST);
+        break;
+      }
+
+      if (position > 0 && total > 0) {
+        useToastStore
+          .getState()
+          .hold(
+            QUEUE_TOAST,
+            total === 1
+              ? QUEUE_COPY.onlyOne
+              : `${position === 1 ? QUEUE_COPY.nextUp : QUEUE_COPY.waiting} — ${QUEUE_COPY.place
+                  .replace("%p", String(position))
+                  .replace("%t", String(total))}`,
+          );
+      }
+      break;
+    }
+
+    case "persona_updated": {
+      const source = msg.payload ?? msg;
+      useToastStore.getState().release(QUEUE_TOAST);
+
+      if (typeof source.persona_id === "string" && source.persona_id.length > 0) {
+        set({
+          personaUpdate: {
+            id: source.persona_id,
+            photoUrl: typeof source.photo_url === "string" ? source.photo_url : null,
+          },
+        });
+      }
       break;
     }
 
@@ -90,6 +133,7 @@ export function reduceServerMessage(
     }
 
     case "image_ready": {
+      useToastStore.getState().release(QUEUE_TOAST);
       const source = msg.payload ?? msg;
       set((state) => ({
         isPainting: false,

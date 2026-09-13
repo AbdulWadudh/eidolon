@@ -6,11 +6,14 @@ export interface Toast {
   id: string;
   message: string;
   tone: ToastTone;
+  sticky?: boolean;
 }
 
 export interface ToastStore {
   toast: Toast | null;
   notify: (message: string, tone?: ToastTone) => void;
+  hold: (id: string, message: string, tone?: ToastTone) => void;
+  release: (id: string) => void;
   dismiss: (id: string) => void;
 }
 
@@ -25,6 +28,18 @@ export const useToastStore = create<ToastStore>((set, get) => ({
 
     raised += 1;
     set({ toast: { id: String(raised), message: trimmed, tone } });
+  },
+
+  hold: (id, message, tone = "neutral") => {
+    const trimmed = message.trim();
+    if (trimmed.length === 0) return;
+
+    set({ toast: { id, message: trimmed, tone, sticky: true } });
+  },
+
+  release: (id) => {
+    if (get().toast?.id !== id) return;
+    set({ toast: null });
   },
 
   dismiss: (id) => {

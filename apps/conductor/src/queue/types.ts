@@ -10,6 +10,7 @@ export interface StageBackdropJob {
 
 export interface PortraitJob {
   characterId: string;
+  userId?: string;
   prompt: string;
 }
 

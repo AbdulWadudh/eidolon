@@ -51,6 +51,7 @@ export const INITIAL_CHAT = {
   paintingTotal: 0,
   photoIdeas: [] as string[],
   arrivedAt: null as string | null,
+  personaUpdate: null as { id: string; photoUrl: string | null } | null,
   areIdeasLoading: false,
   characterLook: {
     avatarUrl: null,
@@ -188,6 +189,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   clearArrival: () => set({ arrivedAt: null }),
+
+  clearPersonaUpdate: () => set({ personaUpdate: null }),
 
   handleServerMessage: (msg) => reduceServerMessage(msg, set, commitStreamingTurn),
 

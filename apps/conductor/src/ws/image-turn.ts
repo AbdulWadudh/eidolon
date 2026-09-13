@@ -1,5 +1,6 @@
 import { PHOTO_COPY, QUEUE_JOBS } from "@eidolon/config";
 import { getCharacterCard, getRecentMessages } from "@/db";
+import { announceQueuePlaces } from "@/queue/queue-place";
 import { enqueueGpuJob } from "@/queue/queues";
 import { generatePhotoIdeas } from "@/services/photo-ideas";
 import { formatPhotoScene } from "@/services/selfie";
@@ -47,6 +48,8 @@ export async function handleImageRequest(
       orientation,
       referenceUrl,
     });
+
+    void announceQueuePlaces();
   } catch (error) {
     console.error("[image-turn] the photo could not be queued", error);
     sendServerMessage(ws, {

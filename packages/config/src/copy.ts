@@ -487,6 +487,17 @@ export const CHARACTER_TASTE_COPY = {
   dislikesHint: "What puts them off. A short list, not a sentence.",
 } as const;
 
+export const QUEUE_COPY = {
+  onlyOne: "On the GPU now",
+  nextUp: "Next on the GPU",
+  waiting: "Waiting on the GPU",
+  place: "%p of %t",
+  announceChatPhotosLabel: "Announce where photos are queued",
+  announceChatPhotosHint:
+    "Portraits always say where they are in the queue. Turn this on to hear the same for photos asked for in a chat.",
+  announceFailed: "Only the owner of this conductor can change that.",
+} as const;
+
 export const PERSONA_COPY = {
   title: "Who you are",
   blurb: "What a character knows about you when you talk to them.",

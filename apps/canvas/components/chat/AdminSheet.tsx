@@ -1,4 +1,7 @@
-import { ADMIN_COPY, MIND_COPY, UI_MS } from "@eidolon/config";
+import { ADMIN_COPY, MIND_COPY, QUEUE_COPY, UI_MS } from "@eidolon/config";
+
+const ANNOUNCE_PATH = "QUEUE_ANNOUNCE.chatPhotos";
+
 import * as React from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
@@ -7,11 +10,13 @@ import { PressableScale } from "@/components/common/pressable-scale";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { SwitchRow } from "@/components/ui/switch";
 import { Cancel01Icon } from "@/lib/icons";
+import { fetchConfig, saveConfigValue } from "@/store/admin-api";
 import { useAdminStore } from "@/store/admin-store";
 import { saveLook } from "@/store/chat-photos";
 import { useChatStore } from "@/store/chat-store";
 import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme } from "@/store/theme-store";
+import { useToastStore } from "@/store/toast-store";
 
 export interface AdminSheetProps {
   isOpen: boolean;
@@ -31,6 +36,37 @@ export function AdminSheet({ isOpen, characterId, onClose }: AdminSheetProps) {
   const serverHost = useConnectionStore((state) => state.serverHost);
   const look = useChatStore((state) => state.characterLook);
   const momentsPaint = look.backgroundChosen !== true;
+
+  const [announcesPhotos, setAnnouncesPhotos] = React.useState<boolean | null>(null);
+  const sessionToken = useConnectionStore((state) => state.sessionToken);
+
+  React.useEffect(() => {
+    if (!isOpen || !serverHost || !sessionToken) return;
+
+    let live = true;
+    void fetchConfig(serverHost, sessionToken)
+      .then((view) => {
+        if (!live) return;
+        const found = view.settings.find((entry) => entry.path === ANNOUNCE_PATH);
+        setAnnouncesPhotos(found?.value === true);
+      })
+      .catch(() => undefined);
+
+    return () => {
+      live = false;
+    };
+  }, [isOpen, serverHost, sessionToken]);
+
+  const setAnnounce = React.useCallback(
+    (enabled: boolean) => {
+      setAnnouncesPhotos(enabled);
+      void saveConfigValue(serverHost, sessionToken, ANNOUNCE_PATH, enabled).catch(() => {
+        setAnnouncesPhotos(!enabled);
+        useToastStore.getState().notify(QUEUE_COPY.announceFailed, "bad");
+      });
+    },
+    [serverHost, sessionToken],
+  );
 
   const setMomentsPaint = React.useCallback(
     (enabled: boolean) => {
@@ -102,6 +138,17 @@ export function AdminSheet({ isOpen, characterId, onClose }: AdminSheetProps) {
               onValueChange={setMomentsPaint}
               accessibilityLabel={ADMIN_COPY.momentBackgroundLabel}
             />
+
+            {announcesPhotos !== null ? (
+              <SwitchRow
+                characterId={characterId}
+                label={QUEUE_COPY.announceChatPhotosLabel}
+                hint={QUEUE_COPY.announceChatPhotosHint}
+                value={announcesPhotos}
+                onValueChange={setAnnounce}
+                accessibilityLabel={QUEUE_COPY.announceChatPhotosLabel}
+              />
+            ) : null}
           </View>
         </Animated.View>
       </Animated.View>

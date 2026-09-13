@@ -54,6 +54,32 @@ export const AudioChunkSchema = z.object({
     .optional(),
 });
 
+export const QueuePlaceSchema = z.object({
+  type: z.literal("queue_place"),
+  kind: z.enum(["portrait", "photo"]),
+  position: z.number().int().nonnegative(),
+  total: z.number().int().nonnegative(),
+  payload: z
+    .object({
+      kind: z.enum(["portrait", "photo"]),
+      position: z.number().int().nonnegative(),
+      total: z.number().int().nonnegative(),
+    })
+    .optional(),
+});
+
+export const PersonaUpdatedSchema = z.object({
+  type: z.literal("persona_updated"),
+  persona_id: z.string().min(1),
+  photo_url: z.string().url().nullable(),
+  payload: z
+    .object({
+      persona_id: z.string().min(1),
+      photo_url: z.string().url().nullable(),
+    })
+    .optional(),
+});
+
 export const StageShiftSchema = z.object({
   type: z.literal("stage_shift"),
   location_name: z.string(),
@@ -215,6 +241,8 @@ export const ServerMessageSchema = z.discriminatedUnion("type", [
   TextReplaceSchema,
   AudioChunkSchema,
   StageShiftSchema,
+  PersonaUpdatedSchema,
+  QueuePlaceSchema,
   ImagePreviewSchema,
   ImageReadySchema,
   ImageFailedSchema,

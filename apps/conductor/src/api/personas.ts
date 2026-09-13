@@ -15,6 +15,7 @@ import {
   updatePersona,
 } from "@/db/personas";
 import { jobKey } from "@/queue/job-id";
+import { announceQueuePlaces } from "@/queue/queue-place";
 import { enqueueGpuJob } from "@/queue/queues";
 import { isStorageConnected, uploadPersonaPhoto } from "@/services/storage";
 
@@ -175,6 +176,8 @@ export function mountPersonas(app: Hono<UserEnv>): void {
     );
 
     if (!jobId) return c.json({ error: PERSONA_COPY.photoFailed }, 503);
+
+    void announceQueuePlaces();
     return c.json({ queued: true, jobId }, 202);
   });
 

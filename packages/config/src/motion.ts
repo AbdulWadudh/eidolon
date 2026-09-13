@@ -52,6 +52,7 @@ export const UI_MS = {
   saveConfirm: 1400,
   searchDebounce: 220,
   toastHold: 2600,
+  toastStickyMax: 90000,
   toastExit: 180,
   stageCrossfade: 900,
   stageCaptionHold: 3600,

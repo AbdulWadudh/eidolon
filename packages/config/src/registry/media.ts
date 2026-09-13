@@ -8,7 +8,7 @@ import {
   TRANSCRIBE,
 } from "../live-voice";
 import { DEFAULT_LLM_PROFILE, LLM_PROFILES } from "../llm";
-import { PORTRAIT, STAGE } from "../queue";
+import { PORTRAIT, QUEUE_ANNOUNCE, STAGE } from "../queue";
 import { VOICE, VOICE_GENDERS, VOICE_LANGUAGES } from "../voice";
 import { REASONS } from "./reasons";
 import type { ConfigGroup } from "./types";
@@ -179,5 +179,12 @@ export const MEDIA_GROUPS: ConfigGroup[] = [
       },
       backdropFileExtension: { bucket: "structural", reason: REASONS.storedShape },
     },
+  },
+  {
+    name: "QUEUE_ANNOUNCE",
+    source: "queue.ts",
+    value: QUEUE_ANNOUNCE,
+    bucket: "editable",
+    reason: REASONS.requestRead,
   },
 ];

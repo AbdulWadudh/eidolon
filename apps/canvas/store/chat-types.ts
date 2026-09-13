@@ -63,6 +63,7 @@ export interface ChatStore {
   paintingTotal: number;
   photoIdeas: string[];
   arrivedAt: string | null;
+  personaUpdate: { id: string; photoUrl: string | null } | null;
   areIdeasLoading: boolean;
   characterLook: CharacterLook;
   handleServerMessage: (msg: ServerMessage) => void;
@@ -70,6 +71,7 @@ export interface ChatStore {
   selectSuggestion: (suggestion: string) => void;
   enhanceInput: (characterId: string) => void;
   clearArrival: () => void;
+  clearPersonaUpdate: () => void;
   sendVoiceNote: (characterId: string, base64: string, format: string) => void;
   revertEnhance: () => void;
   interrupt: (characterId: string) => void;

@@ -32,6 +32,23 @@ export function socketsForCharacter(characterId: string, userId: string): WebSoc
   return matches;
 }
 
+export function broadcastToReader(userId: string, message: unknown): number {
+  let delivered = 0;
+
+  for (const [ws, owner] of users) {
+    if (owner !== userId) continue;
+    try {
+      sendServerMessage(ws, message);
+      delivered += 1;
+    } catch (error) {
+      console.error("[ws] broadcast failed, dropping socket", error);
+      releaseSocket(ws);
+    }
+  }
+
+  return delivered;
+}
+
 export function broadcastToEveryUser(characterId: string, message: unknown): number {
   let delivered = 0;
 
