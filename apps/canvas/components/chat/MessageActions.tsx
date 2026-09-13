@@ -108,6 +108,11 @@ export function MessageActions({
           borderTopRightRadius: 0,
           borderBottomLeftRadius: theme.radius,
           borderBottomRightRadius: theme.radius,
+          borderColor: theme.cardBorder,
+          borderTopWidth: 0,
+          borderLeftWidth: theme.borderWidth,
+          borderRightWidth: theme.borderWidth,
+          borderBottomWidth: theme.borderWidth,
         }}
       />
 
