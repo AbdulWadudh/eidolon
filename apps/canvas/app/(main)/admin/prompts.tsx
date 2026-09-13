@@ -232,7 +232,7 @@ export default function AdminPromptsScreen() {
                           {prompt.variables.map((variable) => (
                             <View
                               key={variable}
-                              className="rounded-full border border-border px-2 py-0.5"
+                              className="rounded-button border border-border px-2 py-0.5"
                             >
                               <Text className="font-ui text-[10px] text-text-muted">
                                 {`{{${variable}}}`}

@@ -133,7 +133,7 @@ export function EditableRow({
         </View>
 
         {badge ? (
-          <View className="rounded-full border border-primary/40 px-2 py-0.5">
+          <View className="rounded-button border border-primary/40 px-2 py-0.5">
             <Text className="font-ui-medium text-[10px] text-primary">{badge}</Text>
           </View>
         ) : null}

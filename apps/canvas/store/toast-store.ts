@@ -14,6 +14,8 @@ export interface ToastStore {
   dismiss: (id: string) => void;
 }
 
+let raised = 0;
+
 export const useToastStore = create<ToastStore>((set, get) => ({
   toast: null,
 
@@ -21,7 +23,8 @@ export const useToastStore = create<ToastStore>((set, get) => ({
     const trimmed = message.trim();
     if (trimmed.length === 0) return;
 
-    set({ toast: { id: crypto.randomUUID(), message: trimmed, tone } });
+    raised += 1;
+    set({ toast: { id: String(raised), message: trimmed, tone } });
   },
 
   dismiss: (id) => {

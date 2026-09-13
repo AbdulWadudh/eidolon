@@ -179,8 +179,8 @@ function RoleChip({
       onPress={onPress}
       className={
         active
-          ? "rounded-full border border-primary bg-primary px-3 py-1.5 font-ui-medium text-primary-foreground text-xs"
-          : "rounded-full border border-border px-3 py-1.5 font-ui-medium text-text-muted text-xs"
+          ? "rounded-button border border-primary bg-primary px-3 py-1.5 font-ui-medium text-primary-foreground text-xs"
+          : "rounded-button border border-border px-3 py-1.5 font-ui-medium text-text-muted text-xs"
       }
     >
       {label}

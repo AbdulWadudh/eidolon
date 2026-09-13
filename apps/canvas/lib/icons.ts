@@ -1,4 +1,5 @@
 export { default as AddCircleIcon } from "@hugeicons/core-free-icons/AddCircleIcon";
+export { default as AlertCircleIcon } from "@hugeicons/core-free-icons/AlertCircleIcon";
 export { default as ArrowDown01Icon } from "@hugeicons/core-free-icons/ArrowDown01Icon";
 export { default as ArrowLeft01Icon } from "@hugeicons/core-free-icons/ArrowLeft01Icon";
 export { default as ArrowReloadHorizontalIcon } from "@hugeicons/core-free-icons/ArrowReloadHorizontalIcon";
@@ -15,10 +16,12 @@ export { default as ColorPickerIcon } from "@hugeicons/core-free-icons/ColorPick
 export { default as DashboardSquare01Icon } from "@hugeicons/core-free-icons/DashboardSquare01Icon";
 export { default as Delete02Icon } from "@hugeicons/core-free-icons/Delete02Icon";
 export { default as Download01Icon } from "@hugeicons/core-free-icons/Download01Icon";
+export { default as File01Icon } from "@hugeicons/core-free-icons/File01Icon";
 export { default as FileUploadIcon } from "@hugeicons/core-free-icons/FileUploadIcon";
 export { default as FlashIcon } from "@hugeicons/core-free-icons/FlashIcon";
 export { default as Folder01Icon } from "@hugeicons/core-free-icons/Folder01Icon";
 export { default as Globe02Icon } from "@hugeicons/core-free-icons/Globe02Icon";
+export { default as GridIcon } from "@hugeicons/core-free-icons/GridIcon";
 export { default as HandIcon } from "@hugeicons/core-free-icons/HandIcon";
 export { default as HardDriveIcon } from "@hugeicons/core-free-icons/HardDriveIcon";
 export { default as HeartCheckIcon } from "@hugeicons/core-free-icons/HeartCheckIcon";

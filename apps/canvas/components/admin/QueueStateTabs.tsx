@@ -60,7 +60,7 @@ export function QueueStateTabs({ queue, value, onChange }: QueueStateTabsProps) 
             }}
           >
             <Animated.View
-              className="flex-row items-center gap-1.5 rounded-full border px-2.5 py-1.5"
+              className="flex-row items-center gap-1.5 rounded-button border px-2.5 py-1.5"
               style={{
                 backgroundColor: isActive ? colour : theme.inputSurface,
                 borderColor: isActive ? colour : theme.cardBorder,

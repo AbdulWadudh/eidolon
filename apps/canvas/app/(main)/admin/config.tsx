@@ -233,8 +233,8 @@ function BucketChip({
       onPress={onPress}
       className={
         active
-          ? "rounded-full border border-primary bg-primary px-2.5 py-1 font-ui-medium text-[11px] text-primary-foreground"
-          : "rounded-full border border-border px-2.5 py-1 font-ui-medium text-[11px] text-text-muted"
+          ? "rounded-button border border-primary bg-primary px-2.5 py-1 font-ui-medium text-[11px] text-primary-foreground"
+          : "rounded-button border border-border px-2.5 py-1 font-ui-medium text-[11px] text-text-muted"
       }
     >
       {label}
