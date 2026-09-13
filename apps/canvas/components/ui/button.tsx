@@ -59,7 +59,11 @@ export const Button = React.forwardRef<React.ElementRef<typeof Pressable>, Butto
     const isTextual = isTextualChildren(children);
 
     return (
-      <Pressable ref={ref} className={cn(buttonVariants({ variant, size, className }))} {...props}>
+      <Pressable
+        ref={ref}
+        className={cn(buttonVariants({ variant, size, className }), props.disabled && "opacity-50")}
+        {...props}
+      >
         {isTextual ? (
           <Text className={cn(buttonTextVariants({ variant, size, className: textClassName }))}>
             {children}

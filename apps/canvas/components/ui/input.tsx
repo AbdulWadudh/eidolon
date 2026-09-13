@@ -1,6 +1,7 @@
 import { AUTH_COPY } from "@eidolon/config";
+import type { IconSvgElement } from "@hugeicons/react-native";
 import * as React from "react";
-import { TextInput, type TextInputProps } from "react-native";
+import { TextInput, type TextInputProps, View } from "react-native";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { GlassSurface } from "@/components/ui/glass-surface";
@@ -11,10 +12,11 @@ import { useResolvedTheme } from "@/store/theme-store";
 
 export interface InputProps extends TextInputProps {
   className?: string;
+  leading?: IconSvgElement;
 }
 
 export const Input = React.forwardRef<React.ElementRef<typeof TextInput>, InputProps>(
-  ({ className, placeholderTextColor, cursorColor, selectionColor, ...props }, ref) => {
+  ({ className, leading, placeholderTextColor, cursorColor, selectionColor, ...props }, ref) => {
     const theme = useResolvedTheme();
     const [isRevealed, setRevealed] = React.useState(false);
     const isMasked = props.secureTextEntry === true;
@@ -35,9 +37,19 @@ export const Input = React.forwardRef<React.ElementRef<typeof TextInput>, InputP
           className={cn(
             "h-11 w-full rounded-input border border-border px-4 py-2 font-ui text-sm text-text-primary",
             isMasked && "pr-12",
+            leading !== undefined && "pl-11",
             "focus:border-primary",
           )}
         />
+
+        {leading !== undefined ? (
+          <View
+            pointerEvents="none"
+            className="absolute top-0 left-0 h-11 w-11 items-center justify-center"
+          >
+            <AppIcon icon={leading} size={16} color={theme.textMuted} />
+          </View>
+        ) : null}
 
         {isMasked ? (
           <PressableScale

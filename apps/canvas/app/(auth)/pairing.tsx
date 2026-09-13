@@ -9,10 +9,11 @@ import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-rea
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SignInPanel } from "@/components/auth/SignInPanel";
 import { AppIcon } from "@/components/common/icon";
+import { PressableScale } from "@/components/common/pressable-scale";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ArrowDown01Icon, ArrowUp01Icon, QrCodeIcon } from "@/lib/icons";
+import { ArrowDown01Icon, ArrowUp01Icon, CameraOff01Icon, QrCodeIcon } from "@/lib/icons";
 import { useAuthStore } from "@/store/auth-store";
 import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme } from "@/store/theme-store";
@@ -39,6 +40,7 @@ export default function PairingScreen() {
   const [tokenInput, setTokenInput] = React.useState("");
   const [isConnecting, setIsConnecting] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [isCameraOn, setCameraOn] = React.useState(true);
 
   const scanLock = React.useRef(false);
 
@@ -113,25 +115,53 @@ export default function PairingScreen() {
           <View className="items-center justify-center">
             <View className="h-72 w-72 overflow-hidden rounded-card border border-border bg-card">
               {permission?.granted && Platform.OS !== "web" ? (
-                <View className="relative h-full w-full">
-                  <CameraView
-                    style={{ width: "100%", height: "100%" }}
-                    barcodeScannerSettings={{
-                      barcodeTypes: ["qr"],
-                    }}
-                    onBarcodeScanned={handleBarcodeScanned}
-                  />
-                  {}
-                  <View className="pointer-events-none absolute inset-4 rounded-button border-2 border-primary" />
-                  {isConnecting && (
-                    <View className="absolute inset-0 items-center justify-center bg-canvas/80">
-                      <ActivityIndicator size="large" color={theme.primary} />
-                      <Text className="mt-3 font-ui-medium text-sm text-text-primary">
-                        {PAIRING_COPY.connecting}
-                      </Text>
-                    </View>
-                  )}
-                </View>
+                isCameraOn ? (
+                  <View className="relative h-full w-full">
+                    <CameraView
+                      style={{ width: "100%", height: "100%" }}
+                      barcodeScannerSettings={{
+                        barcodeTypes: ["qr"],
+                      }}
+                      onBarcodeScanned={handleBarcodeScanned}
+                    />
+                    {}
+                    <View className="pointer-events-none absolute inset-4 rounded-button border-2 border-primary" />
+
+                    <PressableScale
+                      accessibilityRole="button"
+                      accessibilityLabel={PAIRING_COPY.cameraStop}
+                      hitSlop={10}
+                      onPress={() => setCameraOn(false)}
+                      className="absolute top-2 right-2 h-9 w-9 items-center justify-center rounded-full border border-border bg-canvas/80"
+                    >
+                      <AppIcon icon={CameraOff01Icon} size={16} color={theme.textPrimary} />
+                    </PressableScale>
+
+                    {isConnecting && (
+                      <View className="absolute inset-0 items-center justify-center bg-canvas/80">
+                        <ActivityIndicator size="large" color={theme.primary} />
+                        <Text className="mt-3 font-ui-medium text-sm text-text-primary">
+                          {PAIRING_COPY.connecting}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                ) : (
+                  <View className="flex-1 items-center justify-center p-6">
+                    <AppIcon icon={CameraOff01Icon} size={48} color={theme.textMuted} />
+                    <Text className="mt-3 text-center font-ui text-xs text-text-muted">
+                      {PAIRING_COPY.cameraOffNote}
+                    </Text>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="mt-4"
+                      onPress={() => setCameraOn(true)}
+                    >
+                      {PAIRING_COPY.cameraStart}
+                    </Button>
+                  </View>
+                )
               ) : (
                 <View className="flex-1 items-center justify-center p-6">
                   <AppIcon icon={QrCodeIcon} size={48} color={theme.textMuted} />

@@ -9,6 +9,8 @@ export { default as Book02Icon } from "@hugeicons/core-free-icons/Book02Icon";
 export { default as BookOpen01Icon } from "@hugeicons/core-free-icons/BookOpen01Icon";
 export { default as Call02Icon } from "@hugeicons/core-free-icons/Call02Icon";
 export { default as CallEnd01Icon } from "@hugeicons/core-free-icons/CallEnd01Icon";
+export { default as Camera01Icon } from "@hugeicons/core-free-icons/Camera01Icon";
+export { default as CameraOff01Icon } from "@hugeicons/core-free-icons/CameraOff01Icon";
 export { default as Cancel01Icon } from "@hugeicons/core-free-icons/Cancel01Icon";
 export { default as CheckmarkCircle01Icon } from "@hugeicons/core-free-icons/CheckmarkCircle01Icon";
 export { default as ClipboardIcon } from "@hugeicons/core-free-icons/ClipboardIcon";
@@ -28,6 +30,7 @@ export { default as HeartCheckIcon } from "@hugeicons/core-free-icons/HeartCheck
 export { default as Image01Icon } from "@hugeicons/core-free-icons/Image01Icon";
 export { default as Logout01Icon } from "@hugeicons/core-free-icons/Logout01Icon";
 export { default as MagicWand01Icon } from "@hugeicons/core-free-icons/MagicWand01Icon";
+export { default as Mail01Icon } from "@hugeicons/core-free-icons/Mail01Icon";
 export { default as Mic01Icon } from "@hugeicons/core-free-icons/Mic01Icon";
 export { default as MicOff01Icon } from "@hugeicons/core-free-icons/MicOff01Icon";
 export { default as Moon02Icon } from "@hugeicons/core-free-icons/Moon02Icon";
@@ -50,6 +53,7 @@ export { default as SquareUnlock01Icon } from "@hugeicons/core-free-icons/Square
 export { default as Sun02Icon } from "@hugeicons/core-free-icons/Sun02Icon";
 export { default as TextFontIcon } from "@hugeicons/core-free-icons/TextFontIcon";
 export { default as Undo02Icon } from "@hugeicons/core-free-icons/Undo02Icon";
+export { default as UserIcon } from "@hugeicons/core-free-icons/UserIcon";
 export { default as UserMultiple02Icon } from "@hugeicons/core-free-icons/UserMultiple02Icon";
 export { default as ViewIcon } from "@hugeicons/core-free-icons/ViewIcon";
 export { default as ViewOffIcon } from "@hugeicons/core-free-icons/ViewOffIcon";

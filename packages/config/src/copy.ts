@@ -31,6 +31,9 @@ export const PAIRING_COPY = {
   passphraseLabel: "Passphrase",
   passphraseHint: "The word shown on your computer",
   connect: "Connect",
+  cameraStop: "Turn the camera off",
+  cameraStart: "Turn the camera on",
+  cameraOffNote: "The camera is off. Turn it on to scan, or type the details in below.",
   missingFields: "Fill in both the address and the passphrase.",
   notOurCode: "That is not an Eidolon code. Scan the one showing on your computer.",
   incompleteCode: "That code is incomplete. Show the full one on your computer and scan again.",
@@ -432,6 +435,11 @@ export const AUTH_COPY = {
   firstAccountNote: "The first account on a conductor becomes its owner.",
   showPassword: "Show the password",
   hidePassword: "Hide the password",
+  namePlaceholder: "What should we call you",
+  emailPlaceholder: "you@example.com",
+  passwordPlaceholder: "At least 8 characters",
+  passwordTooShort: "That password is too short.",
+  emailLooksWrong: "That does not look like an email address.",
 } as const;
 
 export const ADMIN_COPY = {
