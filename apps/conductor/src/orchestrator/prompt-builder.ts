@@ -1,4 +1,11 @@
-import { PROMPT_BUDGET, render, STATUS_COPY, WEB_CONTEXT, WORKING_CONTEXT } from "@eidolon/config";
+import {
+  AFFINITY,
+  PROMPT_BUDGET,
+  render,
+  STATUS_COPY,
+  WEB_CONTEXT,
+  WORKING_CONTEXT,
+} from "@eidolon/config";
 import { getCharacterCard, getCharacterMind, getRecentMessages } from "@/db";
 import { getActiveChronicle } from "@/orchestrator/chronicle";
 import { loreContext } from "@/orchestrator/lorebook";
@@ -35,9 +42,16 @@ export interface AssembleOptions {
   characterId: string;
   userText: string;
   allowSearch: boolean;
+  moodOverride?: string;
   influences?: string[];
   onStatus?: (status: string, detail: string) => void;
   signal?: AbortSignal;
+}
+
+export function resolveMood(mood: string | undefined): string | null {
+  if (!mood) return null;
+  const wanted = mood.trim().toLowerCase();
+  return AFFINITY.moods.find((known) => known.toLowerCase() === wanted) ?? null;
 }
 
 export function stateDirective(affinity: number, tier: string, mood: string): string {
@@ -142,7 +156,8 @@ export async function assemblePrompt(options: AssembleOptions): Promise<Assemble
   const { characterId, userText, allowSearch } = options;
 
   const card = getCharacterCard(characterId);
-  const mind = getCharacterMind(characterId);
+  const stored = getCharacterMind(characterId);
+  const mind = { ...stored, mood: resolveMood(options.moodOverride) ?? stored.mood };
 
   const [web, lore, recall] = await Promise.all([
     gatherWeb(userText, allowSearch, options.onStatus),

@@ -1,7 +1,14 @@
-import { AFFINITY, CHRONICLE_CONTEXT, TRANSCRIPT } from "@eidolon/config";
-import { getCharacterMind, isAffinityLocked, saveCharacterMind, setAffinityLock } from "@/db";
+import { AFFINITY, TRANSCRIPT } from "@eidolon/config";
+import {
+  getCharacterCard,
+  getCharacterMind,
+  isAffinityLocked,
+  saveCharacterMind,
+  setAffinityLock,
+} from "@/db";
 import { getChronicles, type StoredChronicle } from "@/db/chronicles";
 import { getLoreEntries } from "@/db/lorebook";
+import { resolveMood } from "@/orchestrator/prompt-builder";
 import { affinityTier, clampScore } from "@/services/affinity-ladder";
 
 export interface LoreView {
@@ -27,6 +34,7 @@ export interface MindView {
     affinity: number;
     tier: string;
     mood: string;
+    pronouns: string;
     isLocked: boolean;
     min: number;
     max: number;
@@ -56,13 +64,12 @@ export function buildMindView(characterId: string): MindView {
       affinity: mind.score,
       tier: mind.tier,
       mood: mind.mood,
+      pronouns: getCharacterCard(characterId).pronouns,
       isLocked: isAffinityLocked(characterId),
       min: AFFINITY.min,
       max: AFFINITY.max,
     },
-    chapters: getChronicles(characterId, TRANSCRIPT.pageSize)
-      .slice(0, CHRONICLE_CONTEXT.activeChapters * 4)
-      .map(toChapterView),
+    chapters: getChronicles(characterId, TRANSCRIPT.pageSize).map(toChapterView),
     lore: getLoreEntries(characterId).map((entry) => {
       const isUnlocked = entry.requiredAffinity <= mind.score;
       return {
@@ -81,6 +88,7 @@ export function buildMindView(characterId: string): MindView {
 export interface AffinityOverride {
   score?: number;
   locked?: boolean;
+  mood?: string;
 }
 
 export function applyAffinityOverride(characterId: string, override: AffinityOverride): MindView {
@@ -88,13 +96,16 @@ export function applyAffinityOverride(characterId: string, override: AffinityOve
     setAffinityLock(characterId, override.locked);
   }
 
-  if (typeof override.score === "number" && Number.isFinite(override.score)) {
-    const score = clampScore(Math.round(override.score));
+  const mood = resolveMood(override.mood);
+  const hasScore = typeof override.score === "number" && Number.isFinite(override.score);
+
+  if (hasScore || mood) {
     const current = getCharacterMind(characterId);
+    const score = hasScore ? clampScore(Math.round(override.score as number)) : current.score;
     saveCharacterMind(characterId, {
       score,
-      tier: affinityTier(score),
-      mood: current.mood,
+      tier: hasScore ? affinityTier(score) : current.tier,
+      mood: mood ?? current.mood,
     });
   }
 

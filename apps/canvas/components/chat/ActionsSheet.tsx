@@ -1,32 +1,15 @@
-import { MIND_COPY, UI_MS } from "@eidolon/config";
+import { ADMIN_COPY, UI_MS } from "@eidolon/config";
 import type { IconSvgElement } from "@hugeicons/react-native";
-import { Modal, Pressable, Text, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
-import { SwitchRow } from "@/components/ui/switch";
-import {
-  AddCircleIcon,
-  BookOpen01Icon,
-  Call02Icon,
-  FlashIcon,
-  Image01Icon,
-  RefreshIcon,
-  SparklesIcon,
-} from "@/lib/icons";
+import { GlassSurface } from "@/components/ui/glass-surface";
+import { AddCircleIcon, Book02Icon, FlashIcon, RefreshIcon, Settings01Icon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
-import { useAffinityStore } from "@/store/affinity-store";
 import { useResolvedTheme } from "@/store/theme-store";
 
-export type ChatAction =
-  | "refresh"
-  | "reset"
-  | "call"
-  | "image"
-  | "lorebook"
-  | "outfit"
-  | "moment"
-  | "replies";
+export type ChatAction = "refresh" | "reset" | "summarize" | "admin" | "outfit" | "moment";
 
 interface ActionSpec {
   action: ChatAction;
@@ -40,10 +23,8 @@ interface ActionSpec {
 const ACTIONS: ActionSpec[] = [
   { action: "refresh", icon: RefreshIcon, label: "Refresh", ready: true },
   { action: "reset", icon: RefreshIcon, label: "Reset", ready: true, destructive: true },
-  { action: "replies", icon: SparklesIcon, label: "Replies", ready: true },
-  { action: "call", icon: Call02Icon, label: "Voice call", badge: "Soon", ready: false },
-  { action: "image", icon: Image01Icon, label: "Selfie", badge: "Soon", ready: false },
-  { action: "lorebook", icon: BookOpen01Icon, label: "Mind", ready: true },
+  { action: "summarize", icon: Book02Icon, label: "New chapter", ready: true },
+  { action: "admin", icon: Settings01Icon, label: ADMIN_COPY.tile, ready: true },
   { action: "outfit", icon: FlashIcon, label: "Outfit", badge: "Soon", ready: false },
   { action: "moment", icon: AddCircleIcon, label: "Moment", badge: "Soon", ready: false },
 ];
@@ -51,36 +32,28 @@ const ACTIONS: ActionSpec[] = [
 export interface ActionsSheetProps {
   isOpen: boolean;
   characterId: string;
-  repliesHidden: boolean;
   onClose: () => void;
   onAction: (action: ChatAction) => void;
 }
 
-export function ActionsSheet({
-  isOpen,
-  characterId,
-  repliesHidden,
-  onClose,
-  onAction,
-}: ActionsSheetProps) {
+export function ActionsSheet({ isOpen, characterId, onClose, onAction }: ActionsSheetProps) {
   const theme = useResolvedTheme(characterId);
   const reduced = useReducedMotion();
-  const insight = useAffinityStore((state) => state.isInsightModeEnabled);
-  const setInsightMode = useAffinityStore((state) => state.setInsightMode);
 
   return (
     <Modal visible={isOpen} transparent animationType="none" onRequestClose={onClose}>
       <Animated.View
         entering={reduced ? undefined : FadeIn.duration(UI_MS.disclosure)}
         className="flex-1 justify-end"
-        style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
+        style={{ backgroundColor: "rgba(0,0,0,0.72)" }}
       >
         <Pressable accessibilityLabel="Close menu" className="flex-1" onPress={onClose} />
 
         <Animated.View
           entering={reduced ? undefined : FadeInDown.duration(UI_MS.disclosure)}
-          className="rounded-t-card border-border border-t bg-card px-4 pt-4 pb-8"
+          className="overflow-hidden rounded-t-card border-border border-t px-4 pt-4 pb-8"
         >
+          <GlassSurface tint="card" overlay pointerEvents="none" style={StyleSheet.absoluteFill} />
           <View className="mb-4 flex-row items-center justify-between">
             <Text className="font-ui-bold text-text-muted text-xs uppercase tracking-[1.5px]">
               More actions
@@ -98,12 +71,7 @@ export function ActionsSheet({
 
           <View className="flex-row flex-wrap">
             {ACTIONS.map((spec) => {
-              const label =
-                spec.action === "replies"
-                  ? repliesHidden
-                    ? "Show replies"
-                    : "Hide replies"
-                  : spec.label;
+              const label = spec.label;
 
               return (
                 <View key={spec.action} className="w-1/4 items-center py-2">
@@ -141,17 +109,6 @@ export function ActionsSheet({
                 </View>
               );
             })}
-          </View>
-
-          <View className="mt-4 border-border border-t pt-4">
-            <SwitchRow
-              characterId={characterId}
-              label={MIND_COPY.insightToggle}
-              hint={MIND_COPY.insightHint}
-              value={insight}
-              onValueChange={setInsightMode}
-              accessibilityLabel={MIND_COPY.insightToggle}
-            />
           </View>
         </Animated.View>
       </Animated.View>
