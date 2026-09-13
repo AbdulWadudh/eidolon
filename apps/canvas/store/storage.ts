@@ -15,32 +15,13 @@ interface MMKVInstance {
   delete?: (key: string) => void;
 }
 
-class MMKVStorageWrapper implements KeyValueStorage {
-  private mmkv: MMKVInstance;
-
-  constructor(mmkv: MMKVInstance) {
-    this.mmkv = mmkv;
-  }
-
-  getString(key: string): string | undefined {
-    return this.mmkv.getString(key);
-  }
-
-  set(key: string, value: string | boolean | number): void {
-    this.mmkv.set(key, value);
-  }
-
-  getBoolean(key: string): boolean | undefined {
-    return this.mmkv.getBoolean(key);
-  }
-
-  delete(key: string): void {
-    if (typeof this.mmkv.remove === "function") {
-      this.mmkv.remove(key);
-    } else if (typeof this.mmkv.delete === "function") {
-      this.mmkv.delete(key);
-    }
-  }
+function wrapMMKV(mmkv: MMKVInstance): KeyValueStorage {
+  return {
+    getString: (key) => mmkv.getString(key),
+    set: (key, value) => mmkv.set(key, value),
+    getBoolean: (key) => mmkv.getBoolean(key),
+    delete: (key) => (mmkv.remove ?? mmkv.delete)?.call(mmkv, key),
+  };
 }
 
 export interface FallbackFile {
@@ -147,7 +128,7 @@ function initStorage(): KeyValueStorage {
     const mmkvModule = require("react-native-mmkv");
     if (typeof mmkvModule.createMMKV === "function") {
       const instance = mmkvModule.createMMKV({ id: "eidolon-canvas-store" });
-      return new MMKVStorageWrapper(instance);
+      return wrapMMKV(instance);
     }
   } catch {}
   return new FallbackStorage();

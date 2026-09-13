@@ -19,10 +19,6 @@ export function embeddingSource(): EmbeddingSource {
   return remoteAvailable === true ? "remote" : "deterministic";
 }
 
-export function resetEmbeddingProbe(): void {
-  remoteAvailable = null;
-}
-
 function isUsableVector(value: unknown): value is number[] {
   return (
     Array.isArray(value) &&

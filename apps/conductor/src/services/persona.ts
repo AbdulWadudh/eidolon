@@ -1,5 +1,4 @@
 import { pronounsFor, render } from "@eidolon/config";
-import { CHAT_TURN } from "@/config";
 import { getPrompt } from "@/prompts/store";
 import type { ChatMessage } from "@/services/llm";
 
@@ -72,20 +71,4 @@ export function influenceNote(influences: string[]): ChatMessage | null {
       influence: influences.map((line) => `- ${line}`).join(NEWLINE),
     }),
   };
-}
-
-export function buildChatMessages(
-  card: CharacterCard,
-  history: ChatMessage[],
-  userText: string,
-  influences: string[] = [],
-  injectedContext?: string,
-): ChatMessage[] {
-  const note = influenceNote(influences);
-  return [
-    { role: "system", content: buildSystemPrompt(card, injectedContext) },
-    ...history.slice(-CHAT_TURN.historyTurns),
-    ...(note ? [note] : []),
-    { role: "user", content: userText },
-  ];
 }

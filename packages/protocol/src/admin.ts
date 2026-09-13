@@ -12,8 +12,6 @@ export const AdminAccountSchema = z.object({
 
 export const AdminAccountListSchema = z.object({ accounts: z.array(AdminAccountSchema) });
 
-export const AdminAccountViewSchema = z.object({ account: AdminAccountSchema });
-
 export const AdminAccountPatchSchema = z
   .object({
     role: UserRoleSchema.optional(),
@@ -37,8 +35,6 @@ export const AdminPromptSchema = z.object({
 
 export const AdminPromptListSchema = z.object({ prompts: z.array(AdminPromptSchema) });
 
-export const AdminPromptViewSchema = z.object({ prompt: AdminPromptSchema });
-
 export const AdminPromptPutSchema = z.object({ value: z.string().min(1) });
 
 export const AdminCharacterSchema = z.object({
@@ -56,10 +52,6 @@ export const AdminCharacterSchema = z.object({
   ownerId: z.string().nullable(),
   isPublic: z.boolean(),
   forkedFrom: z.string().nullable(),
-});
-
-export const AdminCharacterListSchema = z.object({
-  characters: z.array(AdminCharacterSchema.passthrough()),
 });
 
 export const AdminCharacterViewSchema = z.object({
@@ -131,16 +123,10 @@ export const AdminAuditViewSchema = z.object({
   entries: z.array(AuditEntrySchema),
 });
 
-export const AdminErrorSchema = z.object({ error: z.string().min(1) });
-
-export const AdminOkSchema = z.object({ ok: z.literal(true) });
-
 export type UserRole = z.infer<typeof UserRoleSchema>;
 export type AdminAccount = z.infer<typeof AdminAccountSchema>;
-export type AdminAccountPatch = z.infer<typeof AdminAccountPatchSchema>;
 export type AdminPrompt = z.infer<typeof AdminPromptSchema>;
 export type AdminCharacter = z.infer<typeof AdminCharacterSchema>;
-export type AdminCharacterDraft = z.infer<typeof AdminCharacterDraftSchema>;
 export type AdminThemeView = z.infer<typeof AdminThemeViewSchema>;
 export type AuditEntry = z.infer<typeof AuditEntrySchema>;
 export type AdminAuditView = z.infer<typeof AdminAuditViewSchema>;

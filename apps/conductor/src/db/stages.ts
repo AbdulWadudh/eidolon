@@ -37,15 +37,6 @@ export function getStage(characterId: string, stageName: string): StoredStage | 
   return row ? toStage(row) : null;
 }
 
-export function getCurrentStage(characterId: string): StoredStage | null {
-  const row = db
-    .query<StageRow, [string]>(
-      "SELECT id, name, backdrop_url, lighting_tint, soundscape_stems FROM stages WHERE character_id = ?1 ORDER BY updated_at DESC, rowid DESC LIMIT 1",
-    )
-    .get(characterId);
-  return row ? toStage(row) : null;
-}
-
 export function listStages(characterId: string): StoredStage[] {
   return db
     .query<StageRow, [string]>(

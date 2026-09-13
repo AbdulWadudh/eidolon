@@ -153,10 +153,6 @@ async function* streamOnce(
   }
 }
 
-export function extractStructuredOutput<T>(raw: string, fallback: T): T {
-  return safeJsonParse<T>(raw, fallback);
-}
-
 export async function checkLlmHealth(): Promise<boolean> {
   try {
     const controller = new AbortController();

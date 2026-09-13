@@ -13,4 +13,3 @@ export const COLORS = {
 } as const;
 
 export type ColorKey = keyof typeof COLORS;
-export type ColorValue = (typeof COLORS)[ColorKey];

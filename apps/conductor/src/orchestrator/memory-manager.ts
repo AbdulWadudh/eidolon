@@ -1,5 +1,5 @@
 import { RECALL } from "@/config";
-import { embed, embeddingSource } from "@/services/embeddings";
+import { embed } from "@/services/embeddings";
 import { insertMemory, type MemorySearchResult, searchMemories } from "@/services/lancedb";
 
 const NEWLINE = String.fromCharCode(10);
@@ -68,10 +68,4 @@ export async function recallMemories(characterId: string, query: string): Promis
     console.error("[memory] recall failed", error);
     return "";
   }
-}
-
-export function describeRecall(): string {
-  return embeddingSource() === "remote"
-    ? "semantic recall is live"
-    : "no embedding endpoint, so recall stays silent rather than guessing";
 }

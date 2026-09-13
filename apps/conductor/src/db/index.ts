@@ -28,14 +28,6 @@ export function checkDatabaseHealth(): boolean {
   }
 }
 
-export function getCharacterName(characterId: string): string {
-  const row = db.query("SELECT name FROM characters WHERE id = ?").get(characterId) as {
-    name?: string;
-  } | null;
-  const name = row?.name?.trim();
-  return name && name.length > 0 ? name : capitalize(characterId);
-}
-
 export interface StoredMind {
   score: number;
   tier: string;
@@ -283,15 +275,6 @@ export function countMessages(characterId: string, userId: string): number {
       "SELECT COUNT(*) as total FROM messages WHERE character_id = ?1 AND user_id = ?2",
     )
     .get(characterId, userId);
-  return row?.total ?? 0;
-}
-
-export function countAllMessages(characterId: string): number {
-  const row = db
-    .query<{ total: number }, [string]>(
-      "SELECT COUNT(*) as total FROM messages WHERE character_id = ?",
-    )
-    .get(characterId);
   return row?.total ?? 0;
 }
 

@@ -92,14 +92,8 @@ export const ClientMessageSchema = z.discriminatedUnion("type", [
 ]);
 
 export type ChatTurnEvent = z.infer<typeof ChatTurnSchema>;
-export type InterruptEvent = z.infer<typeof InterruptSchema>;
-export type RequestImageEvent = z.infer<typeof RequestImageSchema>;
-export type RequestPhotoIdeasEvent = z.infer<typeof RequestPhotoIdeasSchema>;
 export type RegenerateReplyEvent = z.infer<typeof RegenerateReplySchema>;
 export type ReplyVariantsEvent = z.infer<typeof ReplyVariantsSchema>;
 export type ResynthesizeAudioEvent = z.infer<typeof ResynthesizeAudioSchema>;
-export type RegenerateSuggestionsEvent = z.infer<typeof RegenerateSuggestionsSchema>;
-export type EnhanceMessageEvent = z.infer<typeof EnhanceMessageSchema>;
 export type VoiceInputEvent = z.infer<typeof VoiceInputSchema>;
-export type PingEvent = z.infer<typeof PingSchema>;
 export type ClientMessage = z.infer<typeof ClientMessageSchema>;

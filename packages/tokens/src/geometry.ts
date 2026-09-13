@@ -6,4 +6,3 @@ export const GEOMETRY = {
 } as const;
 
 export type GeometryKey = keyof typeof GEOMETRY;
-export type GeometryValue = (typeof GEOMETRY)[GeometryKey];

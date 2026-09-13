@@ -227,24 +227,5 @@ export const ServerMessageSchema = z.discriminatedUnion("type", [
   PongSchema,
 ]);
 
-export type ServerStatus = z.infer<typeof ServerStatusEnum>;
-export type AudioFormat = z.infer<typeof AudioFormatEnum>;
-export type ImageAspectRatio = z.infer<typeof ImageAspectRatioEnum>;
-export type StatusUpdateEvent = z.infer<typeof StatusUpdateSchema>;
-export type TextDeltaEvent = z.infer<typeof TextDeltaSchema>;
-export type TextReplaceEvent = z.infer<typeof TextReplaceSchema>;
 export type AudioChunkEvent = z.infer<typeof AudioChunkSchema>;
-export type StageShiftEvent = z.infer<typeof StageShiftSchema>;
-export type ImagePreviewEvent = z.infer<typeof ImagePreviewSchema>;
-export type ImageReadyEvent = z.infer<typeof ImageReadySchema>;
-export type PhotoIdeasEvent = z.infer<typeof PhotoIdeasSchema>;
-export type ImageFailedEvent = z.infer<typeof ImageFailedSchema>;
-export type MindUpdateEvent = z.infer<typeof MindUpdateSchema>;
-export type ReplySuggestionsEvent = z.infer<typeof ReplySuggestionsSchema>;
-export type MessageEnhancedEvent = z.infer<typeof MessageEnhancedSchema>;
-export type ReplyOptionsEvent = z.infer<typeof ReplyOptionsSchema>;
-export type MessageCommittedEvent = z.infer<typeof MessageCommittedSchema>;
-export type TranscriptEvent = z.infer<typeof TranscriptSchema>;
-export type ErrorEvent = z.infer<typeof ErrorSchema>;
-export type PongEvent = z.infer<typeof PongSchema>;
 export type ServerMessage = z.infer<typeof ServerMessageSchema>;

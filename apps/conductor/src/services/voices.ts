@@ -19,10 +19,6 @@ interface KokoroVoice {
 
 let cached: { voices: Voice[]; expiresAt: number } | null = null;
 
-export function clearVoiceCache(): void {
-  cached = null;
-}
-
 export function toVoice(raw: KokoroVoice): Voice | null {
   const id = typeof raw.id === "string" ? raw.id : typeof raw.name === "string" ? raw.name : "";
   if (id.length === 0) return null;
@@ -65,9 +61,4 @@ export async function listVoices(): Promise<Voice[]> {
   } catch {
     return [];
   }
-}
-
-export async function isKnownVoice(id: string): Promise<boolean> {
-  const voices = await listVoices();
-  return voices.length === 0 || voices.some((voice) => voice.id === id);
 }

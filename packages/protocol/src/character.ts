@@ -34,18 +34,3 @@ export const TavernV2CardSchema = z.object({
 export type EidolonMetadata = z.infer<typeof EidolonMetadataSchema>;
 export type TavernV2CharacterData = z.infer<typeof TavernV2CharacterDataSchema>;
 export type TavernV2Card = z.infer<typeof TavernV2CardSchema>;
-
-export interface TavernV2Metadata {
-  name: string;
-  description: string;
-  personality: string;
-  scenario: string;
-  first_mes: string;
-  mes_example: string;
-  eidolon_metadata?: {
-    stage_deck: string[];
-    voice_id?: string;
-    theme_pigment?: string;
-    affinity_score: number;
-  };
-}

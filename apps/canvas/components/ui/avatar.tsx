@@ -1,5 +1,5 @@
 import type * as React from "react";
-import { Image, type ImageProps, Text, View, type ViewProps } from "react-native";
+import { Text, View, type ViewProps } from "react-native";
 import { cn, isTextualChildren } from "@/lib/utils";
 
 export interface AvatarProps extends ViewProps {
@@ -18,14 +18,6 @@ export function Avatar({ className, size = 44, style, ...props }: AvatarProps) {
       {...props}
     />
   );
-}
-
-export interface AvatarImageProps extends ImageProps {
-  className?: string;
-}
-
-export function AvatarImage({ className, ...props }: AvatarImageProps) {
-  return <Image className={cn("h-full w-full object-cover", className)} {...props} />;
 }
 
 export interface AvatarFallbackProps extends ViewProps {

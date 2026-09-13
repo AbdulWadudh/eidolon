@@ -59,8 +59,3 @@ export async function checkCacheHealth(): Promise<boolean> {
     return false;
   }
 }
-
-export function closeCache(): void {
-  client?.close();
-  client = null;
-}

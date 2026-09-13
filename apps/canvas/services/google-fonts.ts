@@ -29,10 +29,6 @@ function getApiKey(): string | undefined {
   return key && key.length > 0 ? key : undefined;
 }
 
-export function hasGoogleFontsApiKey(): boolean {
-  return getApiKey() !== undefined;
-}
-
 function toHttps(url: string): string {
   return url.startsWith("http://") ? `https://${url.slice("http://".length)}` : url;
 }

@@ -75,7 +75,3 @@ export function loadFontPreview(entry: GoogleFontFamily): Promise<PreviewState> 
     pump();
   });
 }
-
-export function getPreviewState(family: string): PreviewState | undefined {
-  return states.get(family);
-}

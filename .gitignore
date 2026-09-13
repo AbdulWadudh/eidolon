@@ -44,3 +44,6 @@ bun.lockb
 
 # Built APKs, kept per version and commit
 /apks/
+
+# Generated knowledge graph
+graphify-out/

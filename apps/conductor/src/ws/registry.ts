@@ -10,10 +10,6 @@ export function trackSocket(ws: WebSocketSender, userId: string): void {
   }
 }
 
-export function userFor(ws: WebSocketSender): string | null {
-  return users.get(ws) ?? null;
-}
-
 export function bindCharacter(ws: WebSocketSender, characterId: string): void {
   const bound = boundCharacters.get(ws);
   if (bound) {

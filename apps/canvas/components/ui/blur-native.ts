@@ -14,7 +14,5 @@ function loadBlurModule(): BlurModule | null {
 }
 
 const blurModule = loadBlurModule();
-
-export const isNativeBlurAvailable = blurModule !== null;
 export const BlurView = blurModule?.BlurView ?? null;
 export const BlurTargetView = blurModule?.BlurTargetView ?? null;
