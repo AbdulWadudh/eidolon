@@ -62,7 +62,11 @@ export function reduceServerMessage(
 
     case "stage_shift": {
       const source = msg.payload ?? msg;
-      if (typeof source.backdrop_url === "string" && source.backdrop_url.length > 0) {
+      if (
+        source.replaces_background !== false &&
+        typeof source.backdrop_url === "string" &&
+        source.backdrop_url.length > 0
+      ) {
         set((state) => ({
           characterLook: { ...state.characterLook, backgroundUrl: source.backdrop_url },
         }));

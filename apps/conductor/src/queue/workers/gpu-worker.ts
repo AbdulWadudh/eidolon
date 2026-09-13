@@ -64,7 +64,8 @@ async function renderStageBackdrop(data: StageBackdropJob): Promise<void> {
     type: "stage_shift",
     payload: {
       location_name: stage.name,
-      backdrop_url: keepsTheirOwn ? null : backdropUrl,
+      backdrop_url: backdropUrl,
+      replaces_background: !keepsTheirOwn,
       lighting_tint: stage.lightingTint,
       soundscape_stems: stage.soundscapeStems,
     },

@@ -60,12 +60,14 @@ export const StageShiftSchema = z.object({
   backdrop_url: z.string().url(),
   lighting_tint: z.string(),
   soundscape_stems: z.array(z.string()),
+  replaces_background: z.boolean().default(true),
   payload: z
     .object({
       location_name: z.string(),
       backdrop_url: z.string().url(),
       lighting_tint: z.string(),
       soundscape_stems: z.array(z.string()),
+      replaces_background: z.boolean().default(true),
     })
     .optional(),
 });
