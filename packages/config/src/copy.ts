@@ -24,6 +24,7 @@ export const MOMENT_COPY = {
   needPlace: "Say where first.",
   arrived: "You are now at",
   keptYourBackground: "kept your own background",
+  captionLead: "The scene shifts",
 } as const;
 
 export const OUTFIT_COPY = {

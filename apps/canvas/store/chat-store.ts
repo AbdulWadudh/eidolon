@@ -50,6 +50,7 @@ export const INITIAL_CHAT = {
   paintingStep: 0,
   paintingTotal: 0,
   photoIdeas: [] as string[],
+  arrivedAt: null as string | null,
   areIdeasLoading: false,
   characterLook: {
     avatarUrl: null,
@@ -185,6 +186,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     set({ areIdeasLoading: true, photoIdeas: [] });
     sendMessage({ type: "request_photo_ideas", character_id: characterId, editing: isEditing });
   },
+
+  clearArrival: () => set({ arrivedAt: null }),
 
   handleServerMessage: (msg) => reduceServerMessage(msg, set, commitStreamingTurn),
 

@@ -75,14 +75,16 @@ export function reduceServerMessage(
       }
 
       if (typeof source.location_name === "string" && source.location_name.length > 0) {
-        useToastStore
-          .getState()
-          .notify(
-            repaints
-              ? `${MOMENT_COPY.arrived} ${source.location_name}`
-              : `${MOMENT_COPY.arrived} ${source.location_name} — ${MOMENT_COPY.keptYourBackground}`,
-            "good",
-          );
+        if (repaints) {
+          set({ arrivedAt: source.location_name });
+        } else {
+          useToastStore
+            .getState()
+            .notify(
+              `${MOMENT_COPY.arrived} ${source.location_name} — ${MOMENT_COPY.keptYourBackground}`,
+              "good",
+            );
+        }
       }
       break;
     }

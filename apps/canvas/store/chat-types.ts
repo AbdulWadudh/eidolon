@@ -62,12 +62,14 @@ export interface ChatStore {
   paintingStep: number;
   paintingTotal: number;
   photoIdeas: string[];
+  arrivedAt: string | null;
   areIdeasLoading: boolean;
   characterLook: CharacterLook;
   handleServerMessage: (msg: ServerMessage) => void;
   rerollSuggestions: (characterId: string) => void;
   selectSuggestion: (suggestion: string) => void;
   enhanceInput: (characterId: string) => void;
+  clearArrival: () => void;
   sendVoiceNote: (characterId: string, base64: string, format: string) => void;
   revertEnhance: () => void;
   interrupt: (characterId: string) => void;

@@ -53,6 +53,8 @@ export const UI_MS = {
   searchDebounce: 220,
   toastHold: 2600,
   toastExit: 180,
+  stageCrossfade: 900,
+  stageCaptionHold: 3600,
 } as const;
 
 export const EASING = {

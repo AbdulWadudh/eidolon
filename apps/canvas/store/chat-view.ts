@@ -32,6 +32,7 @@ export interface ChatView {
   paintingStep: number;
   paintingTotal: number;
   photoIdeas: string[];
+  arrivedAt: string | null;
   areIdeasLoading: boolean;
   autoPlayMessageId: string | null;
   focusMessageId: string | null;
@@ -64,6 +65,7 @@ export function projectChat(state: ChatStore, characterId: string): ChatView {
       paintingStep: 0,
       paintingTotal: 0,
       photoIdeas: NO_SUGGESTIONS,
+      arrivedAt: null,
       areIdeasLoading: false,
       autoPlayMessageId: null,
       focusMessageId: null,
@@ -93,6 +95,7 @@ export function projectChat(state: ChatStore, characterId: string): ChatView {
     paintingStep: state.paintingStep,
     paintingTotal: state.paintingTotal,
     photoIdeas: state.photoIdeas,
+    arrivedAt: state.arrivedAt,
     areIdeasLoading: state.areIdeasLoading,
     autoPlayMessageId: state.autoPlayMessageId,
     focusMessageId: state.focusMessageId,

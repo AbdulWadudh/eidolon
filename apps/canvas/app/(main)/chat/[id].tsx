@@ -190,7 +190,12 @@ export default function ChatScreen() {
           not behind the bar itself, which carries the name, mood and affinity
           and has to stay readable whatever picture was chosen. */}
       <KeyboardAvoidingView behavior="padding" automaticOffset style={{ flex: 1 }}>
-        <ChatBackdrop uri={view.characterLook.backgroundUrl} characterId={characterId} />
+        <ChatBackdrop
+          uri={view.characterLook.backgroundUrl}
+          characterId={characterId}
+          arrivedAt={view.arrivedAt}
+          onArrivalSeen={chat.clearArrival}
+        />
 
         <VoiceNotesProvider autoPlay={autoPlay} onAutoPlayed={chat.clearAutoPlay}>
           <ChatFeed
