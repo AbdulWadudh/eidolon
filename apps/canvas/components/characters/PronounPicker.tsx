@@ -14,15 +14,15 @@ export function PronounPicker({ characterId, value, onChange }: PronounPickerPro
   const selected = pronounsFor(value);
 
   return (
-    <View className="gap-2">
-      <Text className="font-ui-medium text-sm text-text-primary">
+    <View className="gap-1.5">
+      <Text className="font-ui-bold text-[12px] text-text-primary">
         {CHARACTER_COPY.pronounsLabel}
       </Text>
-      <Text className="font-ui text-[11px] text-text-muted leading-4">
+      <Text className="font-ui text-[10.5px] text-text-muted leading-[14px]">
         {CHARACTER_COPY.pronounsHint}
       </Text>
 
-      <View className="mt-1 flex-row gap-2">
+      <View className="mt-0.5 flex-row gap-2">
         {Object.entries(PRONOUN_SETS).map(([key, set]) => {
           const isSelected = set.subject === selected.subject;
 
@@ -33,7 +33,7 @@ export function PronounPicker({ characterId, value, onChange }: PronounPickerPro
               accessibilityState={{ selected: isSelected }}
               accessibilityLabel={set.label}
               onPress={() => onChange(key)}
-              className="flex-1 items-center border py-2.5"
+              className="flex-1 items-center border py-2"
               style={{
                 borderRadius: theme.radius,
                 borderColor: isSelected ? theme.primary : theme.cardBorder,

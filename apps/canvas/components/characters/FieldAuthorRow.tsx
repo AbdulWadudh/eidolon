@@ -18,7 +18,8 @@ export interface FieldAuthorRowProps {
   onRevert: () => void;
 }
 
-const SIZE = 32;
+const SIZE = 28;
+const ICON_PX = 14;
 
 export function FieldAuthorRow({
   characterId,
@@ -55,7 +56,7 @@ export function FieldAuthorRow({
             style={{ height: SIZE, width: SIZE, opacity: isLocked ? 0.4 : 1 }}
             className="items-center justify-center rounded-button border border-border bg-input"
           >
-            <AppIcon icon={Undo02Icon} size={15} color={theme.textMuted} />
+            <AppIcon icon={Undo02Icon} size={ICON_PX} color={theme.textMuted} />
           </PressableScale>
         </Animated.View>
       ) : null}
@@ -70,7 +71,7 @@ export function FieldAuthorRow({
           style={{ height: SIZE, width: SIZE, opacity: isLocked ? 0.4 : 1 }}
           className="items-center justify-center rounded-button border border-border bg-input"
         >
-          <AppIcon icon={MagicWand01Icon} size={15} color={theme.textPrimary} />
+          <AppIcon icon={MagicWand01Icon} size={ICON_PX} color={theme.textPrimary} />
         </PressableScale>
       ) : null}
 
@@ -85,7 +86,7 @@ export function FieldAuthorRow({
         // The one control that is always offered, so it carries the accent.
         // The others appear only when there is something to act on.
       >
-        <AppIcon icon={SparklesIcon} size={15} color={theme.primary} />
+        <AppIcon icon={SparklesIcon} size={ICON_PX} color={theme.primary} />
       </PressableScale>
     </View>
   );

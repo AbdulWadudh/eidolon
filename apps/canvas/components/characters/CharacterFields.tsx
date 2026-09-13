@@ -30,7 +30,7 @@ export function CharacterFields({
   const reduced = useReducedMotion();
 
   return (
-    <View className={compact ? "gap-3" : "gap-4"}>
+    <View className={compact ? "gap-3" : "gap-3.5"}>
       {keys.map((key, position) => {
         const field = FIELDS[key];
         const value = draft[key];
@@ -45,7 +45,7 @@ export function CharacterFields({
                 ? undefined
                 : FadeInDown.duration(UI_MS.disclosure).delay(position * UI_MS.revealStagger)
             }
-            className={compact ? "gap-1.5" : "gap-2"}
+            className={compact ? "gap-1.5" : "gap-1.5"}
           >
             <View className="flex-row items-center gap-2">
               <View className="flex-1">
@@ -54,7 +54,7 @@ export function CharacterFields({
                     className={
                       compact
                         ? "font-ui-bold text-[12px] text-text-primary"
-                        : "font-ui-bold text-[13px] text-text-primary"
+                        : "font-ui-bold text-[12px] text-text-primary"
                     }
                   >
                     {field.label}
@@ -74,7 +74,7 @@ export function CharacterFields({
                   />
                 </View>
                 {compact ? null : (
-                  <Text className="mt-1 font-ui text-[11px] text-text-muted leading-4">
+                  <Text className="mt-0.5 font-ui text-[10.5px] text-text-muted leading-[14px]">
                     {field.hint}
                   </Text>
                 )}
@@ -108,13 +108,13 @@ export function CharacterFields({
               className={
                 compact
                   ? "rounded-button border border-border bg-input font-main text-[13px] text-text-primary leading-5"
-                  : "rounded-button border border-border bg-input font-main text-[15px] text-text-primary leading-6"
+                  : "rounded-button border border-border bg-input font-main text-[13.5px] text-text-primary leading-5"
               }
               style={{
                 minHeight: compact
                   ? field.lines * FIELD_PADDING.compactLineHeightPx + FIELD_PADDING.compactBasePx
                   : Math.max(
-                      CHAT.minTouchTargetPx + 8,
+                      CHAT.minTouchTargetPx,
                       field.lines * FIELD_PADDING.lineHeightPx + FIELD_PADDING.basePx,
                     ),
                 paddingHorizontal: compact

@@ -10,7 +10,10 @@ import { tap } from "@/services/haptics";
 import type { AvatarCropRect } from "@/store/chat-photos";
 import { useResolvedTheme, useThemeStore } from "@/store/theme-store";
 
-const AVATAR_PX = 44;
+const AVATAR_PX = 38;
+const ACTION_PX = AVATAR_PX;
+const ICON_PX = 18;
+const ICON_STROKE = 1.6;
 
 export interface CharacterSettingsHeaderProps {
   characterId: string;
@@ -47,15 +50,21 @@ export function CharacterSettingsHeader({
       };
 
   return (
-    <View className="flex-row items-center gap-3 border-border border-b px-5 py-3">
+    <View className="flex-row items-center gap-2 border-border border-b px-3 py-2">
       <PressableScale
         accessibilityRole="button"
         accessibilityLabel={CHARACTER_COPY.backLabel}
         hitSlop={8}
         onPress={onBack}
-        className="h-11 w-11 items-center justify-center rounded-button border border-border bg-input"
+        className="items-center justify-center rounded-button active:bg-card"
+        style={{ height: ACTION_PX, width: ACTION_PX }}
       >
-        <AppIcon icon={ArrowLeft01Icon} size={20} color={theme.textPrimary} />
+        <AppIcon
+          icon={ArrowLeft01Icon}
+          size={ICON_PX}
+          color={theme.textPrimary}
+          strokeWidth={ICON_STROKE}
+        />
       </PressableScale>
 
       <View
@@ -95,7 +104,8 @@ export function CharacterSettingsHeader({
           tap("light");
           toggleColorMode();
         }}
-        className="h-11 w-11 items-center justify-center overflow-hidden rounded-button border border-border bg-input"
+        className="items-center justify-center overflow-hidden rounded-button active:bg-card"
+        style={{ height: ACTION_PX, width: ACTION_PX }}
       >
         {}
         <Animated.View
@@ -106,7 +116,12 @@ export function CharacterSettingsHeader({
             ...swap,
           }}
         >
-          <AppIcon icon={Sun02Icon} size={19} color={theme.textPrimary} />
+          <AppIcon
+            icon={Sun02Icon}
+            size={ICON_PX}
+            color={theme.textPrimary}
+            strokeWidth={ICON_STROKE}
+          />
         </Animated.View>
         <Animated.View
           className="absolute"
@@ -116,7 +131,12 @@ export function CharacterSettingsHeader({
             ...swap,
           }}
         >
-          <AppIcon icon={Moon02Icon} size={19} color={theme.primary} />
+          <AppIcon
+            icon={Moon02Icon}
+            size={ICON_PX}
+            color={theme.primary}
+            strokeWidth={ICON_STROKE}
+          />
         </Animated.View>
       </PressableScale>
 
@@ -125,10 +145,15 @@ export function CharacterSettingsHeader({
         accessibilityLabel={CHARACTER_COPY.themeLabel}
         hitSlop={8}
         onPress={onOpenTheme}
-        className="h-11 w-11 items-center justify-center rounded-button border bg-input"
-        style={{ borderColor: theme.primary }}
+        className="items-center justify-center rounded-button active:bg-card"
+        style={{ height: ACTION_PX, width: ACTION_PX }}
       >
-        <AppIcon icon={PaintBoardIcon} size={19} color={theme.primary} />
+        <AppIcon
+          icon={PaintBoardIcon}
+          size={ICON_PX}
+          color={theme.primary}
+          strokeWidth={ICON_STROKE}
+        />
       </PressableScale>
     </View>
   );
