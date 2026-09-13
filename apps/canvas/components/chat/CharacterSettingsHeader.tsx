@@ -2,10 +2,10 @@ import { CHARACTER_COPY, EASING_BEZIER, UI_MS } from "@eidolon/config";
 import { Image } from "expo-image";
 import { Text, View } from "react-native";
 import Animated, { cubicBezier, useReducedMotion } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { croppedStyle, usableCrop } from "@/lib/avatar-crop";
+import { useBarTopInset } from "@/lib/bar-inset";
 import { ArrowLeft01Icon, Moon02Icon, PaintBoardIcon, Sun02Icon } from "@/lib/icons";
 import { tap } from "@/services/haptics";
 import type { AvatarCropRect } from "@/store/chat-photos";
@@ -37,7 +37,7 @@ export function CharacterSettingsHeader({
   onBack,
   onOpenTheme,
 }: CharacterSettingsHeaderProps) {
-  const insets = useSafeAreaInsets();
+  const barTop = useBarTopInset();
   const theme = useResolvedTheme(characterId);
   const reduced = useReducedMotion();
   const mode = useThemeStore((state) => state.palettes.mode);
@@ -56,7 +56,7 @@ export function CharacterSettingsHeader({
   return (
     <View
       className="flex-row items-center gap-2 border-border border-b px-3 pb-2"
-      style={{ paddingTop: insets.top + BAR_TOP_PX }}
+      style={{ paddingTop: barTop + BAR_TOP_PX }}
     >
       <PressableScale
         accessibilityRole="button"

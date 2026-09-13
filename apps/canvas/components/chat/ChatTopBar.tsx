@@ -2,7 +2,6 @@ import { AFFINITY_HUD, affinityLabel, CHAT_COPY, EASING_BEZIER, UI_MS } from "@e
 import { Image } from "expo-image";
 import { Text, View } from "react-native";
 import Animated, { cubicBezier, FadeIn, useReducedMotion } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AffinityToast } from "@/components/chat/AffinityToast";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
@@ -10,6 +9,7 @@ import { SkeletonLine } from "@/components/common/skeleton-line";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { croppedStyle } from "@/lib/avatar-crop";
+import { useBarTopInset } from "@/lib/bar-inset";
 import { ArrowLeft01Icon, Call02Icon, MoreVerticalIcon } from "@/lib/icons";
 import { useAffinityStore } from "@/store/affinity-store";
 import type { MindState } from "@/store/chat-messages";
@@ -54,7 +54,7 @@ export function ChatTopBar({
   onOverflow,
   onCall,
 }: ChatTopBarProps) {
-  const insets = useSafeAreaInsets();
+  const barTop = useBarTopInset();
   const theme = useResolvedTheme(characterId);
   const reduced = useReducedMotion();
   const insight = useAffinityStore((state) => state.isInsightModeEnabled);
@@ -68,7 +68,7 @@ export function ChatTopBar({
       tint="canvas"
       characterId={characterId}
       className="flex-row items-center gap-1 border-border border-b px-2 pb-2"
-      style={{ paddingTop: insets.top + BAR_TOP_PX }}
+      style={{ paddingTop: barTop + BAR_TOP_PX }}
     >
       <PressableScale
         accessibilityRole="button"

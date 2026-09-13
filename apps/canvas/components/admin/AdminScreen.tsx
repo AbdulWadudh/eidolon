@@ -2,12 +2,13 @@ import { DASHBOARD_COPY } from "@eidolon/config";
 import { useRouter } from "expo-router";
 import type * as React from "react";
 import { ScrollView, Text, View } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { AppIcon } from "@/components/common/icon";
 import { LoadingState } from "@/components/common/loading-state";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Card } from "@/components/ui/card";
 import { GlassSurface } from "@/components/ui/glass-surface";
+import { useBarTopInset } from "@/lib/bar-inset";
 import { ArrowLeft01Icon } from "@/lib/icons";
 import { useResolvedTheme } from "@/store/theme-store";
 
@@ -30,7 +31,7 @@ export function AdminScreen({
   trailing,
   children,
 }: AdminScreenProps) {
-  const insets = useSafeAreaInsets();
+  const barTop = useBarTopInset();
   const router = useRouter();
   const theme = useResolvedTheme();
 
@@ -42,7 +43,7 @@ export function AdminScreen({
     >
       <View
         className="flex-row items-center gap-3 border-b border-border px-4 pb-3"
-        style={{ paddingTop: insets.top + BAR_TOP_PX }}
+        style={{ paddingTop: barTop + BAR_TOP_PX }}
       >
         <PressableScale
           accessibilityRole="button"

@@ -5,6 +5,7 @@ import {
   DASHBOARD_COPY,
   GALLERY_COPY,
   HOME_COPY,
+  stripAuthority,
   UI_MS,
 } from "@eidolon/config";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -22,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { useConfirm } from "@/hooks/use-confirm";
+import { useBarTopInset } from "@/lib/bar-inset";
 import {
   DashboardSquare01Icon,
   Logout01Icon,
@@ -41,6 +43,7 @@ export default function MainCharactersScreen() {
   const router = useRouter();
   const { serverHost, sessionToken, signOut, connectionState } = useConnectionStore();
   const theme = useResolvedTheme();
+  const barTop = useBarTopInset();
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
   const isOwner = useIsOwner();
@@ -87,7 +90,7 @@ export default function MainCharactersScreen() {
   );
 
   const status = {
-    connected: { color: theme.success, label: serverHost || "connected" },
+    connected: { color: theme.success, label: stripAuthority(serverHost) || "connected" },
     connecting: { color: theme.warning, label: CONNECTION_COPY.connecting },
     error: { color: theme.danger, label: CONNECTION_COPY.disconnected },
     disconnected: { color: theme.textMuted, label: CONNECTION_COPY.disconnected },
@@ -99,10 +102,11 @@ export default function MainCharactersScreen() {
       <GlassSurface
         tint="card"
         className="flex-row items-center justify-between border-border border-b px-3 pb-2.5"
-        style={{ paddingTop: insets.top + HEADER_TOP_PX }}
+        style={{ paddingTop: barTop + HEADER_TOP_PX }}
       >
         <Text
-          className="shrink-0 font-main-bold text-xl text-text-primary tracking-tight"
+          className="font-main-bold text-xl text-text-primary tracking-tight"
+          style={{ flexShrink: 0, flexGrow: 0 }}
           numberOfLines={1}
         >
           Eidolon
@@ -111,7 +115,8 @@ export default function MainCharactersScreen() {
         {}
         <GlassSurface
           tint="card"
-          className="mx-2 flex-1 shrink flex-row items-center gap-2 overflow-hidden rounded-button border border-border px-2.5 py-1"
+          style={{ flexShrink: 1, minWidth: 0 }}
+          className="mx-2 flex-1 flex-row items-center gap-2 overflow-hidden rounded-button border border-border px-2.5 py-1"
         >
           <View className="h-2 w-2 rounded-full" style={{ backgroundColor: status.color }} />
           <Text className="font-ui text-xs text-text-muted" numberOfLines={1}>

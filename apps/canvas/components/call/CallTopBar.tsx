@@ -1,9 +1,9 @@
 import { CALL_COPY, callDurationLabel, callTitle } from "@eidolon/config";
 import { Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { GlassSurface } from "@/components/ui/glass-surface";
+import { useBarTopInset } from "@/lib/bar-inset";
 import { ArrowLeft01Icon, VolumeHighIcon, VolumeOffIcon } from "@/lib/icons";
 import { useResolvedTheme } from "@/store/theme-store";
 
@@ -26,7 +26,7 @@ export function CallTopBar({
   onBack,
   onToggleSpeaker,
 }: CallTopBarProps) {
-  const insets = useSafeAreaInsets();
+  const barTop = useBarTopInset();
   const theme = useResolvedTheme(characterId);
   const duration = callDurationLabel(elapsedSeconds);
 
@@ -35,7 +35,7 @@ export function CallTopBar({
       tint="canvas"
       characterId={characterId}
       className="flex-row items-center gap-3 border-border border-b px-4 pb-3"
-      style={{ paddingTop: insets.top + BAR_TOP_PX }}
+      style={{ paddingTop: barTop + BAR_TOP_PX }}
     >
       <PressableScale
         accessibilityRole="button"
