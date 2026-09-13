@@ -48,7 +48,7 @@ Everything is Bun + TypeScript. Biome is the only linter and formatter.
 | CI | no workflow; releases are local |
 | Voice notes | wired end to end: Kokoro synthesises each reply, `audio_chunk` carries base64 mp3, the client auto-plays it once. Unverified on a handset |
 | Web search | DuckDuckGo first, then Serper, then Exa. The last two need keys, so an unconfigured install falls through and returns nothing |
-| Mic button | `InputToolbar` offers `voice`, but the chat screen's `onAction` never handles it, so it does nothing |
+| Voice transcription | built end to end and then hidden. The recorder, the `voice_input` message, `handleVoiceInput` and the chat turn it runs all work; what is missing is a recogniser. `transcribeAudio` POSTs multipart to `{STT_API_URL}/audio/transcriptions` expecting an OpenAI-shaped reply, `STT_API_URL` is unset, so `isTranscriptionConfigured()` is false and every voice note is refused. llama-server answers 501 on that path and Kokoro is TTS only, so nothing already running can serve it. Run one (`faster-whisper-server` or `whisper.cpp` in server mode), set `STT_API_URL`, and `/health` turns `stt: unconfigured` into `healthy`. To bring the button back, restore the `voice` entry in `LEFT_TOOLS` and the three lines in `chat/[id].tsx` that call `useVoiceNote`; `use-voice-note.ts`, `sendVoiceNote` and the whole conductor half were left in place. Calls start hearing at the same moment, off the same service |
 
 | `.gitattributes` | absent. `core.autocrlf=true` rewrites endings on checkout and Biome wants LF, so `bun run lint` fails on a fresh clone until someone re-runs `bun run format`. `* text=auto eol=lf` would end it |
 

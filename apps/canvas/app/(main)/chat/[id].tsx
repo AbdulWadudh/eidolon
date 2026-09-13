@@ -24,7 +24,6 @@ import { useChatView } from "@/hooks/use-chat-view";
 import { useConfirm } from "@/hooks/use-confirm";
 import { usePhotoFlow } from "@/hooks/use-photo-flow";
 import { useSuggestions } from "@/hooks/use-suggestions";
-import { useVoiceNote } from "@/hooks/use-voice-note";
 import { VoiceNotesProvider } from "@/hooks/use-voice-notes";
 import { useAffinityStore } from "@/store/affinity-store";
 import { type CharacterCard, fetchCharacter, requestMoment } from "@/store/character-api";
@@ -80,7 +79,6 @@ export default function ChatScreen() {
   const resetAffinity = useAffinityStore((state) => state.reset);
   const photos = usePhotoFlow(characterId, serverHost);
   const replies = useSuggestions(characterId, view, inputRef);
-  const voiceNote = useVoiceNote(characterId);
 
   React.useEffect(() => {
     setActiveCharacter(characterId);
@@ -241,7 +239,6 @@ export default function ChatScreen() {
             onInterrupt={() => chat.interrupt(characterId)}
             suggestionsOpen={replies.isTrayVisible}
             moodActive={chat.moodOverride !== null}
-            isRecording={voiceNote.isRecording}
             onAction={(action) => {
               if (action === "more") setActionsOpen(true);
               if (action === "lorebook") setMindOpen(true);
@@ -250,7 +247,6 @@ export default function ChatScreen() {
               if (action === "suggestions") replies.toggle();
               if (action === "gallery") photos.openSheet();
               if (action === "mood") setMoodOpen(true);
-              if (action === "voice") voiceNote.toggle();
             }}
           />
         </VoiceNotesProvider>

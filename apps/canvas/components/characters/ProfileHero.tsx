@@ -99,14 +99,12 @@ export function ProfileHero({
                 onPress={onPickPart}
                 className="h-11 w-11 items-center justify-center rounded-full"
                 style={{
-                  backgroundColor: avatarCrop !== null ? theme.primary : "rgba(0,0,0,0.55)",
+                  backgroundColor: "rgba(0,0,0,0.55)",
+                  borderWidth: avatarCrop !== null ? 1.5 : 0,
+                  borderColor: theme.primary,
                 }}
               >
-                <AppIcon
-                  icon={CropIcon}
-                  size={18}
-                  color={avatarCrop !== null ? theme.primaryForeground : "#fff"}
-                />
+                <AppIcon icon={CropIcon} size={18} color="#fff" />
               </PressableScale>
 
               <PressableScale
@@ -117,14 +115,12 @@ export function ProfileHero({
                 onPress={onUseWhole}
                 className="h-11 w-11 items-center justify-center rounded-full"
                 style={{
-                  backgroundColor: avatarCrop === null ? theme.primary : "rgba(0,0,0,0.55)",
+                  backgroundColor: "rgba(0,0,0,0.55)",
+                  borderWidth: avatarCrop === null ? 1.5 : 0,
+                  borderColor: theme.primary,
                 }}
               >
-                <AppIcon
-                  icon={Image01Icon}
-                  size={18}
-                  color={avatarCrop === null ? theme.primaryForeground : "#fff"}
-                />
+                <AppIcon icon={Image01Icon} size={18} color="#fff" />
               </PressableScale>
             </>
           ) : null}

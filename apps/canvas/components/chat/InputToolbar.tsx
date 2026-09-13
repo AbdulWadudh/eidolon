@@ -10,7 +10,6 @@ import {
   FlashIcon,
   Image01Icon,
   MagicWand01Icon,
-  Mic01Icon,
   SmileIcon,
   Undo02Icon,
 } from "@/lib/icons";
@@ -35,7 +34,6 @@ interface ToolSpec {
 const LEFT_TOOLS: ToolSpec[] = [
   { action: "mood", icon: SmileIcon, label: "Set mood" },
   { action: "gallery", icon: Image01Icon, label: "Request a selfie" },
-  { action: "voice", icon: Mic01Icon, label: "Record a voice note" },
 ];
 
 const RIGHT_TOOLS: ToolSpec[] = [
