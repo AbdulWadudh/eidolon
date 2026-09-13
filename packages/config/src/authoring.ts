@@ -10,6 +10,9 @@ export type AuthorField =
   | "chapter"
   | "lore"
   | "outfit"
+  | "place"
+  | "photo"
+  | "portrait"
   | "reply";
 
 export type AuthorMode = "suggest" | "enhance";
@@ -37,6 +40,30 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
       "What they are wearing, as a short phrase of visual detail: garments, fabric, colour, how it sits on them. Under twelve words, never a sentence. Only clothes — never their face, hair, build or the place they are in.",
     maxTokens: 28,
     maxChars: 90,
+    singleLine: true,
+  },
+  place: {
+    label: "Place",
+    guidance:
+      "Where the conversation is happening, as a short phrase of visual detail: the room or street, the weather, the hour, what the light is doing. Under fifteen words, never a sentence. The place only — nobody is in it.",
+    maxTokens: 32,
+    maxChars: 110,
+    singleLine: true,
+  },
+  photo: {
+    label: "Photo",
+    guidance:
+      "What to photograph, said the way a person asks for a picture: a place, a thing they are doing, something near them. One short line, under twelve words. Never mentions cameras, phones or the person asking.",
+    maxTokens: 28,
+    maxChars: 90,
+    singleLine: true,
+  },
+  portrait: {
+    label: "Portrait",
+    guidance:
+      "Extra visual direction for a portrait: clothing, setting, mood, the light. A short phrase under fifteen words, never a sentence. Never describes their face, hair or build, which are already fixed.",
+    maxTokens: 32,
+    maxChars: 110,
     singleLine: true,
   },
   tagline: {

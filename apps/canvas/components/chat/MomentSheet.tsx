@@ -2,23 +2,33 @@ import { MOMENT_COPY, UI_MS } from "@eidolon/config";
 import * as React from "react";
 import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
+import { AuthorButtons } from "@/components/chat/mind/AuthorButtons";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Button } from "@/components/ui/button";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { Input } from "@/components/ui/input";
+import { useTextAuthor } from "@/hooks/use-text-author";
 import { Cancel01Icon } from "@/lib/icons";
 import { useResolvedTheme } from "@/store/theme-store";
 
 export interface MomentSheetProps {
   isOpen: boolean;
   characterId: string;
+  serverHost: string;
   onClose: () => void;
   onSend: (place: string) => Promise<string | null>;
 }
 
-export function MomentSheet({ isOpen, characterId, onClose, onSend }: MomentSheetProps) {
+export function MomentSheet({
+  isOpen,
+  characterId,
+  serverHost,
+  onClose,
+  onSend,
+}: MomentSheetProps) {
   const theme = useResolvedTheme(characterId);
+  const author = useTextAuthor(serverHost, "place");
   const reduced = useReducedMotion();
   const [place, setPlace] = React.useState("");
   const [isSending, setSending] = React.useState(false);
@@ -99,6 +109,17 @@ export function MomentSheet({ isOpen, characterId, onClose, onSend }: MomentShee
             accessibilityLabel={MOMENT_COPY.title}
             returnKeyType="go"
             onSubmitEditing={() => void send()}
+            trailing={
+              <AuthorButtons
+                characterId={characterId}
+                author={author}
+                draft={place}
+                onText={(text) => {
+                  setPlace(text);
+                  setError(null);
+                }}
+              />
+            }
           />
 
           {error ? (

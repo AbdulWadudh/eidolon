@@ -13,10 +13,26 @@ import { useResolvedTheme } from "@/store/theme-store";
 export interface InputProps extends TextInputProps {
   className?: string;
   leading?: IconSvgElement;
+  trailing?: React.ReactNode;
+  trailingWidth?: number;
 }
 
+const TRAILING_PX = 76;
+
 export const Input = React.forwardRef<React.ElementRef<typeof TextInput>, InputProps>(
-  ({ className, leading, placeholderTextColor, cursorColor, selectionColor, ...props }, ref) => {
+  (
+    {
+      className,
+      leading,
+      trailing,
+      trailingWidth = TRAILING_PX,
+      placeholderTextColor,
+      cursorColor,
+      selectionColor,
+      ...props
+    },
+    ref,
+  ) => {
     const theme = useResolvedTheme();
     const [isRevealed, setRevealed] = React.useState(false);
     const isMasked = props.secureTextEntry === true;
@@ -37,6 +53,7 @@ export const Input = React.forwardRef<React.ElementRef<typeof TextInput>, InputP
               textAlignVertical: "center",
               borderWidth: theme.borderWidth,
             },
+            trailing !== undefined ? { paddingRight: trailingWidth } : null,
             props.style,
           ]}
           className={cn(
@@ -54,6 +71,10 @@ export const Input = React.forwardRef<React.ElementRef<typeof TextInput>, InputP
           >
             <AppIcon icon={leading} size={16} color={theme.textMuted} />
           </View>
+        ) : null}
+
+        {trailing !== undefined ? (
+          <View className="absolute top-0 right-0 bottom-0 justify-center pr-2">{trailing}</View>
         ) : null}
 
         {isMasked ? (

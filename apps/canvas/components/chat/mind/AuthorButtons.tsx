@@ -1,5 +1,5 @@
 import { AUTHOR_COPY } from "@eidolon/config";
-import { Text, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import type { TextAuthor } from "@/hooks/use-text-author";
@@ -13,40 +13,45 @@ export interface AuthorButtonsProps {
   onText: (text: string) => void;
 }
 
+const SIZE = 28;
+const ICON_PX = 14;
+
 export function AuthorButtons({ characterId, author, draft, onText }: AuthorButtonsProps) {
   const theme = useResolvedTheme(characterId);
   const canEnhance = draft.trim().length > 0;
 
+  if (author.isBusy) {
+    return (
+      <View style={{ height: SIZE }} className="flex-row items-center justify-end px-2">
+        <ActivityIndicator size="small" color={theme.primary} />
+      </View>
+    );
+  }
+
   return (
-    <View className="flex-row gap-2">
-      <PressableScale
-        accessibilityRole="button"
-        accessibilityLabel={AUTHOR_COPY.suggest}
-        accessibilityState={{ busy: author.isBusy }}
-        disabled={author.isBusy}
-        onPress={() => author.run("suggest", "", onText)}
-        className="h-9 flex-1 flex-row items-center justify-center gap-1.5 rounded-button border border-border"
-        style={{ opacity: author.isBusy ? 0.5 : 1 }}
-      >
-        <AppIcon icon={SparklesIcon} size={14} color={theme.primary} />
-        <Text className="font-ui-medium text-[11px]" style={{ color: theme.primary }}>
-          {author.isBusy ? AUTHOR_COPY.working : AUTHOR_COPY.suggest}
-        </Text>
-      </PressableScale>
+    <View className="flex-row items-center justify-end gap-1.5">
+      {canEnhance ? (
+        <PressableScale
+          accessibilityRole="button"
+          accessibilityLabel={AUTHOR_COPY.enhance}
+          hitSlop={8}
+          onPress={() => author.run("enhance", draft, onText)}
+          style={{ height: SIZE, width: SIZE }}
+          className="items-center justify-center rounded-button border border-border bg-input"
+        >
+          <AppIcon icon={MagicWand01Icon} size={ICON_PX} color={theme.textPrimary} />
+        </PressableScale>
+      ) : null}
 
       <PressableScale
         accessibilityRole="button"
-        accessibilityLabel={AUTHOR_COPY.enhance}
-        accessibilityState={{ busy: author.isBusy, disabled: !canEnhance }}
-        disabled={author.isBusy || !canEnhance}
-        onPress={() => author.run("enhance", draft, onText)}
-        className="h-9 flex-1 flex-row items-center justify-center gap-1.5 rounded-button border border-border"
-        style={{ opacity: author.isBusy || !canEnhance ? 0.4 : 1 }}
+        accessibilityLabel={AUTHOR_COPY.suggest}
+        hitSlop={8}
+        onPress={() => author.run("suggest", "", onText)}
+        style={{ height: SIZE, width: SIZE }}
+        className="items-center justify-center rounded-button border border-border bg-input"
       >
-        <AppIcon icon={MagicWand01Icon} size={14} color={theme.textMuted} />
-        <Text className="font-ui-medium text-[11px]" style={{ color: theme.textMuted }}>
-          {AUTHOR_COPY.enhance}
-        </Text>
+        <AppIcon icon={SparklesIcon} size={ICON_PX} color={theme.primary} />
       </PressableScale>
     </View>
   );

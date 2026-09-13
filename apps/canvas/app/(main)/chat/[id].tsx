@@ -265,6 +265,7 @@ export default function ChatScreen() {
       <MomentSheet
         isOpen={momentOpen}
         characterId={characterId}
+        serverHost={serverHost}
         onClose={() => setMomentOpen(false)}
         onSend={(place) => requestMoment(serverHost, characterId, place)}
       />
@@ -272,7 +273,6 @@ export default function ChatScreen() {
       <OutfitSheet
         isOpen={outfitOpen}
         characterId={characterId}
-        characterName={characterName}
         serverHost={serverHost}
         outfit={view.characterLook.outfit}
         onClose={() => setOutfitOpen(false)}
@@ -298,6 +298,7 @@ export default function ChatScreen() {
       <PhotoRequestSheet
         isOpen={photos.isSheetOpen}
         characterId={characterId}
+        serverHost={serverHost}
         characterName={characterName}
         ideas={view.photoIdeas}
         areIdeasLoading={view.areIdeasLoading}

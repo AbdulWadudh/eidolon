@@ -3,14 +3,17 @@ import * as React from "react";
 import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
+import { AuthorButtons } from "@/components/chat/mind/AuthorButtons";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { GlassSurface } from "@/components/ui/glass-surface";
+import { type TextAuthor, useTextAuthor } from "@/hooks/use-text-author";
 import { Image01Icon, RefreshIcon, SentIcon } from "@/lib/icons";
 import type { PhotoOrientation } from "@/store/chat-photos";
 import { useResolvedTheme } from "@/store/theme-store";
 
 export interface PhotoRequestSheetProps {
+  serverHost: string;
   isOpen: boolean;
   characterId: string;
   characterName: string;
@@ -30,6 +33,7 @@ const ORIENTATIONS: { value: PhotoOrientation; label: string; hint: string; rati
 export function PhotoRequestSheet({
   isOpen,
   characterId,
+  serverHost,
   characterName,
   ideas,
   areIdeasLoading,
@@ -39,6 +43,7 @@ export function PhotoRequestSheet({
   onSubmit,
 }: PhotoRequestSheetProps) {
   const theme = useResolvedTheme(characterId);
+  const author = useTextAuthor(serverHost, "photo");
   const reduced = useReducedMotion();
   const [orientation, setOrientation] = React.useState<PhotoOrientation | null>(null);
   const [situation, setSituation] = React.useState("");
@@ -101,6 +106,7 @@ export function PhotoRequestSheet({
             {orientation ? (
               <Situation
                 characterId={characterId}
+                author={author}
                 editing={editing}
                 value={situation}
                 ideas={ideas}
@@ -143,6 +149,7 @@ export function PhotoRequestSheet({
 
 function Situation({
   characterId,
+  author,
   editing,
   value,
   ideas,
@@ -152,6 +159,7 @@ function Situation({
   onSend,
 }: {
   characterId: string;
+  author: TextAuthor;
   editing?: string | null;
   value: string;
   ideas: string[];
@@ -191,6 +199,8 @@ function Situation({
       </View>
 
       <View className="flex-row items-end gap-2">
+        <AuthorButtons characterId={characterId} author={author} draft={value} onText={onChange} />
+
         <TextInput
           accessibilityLabel="Describe the photo"
           multiline

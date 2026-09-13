@@ -3,7 +3,9 @@ import { Image } from "expo-image";
 import * as React from "react";
 import { ActivityIndicator, Text, TextInput, View } from "react-native";
 import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
+import { AuthorButtons } from "@/components/chat/mind/AuthorButtons";
 import { Button } from "@/components/ui/button";
+import { useTextAuthor } from "@/hooks/use-text-author";
 import { tap } from "@/services/haptics";
 import { requestPortrait } from "@/store/character-api";
 import { fetchLook } from "@/store/chat-photos";
@@ -23,6 +25,7 @@ export function PortraitStudio({
   onPortrait,
 }: PortraitStudioProps) {
   const theme = useResolvedTheme(characterId);
+  const author = useTextAuthor(serverHost, "portrait");
   const reduced = useReducedMotion();
 
   const [extra, setExtra] = React.useState("");
@@ -97,6 +100,9 @@ export function PortraitStudio({
         <Text className="font-ui text-[11px] text-text-muted leading-4">
           {AUTHOR_COPY.portraitExtraHint}
         </Text>
+
+        <AuthorButtons characterId={characterId} author={author} draft={extra} onText={setExtra} />
+
         <TextInput
           accessibilityLabel={AUTHOR_COPY.portraitExtraLabel}
           value={extra}

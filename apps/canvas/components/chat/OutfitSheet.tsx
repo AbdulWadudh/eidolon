@@ -1,32 +1,29 @@
-import { AUTHOR_COPY, OUTFIT_COPY, UI_MS } from "@eidolon/config";
+import { OUTFIT_COPY, UI_MS } from "@eidolon/config";
 import * as React from "react";
-import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
+import { AuthorButtons } from "@/components/chat/mind/AuthorButtons";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Button } from "@/components/ui/button";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { Input } from "@/components/ui/input";
-import { Cancel01Icon, MagicWand01Icon, SparklesIcon } from "@/lib/icons";
-import { authorField } from "@/store/author-api";
+import { useTextAuthor } from "@/hooks/use-text-author";
+import { Cancel01Icon } from "@/lib/icons";
 import { useResolvedTheme } from "@/store/theme-store";
 
 export interface OutfitSheetProps {
   isOpen: boolean;
   characterId: string;
-  characterName: string;
   serverHost: string;
   outfit: string | null;
   onClose: () => void;
   onApply: (outfit: string | null) => void;
 }
 
-const AUTHOR_PX = 30;
-
 export function OutfitSheet({
   isOpen,
   characterId,
-  characterName,
   serverHost,
   outfit,
   onClose,
@@ -34,8 +31,8 @@ export function OutfitSheet({
 }: OutfitSheetProps) {
   const theme = useResolvedTheme(characterId);
   const reduced = useReducedMotion();
+  const author = useTextAuthor(serverHost, "outfit");
   const [draft, setDraft] = React.useState("");
-  const [isWriting, setWriting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -46,22 +43,6 @@ export function OutfitSheet({
   }, [isOpen, outfit]);
 
   const trimmed = draft.trim();
-
-  const write = React.useCallback(
-    async (mode: "suggest" | "enhance") => {
-      setWriting(true);
-      setError(null);
-
-      const result = await authorField(serverHost, "outfit", mode, trimmed, {
-        name: characterName,
-      });
-
-      if (result.text) setDraft(result.text);
-      else if (result.error) setError(result.error);
-      setWriting(false);
-    },
-    [characterName, serverHost, trimmed],
-  );
 
   return (
     <Modal visible={isOpen} transparent animationType="none" onRequestClose={onClose}>
@@ -97,47 +78,25 @@ export function OutfitSheet({
             {OUTFIT_COPY.blurb}
           </Text>
 
-          <View className="mb-1.5 flex-row items-center justify-end gap-1.5">
-            {isWriting ? (
-              <ActivityIndicator size="small" color={theme.primary} />
-            ) : (
-              <>
-                {trimmed.length > 0 ? (
-                  <PressableScale
-                    accessibilityRole="button"
-                    accessibilityLabel={`${AUTHOR_COPY.enhance}: ${OUTFIT_COPY.title}`}
-                    hitSlop={8}
-                    onPress={() => void write("enhance")}
-                    style={{ height: AUTHOR_PX, width: AUTHOR_PX }}
-                    className="items-center justify-center rounded-button border border-border bg-input"
-                  >
-                    <AppIcon icon={MagicWand01Icon} size={14} color={theme.textPrimary} />
-                  </PressableScale>
-                ) : null}
-
-                <PressableScale
-                  accessibilityRole="button"
-                  accessibilityLabel={`${AUTHOR_COPY.suggest}: ${OUTFIT_COPY.title}`}
-                  hitSlop={8}
-                  onPress={() => void write("suggest")}
-                  style={{ height: AUTHOR_PX, width: AUTHOR_PX }}
-                  className="items-center justify-center rounded-button border border-border bg-input"
-                >
-                  <AppIcon icon={SparklesIcon} size={14} color={theme.primary} />
-                </PressableScale>
-              </>
-            )}
-          </View>
-
           <Input
             value={draft}
             onChangeText={setDraft}
-            editable={!isWriting}
             placeholder={OUTFIT_COPY.placeholder}
             accessibilityLabel={OUTFIT_COPY.title}
             autoCapitalize="none"
             returnKeyType="done"
             onSubmitEditing={() => onApply(trimmed || null)}
+            trailing={
+              <AuthorButtons
+                characterId={characterId}
+                author={author}
+                draft={draft}
+                onText={(text) => {
+                  setDraft(text);
+                  setError(null);
+                }}
+              />
+            }
           />
 
           <Text
