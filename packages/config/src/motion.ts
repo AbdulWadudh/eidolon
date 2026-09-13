@@ -22,6 +22,13 @@ export const GALLERY = {
   gapPx: 3,
 } as const;
 
+export const MEDIA_PREVIEW = {
+  imageExtensions: [".webp", ".png", ".jpg", ".jpeg", ".gif", ".avif"],
+  audioExtensions: [".mp3", ".m4a", ".wav", ".ogg", ".aac", ".opus"],
+  imageHeightPx: 180,
+  buttonPx: 36,
+} as const;
+
 export const PORTRAIT_POLL_MS = 4000;
 
 export const UI_MS = {

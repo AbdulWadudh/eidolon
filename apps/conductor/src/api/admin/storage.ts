@@ -12,6 +12,7 @@ function view(report: SweepReport) {
     connected: isStorageConnected(),
     endpoint: storage.endpoint,
     bucket: storage.bucket,
+    publicUrl: storage.publicUrl,
     scanned: report.scanned,
     referenced: report.referenced,
     skipped: report.skipped,

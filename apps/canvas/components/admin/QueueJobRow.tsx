@@ -2,6 +2,7 @@ import { DASHBOARD_COPY } from "@eidolon/config";
 import { Text, View } from "react-native";
 import Animated, { useReducedMotion } from "react-native-reanimated";
 import { disclose } from "@/components/admin/admin-motion";
+import { MediaPreview } from "@/components/admin/MediaPreview";
 import { QueueJobInput } from "@/components/admin/QueueJobInput";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
@@ -116,7 +117,7 @@ export function QueueJobRow({
           {job.output ? (
             <View className="gap-1">
               <Label text="Output" />
-              <Text className="font-ui text-[10px] text-text-primary">{job.output}</Text>
+              <MediaPreview value={job.output} characterId={job.characterId ?? undefined} />
             </View>
           ) : null}
 

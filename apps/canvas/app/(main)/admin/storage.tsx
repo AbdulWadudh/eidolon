@@ -4,11 +4,17 @@ import { Text, View } from "react-native";
 import Animated, { useReducedMotion } from "react-native-reanimated";
 import { AdminEmpty, AdminScreen } from "@/components/admin/AdminScreen";
 import { revealAt } from "@/components/admin/admin-motion";
+import { MediaPreview } from "@/components/admin/MediaPreview";
 import { Button } from "@/components/ui/button";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { useConfirm } from "@/hooks/use-confirm";
 import { AdminRequestError, fetchStorage, type StorageView, sweepStorage } from "@/store/admin-api";
 import { useConnectionStore } from "@/store/connection";
+
+function publicUrlFor(view: StorageView | null, key: string): string {
+  const base = view?.publicUrl?.replace(/\/+$/, "") ?? "";
+  return base.length > 0 ? `${base}/${key}` : "";
+}
 
 function megabytes(bytes: number): string {
   return (bytes / 1024 / 1024).toFixed(1);
@@ -127,14 +133,20 @@ export default function AdminStorageScreen() {
             <Animated.View entering={revealAt(index, reduced)} key={object.key}>
               <GlassSurface
                 tint="card"
-                className="flex-row items-center gap-3 overflow-hidden rounded-card border border-border px-4 py-2.5"
+                className="gap-2 overflow-hidden rounded-card border border-border px-4 py-2.5"
               >
-                <Text className="flex-1 font-ui text-[11px] text-text-muted" numberOfLines={1}>
-                  {object.key}
-                </Text>
-                <Text className="font-ui-medium text-[10px] text-text-muted">
-                  {`${megabytes(object.bytes)} MB`}
-                </Text>
+                <View className="flex-row items-center gap-3">
+                  <Text className="flex-1 font-ui text-[11px] text-text-muted" numberOfLines={1}>
+                    {object.key}
+                  </Text>
+                  <Text className="font-ui-medium text-[10px] text-text-muted">
+                    {`${megabytes(object.bytes)} MB`}
+                  </Text>
+                </View>
+
+                {publicUrlFor(view, object.key) ? (
+                  <MediaPreview value={publicUrlFor(view, object.key)} />
+                ) : null}
               </GlassSurface>
             </Animated.View>
           ))}

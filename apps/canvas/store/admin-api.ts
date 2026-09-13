@@ -287,6 +287,7 @@ export interface StorageView {
   connected: boolean;
   endpoint: string;
   bucket: string;
+  publicUrl: string;
   scanned: number;
   referenced: number;
   skipped: "not-connected" | "no-references" | null;

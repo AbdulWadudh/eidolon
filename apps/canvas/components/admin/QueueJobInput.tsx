@@ -1,6 +1,7 @@
 import { AUTHOR_COPY, DASHBOARD_COPY } from "@eidolon/config";
 import * as React from "react";
 import { Text, TextInput, View } from "react-native";
+import { MediaPreview } from "@/components/admin/MediaPreview";
 import { FieldAuthorRow } from "@/components/characters/FieldAuthorRow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -158,7 +159,9 @@ export function QueueJobInput({
         ) : (
           <View className="flex-row items-start gap-2" key={field.label}>
             <Text className="w-24 font-ui text-[10px] text-text-muted">{field.label}</Text>
-            <Text className="flex-1 font-ui text-[10px] text-text-primary">{field.value}</Text>
+            <View className="flex-1">
+              <MediaPreview value={field.value} />
+            </View>
           </View>
         ),
       )}
