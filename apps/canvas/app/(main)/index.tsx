@@ -26,13 +26,15 @@ import {
   DashboardSquare01Icon,
   Logout01Icon,
   PaintBoardIcon,
-  Settings01Icon,
   SparklesIcon,
+  UserIcon,
 } from "@/lib/icons";
 import { useAuthStore, useIsOwner } from "@/store/auth-store";
 import { type CharacterSummary, fetchCharacters } from "@/store/character-api";
 import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme } from "@/store/theme-store";
+
+const ACCOUNT_PX = 34;
 
 export default function MainCharactersScreen() {
   const router = useRouter();
@@ -41,6 +43,7 @@ export default function MainCharactersScreen() {
   const reduced = useReducedMotion();
   const isOwner = useIsOwner();
   const refreshAccount = useAuthStore((state) => state.refresh);
+  const account = useAuthStore((state) => state.account);
   const confirmation = useConfirm();
 
   const revealAt = (index: number) =>
@@ -136,13 +139,22 @@ export default function MainCharactersScreen() {
 
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={HOME_COPY.connectedTo}
+            accessibilityLabel={
+              account ? `${HOME_COPY.accountLabel}: ${account.name}` : HOME_COPY.accountLabel
+            }
             accessibilityState={{ expanded: showSettings }}
             hitSlop={6}
-            className="items-center justify-center rounded-button p-2 active:bg-card"
+            className="ml-0.5 items-center justify-center overflow-hidden rounded-full border border-border bg-card active:bg-border"
+            style={{ height: ACCOUNT_PX, width: ACCOUNT_PX }}
             onPress={() => setShowSettings((prev) => !prev)}
           >
-            <AppIcon icon={Settings01Icon} size={18} color={theme.textPrimary} strokeWidth={1.6} />
+            {account?.name ? (
+              <Text className="font-main-bold text-[13px]" style={{ color: theme.primary }}>
+                {account.name.trim().slice(0, 1).toUpperCase()}
+              </Text>
+            ) : (
+              <AppIcon icon={UserIcon} size={17} color={theme.textPrimary} strokeWidth={1.6} />
+            )}
           </Pressable>
         </View>
       </View>
@@ -151,12 +163,19 @@ export default function MainCharactersScreen() {
         {}
         {showSettings && (
           <Card className="border-primary/30">
-            <View className="flex-row items-center justify-between">
-              <View>
-                <Text className="font-ui-bold text-sm text-text-primary">
-                  {HOME_COPY.connectedTo}
+            <View className="flex-row items-center justify-between gap-3">
+              <View className="flex-1">
+                <Text className="font-ui-bold text-sm text-text-primary" numberOfLines={1}>
+                  {account?.name || HOME_COPY.signedOutAccount}
                 </Text>
-                <Text className="font-ui text-xs text-text-muted">{serverHost}</Text>
+                {account?.email ? (
+                  <Text className="font-ui text-[11px] text-text-muted" numberOfLines={1}>
+                    {account.email}
+                  </Text>
+                ) : null}
+                <Text className="mt-1 font-ui text-[11px] text-text-muted" numberOfLines={1}>
+                  {`${HOME_COPY.servedFrom} ${serverHost}`}
+                </Text>
               </View>
               <Button
                 variant="destructive"

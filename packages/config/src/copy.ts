@@ -46,6 +46,9 @@ export const CONNECT_MESSAGES: readonly string[] = [
 export const HOME_COPY = {
   connectedTo: "Connected to",
   disconnect: "Disconnect",
+  accountLabel: "Your account",
+  signedOutAccount: "Not signed in",
+  servedFrom: "Served from",
   whosHere: "Who's here",
   ready: "Ready when you are",
   sayHello: "Say hello",
