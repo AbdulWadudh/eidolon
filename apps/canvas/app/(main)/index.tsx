@@ -100,7 +100,7 @@ export default function MainCharactersScreen() {
     <View style={{ flex: 1, backgroundColor: theme.canvas }} className="flex-1 bg-canvas">
       {}
       <GlassSurface
-        tint="card"
+        tint="canvas"
         className="flex-row items-center justify-between border-border border-b px-3 pb-2.5"
         style={{ paddingTop: barTop + HEADER_TOP_PX }}
       >
