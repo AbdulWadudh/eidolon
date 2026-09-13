@@ -17,6 +17,7 @@ export { default as Delete02Icon } from "@hugeicons/core-free-icons/Delete02Icon
 export { default as Download01Icon } from "@hugeicons/core-free-icons/Download01Icon";
 export { default as FileUploadIcon } from "@hugeicons/core-free-icons/FileUploadIcon";
 export { default as FlashIcon } from "@hugeicons/core-free-icons/FlashIcon";
+export { default as Folder01Icon } from "@hugeicons/core-free-icons/Folder01Icon";
 export { default as Globe02Icon } from "@hugeicons/core-free-icons/Globe02Icon";
 export { default as HandIcon } from "@hugeicons/core-free-icons/HandIcon";
 export { default as HardDriveIcon } from "@hugeicons/core-free-icons/HardDriveIcon";

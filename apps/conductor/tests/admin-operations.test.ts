@@ -17,7 +17,13 @@ import {
   queueFor,
 } from "@/queue/stats";
 import { isAuthorableField, shapeJobPrompt } from "@/services/job-author";
-import { browseStorage } from "@/services/storage-browse";
+import {
+  browseStorage,
+  filesAt,
+  foldersUnder,
+  mediaKindForKey,
+  normalisePrefix,
+} from "@/services/storage-browse";
 
 const OWNER = { "Content-Type": "application/json", Authorization: `Bearer ${PAIRING_SECRET}` };
 const MEMBER_EMAIL = "operations-test-member@eidolon.test";
@@ -367,5 +373,96 @@ describe("browsing the bucket", () => {
     });
 
     expect(response.status).toBe(409);
+  });
+});
+
+const BUCKET = [
+  { key: "characters/emma/images/a.webp", bytes: 10, modifiedAt: 3, referenced: true },
+  { key: "characters/emma/images/b.webp", bytes: 20, modifiedAt: 2, referenced: false },
+  { key: "characters/emma/audio/c.mp3", bytes: 30, modifiedAt: 1, referenced: true },
+  { key: "characters/nadia/images/d.png", bytes: 40, modifiedAt: 4, referenced: true },
+  { key: "loose.txt", bytes: 5, modifiedAt: 5, referenced: false },
+].map((object) => ({ ...object, url: "", kind: mediaKindForKey(object.key) }));
+
+describe("walking the bucket as folders", () => {
+  it("normalises a prefix to end in a slash, and nothing to empty", () => {
+    expect(normalisePrefix(undefined)).toBe("");
+    expect(normalisePrefix("")).toBe("");
+    expect(normalisePrefix("characters")).toBe("characters/");
+    expect(normalisePrefix("characters/")).toBe("characters/");
+    expect(normalisePrefix("/characters/emma")).toBe("characters/emma/");
+  });
+
+  it("shows one folder at the root, and the loose file beside it", () => {
+    const folders = foldersUnder(BUCKET, "");
+    const files = filesAt(BUCKET, "");
+
+    expect(folders.map((folder) => folder.name)).toEqual(["characters"]);
+    expect(folders[0]?.objects).toBe(4);
+    expect(folders[0]?.bytes).toBe(100);
+    expect(folders[0]?.orphans).toBe(1);
+    expect(files.map((file) => file.key)).toEqual(["loose.txt"]);
+  });
+
+  it("descends one level at a time rather than flattening", () => {
+    const folders = foldersUnder(BUCKET, "characters/");
+
+    expect(folders.map((folder) => folder.name)).toEqual(["emma", "nadia"]);
+    expect(filesAt(BUCKET, "characters/")).toEqual([]);
+  });
+
+  it("lists the files once there are no more folders", () => {
+    const under = BUCKET.filter((object) => object.key.startsWith("characters/emma/images/"));
+    const files = filesAt(under, "characters/emma/images/");
+
+    expect(files.map((file) => file.key.split("/").at(-1))).toEqual(["a.webp", "b.webp"]);
+    expect(foldersUnder(under, "characters/emma/images/")).toEqual([]);
+  });
+
+  it("counts orphans per folder so a folder says what a sweep would take", () => {
+    const folders = foldersUnder(BUCKET, "characters/");
+    const emma = folders.find((folder) => folder.name === "emma");
+
+    expect(emma?.objects).toBe(3);
+    expect(emma?.orphans).toBe(1);
+  });
+
+  it("reads a media kind from the key", () => {
+    expect(mediaKindForKey("characters/emma/images/a.webp")).toBe("image");
+    expect(mediaKindForKey("characters/emma/audio/c.mp3")).toBe("audio");
+    expect(mediaKindForKey("loose.txt")).toBe("other");
+  });
+
+  it("flattens when folder mode is off, and never invents a folder", async () => {
+    const response = await app.request(
+      `${adminApiPath("storage")}/objects?folders=false&prefix=characters`,
+      { headers: OWNER },
+    );
+    const body = (await response.json()) as {
+      folderMode: boolean;
+      folders: unknown[];
+      prefix: string;
+    };
+
+    expect(body.folderMode).toBe(false);
+    expect(body.folders).toEqual([]);
+    expect(body.prefix).toBe("");
+  });
+
+  it("walks folders by default", async () => {
+    const response = await app.request(`${adminApiPath("storage")}/objects`, { headers: OWNER });
+    const body = (await response.json()) as { folderMode: boolean };
+
+    expect(body.folderMode).toBe(true);
+  });
+
+  it("serves folders and a prefix over the route", async () => {
+    const response = await app.request(`${adminApiPath("storage")}/objects?prefix=characters`, {
+      headers: OWNER,
+    });
+    const body = (await response.json()) as { prefix: string; folders: unknown[] };
+
+    expect(response.status).toBe(200);
+    expect(Array.isArray(body.folders)).toBe(true);
   });
 });

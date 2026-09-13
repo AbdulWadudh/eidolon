@@ -1,12 +1,14 @@
-import { CALL_COPY, MEDIA_PREVIEW, VOICE_COPY } from "@eidolon/config";
+import { CALL_COPY, DASHBOARD_COPY, MEDIA_PREVIEW, UI_MS, VOICE_COPY } from "@eidolon/config";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { Image } from "expo-image";
 import * as React from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, Clipboard, Text, View } from "react-native";
+import { ImageLightbox } from "@/components/admin/ImageLightbox";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
-import { PauseIcon, PlayIcon } from "@/lib/icons";
-import { filenameOf, mediaKindFor } from "@/lib/media-kind";
+import { ClipboardIcon, Download01Icon, PauseIcon, PlayIcon } from "@/lib/icons";
+import { filenameOf, isUrlLike, mediaKindFor } from "@/lib/media-kind";
+import { saveMediaToDevice } from "@/lib/save-media";
 import { tap } from "@/services/haptics";
 import { useResolvedTheme } from "@/store/theme-store";
 
@@ -21,26 +23,140 @@ export function MediaPreview({ value, characterId }: MediaPreviewProps) {
   if (kind === "image") return <ImagePreview url={value} characterId={characterId} />;
   if (kind === "audio") return <AudioPreview url={value} characterId={characterId} />;
 
-  return <Text className="font-ui text-[10px] text-text-primary">{value}</Text>;
+  return (
+    <View className="flex-row items-start gap-2">
+      <Text className="flex-1 font-ui text-[10px] text-text-primary">{value}</Text>
+      <CopyButton value={value} characterId={characterId} />
+      {isUrlLike(value) ? <DownloadButton url={value} characterId={characterId} /> : null}
+    </View>
+  );
 }
 
 function Caption({ value }: { value: string }) {
   return (
-    <Text className="font-ui text-[10px] text-text-muted" numberOfLines={1}>
+    <Text className="flex-1 font-ui text-[10px] text-text-muted" numberOfLines={1}>
       {filenameOf(value)}
     </Text>
+  );
+}
+
+export function CopyButton({ value, characterId }: { value: string; characterId?: string }) {
+  const theme = useResolvedTheme(characterId);
+  const [copied, setCopied] = React.useState(false);
+  const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  React.useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+
+  const copy = React.useCallback(() => {
+    Clipboard.setString(value);
+    tap("light");
+    setCopied(true);
+
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setCopied(false), UI_MS.copyFeedback);
+  }, [value]);
+
+  return (
+    <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel={copied ? DASHBOARD_COPY.copied : DASHBOARD_COPY.copy}
+      hitSlop={8}
+      onPress={copy}
+      className="h-7 w-7 items-center justify-center rounded-button border border-border"
+    >
+      <AppIcon icon={ClipboardIcon} size={13} color={copied ? theme.success : theme.textMuted} />
+    </PressableScale>
+  );
+}
+
+export function DownloadButton({ url, characterId }: { url: string; characterId?: string }) {
+  const theme = useResolvedTheme(characterId);
+  const [isSaving, setSaving] = React.useState(false);
+  const [note, setNote] = React.useState<string | null>(null);
+
+  const save = React.useCallback(() => {
+    if (isSaving) return;
+
+    setSaving(true);
+    setNote(null);
+
+    void saveMediaToDevice(url)
+      .then((outcome) => {
+        if (outcome.result === "saved") {
+          tap("success");
+          setNote(
+            outcome.target === "gallery"
+              ? DASHBOARD_COPY.downloadedGallery
+              : DASHBOARD_COPY.downloadedFile(outcome.name),
+          );
+          return;
+        }
+
+        tap("light");
+        setNote(
+          outcome.result === "denied"
+            ? DASHBOARD_COPY.downloadDenied
+            : DASHBOARD_COPY.downloadFailed,
+        );
+      })
+      .finally(() => setSaving(false));
+  }, [isSaving, url]);
+
+  return (
+    <View className="flex-row items-center gap-2">
+      <PressableScale
+        accessibilityRole="button"
+        accessibilityLabel={DASHBOARD_COPY.download}
+        accessibilityState={{ busy: isSaving }}
+        hitSlop={8}
+        onPress={save}
+        className="h-7 w-7 items-center justify-center rounded-button border border-border"
+      >
+        {isSaving ? (
+          <ActivityIndicator size="small" color={theme.primary} />
+        ) : (
+          <AppIcon icon={Download01Icon} size={13} color={theme.textMuted} />
+        )}
+      </PressableScale>
+
+      {note ? (
+        <Text
+          accessibilityLiveRegion="polite"
+          className="flex-1 font-ui text-[10px] text-text-muted"
+          numberOfLines={2}
+        >
+          {note}
+        </Text>
+      ) : null}
+    </View>
   );
 }
 
 function ImagePreview({ url, characterId }: { url: string; characterId?: string }) {
   const theme = useResolvedTheme(characterId);
   const [failed, setFailed] = React.useState(false);
+  const [isOpen, setOpen] = React.useState(false);
 
-  if (failed) return <Text className="font-ui text-[10px] text-text-primary">{url}</Text>;
+  if (failed) {
+    return (
+      <View className="flex-row items-start gap-2">
+        <Text className="flex-1 font-ui text-[10px] text-text-primary">{url}</Text>
+        <CopyButton value={url} characterId={characterId} />
+      </View>
+    );
+  }
 
   return (
     <View className="gap-1">
-      <View
+      <PressableScale
+        accessibilityRole="imagebutton"
+        accessibilityLabel={filenameOf(url)}
+        onPress={() => setOpen(true)}
         className="overflow-hidden rounded-button border border-border"
         style={{ height: MEDIA_PREVIEW.imageHeightPx, backgroundColor: theme.inputSurface }}
       >
@@ -50,8 +166,15 @@ function ImagePreview({ url, characterId }: { url: string; characterId?: string 
           style={{ flex: 1 }}
           onError={() => setFailed(true)}
         />
+      </PressableScale>
+
+      <View className="flex-row items-center gap-2">
+        <Caption value={url} />
+        <CopyButton value={url} characterId={characterId} />
+        <DownloadButton url={url} characterId={characterId} />
       </View>
-      <Caption value={url} />
+
+      <ImageLightbox url={isOpen ? url : null} onClose={() => setOpen(false)} />
     </View>
   );
 }
@@ -87,7 +210,14 @@ function AudioPreview({ url, characterId }: { url: string; characterId?: string 
     }
   }, [failed, player, status.playing, url]);
 
-  if (failed) return <Text className="font-ui text-[10px] text-text-primary">{url}</Text>;
+  if (failed) {
+    return (
+      <View className="flex-row items-start gap-2">
+        <Text className="flex-1 font-ui text-[10px] text-text-primary">{url}</Text>
+        <CopyButton value={url} characterId={characterId} />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-row items-center gap-2">
@@ -111,9 +241,9 @@ function AudioPreview({ url, characterId }: { url: string; characterId?: string 
         )}
       </PressableScale>
 
-      <View className="flex-1">
-        <Caption value={url} />
-      </View>
+      <Caption value={url} />
+      <CopyButton value={url} characterId={characterId} />
+      <DownloadButton url={url} characterId={characterId} />
     </View>
   );
 }

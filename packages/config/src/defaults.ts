@@ -276,6 +276,15 @@ export const STORAGE_SWEEP = {
   ],
 } as const;
 
+export const MEDIA_TYPES = {
+  imageExtensions: [".webp", ".png", ".jpg", ".jpeg", ".gif", ".avif"],
+  audioExtensions: [".mp3", ".m4a", ".wav", ".ogg", ".aac", ".opus"],
+} as const;
+
+export const MEDIA_KINDS = ["image", "audio", "other"] as const;
+
+export type MediaKind = (typeof MEDIA_KINDS)[number];
+
 export const STORAGE_BROWSER = {
   pageSize: 40,
   maxPageSize: 200,

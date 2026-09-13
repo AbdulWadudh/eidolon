@@ -1,4 +1,4 @@
-import { MEDIA_PREVIEW } from "@eidolon/config";
+import { MEDIA_TYPES } from "@eidolon/config";
 
 export type MediaKind = "image" | "audio" | "text";
 
@@ -22,8 +22,8 @@ export function mediaKindFor(value: string): MediaKind {
   if (!isUrlLike(value)) return "text";
 
   const path = pathOf(value);
-  if (endsWithAny(path, MEDIA_PREVIEW.imageExtensions)) return "image";
-  if (endsWithAny(path, MEDIA_PREVIEW.audioExtensions)) return "audio";
+  if (endsWithAny(path, MEDIA_TYPES.imageExtensions)) return "image";
+  if (endsWithAny(path, MEDIA_TYPES.audioExtensions)) return "audio";
   return "text";
 }
 

@@ -480,12 +480,23 @@ export async function authorQueueJobField(
   }
 }
 
+export type StoredMediaKind = "image" | "audio" | "other";
+
 export interface BrowsedObject {
   key: string;
   bytes: number;
   modifiedAt: number;
   referenced: boolean;
   url: string;
+  kind: StoredMediaKind;
+}
+
+export interface BrowsedFolder {
+  name: string;
+  prefix: string;
+  objects: number;
+  bytes: number;
+  orphans: number;
 }
 
 export interface BrowseView {
@@ -497,6 +508,10 @@ export interface BrowseView {
   orphans: number;
   matched: number;
   bytes: number;
+  kinds: Record<StoredMediaKind, number>;
+  folderMode: boolean;
+  prefix: string;
+  folders: BrowsedFolder[];
   limit: number;
   offset: number;
   objects: BrowsedObject[];
@@ -505,11 +520,21 @@ export interface BrowseView {
 export function browseStorage(
   host: string,
   token: string,
-  options: { search?: string; orphans?: boolean; offset?: number } = {},
+  options: {
+    search?: string;
+    orphans?: boolean;
+    kind?: StoredMediaKind | null;
+    folderMode?: boolean;
+    prefix?: string;
+    offset?: number;
+  } = {},
 ): Promise<BrowseView> {
   const query = new URLSearchParams();
   if (options.search) query.set("search", options.search);
   if (options.orphans) query.set("orphans", "true");
+  if (options.kind) query.set("kind", options.kind);
+  if (options.folderMode === false) query.set("folders", "false");
+  if (options.prefix) query.set("prefix", options.prefix);
   if (options.offset) query.set("offset", String(options.offset));
 
   const search = query.size > 0 ? `?${query.toString()}` : "";

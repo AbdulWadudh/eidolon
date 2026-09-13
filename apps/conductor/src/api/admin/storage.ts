@@ -1,3 +1,4 @@
+import { MEDIA_KINDS, type MediaKind } from "@eidolon/config";
 import { Hono } from "hono";
 import type { OwnerEnv } from "@/auth/guard";
 import { deleteFile, getStorageConfig, isStorageConnected } from "@/services/storage";
@@ -36,6 +37,10 @@ function flag(raw: string | undefined): boolean {
   return raw === "true" || raw === "1";
 }
 
+function kindOf(raw: string | undefined): MediaKind | null {
+  return MEDIA_KINDS.some((one) => one === raw) ? (raw as MediaKind) : null;
+}
+
 function numeric(raw: string | undefined): number | undefined {
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : undefined;
@@ -46,6 +51,9 @@ adminStorage.get("/objects", async (c) =>
     await browseStorage({
       search: c.req.query("search"),
       onlyOrphans: flag(c.req.query("orphans")),
+      kind: kindOf(c.req.query("kind")),
+      folderMode: c.req.query("folders") !== "false",
+      prefix: c.req.query("prefix"),
       limit: numeric(c.req.query("limit")),
       offset: numeric(c.req.query("offset")),
     }),
