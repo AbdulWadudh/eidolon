@@ -16,6 +16,7 @@ export const Input = React.forwardRef<React.ElementRef<typeof TextInput>, InputP
       <GlassSurface tint="input" className={cn("w-full rounded-input", className)}>
         <TextInput
           ref={ref}
+          {...props}
           placeholderTextColor={placeholderTextColor ?? theme.textMuted}
           cursorColor={cursorColor ?? theme.primary}
           selectionColor={selectionColor ?? theme.primary}
@@ -24,10 +25,9 @@ export const Input = React.forwardRef<React.ElementRef<typeof TextInput>, InputP
             props.style,
           ]}
           className={cn(
-            "h-11 w-full rounded-input border border-border px-3 py-2 font-ui text-sm text-text-primary",
+            "h-11 w-full rounded-input border border-border px-4 py-2 font-ui text-sm text-text-primary",
             "focus:border-primary",
           )}
-          {...props}
         />
       </GlassSurface>
     );

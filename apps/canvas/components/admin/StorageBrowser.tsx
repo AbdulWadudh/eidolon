@@ -191,7 +191,7 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
               autoCapitalize="none"
               autoCorrect={false}
               autoFocus
-              className="h-9 rounded-button border border-border bg-input-surface px-3 font-ui text-xs text-text-primary"
+              className="h-9 rounded-button border border-border bg-input-surface px-4 font-ui text-xs text-text-primary"
               style={{ paddingVertical: 0, includeFontPadding: false, textAlignVertical: "center" }}
             />
           </Animated.View>
