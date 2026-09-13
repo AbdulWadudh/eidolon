@@ -75,6 +75,14 @@ export function adminStorageSweepPath(): string {
   return `${adminApiPath("storage")}/sweep`;
 }
 
+export function adminStorageObjectsPath(): string {
+  return `${adminApiPath("storage")}/objects`;
+}
+
+export function adminStorageObjectPath(key: string): string {
+  return `${adminApiPath("storage")}/objects/${encodeURIComponent(key)}`;
+}
+
 export function adminQueueRetryPath(queueKey: string): string {
   return `${adminApiPath("queues", queueKey)}/retry`;
 }

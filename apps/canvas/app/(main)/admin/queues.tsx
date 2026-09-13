@@ -1,4 +1,5 @@
 import { DASHBOARD_COPY } from "@eidolon/config";
+import type { IconSvgElement } from "@hugeicons/react-native";
 import * as React from "react";
 import { Text, View } from "react-native";
 import Animated, { useReducedMotion } from "react-native-reanimated";
@@ -12,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useJobAuthor } from "@/hooks/use-job-author";
-import { Queue01Icon, RefreshIcon } from "@/lib/icons";
+import { FileUploadIcon, FlashIcon, Queue01Icon, RefreshIcon, SentIcon } from "@/lib/icons";
 import { countFor, isPending, PENDING_TAB, type QueueTab } from "@/lib/queue-tabs";
 import {
   AdminRequestError,
@@ -26,6 +27,12 @@ import {
 } from "@/store/admin-api";
 import { useConnectionStore } from "@/store/connection";
 import { useResolvedTheme } from "@/store/theme-store";
+
+const QUEUE_ICONS: Record<string, IconSvgElement> = {
+  gpu: FlashIcon,
+  s3Upload: FileUploadIcon,
+  proactive: SentIcon,
+};
 
 export default function AdminQueuesScreen() {
   const theme = useResolvedTheme();
@@ -121,7 +128,7 @@ export default function AdminQueuesScreen() {
         <Animated.View entering={revealAt(index, reduced)} key={queue.key}>
           <CollapsibleSection
             sectionKey={queue.key}
-            icon={Queue01Icon}
+            icon={QUEUE_ICONS[queue.key] ?? Queue01Icon}
             iconColor={queue.reachable ? theme.primary : theme.danger}
             title={queue.name}
             badge={

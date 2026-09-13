@@ -9,6 +9,8 @@ import {
   adminQueueJobAuthorPath,
   adminQueueJobPath,
   adminQueueRetryPath,
+  adminStorageObjectPath,
+  adminStorageObjectsPath,
   adminStorageSweepPath,
   stripAuthority,
   TIMEOUTS_MS,
@@ -476,4 +478,48 @@ export async function authorQueueJobField(
   } catch {
     return { text: null, error: null };
   }
+}
+
+export interface BrowsedObject {
+  key: string;
+  bytes: number;
+  modifiedAt: number;
+  referenced: boolean;
+  url: string;
+}
+
+export interface BrowseView {
+  connected: boolean;
+  bucket: string;
+  publicUrl: string;
+  total: number;
+  referenced: number;
+  orphans: number;
+  matched: number;
+  bytes: number;
+  limit: number;
+  offset: number;
+  objects: BrowsedObject[];
+}
+
+export function browseStorage(
+  host: string,
+  token: string,
+  options: { search?: string; orphans?: boolean; offset?: number } = {},
+): Promise<BrowseView> {
+  const query = new URLSearchParams();
+  if (options.search) query.set("search", options.search);
+  if (options.orphans) query.set("orphans", "true");
+  if (options.offset) query.set("offset", String(options.offset));
+
+  const search = query.size > 0 ? `?${query.toString()}` : "";
+  return send(host, token, `${adminStorageObjectsPath()}${search}`, "GET");
+}
+
+export function removeStorageObject(
+  host: string,
+  token: string,
+  key: string,
+): Promise<{ ok: true }> {
+  return send(host, token, adminStorageObjectPath(key), "DELETE");
 }

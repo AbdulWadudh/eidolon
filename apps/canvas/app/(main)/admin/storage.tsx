@@ -5,6 +5,7 @@ import Animated, { useReducedMotion } from "react-native-reanimated";
 import { AdminEmpty, AdminScreen } from "@/components/admin/AdminScreen";
 import { revealAt } from "@/components/admin/admin-motion";
 import { MediaPreview } from "@/components/admin/MediaPreview";
+import { StorageBrowser } from "@/components/admin/StorageBrowser";
 import { Button } from "@/components/ui/button";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { useConfirm } from "@/hooks/use-confirm";
@@ -152,6 +153,12 @@ export default function AdminStorageScreen() {
           ))}
         </>
       )}
+
+      {view?.connected ? (
+        <View className="mt-2 border-border border-t pt-4">
+          <StorageBrowser serverHost={serverHost} token={pairingToken} onError={setError} />
+        </View>
+      ) : null}
 
       {confirmation.sheet}
     </AdminScreen>

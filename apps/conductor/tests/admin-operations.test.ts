@@ -17,6 +17,7 @@ import {
   queueFor,
 } from "@/queue/stats";
 import { isAuthorableField, shapeJobPrompt } from "@/services/job-author";
+import { browseStorage } from "@/services/storage-browse";
 
 const OWNER = { "Content-Type": "application/json", Authorization: `Bearer ${PAIRING_SECRET}` };
 const MEMBER_EMAIL = "operations-test-member@eidolon.test";
@@ -321,5 +322,50 @@ describe("writing a job prompt for you", () => {
     });
 
     expect([400, 404]).toContain(response.status);
+  });
+});
+
+describe("browsing the bucket", () => {
+  it("reports it as disconnected here rather than an empty bucket", async () => {
+    const result = await browseStorage();
+
+    expect(result.connected).toBe(false);
+    expect(result.total).toBe(0);
+    expect(result.objects).toEqual([]);
+  });
+
+  it("serves the browse route to an owner and refuses a member", async () => {
+    const owner = await app.request(`${adminApiPath("storage")}/objects`, { headers: OWNER });
+    const member = await app.request(`${adminApiPath("storage")}/objects`, {
+      headers: await memberHeaders(),
+    });
+
+    expect(owner.status).toBe(200);
+    expect(member.status).toBe(403);
+  });
+
+  it("carries the paging and tallies the route promises", async () => {
+    const response = await app.request(`${adminApiPath("storage")}/objects`, { headers: OWNER });
+    const body = (await response.json()) as {
+      total: number;
+      referenced: number;
+      orphans: number;
+      matched: number;
+      limit: number;
+      offset: number;
+    };
+
+    expect(body.limit).toBeGreaterThan(0);
+    expect(body.offset).toBe(0);
+    expect(body.referenced + body.orphans).toBe(body.total);
+  });
+
+  it("refuses to delete an object with no bucket connected", async () => {
+    const response = await app.request(`${adminApiPath("storage")}/objects/anything.webp`, {
+      method: "DELETE",
+      headers: OWNER,
+    });
+
+    expect(response.status).toBe(409);
   });
 });

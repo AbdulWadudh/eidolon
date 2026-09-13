@@ -276,6 +276,11 @@ export const STORAGE_SWEEP = {
   ],
 } as const;
 
+export const STORAGE_BROWSER = {
+  pageSize: 40,
+  maxPageSize: 200,
+} as const;
+
 export const DATA_FILES = {
   sqlite: "eidolon.db",
   lancedb: "lancedb",
