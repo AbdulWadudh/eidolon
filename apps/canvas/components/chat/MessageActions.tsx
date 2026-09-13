@@ -30,7 +30,7 @@ export interface MessageActionsProps {
   onCancel: () => void;
 }
 
-const ACTION_PX = 28;
+const ACTION_PX = 24;
 const ICON_PX = 13;
 
 export function MessageActions({
@@ -111,7 +111,10 @@ export function MessageActions({
         }}
       />
 
-      <View className="flex-row items-center gap-1 px-1.5 pb-1" style={{ paddingTop: overlap + 4 }}>
+      <View
+        className="flex-row items-center gap-1 px-1.5 pb-0.5"
+        style={{ paddingTop: overlap + 2 }}
+      >
         {isEditing ? (
           <>
             {button(MIND_COPY.cancel, Cancel01Icon, theme.textMuted, onCancel, true)}
