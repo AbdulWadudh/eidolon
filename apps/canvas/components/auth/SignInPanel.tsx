@@ -3,12 +3,11 @@ import * as React from "react";
 import { ActivityIndicator, Text, type TextInput, View } from "react-native";
 import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
 import { AppIcon } from "@/components/common/icon";
-import { PressableScale } from "@/components/common/pressable-scale";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Segmented } from "@/components/ui/segmented";
 import { AlertCircleIcon, Mail01Icon, SquareLock01Icon, UserIcon } from "@/lib/icons";
-import { select } from "@/services/haptics";
 import { type Account, signIn, signUp } from "@/store/auth-store";
 import { useResolvedTheme } from "@/store/theme-store";
 
@@ -74,9 +73,18 @@ export function SignInPanel({ host, onSignedIn }: SignInPanelProps) {
 
   return (
     <Card className="mt-2 flex-col gap-3">
-      <Text className="font-ui-bold text-sm text-text-primary">
-        {isNew ? AUTH_COPY.signUpTitle : AUTH_COPY.signInTitle}
-      </Text>
+      <Segmented
+        accessibilityLabel={AUTH_COPY.signInTitle}
+        options={[
+          { value: "in", label: AUTH_COPY.tabSignIn },
+          { value: "up", label: AUTH_COPY.tabSignUp },
+        ]}
+        value={isNew ? "up" : "in"}
+        onChange={(next) => {
+          setIsNew(next === "up");
+          setError(null);
+        }}
+      />
 
       {isNew ? (
         <Field label={AUTH_COPY.nameLabel}>
@@ -163,23 +171,6 @@ export function SignInPanel({ host, onSignedIn }: SignInPanelProps) {
           AUTH_COPY.signInAction
         )}
       </Button>
-
-      <PressableScale
-        accessibilityRole="button"
-        accessibilityLabel={isNew ? AUTH_COPY.switchToSignIn : AUTH_COPY.switchToSignUp}
-        hitSlop={8}
-        disabled={isWorking}
-        onPress={() => {
-          select();
-          setIsNew((prev) => !prev);
-          setError(null);
-        }}
-        className="h-9 items-center justify-center"
-      >
-        <Text className="text-center font-ui text-primary text-xs">
-          {isNew ? AUTH_COPY.switchToSignIn : AUTH_COPY.switchToSignUp}
-        </Text>
-      </PressableScale>
 
       {isNew ? (
         <Text className="text-center font-ui text-[11px] text-text-muted">
