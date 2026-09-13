@@ -110,7 +110,7 @@ function MessageCardBase({
         )}
         style={{
           ...(message.audioUrl ? { borderTopLeftRadius: 0 } : null),
-          ...(fusesActions ? { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 } : null),
+          ...(fusesActions ? { borderBottomLeftRadius: 0 } : null),
         }}
       >
         {message.imageUrl ? (
