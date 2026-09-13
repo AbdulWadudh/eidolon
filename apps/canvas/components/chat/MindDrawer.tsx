@@ -1,14 +1,27 @@
 import { MIND_COPY, UI_MS } from "@eidolon/config";
 import * as React from "react";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { AffinitySection } from "@/components/chat/mind/AffinitySection";
 import { ChronicleSection } from "@/components/chat/mind/ChronicleSection";
 import { LoreSection } from "@/components/chat/mind/LoreSection";
 import { PressableScale } from "@/components/common/pressable-scale";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { SwitchRow } from "@/components/ui/switch";
+import { useVoice } from "@/hooks/use-voice";
 import { useAffinityStore } from "@/store/affinity-store";
-import { fetchMind, type MindView, patchAffinity } from "@/store/mind-api";
+import {
+  createChapter,
+  createLore,
+  fetchMind,
+  type LoreDraft,
+  type MindView,
+  patchAffinity,
+  removeChapter,
+  removeLore,
+  updateChapter,
+  updateLore,
+} from "@/store/mind-api";
 
 export interface MindDrawerProps {
   isOpen: boolean;
@@ -19,6 +32,7 @@ export interface MindDrawerProps {
 
 export function MindDrawer({ isOpen, characterId, serverHost, onClose }: MindDrawerProps) {
   const reduced = useReducedMotion();
+  const say = useVoice();
   const [view, setView] = React.useState<MindView | null>(null);
   const [failed, setFailed] = React.useState(false);
 
@@ -51,6 +65,44 @@ export function MindDrawer({ isOpen, characterId, serverHost, onClose }: MindDra
     [serverHost, characterId],
   );
 
+  const apply = React.useCallback((next: MindView | null) => {
+    if (next) setView(next);
+  }, []);
+
+  const saveChapter = React.useCallback(
+    (chapterId: string | null, summaryText: string) => {
+      const request = chapterId
+        ? updateChapter(serverHost, characterId, chapterId, summaryText)
+        : createChapter(serverHost, characterId, summaryText);
+      void Promise.resolve(request).then(apply);
+    },
+    [serverHost, characterId, apply],
+  );
+
+  const dropChapter = React.useCallback(
+    (chapterId: string) => {
+      void Promise.resolve(removeChapter(serverHost, characterId, chapterId)).then(apply);
+    },
+    [serverHost, characterId, apply],
+  );
+
+  const saveLore = React.useCallback(
+    (entryId: string | null, draft: LoreDraft) => {
+      const request = entryId
+        ? updateLore(serverHost, characterId, entryId, draft)
+        : createLore(serverHost, characterId, draft);
+      void Promise.resolve(request).then(apply);
+    },
+    [serverHost, characterId, apply],
+  );
+
+  const dropLore = React.useCallback(
+    (entryId: string) => {
+      void Promise.resolve(removeLore(serverHost, characterId, entryId)).then(apply);
+    },
+    [serverHost, characterId, apply],
+  );
+
   const toggleLock = React.useCallback(
     (locked: boolean) => {
       setAffinityLock(locked);
@@ -66,7 +118,7 @@ export function MindDrawer({ isOpen, characterId, serverHost, onClose }: MindDra
       <Animated.View
         entering={reduced ? undefined : FadeIn.duration(UI_MS.disclosure)}
         className="flex-1 justify-end"
-        style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
+        style={{ backgroundColor: "rgba(0,0,0,0.72)" }}
       >
         <Pressable
           accessibilityRole="button"
@@ -77,15 +129,16 @@ export function MindDrawer({ isOpen, characterId, serverHost, onClose }: MindDra
 
         <Animated.View
           entering={reduced ? undefined : FadeInDown.duration(UI_MS.disclosure)}
-          className="max-h-[86%] rounded-t-card border-border border-t bg-card"
+          className="max-h-[86%] overflow-hidden rounded-t-card border-border border-t"
         >
+          <GlassSurface tint="card" overlay pointerEvents="none" style={StyleSheet.absoluteFill} />
           <View className="flex-row items-start justify-between border-border border-b px-4 py-4">
             <View className="flex-1 pr-3">
               <Text className="font-main-bold text-base text-text-primary">
                 {MIND_COPY.drawerTitle}
               </Text>
               <Text className="mt-0.5 font-ui text-[11px] text-text-muted">
-                {MIND_COPY.drawerSubtitle}
+                {say(MIND_COPY.drawerSubtitle)}
               </Text>
             </View>
             <PressableScale
@@ -119,7 +172,7 @@ export function MindDrawer({ isOpen, characterId, serverHost, onClose }: MindDra
             <SwitchRow
               characterId={characterId}
               label={MIND_COPY.insightToggle}
-              hint={MIND_COPY.insightHint}
+              hint={say(MIND_COPY.insightHint)}
               value={isInsightModeEnabled}
               onValueChange={setInsightMode}
               accessibilityLabel={MIND_COPY.insightToggle}
@@ -128,7 +181,7 @@ export function MindDrawer({ isOpen, characterId, serverHost, onClose }: MindDra
             <SwitchRow
               characterId={characterId}
               label={MIND_COPY.searchToggle}
-              hint={MIND_COPY.searchHint}
+              hint={say(MIND_COPY.searchHint)}
               value={allowWebSearch}
               onValueChange={setAllowWebSearch}
               accessibilityLabel={MIND_COPY.searchToggle}
@@ -152,9 +205,21 @@ export function MindDrawer({ isOpen, characterId, serverHost, onClose }: MindDra
               </View>
             ) : (
               <>
-                <LoreSection characterId={characterId} entries={view?.lore ?? []} />
+                <LoreSection
+                  characterId={characterId}
+                  entries={view?.lore ?? []}
+                  serverHost={serverHost}
+                  onSave={saveLore}
+                  onDelete={dropLore}
+                />
                 <View className="h-px bg-border" />
-                <ChronicleSection characterId={characterId} chapters={view?.chapters ?? []} />
+                <ChronicleSection
+                  characterId={characterId}
+                  chapters={view?.chapters ?? []}
+                  serverHost={serverHost}
+                  onSave={saveChapter}
+                  onDelete={dropChapter}
+                />
               </>
             )}
           </ScrollView>

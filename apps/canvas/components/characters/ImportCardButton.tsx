@@ -53,7 +53,7 @@ export function ImportCardButton({ serverHost, onImported }: ImportCardButtonPro
   }, [serverHost, onImported]);
 
   return (
-    <Card className="border-border bg-card p-4">
+    <Card className="border-border p-4">
       <View className="flex-row items-center justify-between">
         <View className="flex-1 pr-3">
           <View className="flex-row items-center gap-2">

@@ -1,5 +1,6 @@
 import { CHARACTER_COPY } from "@eidolon/config";
 import { Text, View } from "react-native";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { SwitchRow } from "@/components/ui/switch";
 
 export interface CharacterSharingSectionProps {
@@ -17,7 +18,7 @@ export function CharacterSharingSection({
 }: CharacterSharingSectionProps) {
   return (
     <View className="gap-4">
-      <View className="rounded-card border border-border bg-input p-4">
+      <GlassSurface tint="input" className="rounded-card border border-border p-4">
         <SwitchRow
           characterId={characterId}
           label={CHARACTER_COPY.publishLabel}
@@ -27,7 +28,7 @@ export function CharacterSharingSection({
           onValueChange={onPublish}
           accessibilityLabel={CHARACTER_COPY.publishLabel}
         />
-      </View>
+      </GlassSurface>
 
       {isMine ? null : (
         <Text className="font-ui text-[11px] text-text-muted leading-4">

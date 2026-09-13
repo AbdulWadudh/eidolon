@@ -1,9 +1,10 @@
 import { AUTHOR_COPY, GALLERY_COPY, UI_MS } from "@eidolon/config";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, SlideInDown, useReducedMotion } from "react-native-reanimated";
 import { PortraitStudio } from "@/components/characters/PortraitStudio";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { Cancel01Icon } from "@/lib/icons";
 import { useResolvedTheme } from "@/store/theme-store";
 
@@ -43,8 +44,9 @@ export function PortraitSheet({
 
         <Animated.View
           entering={reduced ? undefined : SlideInDown.duration(UI_MS.reveal)}
-          className="max-h-[85%] rounded-t-card border-border border-t bg-card"
+          className="max-h-[85%] overflow-hidden rounded-t-card border-border border-t"
         >
+          <GlassSurface tint="card" overlay pointerEvents="none" style={StyleSheet.absoluteFill} />
           <View className="flex-row items-center gap-3 border-border border-b px-4 py-4">
             <Text className="flex-1 font-main-bold text-base text-text-primary">
               {AUTHOR_COPY.portraitTitle}

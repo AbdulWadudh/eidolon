@@ -1,9 +1,10 @@
 import { affinityLabel, HOME_COPY } from "@eidolon/config";
 import { Image } from "expo-image";
-import { Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { croppedStyle, usableCrop } from "@/lib/avatar-crop";
 import { useAffinityStore } from "@/store/affinity-store";
 import type { CharacterSummary } from "@/store/character-api";
@@ -31,8 +32,9 @@ export function CharacterRosterCard({ character, onOpen, onEdit }: CharacterCard
       accessibilityRole="button"
       accessibilityLabel={`Open your chat with ${character.name}`}
       onPress={onOpen}
-      className="rounded-card border border-border bg-card p-4"
+      className="overflow-hidden rounded-card border border-border p-4"
     >
+      <GlassSurface tint="card" pointerEvents="none" style={StyleSheet.absoluteFill} />
       <View className="flex-row items-center gap-4">
         <Avatar size={AVATAR_PX} className="overflow-hidden border border-border">
           {character.avatarUrl ? (
@@ -51,14 +53,9 @@ export function CharacterRosterCard({ character, onOpen, onEdit }: CharacterCard
         </Avatar>
 
         <View className="flex-1">
-          <View className="flex-row items-center justify-between gap-2">
-            <Text className="flex-1 font-main-bold text-lg text-text-primary" numberOfLines={1}>
-              {character.name}
-            </Text>
-            {character.messageCount > 0 ? (
-              <Badge variant="muted">{`${character.messageCount}`}</Badge>
-            ) : null}
-          </View>
+          <Text className="font-main-bold text-lg text-text-primary" numberOfLines={1}>
+            {character.name}
+          </Text>
 
           <Text
             className={
@@ -72,15 +69,21 @@ export function CharacterRosterCard({ character, onOpen, onEdit }: CharacterCard
           </Text>
         </View>
 
-        <PressableScale
-          accessibilityRole="button"
-          accessibilityLabel={`Edit ${character.name}`}
-          hitSlop={10}
-          onPress={onEdit}
-          className="h-10 w-10 items-center justify-center rounded-button border border-border bg-input"
-        >
-          <Text className="font-ui text-sm text-text-muted">⋯</Text>
-        </PressableScale>
+        <View className="flex-row items-center gap-1.5">
+          {character.messageCount > 0 ? (
+            <Badge variant="muted">{`${character.messageCount}`}</Badge>
+          ) : null}
+
+          <PressableScale
+            accessibilityRole="button"
+            accessibilityLabel={`Edit ${character.name}`}
+            hitSlop={10}
+            onPress={onEdit}
+            className="h-10 w-10 items-center justify-center rounded-button border border-border bg-input"
+          >
+            <Text className="font-ui text-sm text-text-muted">⋯</Text>
+          </PressableScale>
+        </View>
       </View>
     </PressableScale>
   );

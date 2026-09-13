@@ -1,6 +1,7 @@
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { useVoiceNotes } from "@/hooks/use-voice-notes";
 import { formatVoiceDuration } from "@/lib/format";
 import { PlayIcon } from "@/lib/icons";
@@ -32,35 +33,49 @@ export function AudioNotePill({
   const disabled = !audioUrl || !voice;
 
   return (
-    <PressableScale
-      accessibilityRole="button"
-      accessibilityState={{ disabled, busy: isActive && voice?.isBuffering, selected: isPlaying }}
-      accessibilityLabel={isPlaying ? `Pause voice note ${label}` : `Play voice note ${label}`}
-      disabled={disabled}
-      hitSlop={10}
-      onPress={() => audioUrl && voice?.toggle(id, audioUrl)}
-      className="flex-row items-center gap-2 self-start border border-border bg-audio-pill px-3 py-1.5"
-      style={{
-        marginBottom: -overlap,
-        paddingBottom: overlap + 6,
-        borderTopLeftRadius: theme.radius,
-        borderTopRightRadius: theme.radius,
-        borderBottomLeftRadius: theme.radius,
-        borderBottomRightRadius: theme.radius,
-        opacity: disabled ? 0.45 : 1,
-      }}
+    <View
+      className="z-10 self-start"
+      style={{ marginBottom: -overlap, opacity: disabled ? 0.45 : 1 }}
     >
-      {isPlaying ? (
-        <WaveformBars isPlaying color={theme.primary} />
-      ) : (
-        <AppIcon icon={PlayIcon} size={13} color={theme.primary} strokeWidth={2.4} />
-      )}
-      <Text
-        className="font-ui-bold text-sm text-text-primary"
-        style={{ fontVariant: ["tabular-nums"] }}
+      <GlassSurface
+        tint="card"
+        characterId={characterId}
+        pointerEvents="none"
+        className="absolute"
+        style={{
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: Math.max(0, overlap - theme.borderWidth),
+          borderTopLeftRadius: theme.radius,
+          borderTopRightRadius: theme.radius,
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
+        }}
+      />
+
+      <PressableScale
+        accessibilityRole="button"
+        accessibilityState={{ disabled, busy: isActive && voice?.isBuffering, selected: isPlaying }}
+        accessibilityLabel={isPlaying ? `Pause voice note ${label}` : `Play voice note ${label}`}
+        disabled={disabled}
+        hitSlop={10}
+        onPress={() => audioUrl && voice?.toggle(id, audioUrl)}
+        className="flex-row items-center gap-2 px-3 py-1.5"
+        style={{ paddingBottom: overlap + 6 }}
       >
-        {label}
-      </Text>
-    </PressableScale>
+        {isPlaying ? (
+          <WaveformBars isPlaying color={theme.primary} />
+        ) : (
+          <AppIcon icon={PlayIcon} size={13} color={theme.primary} strokeWidth={2.4} />
+        )}
+        <Text
+          className="font-ui-bold text-sm text-text-primary"
+          style={{ fontVariant: ["tabular-nums"] }}
+        >
+          {label}
+        </Text>
+      </PressableScale>
+    </View>
   );
 }

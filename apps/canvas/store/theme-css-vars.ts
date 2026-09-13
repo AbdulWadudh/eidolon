@@ -1,4 +1,5 @@
 import type { ThemeTokens } from "@eidolon/tokens";
+import { blurRadiusPx, surfaceAlpha } from "@/lib/translucency";
 
 function fontVariant(base: string, variant: "Bold" | "Italic" | "Medium"): string {
   const separator = base.lastIndexOf("-");
@@ -69,6 +70,9 @@ export function tokensToCssVars(theme: ThemeTokens): Record<string, string> {
     "--radius-button": radiusPx,
     "--radius-input": radiusPx,
     "--border-width": borderWidthPx,
+    "--translucency": String(theme.translucency),
+    "--surface-alpha": String(surfaceAlpha(theme.translucency)),
+    "--surface-blur": `${blurRadiusPx(theme.translucency)}px`,
     "--font-main": theme.fontMain,
     "--font-main-bold": fontVariant(theme.fontMain, "Bold"),
     "--font-main-italic": fontVariant(theme.fontMain, "Italic"),

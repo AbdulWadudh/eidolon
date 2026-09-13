@@ -26,6 +26,7 @@ export const COLOR_TOKEN_KEYS = [
 export const SHARED_TOKEN_KEYS = [
   "radius",
   "borderWidth",
+  "translucency",
   "fontMain",
   "fontUI",
   "fontScale",

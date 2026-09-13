@@ -3,6 +3,7 @@ import { View } from "react-native";
 import Animated, { FadeIn, FadeOut, useReducedMotion } from "react-native-reanimated";
 import { CharacterFields } from "@/components/characters/CharacterFields";
 import { PortraitStudio } from "@/components/characters/PortraitStudio";
+import { PronounPicker } from "@/components/characters/PronounPicker";
 import { CharacterSharingSection } from "@/components/chat/CharacterSharingSection";
 import { VoicePicker } from "@/components/ui/voice-picker";
 import type { FieldAuthor } from "@/hooks/use-field-author";
@@ -57,6 +58,11 @@ export function CharacterSettingsBody({
 
       {section === "identity" ? (
         <View className="mt-6 gap-4 border-border border-t pt-6">
+          <PronounPicker
+            characterId={characterId}
+            value={draft.pronouns}
+            onChange={(pronouns) => onChange({ pronouns })}
+          />
           <PortraitStudio
             characterId={characterId}
             serverHost={serverHost}

@@ -3,6 +3,7 @@ import type * as React from "react";
 import { TextInput, View } from "react-native";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { Cancel01Icon, SentIcon } from "@/lib/icons";
 import { useResolvedTheme } from "@/store/theme-store";
 import { InputToolbar, type ToolbarAction } from "./InputToolbar";
@@ -14,6 +15,7 @@ export interface InputDockProps {
   isStreaming: boolean;
   characterId: string;
   suggestionsOpen?: boolean;
+  moodActive?: boolean;
   isEnhancing?: boolean;
   revertSteps?: number;
   inputRef?: React.RefObject<TextInput | null>;
@@ -28,6 +30,7 @@ export function InputDock({
   isStreaming,
   characterId,
   suggestionsOpen,
+  moodActive = false,
   isEnhancing = false,
   revertSteps = 0,
   inputRef,
@@ -42,7 +45,11 @@ export function InputDock({
   const showStop = isStreaming && !canSend;
 
   return (
-    <View className="mx-4 mb-3 rounded-card border border-border bg-input p-2.5">
+    <GlassSurface
+      tint="input"
+      characterId={characterId}
+      className="mx-4 mb-3 rounded-card border border-border p-2.5"
+    >
       <View className="flex-row items-end gap-2">
         <TextInput
           ref={inputRef}
@@ -92,11 +99,12 @@ export function InputDock({
       <InputToolbar
         characterId={characterId}
         suggestionsOpen={suggestionsOpen}
+        moodActive={moodActive}
         canEnhance={canSend}
         isEnhancing={isEnhancing}
         revertSteps={revertSteps}
         onAction={onAction}
       />
-    </View>
+    </GlassSurface>
   );
 }

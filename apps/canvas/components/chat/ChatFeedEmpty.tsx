@@ -1,10 +1,11 @@
 import { GALLERY_COPY } from "@eidolon/config";
-import { Text, View } from "react-native";
+import { Text } from "react-native";
 import { LoadFailed, LoadingState } from "@/components/common/loading-state";
+import { GlassSurface } from "@/components/ui/glass-surface";
 
 function EmptyStage({ characterName }: { characterName: string }) {
   return (
-    <View className="items-center rounded-card border border-border border-dashed bg-card px-5 py-8">
+    <GlassSurface className="items-center rounded-card border border-border border-dashed px-5 py-8">
       <Text className="font-ui-bold text-text-muted text-xs uppercase tracking-[2px]">
         The stage is set
       </Text>
@@ -12,7 +13,7 @@ function EmptyStage({ characterName }: { characterName: string }) {
         Open the scene with {characterName}. Put actions between *asterisks* and they read as
         narration.
       </Text>
-    </View>
+    </GlassSurface>
   );
 }
 

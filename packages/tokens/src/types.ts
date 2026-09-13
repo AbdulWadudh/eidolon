@@ -21,6 +21,7 @@ export interface ThemeTokens {
 
   radius: number;
   borderWidth: number;
+  translucency: number;
 
   fontMain: string;
   fontUI: string;
@@ -45,6 +46,7 @@ export const DEFAULT_THEME_TOKENS: ThemeTokens = {
   danger: "#EF4444",
   radius: 10,
   borderWidth: 1,
+  translucency: 0,
   fontMain: "NunitoSans-Regular",
   fontUI: "PublicSans-Regular",
   fontScale: 1,
@@ -68,6 +70,7 @@ export const DEFAULT_LIGHT_THEME_TOKENS: ThemeTokens = {
   danger: "#EF4444",
   radius: 10,
   borderWidth: 1,
+  translucency: 0,
   fontMain: "NunitoSans-Regular",
   fontUI: "PublicSans-Regular",
   fontScale: 1,

@@ -1,10 +1,11 @@
 import { CHAT, UI_MS } from "@eidolon/config";
 import * as React from "react";
-import { Modal, Pressable, Text, TextInput, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { Image01Icon, RefreshIcon, SentIcon } from "@/lib/icons";
 import type { PhotoOrientation } from "@/store/chat-photos";
 import { useResolvedTheme } from "@/store/theme-store";
@@ -68,7 +69,7 @@ export function PhotoRequestSheet({
       <Animated.View
         entering={reduced ? undefined : FadeIn.duration(UI_MS.disclosure)}
         className="flex-1 justify-end"
-        style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
+        style={{ backgroundColor: "rgba(0,0,0,0.72)" }}
       >
         {}
         <KeyboardAvoidingView behavior="padding" automaticOffset style={{ flex: 1 }}>
@@ -76,8 +77,14 @@ export function PhotoRequestSheet({
 
           <Animated.View
             entering={reduced ? undefined : FadeInDown.duration(UI_MS.disclosure)}
-            className="rounded-t-card border-border border-t bg-card px-4 pt-4 pb-8"
+            className="overflow-hidden rounded-t-card border-border border-t px-4 pt-4 pb-8"
           >
+            <GlassSurface
+              tint="card"
+              overlay
+              pointerEvents="none"
+              style={StyleSheet.absoluteFill}
+            />
             <View className="mb-4 flex-row items-center gap-2">
               <AppIcon icon={Image01Icon} size={18} color={theme.primary} strokeWidth={2} />
               <Text className="font-ui-bold text-sm text-text-primary">

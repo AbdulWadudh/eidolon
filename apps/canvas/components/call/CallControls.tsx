@@ -2,6 +2,7 @@ import { CALL, CALL_COPY } from "@eidolon/config";
 import { Text, View } from "react-native";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { CallEnd01Icon, HandIcon, Mic01Icon, MicOff01Icon } from "@/lib/icons";
 import { useResolvedTheme } from "@/store/theme-store";
 
@@ -48,25 +49,31 @@ export function CallControls({
 
   return (
     <View className="flex-row items-center justify-center gap-6">
-      <PressableScale
-        accessibilityRole="switch"
-        accessibilityState={{ checked: isMuted }}
-        accessibilityLabel={isMuted ? CALL_COPY.unmute : CALL_COPY.mute}
-        hitSlop={8}
-        onPress={onToggleMute}
-        className="items-center justify-center rounded-full border bg-card"
+      <GlassSurface
+        tint="card"
+        characterId={characterId}
+        className="rounded-full border"
         style={{
           width: CALL.muteButtonPx,
           height: CALL.muteButtonPx,
           borderColor: isListening && !isMuted ? theme.success : theme.cardBorder,
         }}
       >
-        <AppIcon
-          icon={isMuted ? MicOff01Icon : Mic01Icon}
-          size={22}
-          color={isMuted ? theme.danger : isListening ? theme.success : theme.textPrimary}
-        />
-      </PressableScale>
+        <PressableScale
+          accessibilityRole="switch"
+          accessibilityState={{ checked: isMuted }}
+          accessibilityLabel={isMuted ? CALL_COPY.unmute : CALL_COPY.mute}
+          hitSlop={8}
+          onPress={onToggleMute}
+          className="h-full w-full items-center justify-center rounded-full"
+        >
+          <AppIcon
+            icon={isMuted ? MicOff01Icon : Mic01Icon}
+            size={22}
+            color={isMuted ? theme.danger : isListening ? theme.success : theme.textPrimary}
+          />
+        </PressableScale>
+      </GlassSurface>
 
       <View className="items-center">
         <PressableScale

@@ -1,6 +1,7 @@
 import { CHAT, CHAT_MS } from "@eidolon/config";
 import { View } from "react-native";
 import Animated, { useReducedMotion } from "react-native-reanimated";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { useResolvedTheme } from "@/store/theme-store";
 
 export interface AudioTabSkeletonProps {
@@ -16,13 +17,26 @@ export function AudioTabSkeleton({ characterId, overlap }: AudioTabSkeletonProps
     <View
       accessibilityRole="progressbar"
       accessibilityLabel="Recording a voice note"
-      className="flex-row items-center gap-2 self-start border border-border bg-audio-pill px-3 py-1.5"
-      style={{
-        marginBottom: -overlap,
-        paddingBottom: overlap + 6,
-        borderRadius: theme.radius,
-      }}
+      className="z-10 flex-row items-center gap-2 self-start px-3 py-1.5"
+      style={{ marginBottom: -overlap, paddingBottom: overlap + 6 }}
     >
+      <GlassSurface
+        tint="card"
+        characterId={characterId}
+        pointerEvents="none"
+        className="absolute"
+        style={{
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: Math.max(0, overlap - theme.borderWidth),
+          borderTopLeftRadius: theme.radius,
+          borderTopRightRadius: theme.radius,
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
+        }}
+      />
+
       {[0, 1, 2].map((index) => (
         <Animated.View
           key={index}

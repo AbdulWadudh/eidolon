@@ -20,6 +20,7 @@ const STATUS_LINE: Record<string, string> = {
 
 export interface ChatFeedProps {
   messages: ChatMessage[];
+  serverHost: string;
   isStreaming: boolean;
   streamingText: string;
   activeStatus: string;
@@ -48,6 +49,7 @@ function getItemType(item: ChatMessage): string {
 export function ChatFeed({
   messages,
   isStreaming,
+  serverHost,
   streamingText,
   activeStatus,
   statusDetail,
@@ -166,9 +168,21 @@ export function ChatFeed({
     followTail(true);
   }, [followTail]);
 
+  const lastReplyId = React.useMemo(
+    () => [...messages].reverse().find((entry) => entry.role === "assistant")?.id ?? null,
+    [messages],
+  );
+
   const renderItem = React.useCallback(
-    ({ item }: { item: ChatMessage }) => <MessageCard message={item} onOpenPhoto={onOpenPhoto} />,
-    [onOpenPhoto],
+    ({ item }: { item: ChatMessage }) => (
+      <MessageCard
+        message={item}
+        onOpenPhoto={onOpenPhoto}
+        isLastReply={item.id === lastReplyId && !isStreaming}
+        serverHost={serverHost}
+      />
+    ),
+    [onOpenPhoto, lastReplyId, isStreaming, serverHost],
   );
 
   const footer = React.useMemo(() => {

@@ -1,8 +1,9 @@
 import { CHAT_MS } from "@eidolon/config";
-import { Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown, FadeOutDown, useReducedMotion } from "react-native-reanimated";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { ArrowDown01Icon } from "@/lib/icons";
 import { useResolvedTheme } from "@/store/theme-store";
 
@@ -29,8 +30,9 @@ export function JumpToLatest({ isStreaming, characterId, onPress }: JumpToLatest
         accessibilityLabel={label}
         hitSlop={8}
         onPress={onPress}
-        className="flex-row items-center gap-2 rounded-full border border-border bg-audio-pill px-3.5 py-2"
+        className="flex-row items-center gap-2 overflow-hidden rounded-full border border-border px-3.5 py-2"
       >
+        <GlassSurface tint="card" pointerEvents="none" style={StyleSheet.absoluteFill} />
         {isStreaming ? <View className="h-1.5 w-1.5 rounded-full bg-primary" /> : null}
         <Text className="font-ui-medium text-text-primary text-xs">{label}</Text>
         <AppIcon icon={ArrowDown01Icon} size={14} color={theme.primary} strokeWidth={2} />

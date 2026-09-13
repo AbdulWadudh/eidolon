@@ -4,6 +4,7 @@ import { Text, View } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
 import { AqueousPool } from "@/components/audio/AqueousPool";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { croppedStyle } from "@/lib/avatar-crop";
 import type { CallPhase } from "@/store/call-store";
 import type { AvatarCropRect } from "@/store/chat-photos";
@@ -75,7 +76,11 @@ export function CallStage({
         </Avatar>
       </AqueousPool>
 
-      <View className="mt-4 rounded-full border border-border bg-audio-pill px-4 py-2">
+      <GlassSurface
+        tint="card"
+        characterId={characterId}
+        className="mt-4 overflow-hidden rounded-full border border-border px-4 py-2"
+      >
         <Text
           accessibilityLiveRegion="polite"
           accessibilityRole="text"
@@ -85,7 +90,7 @@ export function CallStage({
         >
           {status}
         </Text>
-      </View>
+      </GlassSurface>
     </View>
   );
 }

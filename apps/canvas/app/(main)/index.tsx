@@ -6,11 +6,13 @@ import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-rea
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CharacterRosterCard } from "@/components/characters/CharacterCard";
 import { ImportCardButton } from "@/components/characters/ImportCardButton";
+import { CharacterSettingsSheet } from "@/components/chat/CharacterSettingsSheet";
 import { AppIcon } from "@/components/common/icon";
 import { LoadingState } from "@/components/common/loading-state";
 import { ThemeStudioSheet } from "@/components/theme/ThemeStudioSheet";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { Logout01Icon, PaintBoardIcon, Settings01Icon, SparklesIcon } from "@/lib/icons";
 import { type CharacterSummary, fetchCharacters } from "@/store/character-api";
 import { useConnectionStore } from "@/store/connection";
@@ -31,6 +33,7 @@ export default function MainCharactersScreen() {
   const [showThemeStudio, setShowThemeStudio] = React.useState(false);
   const [roster, setRoster] = React.useState<CharacterSummary[]>([]);
   const [isLoadingRoster, setLoadingRoster] = React.useState(true);
+  const [managing, setManaging] = React.useState<CharacterSummary | null>(null);
 
   const refreshRoster = React.useCallback(
     () => fetchCharacters(serverHost).then(setRoster),
@@ -67,12 +70,15 @@ export default function MainCharactersScreen() {
         <Text className="font-main-bold text-2xl text-text-primary tracking-tight">Eidolon</Text>
 
         {}
-        <View className="flex-row items-center gap-2 rounded-full border border-border bg-audio-pill px-3 py-1.5">
+        <GlassSurface
+          tint="card"
+          className="flex-row items-center gap-2 overflow-hidden rounded-full border border-border px-3 py-1.5"
+        >
           <View className="h-2 w-2 rounded-full" style={{ backgroundColor: status.color }} />
           <Text className="font-ui text-xs text-text-muted" numberOfLines={1}>
             {status.label}
           </Text>
-        </View>
+        </GlassSurface>
 
         {}
         <View className="flex-row items-center gap-2">
@@ -95,7 +101,7 @@ export default function MainCharactersScreen() {
       <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
         {}
         {showSettings && (
-          <Card className="border-primary/30 bg-card">
+          <Card className="border-primary/30">
             <View className="flex-row items-center justify-between">
               <View>
                 <Text className="font-ui-bold text-sm text-text-primary">
@@ -133,7 +139,7 @@ export default function MainCharactersScreen() {
           <LoadingState label={GALLERY_COPY.loadingRoster} fill={false} />
         ) : roster.length === 0 ? (
           <Animated.View entering={revealAt(0)}>
-            <Card className="border-border bg-card p-5">
+            <Card className="border-border p-5">
               <Text className="font-main text-sm text-text-muted leading-5">
                 {CHARACTER_COPY.emptyRoster}
               </Text>
@@ -145,7 +151,7 @@ export default function MainCharactersScreen() {
               <CharacterRosterCard
                 character={character}
                 onOpen={() => router.push(`/chat/${character.id}`)}
-                onEdit={() => router.push(`/characters/${character.id}`)}
+                onEdit={() => setManaging(character)}
               />
             </Animated.View>
           ))
@@ -173,7 +179,7 @@ export default function MainCharactersScreen() {
 
         {/* Dynamic Theming Studio Card */}
         <Animated.View entering={revealAt(1)}>
-          <Card className="border-border bg-card p-4">
+          <Card className="border-border p-4">
             <View className="flex-row items-center justify-between">
               <View className="flex-1 pr-3">
                 <View className="flex-row items-center gap-2">
@@ -193,7 +199,7 @@ export default function MainCharactersScreen() {
 
         {/* Lab Link Card */}
         <Animated.View entering={revealAt(2)}>
-          <Card className="border-border bg-card p-4">
+          <Card className="border-border p-4">
             <View className="flex-row items-center justify-between">
               <View className="flex-1 pr-3">
                 <View className="flex-row items-center gap-2">
@@ -212,12 +218,28 @@ export default function MainCharactersScreen() {
         </Animated.View>
       </ScrollView>
 
+      <CharacterSettingsSheet
+        isOpen={managing !== null}
+        characterId={managing?.id ?? ""}
+        avatarUrl={managing?.avatarUrl ?? null}
+        avatarCrop={managing?.avatarCrop ?? null}
+        onClose={() => {
+          setManaging(null);
+          void refreshRoster();
+        }}
+        onOpenTheme={() => setShowThemeStudio(true)}
+        onForked={(characterId) => {
+          setManaging(null);
+          void refreshRoster().then(() => router.push(`/chat/${characterId}`));
+        }}
+      />
+
       {/* Theme Studio Modal Sheet */}
       <ThemeStudioSheet
         isOpen={showThemeStudio}
         onClose={() => setShowThemeStudio(false)}
-        characterId="emma"
-        characterName="Emma"
+        characterId={managing?.id ?? "emma"}
+        characterName={managing?.name ?? "Emma"}
       />
     </SafeAreaView>
   );

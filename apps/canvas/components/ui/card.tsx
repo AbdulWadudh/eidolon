@@ -1,12 +1,14 @@
 import * as React from "react";
 import { Text, type TextProps, View, type ViewProps } from "react-native";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { cn } from "@/lib/utils";
 
 export const Card = React.forwardRef<React.ElementRef<typeof View>, ViewProps>(
   ({ className, ...props }, ref) => (
-    <View
+    <GlassSurface
       ref={ref}
-      className={cn("rounded-card border border-card-border bg-card p-4 shadow-none", className)}
+      tint="card"
+      className={cn("rounded-card border border-card-border p-4 shadow-none", className)}
       {...props}
     />
   ),

@@ -4,6 +4,7 @@ import { type GestureResponderEvent, Text, View } from "react-native";
 import Animated, { cubicBezier, useReducedMotion } from "react-native-reanimated";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
+import { useVoice } from "@/hooks/use-voice";
 import { SquareLock01Icon, SquareUnlock01Icon } from "@/lib/icons";
 import { useResolvedTheme } from "@/store/theme-store";
 
@@ -31,6 +32,7 @@ export function AffinitySection({
   onToggleLock,
 }: AffinitySectionProps) {
   const theme = useResolvedTheme(characterId);
+  const say = useVoice();
   const reduced = useReducedMotion();
   const [trackWidth, setTrackWidth] = React.useState(0);
   const percent = (clamp(score) / AFFINITY_HUD.scaleMax) * 100;
@@ -144,7 +146,7 @@ export function AffinitySection({
       </View>
 
       {isLocked ? (
-        <Text className="font-ui text-[11px] text-text-muted">{MIND_COPY.lockedNote}</Text>
+        <Text className="font-ui text-[11px] text-text-muted">{say(MIND_COPY.lockedNote)}</Text>
       ) : null}
     </View>
   );

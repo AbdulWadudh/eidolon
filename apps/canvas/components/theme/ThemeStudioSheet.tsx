@@ -8,6 +8,10 @@ import { AppIcon } from "@/components/common/icon";
 import { ColorPickerModal } from "@/components/theme/ColorPickerModal";
 import { ColorField } from "@/components/theme/color-field";
 import { ThemeScopeSelector } from "@/components/theme/ThemeScopeSelector";
+import {
+  TRANSLUCENCY_SECTION_KEY,
+  TranslucencySection,
+} from "@/components/theme/translucency-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -48,6 +52,7 @@ const INSPECTED_TOKENS: [string, keyof ThemeTokens][] = [
   ["--warning", "warning"],
   ["--danger", "danger"],
   ["--radius", "radius"],
+  ["--translucency", "translucency"],
   ["--font-main", "fontMain"],
   ["--font-ui", "fontUI"],
   ["--font-scale", "fontScale"],
@@ -108,6 +113,7 @@ export function ThemeStudioSheet({
         resolvedTheme.warning,
         resolvedTheme.danger,
         resolvedTheme.radius,
+        resolvedTheme.translucency,
         resolvedTheme.fontMain,
         resolvedTheme.fontUI,
         resolvedTheme.fontScale,
@@ -394,6 +400,17 @@ export function ThemeStudioSheet({
                 </Pressable>
               </View>
             </CollapsibleSection>
+
+            <TranslucencySection
+              value={resolvedTheme.translucency}
+              isDefault={isTokenDefault("translucency")}
+              expanded={expandedSection === TRANSLUCENCY_SECTION_KEY}
+              accentColor={resolvedTheme.primary}
+              chevronColor={resolvedTheme.textMuted}
+              onToggle={toggleSection}
+              onChange={(val) => updateToken("translucency", val)}
+              onReset={() => handleResetToken("translucency")}
+            />
 
             {/* C. Color Variables Controls */}
             {/* 1. Surfaces */}

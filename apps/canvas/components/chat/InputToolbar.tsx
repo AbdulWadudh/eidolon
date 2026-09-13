@@ -57,6 +57,7 @@ const TOOL_HIT_SLOP = {
 export interface InputToolbarProps {
   characterId?: string;
   suggestionsOpen?: boolean;
+  moodActive?: boolean;
   canEnhance?: boolean;
   isEnhancing?: boolean;
   revertSteps?: number;
@@ -113,6 +114,7 @@ function ToolButton({
 export function InputToolbar({
   characterId,
   suggestionsOpen,
+  moodActive = false,
   canEnhance = false,
   isEnhancing = false,
   revertSteps = 0,
@@ -125,7 +127,14 @@ export function InputToolbar({
     <View className="mt-2 flex-row items-center justify-between border-border border-t pt-2">
       <View className="flex-row items-center" style={{ gap: TOOL_GAP }}>
         {LEFT_TOOLS.map((spec) => (
-          <ToolButton key={spec.action} spec={spec} color={theme.textMuted} onAction={onAction} />
+          <ToolButton
+            key={spec.action}
+            spec={spec}
+            color={theme.textMuted}
+            active={spec.action === "mood" ? moodActive : undefined}
+            activeColor={theme.primary}
+            onAction={onAction}
+          />
         ))}
       </View>
       <View className="flex-row items-center" style={{ gap: TOOL_GAP }}>

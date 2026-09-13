@@ -1,6 +1,6 @@
 import { CHARACTER_COPY, UI_MS } from "@eidolon/config";
 import * as React from "react";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { VariableContextProvider } from "react-native-css";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import Animated, {
@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { CharacterSettingsBody } from "@/components/chat/CharacterSettingsBody";
 import { CharacterSettingsHeader } from "@/components/chat/CharacterSettingsHeader";
 import { Button } from "@/components/ui/button";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { Segmented } from "@/components/ui/segmented";
 import { useFieldAuthor } from "@/hooks/use-field-author";
 import { tap } from "@/services/haptics";
@@ -57,6 +58,7 @@ function toDraft(card: CharacterCard): Draft {
     exampleDialogue: card.exampleDialogue,
     greeting: card.greeting,
     voice: card.voice,
+    pronouns: card.pronouns,
   };
 }
 
@@ -234,9 +236,15 @@ export function CharacterSettingsSheet({
               <Animated.View
                 entering={reduced ? undefined : SlideInDown.duration(UI_MS.disclosure)}
                 exiting={reduced ? undefined : SlideOutDown.duration(UI_MS.revealReduced)}
-                className="absolute right-0 bottom-0 left-0 flex-row items-center gap-3 border-border border-t bg-card pt-3 pb-5"
+                className="absolute right-0 bottom-0 left-0 flex-row items-center gap-3 overflow-hidden border-border border-t pt-3 pb-5"
                 style={{ paddingHorizontal: SETTINGS_PADDING_PX }}
               >
+                <GlassSurface
+                  tint="card"
+                  overlay
+                  pointerEvents="none"
+                  style={StyleSheet.absoluteFill}
+                />
                 <View className="flex-1">
                   <Text className="font-ui-medium text-[12px] text-text-primary">
                     {dirty.length === 1

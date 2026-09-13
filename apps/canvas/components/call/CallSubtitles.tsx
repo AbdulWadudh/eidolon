@@ -1,7 +1,8 @@
 import { CALL, CALL_COPY, CALL_MS } from "@eidolon/config";
 import * as React from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, Text } from "react-native";
 import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { useResolvedTheme } from "@/store/theme-store";
 
 export interface CallSubtitlesProps {
@@ -59,8 +60,10 @@ export function CallSubtitles({
   const isEmpty = !showsYours && hers.length === 0;
 
   return (
-    <View
-      className="w-full rounded-card border border-border bg-card"
+    <GlassSurface
+      tint="card"
+      characterId={characterId}
+      className="w-full overflow-hidden rounded-card border border-border"
       style={{
         minHeight: CALL.subtitleMinHeightPx,
         maxHeight: CALL.subtitleMaxHeightPx,
@@ -110,6 +113,6 @@ export function CallSubtitles({
           </Text>
         ) : null}
       </ScrollView>
-    </View>
+    </GlassSurface>
   );
 }

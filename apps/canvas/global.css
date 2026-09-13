@@ -78,6 +78,9 @@
   --radius-button: 10px;
   --radius-input: 10px;
   --border-width: 1px;
+  --translucency: 0;
+  --surface-alpha: 1;
+  --surface-blur: 0px;
 
   --font-main: NunitoSans-Regular;
   --font-main-bold: NunitoSans-Bold;

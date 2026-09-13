@@ -5,13 +5,14 @@ import {
   EASING_BEZIER,
 } from "@eidolon/config";
 import * as React from "react";
-import { Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Animated, {
   cubicBezier,
   FadeOut,
   useReducedMotion,
   useSharedValue,
 } from "react-native-reanimated";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { useAffinityStore } from "@/store/affinity-store";
 import { useResolvedTheme } from "@/store/theme-store";
 
@@ -52,7 +53,7 @@ export function AffinityToast({ characterId }: AffinityToastProps) {
         exiting={reduced ? undefined : FadeOut.duration(AFFINITY_HUD.toastExitMs)}
         accessibilityLiveRegion="polite"
         accessibilityLabel={affinityToastAnnouncement(toast.delta, toast.score, toast.tier)}
-        className="flex-row items-center rounded-full border bg-card px-3 py-1"
+        className="flex-row items-center overflow-hidden rounded-full border px-3 py-1"
         style={{
           borderColor: isGain ? theme.primary : theme.danger,
           transform: [{ translateY: lift }],
@@ -62,6 +63,12 @@ export function AffinityToast({ characterId }: AffinityToastProps) {
           transitionTimingFunction: cubicBezier(...EASING_BEZIER.out),
         }}
       >
+        <GlassSurface
+          tint="card"
+          characterId={characterId}
+          pointerEvents="none"
+          style={StyleSheet.absoluteFill}
+        />
         <Text
           className="font-ui-bold text-[11px]"
           style={{ color: isGain ? theme.primary : theme.danger }}

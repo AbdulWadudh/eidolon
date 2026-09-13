@@ -153,7 +153,7 @@ export default function PairingScreen() {
                 reduced ? FadeIn.duration(UI_MS.revealReduced) : FadeInDown.duration(UI_MS.reveal)
               }
             >
-              <Card className="mt-4 border-danger bg-card">
+              <Card className="mt-4 border-danger">
                 <Text
                   accessibilityLiveRegion="assertive"
                   className="font-ui-medium text-xs text-danger"

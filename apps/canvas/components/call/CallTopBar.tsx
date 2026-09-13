@@ -2,6 +2,7 @@ import { CALL_COPY, callDurationLabel, callTitle } from "@eidolon/config";
 import { Text, View } from "react-native";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import { ArrowLeft01Icon, VolumeHighIcon, VolumeOffIcon } from "@/lib/icons";
 import { useResolvedTheme } from "@/store/theme-store";
 
@@ -26,7 +27,11 @@ export function CallTopBar({
   const duration = callDurationLabel(elapsedSeconds);
 
   return (
-    <View className="flex-row items-center gap-3 border-border border-b px-4 py-3">
+    <GlassSurface
+      tint="canvas"
+      characterId={characterId}
+      className="flex-row items-center gap-3 border-border border-b px-4 py-3"
+    >
       <PressableScale
         accessibilityRole="button"
         accessibilityLabel={CALL_COPY.back}
@@ -68,6 +73,6 @@ export function CallTopBar({
           color={isSpeakerOn ? theme.primary : theme.textMuted}
         />
       </PressableScale>
-    </View>
+    </GlassSurface>
   );
 }
