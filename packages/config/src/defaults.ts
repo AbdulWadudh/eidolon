@@ -286,7 +286,7 @@ export const MEDIA_KINDS = ["image", "audio", "other"] as const;
 export type MediaKind = (typeof MEDIA_KINDS)[number];
 
 export const STORAGE_BROWSER = {
-  pageSize: 40,
+  pageSize: 24,
   maxPageSize: 200,
 } as const;
 

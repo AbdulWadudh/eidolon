@@ -12,7 +12,7 @@ export interface ConfirmRequest {
 
 export interface Confirmation {
   ask: (request: ConfirmRequest) => void;
-  sheet: React.ReactElement;
+  sheet: React.ReactElement | null;
 }
 
 export function useConfirm(characterId?: string): Confirmation {
@@ -30,18 +30,19 @@ export function useConfirm(characterId?: string): Confirmation {
     pending.onConfirm();
   }, [pending]);
 
-  const sheet = (
-    <AlertSheet
-      isOpen={pending !== null}
-      characterId={characterId}
-      title={pending?.title ?? ""}
-      body={pending?.body}
-      confirmLabel={pending?.confirmLabel}
-      isDestructive={pending?.isDestructive ?? true}
-      onConfirm={confirm}
-      onClose={close}
-    />
-  );
+  const sheet =
+    pending === null ? null : (
+      <AlertSheet
+        isOpen
+        characterId={characterId}
+        title={pending.title}
+        body={pending.body}
+        confirmLabel={pending.confirmLabel}
+        isDestructive={pending.isDestructive ?? true}
+        onConfirm={confirm}
+        onClose={close}
+      />
+    );
 
   return { ask, sheet };
 }

@@ -1,5 +1,4 @@
 import { CALL_COPY, DASHBOARD_COPY, MEDIA_PREVIEW, UI_MS, VOICE_COPY } from "@eidolon/config";
-import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { Image } from "expo-image";
 import * as React from "react";
 import { ActivityIndicator, Clipboard, Text, View } from "react-native";
@@ -10,18 +9,21 @@ import { ClipboardIcon, Download01Icon, PauseIcon, PlayIcon, SentIcon } from "@/
 import { filenameOf, isUrlLike, mediaKindFor } from "@/lib/media-kind";
 import { saveMediaToDevice, shareMedia } from "@/lib/save-media";
 import { tap } from "@/services/haptics";
+import { usePreviewAudio } from "@/store/preview-audio";
 import { useResolvedTheme } from "@/store/theme-store";
 import { notify } from "@/store/toast-store";
 
 export interface MediaPreviewProps {
   value: string;
   characterId?: string;
+  compact?: boolean;
 }
 
-export function MediaPreview({ value, characterId }: MediaPreviewProps) {
+export function MediaPreview({ value, characterId, compact = false }: MediaPreviewProps) {
   const kind = mediaKindFor(value);
 
-  if (kind === "image") return <ImagePreview url={value} characterId={characterId} />;
+  if (kind === "image")
+    return <ImagePreview url={value} characterId={characterId} compact={compact} />;
   if (kind === "audio") return <AudioPreview url={value} characterId={characterId} />;
 
   return (
@@ -172,7 +174,15 @@ export function DownloadButton({ url, characterId }: { url: string; characterId?
   );
 }
 
-function ImagePreview({ url, characterId }: { url: string; characterId?: string }) {
+function ImagePreview({
+  url,
+  characterId,
+  compact = false,
+}: {
+  url: string;
+  characterId?: string;
+  compact?: boolean;
+}) {
   const theme = useResolvedTheme(characterId);
   const [failed, setFailed] = React.useState(false);
   const [isOpen, setOpen] = React.useState(false);
@@ -182,6 +192,39 @@ function ImagePreview({ url, characterId }: { url: string; characterId?: string 
       <View className="flex-row items-start gap-2">
         <Text className="flex-1 font-ui text-[10px] text-text-primary">{url}</Text>
         <CopyButton value={url} characterId={characterId} />
+      </View>
+    );
+  }
+
+  if (compact) {
+    return (
+      <View className="flex-row items-center gap-2">
+        <PressableScale
+          accessibilityRole="imagebutton"
+          accessibilityLabel={filenameOf(url)}
+          onPress={() => setOpen(true)}
+          className="overflow-hidden rounded-button border border-border"
+          style={{
+            width: MEDIA_PREVIEW.thumbPx,
+            height: MEDIA_PREVIEW.thumbPx,
+            backgroundColor: theme.inputSurface,
+          }}
+        >
+          <Image
+            source={{ uri: url }}
+            contentFit="cover"
+            recyclingKey={url}
+            style={{ flex: 1 }}
+            onError={() => setFailed(true)}
+          />
+        </PressableScale>
+
+        <Caption value={url} />
+        <CopyButton value={url} characterId={characterId} />
+        <ShareButton url={url} characterId={characterId} />
+        <DownloadButton url={url} characterId={characterId} />
+
+        <ImageLightbox url={isOpen ? url : null} onClose={() => setOpen(false)} />
       </View>
     );
   }
@@ -198,6 +241,7 @@ function ImagePreview({ url, characterId }: { url: string; characterId?: string 
         <Image
           source={{ uri: url }}
           contentFit="contain"
+          recyclingKey={url}
           style={{ flex: 1 }}
           onError={() => setFailed(true)}
         />
@@ -217,51 +261,17 @@ function ImagePreview({ url, characterId }: { url: string; characterId?: string 
 
 function AudioPreview({ url, characterId }: { url: string; characterId?: string }) {
   const theme = useResolvedTheme(characterId);
-  const player = useAudioPlayer(null);
-  const status = useAudioPlayerStatus(player);
-  const [isLoading, setLoading] = React.useState(false);
-  const [failed, setFailed] = React.useState(false);
-  const started = React.useRef(false);
-
-  const toggle = React.useCallback(() => {
-    if (failed) return;
-
-    if (started.current && status.playing) {
-      player.pause();
-      return;
-    }
-
-    try {
-      if (!started.current) {
-        setLoading(true);
-        player.replace({ uri: url });
-        started.current = true;
-      }
-      tap("light");
-      player.play();
-    } catch {
-      setFailed(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [failed, player, status.playing, url]);
-
-  if (failed) {
-    return (
-      <View className="flex-row items-start gap-2">
-        <Text className="flex-1 font-ui text-[10px] text-text-primary">{url}</Text>
-        <CopyButton value={url} characterId={characterId} />
-      </View>
-    );
-  }
+  const isPlaying = usePreviewAudio((state) => state.playingUrl === url);
+  const isLoading = usePreviewAudio((state) => state.loadingUrl === url);
+  const toggle = usePreviewAudio((state) => state.toggle);
 
   return (
     <View className="flex-row items-center gap-2">
       <PressableScale
         accessibilityRole="button"
-        accessibilityLabel={status.playing ? CALL_COPY.mute : VOICE_COPY.preview}
+        accessibilityLabel={isPlaying ? CALL_COPY.mute : VOICE_COPY.preview}
         accessibilityState={{ busy: isLoading }}
-        onPress={toggle}
+        onPress={() => toggle(url)}
         className="items-center justify-center rounded-full border border-border bg-input"
         style={{ width: MEDIA_PREVIEW.buttonPx, height: MEDIA_PREVIEW.buttonPx }}
       >
@@ -269,7 +279,7 @@ function AudioPreview({ url, characterId }: { url: string; characterId?: string 
           <ActivityIndicator size="small" color={theme.primary} />
         ) : (
           <AppIcon
-            icon={status.playing ? PauseIcon : PlayIcon}
+            icon={isPlaying ? PauseIcon : PlayIcon}
             size={15}
             color={theme.primary}
             strokeWidth={1.8}

@@ -24,6 +24,7 @@ export const GALLERY = {
 
 export const MEDIA_PREVIEW = {
   imageHeightPx: 180,
+  thumbPx: 52,
   buttonPx: 36,
   lightboxPaddingPx: 16,
 } as const;

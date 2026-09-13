@@ -334,7 +334,7 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
                 </PressableScale>
               </View>
 
-              {object.url ? <MediaPreview value={object.url} /> : null}
+              {object.url ? <MediaPreview value={object.url} compact /> : null}
             </GlassSurface>
           </Animated.View>
         ))

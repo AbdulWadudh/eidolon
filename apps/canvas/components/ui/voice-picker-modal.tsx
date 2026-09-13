@@ -181,8 +181,10 @@ export function VoicePickerModal({
       </View>
     );
 
+  if (!isOpen) return null;
+
   return (
-    <Modal visible={isOpen} animationType="slide" onRequestClose={onClose}>
+    <Modal visible animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.canvas }} className="flex-1 bg-canvas">
         <View className="flex-row items-center gap-3 border-b border-border px-4 py-3">
           <View className="flex-1">

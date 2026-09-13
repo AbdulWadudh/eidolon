@@ -23,8 +23,10 @@ export function ImageLightbox({ url, onClose }: ImageLightboxProps) {
   const pager = React.useMemo(() => Gesture.Native(), []);
   const [, setZoomed] = React.useState(false);
 
+  if (url === null) return null;
+
   return (
-    <Modal visible={url !== null} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible transparent animationType="fade" onRequestClose={onClose}>
       <GestureHandlerRootView style={StyleSheet.absoluteFill}>
         <Animated.View
           entering={reduced ? undefined : FadeIn.duration(UI_MS.disclosure)}
