@@ -1,4 +1,10 @@
-import { CONFIRM_COPY, DASHBOARD_COPY, UI_MS } from "@eidolon/config";
+import {
+  CONFIRM_COPY,
+  DASHBOARD_COPY,
+  MEDIA_PREVIEW,
+  STORAGE_BROWSER,
+  UI_MS,
+} from "@eidolon/config";
 import type { IconSvgElement } from "@hugeicons/react-native";
 import * as React from "react";
 import { ActivityIndicator, ScrollView, Text, TextInput, View } from "react-native";
@@ -9,11 +15,11 @@ import { MediaPreview } from "@/components/admin/MediaPreview";
 import { AppIcon } from "@/components/common/icon";
 import { LoadingState } from "@/components/common/loading-state";
 import { PressableScale } from "@/components/common/pressable-scale";
-import { Button } from "@/components/ui/button";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { useConfirm } from "@/hooks/use-confirm";
 import {
   AlertCircleIcon,
+  ArrowLeft01Icon,
   ArrowRight01Icon,
   Cancel01Icon,
   Delete02Icon,
@@ -70,6 +76,7 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
   const [kind, setKind] = React.useState<StoredMediaKind | null>(null);
   const [prefix, setPrefix] = React.useState("");
   const [folderMode, setFolderMode] = React.useState(false);
+  const [page, setPage] = React.useState(0);
   const [isSearchOpen, setSearchOpen] = React.useState(false);
   const [isBusy, setBusy] = React.useState(false);
   const [hasLoaded, setLoaded] = React.useState(false);
@@ -83,7 +90,7 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
   );
 
   const load = React.useCallback(
-    (offset: number) => {
+    (wanted: number) => {
       setBusy(true);
       browseStorage(serverHost, token, {
         search,
@@ -91,11 +98,11 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
         kind,
         folderMode,
         prefix,
-        offset,
+        offset: wanted * STORAGE_BROWSER.pageSize,
       })
         .then((body) => {
           setView(body);
-          setObjects((current) => (offset === 0 ? body.objects : [...current, ...body.objects]));
+          setObjects(body.objects);
         })
         .catch(report)
         .finally(() => {
@@ -108,13 +115,19 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
 
   React.useEffect(() => {
     if (search.trim().length === 0) {
-      load(0);
+      load(page);
       return;
     }
 
-    const timer = setTimeout(() => load(0), UI_MS.searchDebounce);
+    const timer = setTimeout(() => load(page), UI_MS.searchDebounce);
     return () => clearTimeout(timer);
-  }, [load, search]);
+  }, [load, page, search]);
+
+  const narrow = React.useCallback((change: () => void) => {
+    select();
+    setPage(0);
+    change();
+  }, []);
 
   const drop = React.useCallback(
     (object: BrowsedObject) => {
@@ -126,17 +139,17 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
         confirmLabel: DASHBOARD_COPY.remove,
         onConfirm: () => {
           removeStorageObject(serverHost, token, object.key)
-            .then(() => load(0))
+            .then(() => load(page))
             .catch(report);
         },
       });
     },
-    [confirmation.ask, load, report, serverHost, token],
+    [confirmation.ask, load, page, report, serverHost, token],
   );
 
-  const more = view !== null && objects.length < view.matched;
   const crumbs = crumbsFor(view?.prefix ?? prefix);
   const walking = view?.folderMode ?? folderMode;
+  const pages = view === null ? 1 : Math.max(1, Math.ceil(view.matched / STORAGE_BROWSER.pageSize));
 
   return (
     <View className="gap-1.5">
@@ -149,7 +162,10 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
             <TextInput
               accessibilityLabel={DASHBOARD_COPY.search}
               value={search}
-              onChangeText={setSearch}
+              onChangeText={(next) => {
+                setPage(0);
+                setSearch(next);
+              }}
               placeholder={DASHBOARD_COPY.search}
               placeholderTextColor={theme.textMuted}
               cursorColor={theme.primary}
@@ -197,16 +213,18 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
           label={DASHBOARD_COPY.storageFlatMode}
           icon={Queue01Icon}
           active={!folderMode}
-          onPress={() => {
-            setFolderMode(false);
-            setPrefix("");
-          }}
+          onPress={() =>
+            narrow(() => {
+              setFolderMode(false);
+              setPrefix("");
+            })
+          }
         />
         <ModeChip
           label={DASHBOARD_COPY.storageFolderMode}
           icon={Folder01Icon}
           active={folderMode}
-          onPress={() => setFolderMode(true)}
+          onPress={() => narrow(() => setFolderMode(true))}
         />
       </View>
 
@@ -220,38 +238,40 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
           icon={GridIcon}
           active={!onlyOrphans && kind === null}
           colour={theme.primary}
-          onPress={() => {
-            setOnlyOrphans(false);
-            setKind(null);
-          }}
+          onPress={() =>
+            narrow(() => {
+              setOnlyOrphans(false);
+              setKind(null);
+            })
+          }
         />
         <Chip
           label={`${DASHBOARD_COPY.storageImages} ${view?.kinds.image ?? 0}`}
           icon={Image01Icon}
           active={kind === "image"}
           colour={theme.primary}
-          onPress={() => setKind(kind === "image" ? null : "image")}
+          onPress={() => narrow(() => setKind(kind === "image" ? null : "image"))}
         />
         <Chip
           label={`${DASHBOARD_COPY.storageAudio} ${view?.kinds.audio ?? 0}`}
           icon={VolumeHighIcon}
           active={kind === "audio"}
           colour={theme.warning}
-          onPress={() => setKind(kind === "audio" ? null : "audio")}
+          onPress={() => narrow(() => setKind(kind === "audio" ? null : "audio"))}
         />
         <Chip
           label={`${DASHBOARD_COPY.storageOther} ${view?.kinds.other ?? 0}`}
           icon={File01Icon}
           active={kind === "other"}
           colour={theme.textMuted}
-          onPress={() => setKind(kind === "other" ? null : "other")}
+          onPress={() => narrow(() => setKind(kind === "other" ? null : "other"))}
         />
         <Chip
           label={`${DASHBOARD_COPY.storageOnlyOrphans} ${view?.orphans ?? 0}`}
           icon={AlertCircleIcon}
           active={onlyOrphans}
           colour={theme.danger}
-          onPress={() => setOnlyOrphans(!onlyOrphans)}
+          onPress={() => narrow(() => setOnlyOrphans(!onlyOrphans))}
         />
       </ScrollView>
 
@@ -264,7 +284,7 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
           <PressableScale
             accessibilityRole="button"
             accessibilityLabel={view?.bucket ?? DASHBOARD_COPY.storageTitle}
-            onPress={() => setPrefix("")}
+            onPress={() => narrow(() => setPrefix(""))}
             className="flex-row items-center gap-1.5 rounded-button border border-border px-2.5 py-1"
           >
             <AppIcon icon={HardDriveIcon} size={12} color={theme.primary} />
@@ -279,7 +299,7 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
               <PressableScale
                 accessibilityRole="button"
                 accessibilityLabel={crumb.name}
-                onPress={() => setPrefix(crumb.prefix)}
+                onPress={() => narrow(() => setPrefix(crumb.prefix))}
                 className="rounded-button border border-border px-2.5 py-1"
               >
                 <Text className="font-ui-medium text-[10px] text-text-primary">{crumb.name}</Text>
@@ -297,12 +317,17 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
 
       {(view?.folders ?? []).map((folder, index) => (
         <Animated.View entering={revealAt(index, reduced)} key={folder.prefix}>
-          <FolderRow folder={folder} onOpen={() => setPrefix(folder.prefix)} />
+          <FolderRow folder={folder} onOpen={() => narrow(() => setPrefix(folder.prefix))} />
         </Animated.View>
       ))}
 
       {!hasLoaded || (isBusy && objects.length === 0) ? (
-        <LoadingState label={DASHBOARD_COPY.storageScanning} fill={false} />
+        <View
+          className="items-center justify-center"
+          style={{ minHeight: MEDIA_PREVIEW.loaderBlockPx }}
+        >
+          <LoadingState label={DASHBOARD_COPY.storageScanning} fill={false} />
+        </View>
       ) : objects.length === 0 && (view?.folders.length ?? 0) === 0 ? (
         <AdminEmpty label={DASHBOARD_COPY.empty} />
       ) : (
@@ -334,21 +359,52 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
                 </PressableScale>
               </View>
 
-              {object.url ? <MediaPreview value={object.url} compact /> : null}
+              {object.url ? <MediaPreview value={object.url} /> : null}
             </GlassSurface>
           </Animated.View>
         ))
       )}
 
-      {more ? (
-        <Button
-          variant="secondary"
-          size="sm"
-          disabled={isBusy}
-          onPress={() => load(objects.length)}
-        >
-          {isBusy ? DASHBOARD_COPY.loading : DASHBOARD_COPY.storageMore}
-        </Button>
+      {pages > 1 ? (
+        <View className="flex-row items-center justify-between gap-2 pt-1">
+          <PressableScale
+            accessibilityRole="button"
+            accessibilityLabel={DASHBOARD_COPY.storagePrevious}
+            disabled={page === 0 || isBusy}
+            onPress={() => {
+              select();
+              setPage(Math.max(0, page - 1));
+            }}
+            className="h-8 flex-row items-center gap-1.5 rounded-button border border-border px-3"
+            style={{ opacity: page === 0 || isBusy ? 0.4 : 1 }}
+          >
+            <AppIcon icon={ArrowLeft01Icon} size={13} color={theme.textMuted} />
+            <Text className="font-ui-medium text-[10px] text-text-primary">
+              {DASHBOARD_COPY.storagePrevious}
+            </Text>
+          </PressableScale>
+
+          <Text className="font-ui text-[10px] text-text-muted">
+            {DASHBOARD_COPY.storagePage(page + 1, pages)}
+          </Text>
+
+          <PressableScale
+            accessibilityRole="button"
+            accessibilityLabel={DASHBOARD_COPY.storageNext}
+            disabled={page + 1 >= pages || isBusy}
+            onPress={() => {
+              select();
+              setPage(Math.min(pages - 1, page + 1));
+            }}
+            className="h-8 flex-row items-center gap-1.5 rounded-button border border-border px-3"
+            style={{ opacity: page + 1 >= pages || isBusy ? 0.4 : 1 }}
+          >
+            <Text className="font-ui-medium text-[10px] text-text-primary">
+              {DASHBOARD_COPY.storageNext}
+            </Text>
+            <AppIcon icon={ArrowRight01Icon} size={13} color={theme.textMuted} />
+          </PressableScale>
+        </View>
       ) : null}
 
       {confirmation.sheet}
