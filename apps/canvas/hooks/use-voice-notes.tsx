@@ -24,13 +24,15 @@ export function VoiceNotesProvider({
   const status = useAudioPlayerStatus(player);
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const autoPlayed = React.useRef<string | null>(null);
+  const loaded = React.useRef<string | null>(null);
 
   const play = React.useCallback(
     (id: string, url: string) => {
-      if (activeId !== id) {
+      if (loaded.current !== url) {
         player.replace(url);
-        setActiveId(id);
+        loaded.current = url;
       }
+      if (activeId !== id) setActiveId(id);
       player.play();
     },
     [activeId, player],
@@ -54,8 +56,11 @@ export function VoiceNotesProvider({
   }, [status.didJustFinish, player]);
 
   React.useEffect(() => {
-    if (!autoPlay || autoPlayed.current === autoPlay.id) return;
-    autoPlayed.current = autoPlay.id;
+    if (!autoPlay) return;
+    const token = `${autoPlay.id}:${autoPlay.url}`;
+    if (autoPlayed.current === token) return;
+
+    autoPlayed.current = token;
     play(autoPlay.id, autoPlay.url);
     onAutoPlayed?.();
   }, [autoPlay, play, onAutoPlayed]);

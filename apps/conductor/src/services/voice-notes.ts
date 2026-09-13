@@ -18,7 +18,10 @@ export async function storeVoiceNote(
   if (!isStorageConnected()) return { url: null, durationSeconds };
 
   try {
-    const url = await uploadAudio(characterId, `${messageId}.mp3`, bytes);
+    const stored = await uploadAudio(characterId, `${messageId}.mp3`, bytes);
+
+    const url = `${stored}${stored.includes("?") ? "&" : "?"}v=${Date.now().toString(36)}`;
+
     setMessageAudio(messageId, url, durationSeconds);
     return { url, durationSeconds };
   } catch (error) {

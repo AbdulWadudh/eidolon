@@ -1,4 +1,4 @@
-import { TTS } from "@eidolon/config";
+import { KOKORO, TTS } from "@eidolon/config";
 import { getServicesConfig } from "@eidolon/config/server";
 import { stripInfluence } from "@eidolon/protocol";
 import { stripEmoji } from "@/utils/sentence-buffer";
@@ -33,7 +33,7 @@ export async function synthesizeSpeech(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "kokoro",
+        model: KOKORO.model,
         input,
         voice,
         response_format: TTS.format,
