@@ -1,6 +1,6 @@
 import { UI_MS } from "@eidolon/config";
 import * as React from "react";
-import { Text, View } from "react-native";
+import { Modal, Text, View } from "react-native";
 import Animated, { FadeInDown, FadeOutDown, useReducedMotion } from "react-native-reanimated";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { useResolvedTheme } from "@/store/theme-store";
@@ -30,22 +30,33 @@ export function Toast() {
   };
 
   return (
-    <View pointerEvents="none" className="absolute inset-x-0 bottom-0 z-50 items-center px-4 pb-8">
-      <Animated.View
-        key={toast.id}
-        entering={reduced ? undefined : FadeInDown.duration(UI_MS.disclosure)}
-        exiting={reduced ? undefined : FadeOutDown.duration(UI_MS.toastExit)}
-        accessibilityLiveRegion="polite"
-        accessibilityLabel={toast.message}
-        className="max-w-full overflow-hidden rounded-card border"
-        style={{ borderColor: edge[toast.tone] }}
+    <Modal
+      visible
+      transparent
+      statusBarTranslucent
+      animationType="none"
+      onRequestClose={() => dismiss(toast.id)}
+    >
+      <View
+        pointerEvents="none"
+        className="absolute inset-x-0 bottom-0 z-50 items-center px-4 pb-8"
       >
-        <GlassSurface tint="card" overlay className="px-4 py-2.5">
-          <Text className="font-ui-medium text-xs text-text-primary" numberOfLines={3}>
-            {toast.message}
-          </Text>
-        </GlassSurface>
-      </Animated.View>
-    </View>
+        <Animated.View
+          key={toast.id}
+          entering={reduced ? undefined : FadeInDown.duration(UI_MS.disclosure)}
+          exiting={reduced ? undefined : FadeOutDown.duration(UI_MS.toastExit)}
+          accessibilityLiveRegion="polite"
+          accessibilityLabel={toast.message}
+          className="max-w-full overflow-hidden rounded-card border"
+          style={{ borderColor: edge[toast.tone] }}
+        >
+          <GlassSurface tint="card" overlay className="px-4 py-2.5">
+            <Text className="font-ui-medium text-xs text-text-primary" numberOfLines={3}>
+              {toast.message}
+            </Text>
+          </GlassSurface>
+        </Animated.View>
+      </View>
+    </Modal>
   );
 }
