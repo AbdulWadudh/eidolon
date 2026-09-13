@@ -201,6 +201,7 @@ export const personas = sqliteTable(
     likes: text(),
     dislikes: text(),
     personality: text(),
+    pronouns: text(),
     isDefault: integer("is_default").default(0),
     createdAt: integer("created_at").notNull(),
     updatedAt: integer("updated_at").notNull(),

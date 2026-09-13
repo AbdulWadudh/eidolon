@@ -13,6 +13,12 @@ export interface PortraitJob {
   prompt: string;
 }
 
+export interface PersonaPortraitJob {
+  personaId: string;
+  userId: string;
+  extra: string;
+}
+
 export interface ChatPhotoJob {
   characterId: string;
   userId: string;
@@ -45,6 +51,7 @@ export interface GpuJobMap {
   [QUEUE_JOBS.generateStageBackdrop]: StageBackdropJob;
   [QUEUE_JOBS.generatePortrait]: PortraitJob;
   [QUEUE_JOBS.generateChatPhoto]: ChatPhotoJob;
+  [QUEUE_JOBS.generatePersonaPortrait]: PersonaPortraitJob;
   [QUEUE_JOBS.summarizeChronicle]: ChronicleSummaryJob;
 }
 
@@ -85,6 +92,12 @@ export function isChatPhotoJob(
   job: GpuJob,
 ): job is Job<ChatPhotoJob, void, typeof QUEUE_JOBS.generateChatPhoto> {
   return job.name === QUEUE_JOBS.generateChatPhoto;
+}
+
+export function isPersonaPortraitJob(
+  job: GpuJob,
+): job is Job<PersonaPortraitJob, void, typeof QUEUE_JOBS.generatePersonaPortrait> {
+  return job.name === QUEUE_JOBS.generatePersonaPortrait;
 }
 
 export function isChronicleSummaryJob(

@@ -109,6 +109,42 @@ export function composeAppearance(look: Look, rawLookChange: string, figure = ""
     .join(", ");
 }
 
+export interface PersonaLookRequest {
+  name: string;
+  about: string;
+  extra: string;
+  pronouns?: string;
+}
+
+export async function describePersonaLook(
+  request: PersonaLookRequest,
+  signal?: AbortSignal,
+): Promise<Look> {
+  const raw = await ask(
+    render(getPrompt("image.personaPortrait"), {
+      name: request.name,
+      about: request.about,
+      extra: request.extra,
+      figure: pronounsFor(request.pronouns).figure,
+    }),
+    IMAGE.appearanceTemperature,
+    signal,
+    LOOK_SCHEMA,
+  );
+
+  const parsed = safeJsonParse<Partial<Look> | null>(raw, null);
+  const look: Look = {
+    age: fewWords(parsed?.age ?? ""),
+    face: fewWords(parsed?.face ?? ""),
+    eyes: fewWords(parsed?.eyes ?? ""),
+    hair: fewWords(parsed?.hair ?? ""),
+    skin: fewWords(parsed?.skin ?? ""),
+    build: fewWords(parsed?.build ?? ""),
+  };
+
+  return isPromptLike(composeAppearance(look, "")) ? look : FALLBACK_LOOK;
+}
+
 export interface LookRequest {
   characterId: string;
   name: string;

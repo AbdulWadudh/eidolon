@@ -1,5 +1,5 @@
 export const FIELD_PADDING = {
-  horizontal: 15,
+  horizontal: 13,
   vertical: 11,
   multilineTop: 13,
   lineHeightPx: 21,

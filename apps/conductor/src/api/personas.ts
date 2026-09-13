@@ -1,4 +1,4 @@
-import { API_ROUTES, CARD_UPLOAD, PERSONA_COPY } from "@eidolon/config";
+import { API_ROUTES, CARD_UPLOAD, PERSONA_COPY, QUEUE_JOBS } from "@eidolon/config";
 import type { Context, Hono } from "hono";
 import type { UserEnv } from "@/auth/guard";
 import {
@@ -14,6 +14,8 @@ import {
   updateChapter,
   updatePersona,
 } from "@/db/personas";
+import { jobKey } from "@/queue/job-id";
+import { enqueueGpuJob } from "@/queue/queues";
 import { isStorageConnected, uploadPersonaPhoto } from "@/services/storage";
 
 const TEXT_FIELDS = [
@@ -24,6 +26,7 @@ const TEXT_FIELDS = [
   "likes",
   "dislikes",
   "personality",
+  "pronouns",
 ] as const;
 
 export function readPersonaDraft(body: Record<string, unknown>): PersonaDraft {
@@ -143,6 +146,36 @@ export function mountPersonas(app: Hono<UserEnv>): void {
     );
 
     return c.json({ persona: updatePersona(personaId, reader.id, { photoUrl }) });
+  });
+
+  app.post(`${base}/:id/portrait`, async (c) => {
+    const personaId = c.req.param("id");
+    const reader = c.get("user");
+    const persona = getPersona(personaId, reader.id);
+
+    if (!persona) return c.json({ error: "No such persona." }, 404);
+
+    const written = [persona.bio, persona.personality, persona.hobbies]
+      .map((part) => part?.trim() ?? "")
+      .join("");
+
+    if (written.length === 0) {
+      return c.json({ error: PERSONA_COPY.photoNeedsSomething }, 400);
+    }
+
+    const body = (await c.req.json().catch(() => ({}))) as { extra?: unknown };
+    const jobId = await enqueueGpuJob(
+      QUEUE_JOBS.generatePersonaPortrait,
+      {
+        personaId,
+        userId: reader.id,
+        extra: typeof body.extra === "string" ? body.extra.trim() : "",
+      },
+      { jobId: jobKey("persona-portrait", personaId, Date.now()) },
+    );
+
+    if (!jobId) return c.json({ error: PERSONA_COPY.photoFailed }, 503);
+    return c.json({ queued: true, jobId }, 202);
   });
 
   app.delete(`${base}/:id/photo`, (c) => {

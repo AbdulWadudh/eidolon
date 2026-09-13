@@ -11,6 +11,8 @@ import { PORTRAIT, STAGE } from "@/config";
 import { appendMessage, getCharacterCard, getRecentMessages, setMessageImage } from "@/db";
 import { appendChronicle, nextChapterIndex } from "@/db/chronicles";
 import { hasChosenBackground, setCharacterAvatar, setCharacterFace } from "@/db/look";
+import { readerEmail } from "@/db/owner";
+import { getPersona, updatePersona } from "@/db/personas";
 import { addPortrait } from "@/db/portraits";
 import { saveStageBackdrop } from "@/db/stages";
 import { queueConnection } from "@/queue/connection";
@@ -22,16 +24,18 @@ import {
   type GpuJobName,
   isChatPhotoJob,
   isChronicleSummaryJob,
+  isPersonaPortraitJob,
   isPortraitJob,
   isStageBackdropJob,
+  type PersonaPortraitJob,
   type PortraitJob,
   type StageBackdropJob,
 } from "@/queue/types";
 import { summarizeMessages } from "@/services/chronicle-writer";
 import { ComfyUnavailableError, generateImage } from "@/services/comfyui";
-import { describeAppearance } from "@/services/photo-look";
+import { composeAppearance, describeAppearance, describePersonaLook } from "@/services/photo-look";
 import { ASPECT_FOR, formatPhotoScene, paintSelfie } from "@/services/selfie";
-import { isStorageConnected, uploadImage } from "@/services/storage";
+import { isStorageConnected, uploadImage, uploadPersonaPhoto } from "@/services/storage";
 import { broadcastToCharacter } from "@/ws/registry";
 
 const NEWLINE = String.fromCharCode(10);
@@ -181,7 +185,71 @@ async function renderChatPhoto(job: Job<ChatPhotoJob>, data: ChatPhotoJob): Prom
   }
 }
 
+function personaBrief(persona: {
+  bio: string | null;
+  personality: string | null;
+  hobbies: string | null;
+  likes: string | null;
+  dislikes: string | null;
+  chapters: { title: string | null; body: string }[];
+}): string {
+  return [
+    persona.bio ? `About them: ${persona.bio}` : "",
+    persona.personality ? `How they are: ${persona.personality}` : "",
+    persona.hobbies ? `What they do: ${persona.hobbies}` : "",
+    persona.likes ? `Drawn to: ${persona.likes}` : "",
+    persona.dislikes ? `Put off by: ${persona.dislikes}` : "",
+    persona.chapters.length > 0
+      ? `What has happened to them: ${persona.chapters
+          .map((chapter) => chapter.body)
+          .join(" ")
+          .slice(0, 400)}`
+      : "",
+  ]
+    .filter((line) => line.length > 0)
+    .join(NEWLINE);
+}
+
+async function renderPersonaPortrait(data: PersonaPortraitJob): Promise<void> {
+  if (!isStorageConnected()) {
+    throw new Error("Object storage is offline, so the portrait would have nowhere to live.");
+  }
+
+  const persona = getPersona(data.personaId, data.userId);
+  if (!persona) throw new Error(`Persona "${data.personaId}" is gone.`);
+
+  const reader = readerEmail(data.userId);
+  const look = await describePersonaLook({
+    name: persona.name,
+    about: personaBrief(persona),
+    extra: data.extra,
+    pronouns: persona.pronouns,
+  });
+
+  const prompt = [
+    composeAppearance(look, "", pronounsFor(persona.pronouns).figure),
+    data.extra.trim(),
+    PORTRAIT.framing,
+  ]
+    .filter((part) => part.length > 0)
+    .join(", ");
+
+  const image = await generateImage(prompt, null, { orientation: PORTRAIT.orientation });
+  const photoUrl = await uploadPersonaPhoto(
+    reader,
+    data.personaId,
+    `portrait-${Date.now()}.${STAGE.backdropFileExtension}`,
+    image.bytes,
+  );
+
+  updatePersona(data.personaId, data.userId, { photoUrl });
+}
+
 export async function processGpuJob(job: GpuJob): Promise<void> {
+  if (isPersonaPortraitJob(job)) {
+    await renderPersonaPortrait(job.data);
+    return;
+  }
   if (isChatPhotoJob(job)) {
     await renderChatPhoto(job, job.data);
     return;

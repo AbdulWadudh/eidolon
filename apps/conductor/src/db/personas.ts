@@ -1,3 +1,4 @@
+import { DEFAULT_PRONOUNS, isPronounKey } from "@eidolon/config";
 import { and, asc, desc, eq, max } from "drizzle-orm";
 import { db } from "@/db";
 import { characters, personaChapters, personas } from "@/db/tables";
@@ -18,13 +19,17 @@ export interface Persona {
   likes: string | null;
   dislikes: string | null;
   personality: string | null;
+  pronouns: string;
   isDefault: boolean;
   updatedAt: number;
   chapters: PersonaChapter[];
 }
 
 export type PersonaDraft = Partial<
-  Pick<Persona, "name" | "photoUrl" | "bio" | "hobbies" | "likes" | "dislikes" | "personality">
+  Pick<
+    Persona,
+    "name" | "photoUrl" | "bio" | "hobbies" | "likes" | "dislikes" | "personality" | "pronouns"
+  >
 >;
 
 function chaptersFor(personaId: string): PersonaChapter[] {
@@ -51,6 +56,7 @@ function shape(row: typeof personas.$inferSelect): Persona {
     likes: row.likes,
     dislikes: row.dislikes,
     personality: row.personality,
+    pronouns: isPronounKey(row.pronouns) ? row.pronouns.trim().toLowerCase() : DEFAULT_PRONOUNS,
     isDefault: row.isDefault === 1,
     updatedAt: row.updatedAt,
     chapters: chaptersFor(row.id),
@@ -96,6 +102,7 @@ export function createPersona(userId: string, draft: PersonaDraft): Persona {
       likes: draft.likes ?? null,
       dislikes: draft.dislikes ?? null,
       personality: draft.personality ?? null,
+      pronouns: isPronounKey(draft.pronouns) ? draft.pronouns : DEFAULT_PRONOUNS,
       isDefault: isFirst ? 1 : 0,
       createdAt: now,
       updatedAt: now,
@@ -115,6 +122,7 @@ export function updatePersona(
   const patch: Record<string, unknown> = { updatedAt: Date.now() };
   for (const [key, value] of Object.entries(draft)) {
     if (value === undefined) continue;
+    if (key === "pronouns" && !isPronounKey(value as string)) continue;
     patch[key] = key === "name" ? (value as string).trim() || "You" : value;
   }
 

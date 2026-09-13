@@ -16,6 +16,7 @@ export const QUEUE_JOBS = {
   generateStageBackdrop: "generate-stage-backdrop",
   generatePortrait: "generate-portrait",
   generateChatPhoto: "generate-chat-photo",
+  generatePersonaPortrait: "generate-persona-portrait",
   summarizeChronicle: "summarize-chronicle",
   uploadImage: "upload-image",
   uploadAudio: "upload-audio",

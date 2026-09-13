@@ -7,6 +7,7 @@ import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AuthoredFields } from "@/components/characters/CharacterFields";
+import { PronounPicker } from "@/components/characters/PronounPicker";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
 import { ChapterList } from "@/components/personas/ChapterList";
@@ -178,6 +179,15 @@ export default function PersonaEditorScreen() {
                 draft={draft}
                 author={author}
                 onChange={change}
+              />
+
+              <PronounPicker
+                value={persona.pronouns}
+                onChange={(pronouns) => {
+                  void savePersona(serverHost, personaId, { pronouns }).then((next) => {
+                    if (next) setPersona(next);
+                  });
+                }}
               />
 
               <View className="h-px bg-border" />

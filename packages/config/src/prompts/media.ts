@@ -13,6 +13,22 @@ export const MEDIA_PROMPTS: PromptDefinition[] = [
 Each field is a short phrase, two or three words, never a sentence. Never write their name, never write "she is" or "her hair is", just the detail itself. Describe only the parts of a person that do not change from one day to the next — no clothes, no glasses, no jewellery, no expression, no setting.`,
   },
   {
+    key: "image.personaPortrait",
+    description:
+      "Turns what a reader wrote about themselves into a description of their face and build, so a portrait of them can be drawn. Read from a persona rather than a character card.",
+    variables: ["name", "about", "extra", "figure"],
+    value: `Read what this person wrote about themselves and fill in what they most likely look like, for an image model. They are {{figure}}.
+
+Name: {{name}}
+{{about}}
+
+{{extra}}
+
+Each field is a short phrase, two or three words, never a sentence. Never write their name, never write "she is" or "her hair is", just the detail itself. Describe only the parts of a person that do not change from one day to the next — no clothes, no glasses, no jewellery, no expression, no setting.
+
+Most of what they wrote is not about their looks. Where it says nothing, choose something ordinary and plausible for the life they describe rather than something striking. A real person, not a model.`,
+  },
+  {
     key: "image.scene",
     description:
       "Plans the photo the character is about to send as a structured shot, so framing, wardrobe and light are chosen together rather than tacked on.",

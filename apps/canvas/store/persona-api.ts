@@ -18,13 +18,17 @@ export interface Persona {
   likes: string | null;
   dislikes: string | null;
   personality: string | null;
+  pronouns: string;
   isDefault: boolean;
   updatedAt: number;
   chapters: PersonaChapter[];
 }
 
 export type PersonaDraft = Partial<
-  Pick<Persona, "name" | "photoUrl" | "bio" | "hobbies" | "likes" | "dislikes" | "personality">
+  Pick<
+    Persona,
+    "name" | "photoUrl" | "bio" | "hobbies" | "likes" | "dislikes" | "personality" | "pronouns"
+  >
 >;
 
 const BASE = apiPath("personas");
@@ -191,5 +195,36 @@ export async function removePhoto(host: string, personaId: string): Promise<Pers
   const body = await call<{ persona: Persona }>(host, `${BASE}/${personaId}/photo`, {
     method: "DELETE",
   });
+  return body?.persona ?? null;
+}
+
+export async function requestPersonaPortrait(
+  host: string,
+  personaId: string,
+  extra: string,
+): Promise<string | null> {
+  if (!host) return null;
+
+  try {
+    const response = await authedFetch(`${host}${BASE}/${personaId}/portrait`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ extra }),
+      signal: AbortSignal.timeout(TIMEOUTS_MS.clientRequest),
+    });
+
+    const body = (await response.json().catch(() => ({}))) as {
+      queued?: boolean;
+      error?: string;
+    };
+
+    return response.ok && body.queued ? null : (body.error ?? "The portrait could not be queued.");
+  } catch {
+    return "The conductor could not be reached.";
+  }
+}
+
+export async function fetchPersona(host: string, personaId: string): Promise<Persona | null> {
+  const body = await call<{ persona: Persona }>(host, `${BASE}/${personaId}`);
   return body?.persona ?? null;
 }

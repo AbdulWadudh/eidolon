@@ -1,4 +1,4 @@
-import { AUTHOR_COPY, EASING_BEZIER, UI_MS } from "@eidolon/config";
+import { AUTHOR_COPY, EASING_BEZIER, FIELD_PADDING, UI_MS } from "@eidolon/config";
 import { ActivityIndicator, Text, TextInput, type TextInputProps, View } from "react-native";
 import Animated, { cubicBezier, FadeIn, useReducedMotion } from "react-native-reanimated";
 import { AppIcon } from "@/components/common/icon";
@@ -184,14 +184,15 @@ export function AuthoredField({
           selectionColor={theme.primary}
           textAlignVertical={isMultiline ? "top" : "center"}
           className={cn(
-            "w-full rounded-button border border-border bg-input px-3.5 font-main text-[13.5px] text-text-primary leading-5",
+            "w-full rounded-button border border-border bg-input font-main text-[13.5px] text-text-primary leading-5",
             inputClassName,
           )}
           style={{
             minHeight: minHeight ?? (isMultiline ? 44 + lines * 20 : 44),
+            paddingLeft: FIELD_PADDING.horizontal,
             paddingTop: isMultiline ? 10 : 0,
             paddingBottom: isMultiline ? ACTION_PX + EDGE_PX * 2 : 0,
-            paddingRight: isMultiline ? 14 : slot,
+            paddingRight: isMultiline ? FIELD_PADDING.horizontal : slot,
             includeFontPadding: false,
             opacity: actions.isBusy ? 0.5 : 1,
           }}

@@ -1,4 +1,4 @@
-import { render } from "@eidolon/config";
+import { pronounsFor, render } from "@eidolon/config";
 import { personaForCharacter } from "@/db/personas";
 import { getPrompt } from "@/prompts/store";
 
@@ -32,6 +32,7 @@ export function readerProfile(characterId: string, userId: string): string {
 
   const reader = [
     line("Name", persona.name),
+    line("Refer to them as", pronounsFor(persona.pronouns).label.toLowerCase()),
     line("About them", persona.bio),
     line("How they are", persona.personality),
     line("What they do with their time", persona.hobbies),

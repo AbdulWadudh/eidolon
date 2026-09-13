@@ -27,3 +27,8 @@ export function forgetOwnerEmail(characterId?: string): void {
   if (characterId === undefined) emails.clear();
   else emails.delete(characterId);
 }
+
+export function readerEmail(userId: string): string {
+  const [row] = db.select({ email: user.email }).from(user).where(eq(user.id, userId)).all();
+  return row?.email?.trim() || UNOWNED;
+}
