@@ -1,7 +1,8 @@
-import type { AuthorField, AuthorMode } from "@eidolon/config";
+import { AUTHOR_COPY, type AuthorField, type AuthorMode } from "@eidolon/config";
 import * as React from "react";
 import { tap } from "@/services/haptics";
 import { authorField } from "@/store/author-api";
+import { useToastStore } from "@/store/toast-store";
 
 export interface TextAuthor {
   isBusy: boolean;
@@ -18,10 +19,13 @@ export function useTextAuthor(serverHost: string, field: AuthorField): TextAutho
 
       void authorField(serverHost, field, mode, draft, {}).then((result) => {
         setBusy(false);
+
         if (!result.text) {
           tap("light");
+          useToastStore.getState().notify(result.error ?? AUTHOR_COPY.failed, "bad");
           return;
         }
+
         tap("success");
         onText(result.text);
       });
