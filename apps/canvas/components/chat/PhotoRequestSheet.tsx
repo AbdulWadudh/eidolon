@@ -1,14 +1,16 @@
-import { CHAT, UI_MS } from "@eidolon/config";
+import { MIND_COPY, PHOTO_COPY, UI_MS } from "@eidolon/config";
 import * as React from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
-import { AuthoredField, textAuthorActions } from "@/components/common/authored-field";
+import { AuthorActions, textAuthorActions } from "@/components/common/authored-field";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
+import { Button } from "@/components/ui/button";
 import { GlassSurface } from "@/components/ui/glass-surface";
+import { Input } from "@/components/ui/input";
 import { type TextAuthor, useTextAuthor } from "@/hooks/use-text-author";
-import { Image01Icon, RefreshIcon, SentIcon } from "@/lib/icons";
+import { Cancel01Icon, Image01Icon, RefreshIcon } from "@/lib/icons";
 import type { PhotoOrientation } from "@/store/chat-photos";
 import { useResolvedTheme } from "@/store/theme-store";
 
@@ -92,7 +94,7 @@ export function PhotoRequestSheet({
             />
             <View className="mb-4 flex-row items-center gap-2">
               <AppIcon icon={Image01Icon} size={18} color={theme.primary} strokeWidth={2} />
-              <Text className="font-ui-bold text-sm text-text-primary">
+              <Text className="flex-1 font-ui-bold text-sm text-text-primary">
                 {orientation
                   ? editing
                     ? "What should change?"
@@ -101,6 +103,28 @@ export function PhotoRequestSheet({
                     ? "Change this photo"
                     : `Ask ${characterName} for a photo`}
               </Text>
+              {orientation ? (
+                <PressableScale
+                  accessibilityRole="button"
+                  accessibilityLabel="Reroll ideas"
+                  accessibilityState={{ busy: areIdeasLoading }}
+                  hitSlop={10}
+                  onPress={onRequestIdeas}
+                  className="items-center justify-center"
+                >
+                  <AppIcon icon={RefreshIcon} size={16} color={theme.textMuted} strokeWidth={1.6} />
+                </PressableScale>
+              ) : null}
+
+              <PressableScale
+                accessibilityRole="button"
+                accessibilityLabel={MIND_COPY.closeLabel}
+                hitSlop={12}
+                onPress={onClose}
+                className="h-8 w-8 items-center justify-center rounded-full border border-border"
+              >
+                <AppIcon icon={Cancel01Icon} size={16} color={theme.textMuted} />
+              </PressableScale>
             </View>
 
             {orientation ? (
@@ -112,7 +136,6 @@ export function PhotoRequestSheet({
                 ideas={ideas}
                 areIdeasLoading={areIdeasLoading}
                 onChange={setSituation}
-                onReroll={onRequestIdeas}
                 onSend={send}
               />
             ) : (
@@ -155,7 +178,6 @@ function Situation({
   ideas,
   areIdeasLoading,
   onChange,
-  onReroll,
   onSend,
 }: {
   characterId: string;
@@ -165,7 +187,6 @@ function Situation({
   ideas: string[];
   areIdeasLoading: boolean;
   onChange: (next: string) => void;
-  onReroll: () => void;
   onSend: () => void;
 }) {
   const theme = useResolvedTheme(characterId);
@@ -198,49 +219,25 @@ function Situation({
             ))}
       </View>
 
-      <View className="flex-row items-end gap-2">
-        <View className="flex-1">
-          <AuthoredField
+      <Input
+        value={value}
+        onChangeText={onChange}
+        placeholder={editing ? PHOTO_COPY.describeEditing : PHOTO_COPY.describe}
+        accessibilityLabel="Describe the photo"
+        autoCapitalize="none"
+        returnKeyType="send"
+        onSubmitEditing={onSend}
+        trailing={
+          <AuthorActions
             characterId={characterId}
-            lines={2}
-            minHeight={64}
-            value={value}
-            onChangeText={onChange}
-            placeholder={editing ? "What is different this time" : "Describe it, or leave it open"}
-            accessibilityLabel="Describe the photo"
-            actions={textAuthorActions(author, value, onChange)}
+            {...textAuthorActions(author, value, onChange)}
           />
-        </View>
+        }
+      />
 
-        <PressableScale
-          accessibilityRole="button"
-          accessibilityLabel="Reroll ideas"
-          onPress={onReroll}
-          className="items-center justify-center border border-border bg-input"
-          style={{
-            width: CHAT.sendButtonPx,
-            height: CHAT.sendButtonPx,
-            borderRadius: theme.radius,
-          }}
-        >
-          <AppIcon icon={RefreshIcon} size={16} color={theme.textMuted} strokeWidth={1.6} />
-        </PressableScale>
-
-        <PressableScale
-          accessibilityRole="button"
-          accessibilityLabel="Ask for the photo"
-          onPress={onSend}
-          className="items-center justify-center"
-          style={{
-            width: CHAT.sendButtonPx,
-            height: CHAT.sendButtonPx,
-            borderRadius: theme.radius,
-            backgroundColor: theme.primary,
-          }}
-        >
-          <AppIcon icon={SentIcon} size={16} color={theme.primaryForeground} strokeWidth={1.6} />
-        </PressableScale>
-      </View>
+      <Button variant="default" size="sm" className="mt-3" onPress={onSend}>
+        {editing ? PHOTO_COPY.askEditing : PHOTO_COPY.ask}
+      </Button>
     </View>
   );
 }

@@ -4,7 +4,7 @@ import { Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from "r
 import { Gesture, GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { DownloadButton } from "@/components/admin/MediaPreview";
+import { DownloadButton } from "@/components/admin/DownloadButton";
 import { ZoomableImage } from "@/components/characters/ZoomableImage";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
