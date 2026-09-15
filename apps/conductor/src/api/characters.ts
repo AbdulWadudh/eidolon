@@ -66,6 +66,23 @@ async function requireOwner(c: Context) {
   return ownerFor(c.req.header("Authorization") ?? c.req.query("token"));
 }
 
+/**
+ * Everything that changes a character — her face, her lore — is her author's to do. An
+ * unowned character is claimed by whoever reaches her first, which is how they have
+ * always worked; anyone else gets a copy of their own instead, from /start.
+ */
+async function authorOf(c: Context, id: string) {
+  const owner = await requireOwner(c);
+  if (!owner) return { error: c.json({ error: "Sign in to change a character." }, 401) };
+
+  adopt(id, owner.id);
+  if (!ownsCharacter(id, owner.id)) {
+    return { error: c.json({ error: "Only her author can change her." }, 403) };
+  }
+
+  return { owner };
+}
+
 characters.get("/", async (c) => {
   const owner = await requireOwner(c);
   return c.json({ characters: listCharacters(owner?.id), owner: owner?.id ?? null });
@@ -238,6 +255,9 @@ characters.post("/:id/lore", async (c) => {
   const characterId = c.req.param("id");
   if (!getCharacter(characterId)) return c.json({ error: "No such character." }, 404);
 
+  const author = await authorOf(c, characterId);
+  if (author.error) return author.error;
+
   const body = (await c.req.json().catch(() => ({}))) as {
     id?: unknown;
     keys?: unknown;
@@ -269,8 +289,20 @@ characters.post("/:id/lore", async (c) => {
   return c.json({ lore: getLoreEntries(characterId).find((entry) => entry.id === id) }, 201);
 });
 
-characters.delete("/:id/lore/:entryId", (c) => {
-  deleteLoreEntry(c.req.param("entryId"));
+characters.delete("/:id/lore/:entryId", async (c) => {
+  const characterId = c.req.param("id");
+  const entryId = c.req.param("entryId");
+
+  const author = await authorOf(c, characterId);
+  if (author.error) return author.error;
+
+  // An entry id alone said nothing about which character it belonged to, so anyone could
+  // name one and have it removed from a character that was never theirs.
+  if (!getLoreEntries(characterId).some((entry) => entry.id === entryId)) {
+    return c.json({ error: "No such entry." }, 404);
+  }
+
+  deleteLoreEntry(entryId);
   return c.json({ ok: true });
 });
 
@@ -294,7 +326,9 @@ characters.post("/:id/portrait", async (c) => {
   const character = getCharacter(characterId);
   if (!character) return c.json({ error: "No such character." }, 404);
 
-  const owner = await requireOwner(c);
+  const author = await authorOf(c, characterId);
+  if (author.error) return author.error;
+  const owner = author.owner;
 
   const body = (await c.req.json().catch(() => ({}))) as { prompt?: unknown };
   const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
