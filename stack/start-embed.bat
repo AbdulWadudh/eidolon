@@ -17,7 +17,7 @@ if not exist "%EIDOLON_EMBED_MODEL%" (
   pause & exit /b 1
 )
 
-llama-server.exe ^
+.\llama-server.exe ^
  -m "%EIDOLON_EMBED_MODEL%" ^
  --host 127.0.0.1 --port 8082 ^
  -ngl 99 -c 8192 ^

@@ -25,6 +25,7 @@
     "stack:up": "bun scripts/stack.ts up",
     "stack:status": "bun scripts/stack.ts status",
     "stack:panes": "bun scripts/stack.ts panes",
+    "stack:panes:prod": "bun scripts/stack.ts panes:prod",
     "stack:down": "bun scripts/stack.ts down",
     "release": "bun scripts/release.ts",
     "release:dry": "bun scripts/release.ts --dry-run",

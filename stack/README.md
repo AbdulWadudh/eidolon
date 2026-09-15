@@ -67,7 +67,7 @@ are being passed:
 ```
 G:\AI\EIDOLON\
   MODELS\            every GGUF the LLM loads
-    Qwen3.5-9B-heretic.Q6_K.gguf                 chat
+    Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q6_K.gguf                 chat
     nomic-embed-text-v1.5.Q5_K_M.gguf            recall
     L3-8B-Stheno-v3.3-32K-NEO-V1-D_AU-Q5_K_M.gguf  (LLM_PROFILE=llama3)
   LLAMA_CPP\         llama.cpp server (CUDA 13.3 build + runtime)

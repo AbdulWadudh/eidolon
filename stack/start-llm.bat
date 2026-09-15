@@ -8,13 +8,13 @@ rem Every model-specific value is a variable, so swapping models is editing this
 rem block rather than the command below. Keep these in step with the matching
 rem entry in packages/config/src/llm.ts, which is where the conductor reads the
 rem stop tokens, samplers and context budget from.
-if "%EIDOLON_LLM_MODEL%"=="" set "EIDOLON_LLM_MODEL=%EIDOLON_AI_ROOT%\MODELS\Qwen3.5-9B-heretic.Q6_K.gguf"
+if "%EIDOLON_LLM_MODEL%"=="" set "EIDOLON_LLM_MODEL=%EIDOLON_AI_ROOT%\MODELS\Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q6_K.gguf"
 if "%EIDOLON_LLM_NGL%"==""   set "EIDOLON_LLM_NGL=99"
 if "%EIDOLON_LLM_CTX%"==""   set "EIDOLON_LLM_CTX=32768"
 rem off for a model that thinks before it answers, auto for one that does not.
 if "%EIDOLON_LLM_REASONING%"=="" set "EIDOLON_LLM_REASONING=off"
 
-if not exist "%EIDOLON_LLM_MODEL%" (
+if not exist "%EIDOLON_LLM_MODEL%" (\
   echo.
   echo   No chat model at:
   echo     %EIDOLON_LLM_MODEL%
@@ -24,7 +24,7 @@ if not exist "%EIDOLON_LLM_MODEL%" (
   pause & exit /b 1
 )
 
-llama-server.exe ^
+.\llama-server.exe ^
  -m "%EIDOLON_LLM_MODEL%" ^
  --host 127.0.0.1 --port 8080 ^
  -ngl %EIDOLON_LLM_NGL% ^

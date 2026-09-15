@@ -140,8 +140,10 @@ function runBatch(name: string, wait: boolean): void {
 const command = process.argv[2] ?? "up";
 if (command === "status") {
   await status();
-} else if (command === "panes") {
-  runBatch("start-panes.bat", false);
+} else if (command === "panes" || command === "panes:dev") {
+  runBatch("start-dev.bat", false);
+} else if (command === "panes:prod") {
+  runBatch("start-prod.bat", false);
 } else if (command === "down") {
   runBatch("stop-all.bat", true);
 } else {

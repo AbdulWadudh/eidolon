@@ -1,7 +1,7 @@
 export const LLM_PROFILES = {
   qwen35: {
     label: "Qwen3.5 (ChatML, hybrid SSM, thinking on request)",
-    modelFile: "Qwen3.5-9B-heretic.Q6_K.gguf",
+    modelFile: "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q6_K.gguf",
     contextTokens: 32768,
     promptMaxChars: 40000,
     historyMaxChars: 24000,
