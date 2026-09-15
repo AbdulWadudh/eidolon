@@ -43,6 +43,10 @@ export const PHOTO_COPY = {
   taking: "Capturing the moment",
   noCamera: "No camera on this side",
   didNotCome: "That photo did not come out",
+  ask: "Ask for it",
+  askEditing: "Take it again",
+  describe: "Describe it, or leave it open",
+  describeEditing: "What is different this time",
 } as const;
 
 export const CONNECT_COPY = {

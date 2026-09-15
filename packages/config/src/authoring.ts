@@ -49,7 +49,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   outfit: {
     label: "Outfit",
     guidance:
-      "One phrase under twelve words, no verb and no full stop. Name the garments, the fabric, the colour, how they sit. Clothes only: never the face, the hair, the build or the room.",
+      "One phrase under twelve words, no verb and no full stop. Name the garment and one detail of it: the colour, the fabric, or how it sits. Clothes only: never the face, the hair, the build or the room.",
     maxTokens: 28,
     maxChars: 90,
     visual: true,
@@ -58,7 +58,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   place: {
     label: "Place",
     guidance:
-      "One phrase under fifteen words, no verb and no full stop. Name the room or street, the hour, the weather, what the light is doing. The place only, with nobody in it.",
+      "One phrase under fifteen words, no verb and no full stop. Name the place, then one thing about the hour or the light. The place only, with nobody in it.",
     maxTokens: 32,
     maxChars: 110,
     visual: true,
@@ -67,7 +67,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   photo: {
     label: "Photo",
     guidance:
-      "One phrase under twelve words naming what a camera is pointed at: a place, a thing being done, something close by. Never a sentence, never spoken aloud, never a mention of cameras, phones or the person asking.",
+      "One phrase under twelve words naming one thing a camera is pointed at. Never a sentence, never spoken aloud, never a mention of cameras, phones or the person asking.",
     maxTokens: 28,
     maxChars: 90,
     visual: true,
@@ -85,7 +85,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   portrait: {
     label: "Portrait",
     guidance:
-      "One phrase under fifteen words of visual direction: what they wear, where they stand, the mood, the light. Never the face, hair or build, which are already fixed.",
+      "One phrase under fifteen words of visual direction: where they stand and what the light is doing. Never the face, hair or build, which are already fixed.",
     maxTokens: 32,
     maxChars: 110,
     visual: true,
@@ -260,7 +260,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
     maxTokens: 110,
     maxChars: 320,
     visual: false,
-    singleLine: false,
+    singleLine: true,
   },
 };
 
@@ -271,6 +271,7 @@ export const AUTHORING = {
   enhanceTemperatures: [0.35, 0.6, 0.9],
   enhanceGrowthRatio: 3,
   enhanceGrowthFloorChars: 220,
+  enhanceGrowthFieldShare: 0.6,
   contextLabel: "The character so far:",
   userContextLabel: "What they have written about themselves so far:",
   draftLabel: "Current:",

@@ -2,6 +2,17 @@ import type { PromptDefinition } from "../prompts-shared";
 
 export const MEDIA_PROMPTS: PromptDefinition[] = [
   {
+    key: "image.avoidIdeas",
+    description:
+      "Injected on a reroll so the next set of photo ideas goes somewhere the last set did not.",
+    variables: ["ideas"],
+    value: `You already offered these and they were turned down:
+{{ideas}}
+
+Do not offer any of them again, and do not offer a reworded version of one.
+Change the subject, not the sentence. A different place, a different object, a different hour.`,
+  },
+  {
     key: "image.appearance",
     description:
       "Turns a character's written persona into a fixed description of their face and body, used once to seed the face every later photo is matched against.",
@@ -10,7 +21,11 @@ export const MEDIA_PROMPTS: PromptDefinition[] = [
 
 {{personality}}
 
-Each field is a short phrase, two or three words, never a sentence. Never write their name, never write "she is" or "her hair is", just the detail itself. Describe only the parts of a person that do not change from one day to the next — no clothes, no glasses, no jewellery, no expression, no setting.`,
+Write each field as a phrase of two or three words. Never a sentence.
+Describe only what does not change from one day to the next.
+Write the detail alone: never their name, never "she is", never "her hair is".
+
+NEVER mention clothes, glasses, jewellery, expression or the place they are in.`,
   },
   {
     key: "image.personaPortrait",
@@ -24,9 +39,13 @@ Name: {{name}}
 
 {{extra}}
 
-Each field is a short phrase, two or three words, never a sentence. Never write their name, never write "she is" or "her hair is", just the detail itself. Describe only the parts of a person that do not change from one day to the next — no clothes, no glasses, no jewellery, no expression, no setting.
+Write each field as a phrase of two or three words. Never a sentence.
+Describe only what does not change from one day to the next.
+Write the detail alone: never their name, never "she is", never "her hair is".
 
-Most of what they wrote is not about their looks. Where it says nothing, choose something ordinary and plausible for the life they describe rather than something striking. A real person, not a model.`,
+Most of what they wrote is not about their looks. Where it says nothing, choose something ordinary and plausible for the life they describe. A real person, not a model.
+
+NEVER mention clothes, glasses, jewellery, expression or the place they are in.`,
   },
   {
     key: "image.scene",
@@ -35,25 +54,30 @@ Most of what they wrote is not about their looks. Where it says nothing, choose 
     variables: ["name", "scene", "request", "framings"],
     value: `{{name}} is about to send the person they are texting a photo of: {{request}}
 
-That is the subject. If it names a place, that is the setting. If it names another person, a pet or a thing, they go in others. Only fall back on the conversation below for what the request did not specify.
+That is the subject of this photo, and it wins over everything below.
+If it names a place, that is the setting.
+If it names another person, a pet or a thing, they go in others.
+Use the conversation only for what the request left out.
 
 Recently they were saying:
 {{scene}}
 
-Fill in each field. Do not describe their face, hair or build anywhere; that is fixed already. setting: where this is, concrete and ordinary. A specific room, street or place, with the details that make it that place and not a stock photo.
-outfit: what they are wearing today. Vary it with the setting and the weather. Not the same clothes as last time.
-others: who or what else is in the frame, if anyone. A friend, a sibling, family on a trip, a pet, a plate of food. Empty for a photo of just them, and used often enough that not every photo is of a person alone.
-action: what they are doing in the instant the shutter went. Not posing. Mid laugh, looking away, reaching for something, squinting into the sun, half turned.
+Fill in every field. Each one is a phrase of at most twelve words, never a sentence.
+
+setting: name the place itself, and the details that make it that place and not a stock photo. Never repeat the words of the request back here.
+outfit: what they are wearing today. Vary it with the setting and the weather, and never the same clothes as last time.
+others: who or what else is in the frame. A friend, a sibling, a pet, a plate of food. Leave it empty for a photo of just them, and fill it often enough that not every photo is of a person alone.
+action: what they are doing in the instant the shutter went. Mid laugh, looking away, reaching for something, squinting into the sun. Never posing.
 light: the real light in that place at that hour.
 framing: how the photo is taken. Choose one that fits and do not default to the same one: {{framings}}
-orientation: "landscape" if the place, the view or the group is the subject, "portrait" if the person is.
-look_change: only if the request asks for something different about their body or hair — dyed hair, a haircut, wet hair, a tan. Two or three words, empty otherwise.
+orientation: "landscape" when the place, the view or the group is the subject. "portrait" when the person is.
+look_change: two or three words, only when the request asks for something different about their body or hair — dyed hair, a haircut, wet hair, a tan. Empty otherwise.
 
-Every field is at most twelve words. A short phrase of visual detail, not a sentence, and never mentions phones, texting or the person receiving it. Leave a field as an empty string when it does not apply — never write "none" or "nothing".
+NEVER describe their face, hair or build anywhere. That is fixed already.
+NEVER mention phones, texting or the person receiving the photo.
+Leave a field as an empty string when it does not apply. Never write "none" or "nothing".
 
-What was asked for is: {{request}}
-
-That is the subject of this photo. If it names a place, that is where this photo happens, and the conversation above does not override it. If it names another person, a pet or a thing, they are in the frame. Only fall back on the conversation for what was not specified.`,
+What was asked for is: {{request}}`,
   },
   {
     key: "image.caption",
@@ -64,46 +88,66 @@ That is the subject of this photo. If it names a place, that is where this photo
 
 You just sent someone you are texting a photo of: {{subject}}
 
-Write the message you send with it. They can already see the picture, so do not describe it. Say the thing the picture made you want to say — react to it, complain about it, brag about it, or explain why you thought of them.
+Write the message you send with it, at most twelve words, one line.
+They can already see the picture. Say the thing it made you want to say: react to it, complain about it, brag about it, or say why you thought of them.
 
-Do not name what is in the frame and do not announce that you are sending a photo. Type the offhand remark you would actually send with it.
-
-At most twelve words — one line, the length of a real text. At most twelve words. Never write your own name. No asterisks, no quotation marks, no square brackets.`,
+NEVER name what is in the frame and never describe it.
+NEVER announce that you are sending a photo.
+NEVER write your own name.
+NEVER use asterisks, quotation marks or square brackets.`,
   },
   {
     key: "image.editIdeas",
     description:
       "Changes offered when the user asks for an existing photo to be redone, rather than subjects for a new one.",
-    variables: ["name", "scene", "count", "maxChars"],
+    variables: ["name", "avoid", "scene", "count", "maxChars"],
     value: `{{name}} sent someone a photo and has been asked to take it again, differently. Suggest {{count}} things they could change about it.
 
 The conversation so far:
 {{scene}}
 
+{{avoid}}
+
 Return a JSON array of exactly {{count}} strings and nothing else. No explanation and no second array.
 
-Every string is a change to the picture that already exists, not a description of a new one and not a subject on its own. Say what is different this time: the light, the distance, the angle, the pose, what they are wearing, something that comes into or leaves the frame. Under {{maxChars}} characters, a few words each.
+Every string is a change to the picture that already exists: the light, the distance, the angle, the pose, what they are wearing, something that comes into or leaves the frame.
+Write a few words, under {{maxChars}} characters.
+Make the {{count}} pull in different directions: one about the light, one about where the camera is, one about them, one about what else is in the frame.
 
-Nobody says these out loud, so they are not sentences, not greetings and never in {{name}}'s voice. Never write the name {{name}}. Never mention phones, screens, texting or the taking of the photo itself.
-
-Make the {{count}} pull in different directions rather than being the same note reworded: change one thing about the light, one about where the camera is, one about them, one about what else is in the frame.`,
+NEVER describe a new picture and never give a subject on its own.
+NEVER write a sentence, a greeting, or anything in {{name}}'s voice.
+NEVER write the name {{name}}.
+NEVER mention phones, screens, texting or the taking of the photo.`,
   },
   {
     key: "image.ideas",
     description:
       "Photo ideas offered when the user asks for a picture, drawn from the character and where the conversation has got to.",
-    variables: ["name", "scene", "count", "maxChars"],
+    variables: ["name", "personality", "avoid", "scene", "count", "maxChars"],
     value: `{{name}} is texting someone and is about to send them a photo. Suggest {{count}} photos they could take right now.
+
+Who they are:
+{{personality}}
 
 The conversation so far:
 {{scene}}
 
-Every idea comes out of that conversation: the place they just mentioned, the thing they are doing, what they are eating, the weather, whoever is with them. If the conversation named something, put it in the frame. Never invent a pet, a sibling, a partner or a place that has not come up.
+{{avoid}}
 
 Return a JSON array of exactly {{count}} strings and nothing else. No explanation and no second array.
 
-Each string labels the photo the way an album names a picture: a few words for what is in the frame, under {{maxChars}} characters. Not a sentence, not a greeting, not something anyone says out loud. Written from {{name}}'s own side, so it says "my" and "the" and never writes the name {{name}}. Never mention phones, screens, texting, sending or the taking of the photo itself.
+Start from that conversation, then look around the rest of their life: their work, what they are holding, where they are going next, who they are with, the weather.
+Label each one the way an album names a picture: a few words for what is in the frame, under {{maxChars}} characters.
+Write from {{name}}'s own side, so it says "my" and "the".
+Give {{count}} different subjects, not {{count}} angles on one. If two of them share a noun, replace one.
+Let at least one be something other than themselves: a view, a plate, a street, a tool they use.
+Let at least one come from their work or their day rather than the room they are in.
+Ordinary and specific to today beats glamorous.
 
-Make the {{count}} different from each other rather than the same idea reworded. Vary who is in the frame and how close the camera is, and let at least one be something other than themselves — a view, a plate, a street, the weather. Ordinary and specific to today beats glamorous.`,
+NEVER invent a pet, a sibling, a partner or a place that has not come up.
+NEVER put anything belonging to the person they are texting in the frame.
+NEVER write a sentence, a greeting, or anything anyone says out loud.
+NEVER write the name {{name}}.
+NEVER mention phones, screens, texting, sending or the taking of the photo.`,
   },
 ];

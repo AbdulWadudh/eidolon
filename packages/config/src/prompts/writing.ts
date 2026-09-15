@@ -2,6 +2,17 @@ import type { PromptDefinition } from "../prompts-shared";
 
 export const WRITING_PROMPTS: PromptDefinition[] = [
   {
+    key: "suggestions.avoid",
+    description:
+      "Injected on a reroll so a new set of reply options is not the last set reworded.",
+    variables: ["lines"],
+    value: `You already offered these and they were turned down:
+{{lines}}
+
+Write something none of them says.
+NEVER reuse their wording or their opening.`,
+  },
+  {
     key: "suggestions.system",
     description: "System prompt for one reply option. Called once per intent, in parallel.",
     variables: ["intent", "maxSentences", "maxActionWords"],
@@ -24,12 +35,13 @@ Never put a feeling, a sensation or scenery inside the asterisks. No hearts skip
   {
     key: "suggestions.user",
     description: "The scene handed to the suggestion writer, plus the ask.",
-    variables: ["scene", "intent", "player", "character", "tier", "user"],
+    variables: ["scene", "intent", "player", "character", "tier", "user", "avoid"],
     value: `{{player}} is texting {{character}}. What they are to each other: {{tier}}.
 {{user}}
 
 Recent messages:
 {{scene}}
+{{avoid}}
 
 Write {{player}}'s next reply, and make it {{intent}}.
 It must follow on from the last message above.

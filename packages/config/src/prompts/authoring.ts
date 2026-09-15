@@ -119,6 +119,8 @@ Write the Photo change: warmer light, and turn them toward the window`,
 
 Keep every fact the author wrote. Carry all of them into the rewrite.
 Never add a fact that is not already in the current text.
+Return as many lines and as many items as the current text has. Never more.
+Stay close to the length of the current text. A rewrite is not an expansion.
 Write it in the shape described under Shape, even when the current text is not in that shape.
 Say it better, not differently: sharper words, the same meaning, the same language.
 Never repeat a line you have already written.

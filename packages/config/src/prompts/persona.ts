@@ -2,6 +2,18 @@ import type { PromptDefinition } from "../prompts-shared";
 
 export const PERSONA_PROMPTS: PromptDefinition[] = [
   {
+    key: "persona.avoidLast",
+    description:
+      "Injected when a reply is being written again, so the second answer is not the first one reworded.",
+    variables: ["reply"],
+    value: `You already answered this, and they asked you to say it another way:
+{{reply}}
+
+Answer again from somewhere else.
+NEVER reuse the wording, the opening or the shape of that answer.
+Take a different position on it, or notice a different part of what they said.`,
+  },
+  {
     key: "persona.personality",
     description: "Fallback personality when a character card has none.",
     variables: [],
