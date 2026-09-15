@@ -29,6 +29,11 @@ export function reduceServerMessage(
       break;
     }
 
+    case "reasoning_delta": {
+      set((state) => ({ streamingReasoning: state.streamingReasoning + msg.payload.token }));
+      break;
+    }
+
     case "reply_suggestions": {
       set({
         suggestions: msg.payload?.suggestions ?? msg.suggestions,
@@ -221,7 +226,10 @@ export function reduceServerMessage(
     }
 
     case "message_committed": {
-      set({ pendingAssistantId: msg.payload.message_id });
+      set({
+        pendingAssistantId: msg.payload.message_id,
+        pendingReasoning: msg.payload.reasoning ?? null,
+      });
       break;
     }
 

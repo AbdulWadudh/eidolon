@@ -1,6 +1,7 @@
 import { ADMIN_COPY, MIND_COPY, QUEUE_COPY, UI_MS } from "@eidolon/config";
 
 const ANNOUNCE_PATH = "QUEUE_ANNOUNCE.chatPhotos";
+const THINKING_PATH = "REASONING.showToUser";
 
 import * as React from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
@@ -38,6 +39,7 @@ export function AdminSheet({ isOpen, characterId, onClose }: AdminSheetProps) {
   const momentsPaint = look.backgroundChosen !== true;
 
   const [announcesPhotos, setAnnouncesPhotos] = React.useState<boolean | null>(null);
+  const [keepsThinking, setKeepsThinking] = React.useState<boolean | null>(null);
   const sessionToken = useConnectionStore((state) => state.sessionToken);
 
   React.useEffect(() => {
@@ -47,8 +49,12 @@ export function AdminSheet({ isOpen, characterId, onClose }: AdminSheetProps) {
     void fetchConfig(serverHost, sessionToken)
       .then((view) => {
         if (!live) return;
-        const found = view.settings.find((entry) => entry.path === ANNOUNCE_PATH);
-        setAnnouncesPhotos(found?.value === true);
+        setAnnouncesPhotos(
+          view.settings.find((entry) => entry.path === ANNOUNCE_PATH)?.value === true,
+        );
+        setKeepsThinking(
+          view.settings.find((entry) => entry.path === THINKING_PATH)?.value === true,
+        );
       })
       .catch(() => undefined);
 
@@ -63,6 +69,17 @@ export function AdminSheet({ isOpen, characterId, onClose }: AdminSheetProps) {
       void saveConfigValue(serverHost, sessionToken, ANNOUNCE_PATH, enabled).catch(() => {
         setAnnouncesPhotos(!enabled);
         useToastStore.getState().notify(QUEUE_COPY.announceFailed, "bad");
+      });
+    },
+    [serverHost, sessionToken],
+  );
+
+  const setKeepThinking = React.useCallback(
+    (enabled: boolean) => {
+      setKeepsThinking(enabled);
+      void saveConfigValue(serverHost, sessionToken, THINKING_PATH, enabled).catch(() => {
+        setKeepsThinking(!enabled);
+        useToastStore.getState().notify(ADMIN_COPY.showThinkingFailed, "bad");
       });
     },
     [serverHost, sessionToken],
@@ -138,6 +155,17 @@ export function AdminSheet({ isOpen, characterId, onClose }: AdminSheetProps) {
               onValueChange={setMomentsPaint}
               accessibilityLabel={ADMIN_COPY.momentBackgroundLabel}
             />
+
+            {keepsThinking !== null ? (
+              <SwitchRow
+                characterId={characterId}
+                label={ADMIN_COPY.showThinkingLabel}
+                hint={ADMIN_COPY.showThinkingHint}
+                value={keepsThinking}
+                onValueChange={setKeepThinking}
+                accessibilityLabel={ADMIN_COPY.showThinkingLabel}
+              />
+            ) : null}
 
             {announcesPhotos !== null ? (
               <SwitchRow

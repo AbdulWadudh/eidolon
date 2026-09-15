@@ -40,6 +40,7 @@ import { forgetCharacter, loadHistory } from "@/store/chat-history";
 import { saveLook } from "@/store/chat-photos";
 import { useChatStore } from "@/store/chat-store";
 import { useConnectionStore } from "@/store/connection";
+import { useCanThink } from "@/store/health-api";
 import { fetchMind, patchAffinity, summarizeNow } from "@/store/mind-api";
 import { useResolvedTheme, useThemeStore } from "@/store/theme-store";
 
@@ -65,6 +66,7 @@ export default function ChatScreen() {
   const chat = useChatStore();
   const view = useChatView(characterId);
   const serverHost = useConnectionStore((state) => state.serverHost);
+  const canThink = useCanThink(serverHost);
   const [card, setCard] = React.useState<CharacterCard | null>(null);
 
   const loadCard = React.useCallback(() => {
@@ -239,6 +241,7 @@ export default function ChatScreen() {
                 serverHost={serverHost}
                 isStreaming={view.isStreaming}
                 streamingText={view.streamingText}
+                streamingReasoning={view.streamingReasoning}
                 activeStatus={view.activeStatus}
                 statusDetail={view.statusDetail}
                 characterId={characterId}
@@ -278,6 +281,8 @@ export default function ChatScreen() {
                   onInterrupt={() => chat.interrupt(characterId)}
                   suggestionsOpen={replies.isTrayVisible}
                   moodActive={chat.moodOverride !== null}
+                  canThink={canThink}
+                  thinkActive={chat.thinkNext}
                   onAction={(action) => {
                     if (action === "more") setActionsOpen(true);
                     if (action === "lorebook") setMindOpen(true);
@@ -286,6 +291,7 @@ export default function ChatScreen() {
                     if (action === "suggestions") replies.toggle();
                     if (action === "gallery") photos.openSheet();
                     if (action === "mood") setMoodOpen(true);
+                    if (action === "think") chat.toggleThinkNext();
                   }}
                 />
               ) : (

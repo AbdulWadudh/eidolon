@@ -19,6 +19,8 @@ export interface InputDockProps {
   isRecording?: boolean;
   isEnhancing?: boolean;
   revertSteps?: number;
+  canThink?: boolean;
+  thinkActive?: boolean;
   inputRef?: React.RefObject<TextInput | null>;
   onChangeText: (text: string) => void;
   onSend: () => void;
@@ -35,6 +37,8 @@ export function InputDock({
   isRecording = false,
   isEnhancing = false,
   revertSteps = 0,
+  canThink = false,
+  thinkActive = false,
   inputRef,
   onChangeText,
   onSend,
@@ -106,6 +110,8 @@ export function InputDock({
         canEnhance={canSend}
         isEnhancing={isEnhancing}
         revertSteps={revertSteps}
+        canThink={canThink}
+        thinkActive={thinkActive}
         onAction={onAction}
       />
     </GlassSurface>

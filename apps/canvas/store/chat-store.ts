@@ -30,6 +30,7 @@ export const INITIAL_CHAT = {
   messages: [] as ChatMessage[],
   isStreaming: false,
   streamingText: "",
+  streamingReasoning: "",
   streamingIsNarration: false,
   activeStatus: "idle" as ActiveStatus,
   statusDetail: null as string | null,
@@ -38,9 +39,11 @@ export const INITIAL_CHAT = {
   isTrayOpen: false,
   inputText: "",
   moodOverride: null,
+  thinkNext: false,
   replyOptions: null as ReplyOptions | null,
   isRegenerating: false,
   pendingAssistantId: null as string | null,
+  pendingReasoning: null as string | null,
   forkedTo: null as string | null,
   canReply: null as boolean | null,
   enhanceHistory: [] as string[],
@@ -96,6 +99,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   setInputText: (text) => set({ inputText: text }),
   setMoodOverride: (override) => set({ moodOverride: override }),
 
+  toggleThinkNext: () => set((state) => ({ thinkNext: !state.thinkNext })),
+
   enhanceInput: (characterId) => {
     const draft = get().inputText;
     if (draft.trim().length === 0 || get().isEnhancing) return;
@@ -136,12 +141,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     if (trimmed.length === 0) return;
 
     const override = get().moodOverride;
+    const think = get().thinkNext;
     const message = createMessage({ characterId, role: "user", text: trimmed });
     set((state) => ({
       activeCharacterId: characterId,
       messages: [...state.messages, message],
       inputText: "",
       moodOverride: override?.hold ? override : null,
+      thinkNext: false,
       enhanceHistory: [],
       isEnhancing: false,
       suggestions: [],
@@ -149,6 +156,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       isTrayOpen: false,
       isStreaming: true,
       streamingText: "",
+      streamingReasoning: "",
       streamingIsNarration: false,
       activeStatus: "thinking",
       statusDetail: null,
@@ -162,6 +170,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       allow_search: useAffinityStore.getState().allowWebSearch,
       user_timezone: resolveUserTimezone(),
       live_voice: isCallLive(characterId),
+      think,
       ...(override ? { mood: override.mood } : {}),
     });
   },
@@ -230,6 +239,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     set({
       isStreaming: true,
       streamingText: "",
+      streamingReasoning: "",
       streamingIsNarration: false,
       activeStatus: "thinking",
       statusDetail: null,
@@ -280,7 +290,7 @@ export function commitStreamingTurn(): void {
 
   const text = state.streamingText.trim();
   if (text.length === 0) {
-    useChatStore.setState({ isStreaming: false, streamingText: "" });
+    useChatStore.setState({ isStreaming: false, streamingText: "", streamingReasoning: "" });
     return;
   }
 
@@ -291,6 +301,7 @@ export function commitStreamingTurn(): void {
     isNarration: state.streamingIsNarration,
     audioUrl: state.pendingAudio?.audioUrl ?? null,
     audioDuration: state.pendingAudio?.audioDuration ?? null,
+    reasoning: state.pendingReasoning ?? (state.streamingReasoning.trim() || null),
   });
 
   const message = state.pendingAssistantId ? { ...drafted, id: state.pendingAssistantId } : drafted;
@@ -299,9 +310,11 @@ export function commitStreamingTurn(): void {
     messages: [...current.messages, message],
     isStreaming: false,
     streamingText: "",
+    streamingReasoning: "",
     streamingIsNarration: false,
     pendingAudio: null,
     pendingAssistantId: null,
+    pendingReasoning: null,
     isSynthesizingAudio: false,
     autoPlayMessageId:
       message.audioUrl && !isCallLive(current.activeCharacterId)

@@ -5,6 +5,7 @@ import Animated, { useReducedMotion } from "react-native-reanimated";
 import { AudioTabSkeleton } from "@/components/audio/AudioTabSkeleton";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { parseRoleplay, splitTrailingWord } from "@/lib/roleplay";
+import { LiveThinking } from "./LiveThinking";
 import { QuillBead } from "./QuillBead";
 import { RoleplaySegments, segmentClass } from "./RoleplayText";
 
@@ -15,6 +16,7 @@ export interface StreamingMessageCardProps {
   status: string | null;
   characterId?: string;
   isSynthesizingAudio?: boolean;
+  reasoning?: string;
 }
 
 export function StreamingMessageCard({
@@ -22,6 +24,7 @@ export function StreamingMessageCard({
   status,
   characterId,
   isSynthesizingAudio = false,
+  reasoning = "",
 }: StreamingMessageCardProps) {
   const reduced = useReducedMotion();
   const split = React.useMemo(() => splitTrailingWord(parseRoleplay(text)), [text]);
@@ -37,6 +40,10 @@ export function StreamingMessageCard({
         className="w-full rounded-card border border-primary/25 p-3.5"
         style={isSynthesizingAudio ? { borderTopLeftRadius: 0 } : undefined}
       >
+        {reasoning.trim().length > 0 ? (
+          <LiveThinking characterId={characterId} reasoning={reasoning} />
+        ) : null}
+
         {text.length === 0 && status ? (
           <Text
             accessibilityLiveRegion="polite"

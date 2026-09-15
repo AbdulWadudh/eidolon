@@ -199,12 +199,20 @@ export function appendMessage(
   role: "user" | "assistant",
   content: string,
   userId: string,
+  reasoning?: string,
 ): string {
   ensureCharacter(characterId, userId);
 
   return db
     .insert(messages)
-    .values({ characterId, role, content, createdAt: Date.now(), userId })
+    .values({
+      characterId,
+      role,
+      content,
+      createdAt: Date.now(),
+      userId,
+      reasoning: reasoning && reasoning.length > 0 ? reasoning : null,
+    })
     .returning({ id: messages.id })
     .get().id;
 }
@@ -268,6 +276,7 @@ export interface StoredMessage {
   audioUrl: string | null;
   audioDuration: number | null;
   imageUrl: string | null;
+  reasoning: string | null;
   createdAt: number;
 }
 
@@ -280,6 +289,7 @@ export function getTranscript(characterId: string, userId: string, limit: number
       audioUrl: messages.audioUrl,
       audioDuration: messages.audioDuration,
       imageUrl: messages.imageUrl,
+      reasoning: messages.reasoning,
       createdAt: messages.createdAt,
     })
     .from(messages)

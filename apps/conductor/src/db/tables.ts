@@ -63,6 +63,7 @@ export const messages = sqliteTable(
     audioDuration: real("audio_duration"),
     imageUrl: text("image_url"),
     imageCaption: text("image_caption"),
+    reasoning: text(),
     userId: text("user_id"),
   },
   (table) => [

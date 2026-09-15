@@ -1,5 +1,5 @@
 import { API_ROUTES, API_VERSION } from "@eidolon/config";
-import { SQLITE_DB_PATH } from "@eidolon/config/server";
+import { getLlmProfile, SQLITE_DB_PATH } from "@eidolon/config/server";
 import { COLORS } from "@eidolon/tokens";
 import { Hono } from "hono";
 import { mountCharacters } from "@/api/characters";
@@ -45,6 +45,7 @@ import { checkCacheHealth } from "@/services/cache";
 import { checkComfyHealth } from "@/services/comfyui";
 import { checkLanceDbHealth } from "@/services/lancedb";
 import { checkLlmHealth } from "@/services/llm";
+import { canThink } from "@/services/llm-profile";
 import { forgetFace } from "@/services/selfie";
 import { getStorageConfig, isStorageConnected } from "@/services/storage";
 import { checkTranscribeHealth, isTranscriptionConfigured } from "@/services/transcribe";
@@ -91,6 +92,10 @@ export async function buildHealthReport() {
       primary: "duck-duck-scrape",
       hasSerperFallback: !!process.env.SERPER_API_KEY,
       hasExaFallback: !!process.env.EXA_API_KEY,
+    },
+    llm: {
+      profile: getLlmProfile(),
+      canThink: canThink(),
     },
     databaseLocation: SQLITE_DB_PATH,
     themeAccent: COLORS.accentAmber,

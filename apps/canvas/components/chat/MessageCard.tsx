@@ -15,6 +15,7 @@ import { useChatStore } from "@/store/chat-store";
 import { useResolvedTheme } from "@/store/theme-store";
 import { MessageImage } from "./MessageImage";
 import { RoleplayText } from "./RoleplayText";
+import { ThinkingDisclosure } from "./ThinkingDisclosure";
 
 export interface MessageCardProps {
   message: ChatMessage;
@@ -55,6 +56,13 @@ function MessageCardBase({
 
   const [editing, setEditing] = React.useState(false);
   const [draft, setDraft] = React.useState(body);
+
+  const showsThinking = !isUser && !editing && (message.reasoning ?? "").trim().length > 0;
+  const stamp = (
+    <Text className="font-ui text-text-muted text-xs" style={{ fontVariant: ["tabular-nums"] }}>
+      {isUser ? `${message.timestamp} • Delivered` : message.timestamp}
+    </Text>
+  );
 
   const beginEdit = () => {
     setDraft(body);
@@ -149,15 +157,16 @@ function MessageCardBase({
           </View>
         ) : null}
 
-        <View className="mt-2.5 flex-row items-center justify-end gap-1.5">
-          {isUser ? <View className="h-1 w-1 rounded-full bg-success" /> : null}
-          <Text
-            className="font-ui text-xs text-text-muted"
-            style={{ fontVariant: ["tabular-nums"] }}
-          >
-            {isUser ? `${message.timestamp} • Delivered` : message.timestamp}
-          </Text>
-        </View>
+        {showsThinking ? (
+          <ThinkingDisclosure characterId={message.characterId} reasoning={message.reasoning ?? ""}>
+            {stamp}
+          </ThinkingDisclosure>
+        ) : (
+          <View className="mt-2.5 flex-row items-center justify-end gap-1.5">
+            {isUser ? <View className="h-1 w-1 rounded-full bg-success" /> : null}
+            {stamp}
+          </View>
+        )}
       </GlassSurface>
 
       {showsOptions ? (

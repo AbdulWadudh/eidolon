@@ -1,0 +1,14 @@
+{
+  "sortClasses": true,
+  "removeRedundant": true,
+  "detectConflicts": true,
+  "readabilityMode": false,
+  "autoFix": true,
+  "classFunctions": [
+    "clsx",
+    "cn",
+    "cva",
+    "tw"
+  ],
+  "plugins": []
+}

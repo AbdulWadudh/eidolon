@@ -122,6 +122,14 @@ export const OUTPUT_TAGS = {
   visualClose: "</visual_prompt>",
 } as const;
 
+export const REASONING = {
+  openTag: "<think>",
+  closeTag: "</think>",
+  leadHoldChars: 600,
+  showToUser: false,
+  maxStoredChars: 4000,
+} as const;
+
 export const TTS = {
   voice: "af_heart",
   format: "mp3",

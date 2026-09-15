@@ -16,6 +16,7 @@ interface TranscriptRow {
   audioUrl?: string | null;
   audioDuration?: number | null;
   imageUrl?: string | null;
+  reasoning?: string | null;
   createdAt: number;
 }
 
@@ -55,6 +56,7 @@ function toMessage(row: TranscriptRow, characterId: string): ChatMessage {
     audioUrl: row.audioUrl ?? null,
     audioDuration: row.audioDuration ?? null,
     imageUrl: row.imageUrl ?? null,
+    reasoning: row.reasoning ?? null,
     timestamp: formatClockTime(new Date(row.createdAt)),
   };
 }

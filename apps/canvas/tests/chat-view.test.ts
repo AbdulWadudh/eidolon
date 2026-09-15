@@ -12,6 +12,7 @@ function message(characterId: string, index: number) {
     audioUrl: null,
     audioDuration: null,
     imageUrl: null,
+    reasoning: null,
     timestamp: "00:00",
   };
 }

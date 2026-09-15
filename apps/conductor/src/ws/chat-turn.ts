@@ -1,6 +1,6 @@
 import { CHAT_COPY, STATUS_COPY } from "@eidolon/config";
 import { type ChatTurnEvent, splitInfluence } from "@eidolon/protocol";
-import { SUGGESTIONS, TTS } from "@/config";
+import { REASONING, SUGGESTIONS, TTS } from "@/config";
 import { appendMessage, getCharacterCard, getRecentMessages } from "@/db";
 import { forkForUser, getCharacter } from "@/db/characters";
 import { maybeSummarizeChronicle } from "@/orchestrator/chronicle";
@@ -73,7 +73,10 @@ export async function handleChatTurn(
 
   sendServerMessage(ws, {
     type: "status_update",
-    payload: { status: "thinking", detail: STATUS_COPY.thinking.line },
+    payload: {
+      status: "thinking",
+      detail: event.think ? STATUS_COPY.reasoning.line : STATUS_COPY.thinking.line,
+    },
   });
 
   const history = assembled.messages.filter(
@@ -93,20 +96,24 @@ export async function handleChatTurn(
       ...exampleLines(card?.exampleDialogue ?? "", assembled.characterName),
     ],
     assembled.characterName,
-    { onSpeech: voice ? (text) => voice.push(text) : undefined },
+    { onSpeech: voice ? (text) => voice.push(text) : undefined, think: event.think },
   );
 
   if (signal.aborted) return;
 
   const reply = outcome.reply.trim();
+  const keptReasoning = REASONING.showToUser ? outcome.reasoning : "";
   if (options.recordUserTurn !== false) appendMessage(characterId, "user", userText, userId);
   const assistantId =
-    reply.length > 0 ? appendMessage(characterId, "assistant", reply, userId) : null;
+    reply.length > 0 ? appendMessage(characterId, "assistant", reply, userId, keptReasoning) : null;
 
   if (assistantId) {
     sendServerMessage(ws, {
       type: "message_committed",
-      payload: { message_id: assistantId },
+      payload: {
+        message_id: assistantId,
+        ...(keptReasoning.length > 0 ? { reasoning: keptReasoning } : {}),
+      },
     });
   }
 

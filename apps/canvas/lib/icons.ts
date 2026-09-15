@@ -7,6 +7,7 @@ export { default as ArrowRight01Icon } from "@hugeicons/core-free-icons/ArrowRig
 export { default as ArrowUp01Icon } from "@hugeicons/core-free-icons/ArrowUp01Icon";
 export { default as Book02Icon } from "@hugeicons/core-free-icons/Book02Icon";
 export { default as BookOpen01Icon } from "@hugeicons/core-free-icons/BookOpen01Icon";
+export { default as Brain02Icon } from "@hugeicons/core-free-icons/Brain02Icon";
 export { default as Call02Icon } from "@hugeicons/core-free-icons/Call02Icon";
 export { default as CallEnd01Icon } from "@hugeicons/core-free-icons/CallEnd01Icon";
 export { default as Cancel01Icon } from "@hugeicons/core-free-icons/Cancel01Icon";

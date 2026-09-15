@@ -1,4 +1,4 @@
-import { CHAT_COPY, CHAT_MS } from "@eidolon/config";
+import { CHAT_COPY, CHAT_MS, pronounsFor } from "@eidolon/config";
 import * as Haptics from "expo-haptics";
 import { Text, View } from "react-native";
 import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
@@ -9,6 +9,7 @@ import { PressableScale } from "@/components/common/pressable-scale";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { ArrowRight01Icon, Cancel01Icon, RefreshIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import { useAffinityStore } from "@/store/affinity-store";
 import { useResolvedTheme } from "@/store/theme-store";
 
 export interface ReplyOptionsPickerProps {
@@ -34,6 +35,7 @@ export function ReplyOptionsPicker({
 }: ReplyOptionsPickerProps) {
   const theme = useResolvedTheme(characterId);
   const reduced = useReducedMotion();
+  const subject = pronounsFor(useAffinityStore((state) => state.pronouns)).subject;
 
   return (
     <Animated.View
@@ -65,7 +67,7 @@ export function ReplyOptionsPicker({
 
             <PressableScale
               accessibilityRole="button"
-              accessibilityLabel={CHAT_COPY.dismissOptions}
+              accessibilityLabel={CHAT_COPY.dismissOptions(subject)}
               hitSlop={10}
               onPress={onCancel}
               className="h-7 w-7 items-center justify-center rounded-button"

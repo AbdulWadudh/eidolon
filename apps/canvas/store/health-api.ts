@@ -51,3 +51,41 @@ export function useServerCapability(host: string, service: ServiceName): boolean
 
   return usable;
 }
+
+interface ThinkingBody {
+  llm?: { canThink?: unknown };
+}
+
+export async function fetchCanThink(host: string): Promise<boolean> {
+  if (!host) return false;
+
+  try {
+    const response = await fetch(healthUrl(host), {
+      signal: AbortSignal.timeout(TIMEOUTS_MS.clientRequest),
+    });
+    if (!response.ok) return false;
+
+    const body = (await response.json()) as ThinkingBody;
+    return body.llm?.canThink === true;
+  } catch {
+    return false;
+  }
+}
+
+export function useCanThink(host: string): boolean {
+  const [capable, setCapable] = React.useState(false);
+
+  React.useEffect(() => {
+    let live = true;
+
+    void fetchCanThink(host).then((next) => {
+      if (live) setCapable(next);
+    });
+
+    return () => {
+      live = false;
+    };
+  }, [host]);
+
+  return capable;
+}

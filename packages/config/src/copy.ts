@@ -1,5 +1,6 @@
 export const STATUS_COPY = {
   thinking: { label: "Typing", line: "Typing…" },
+  reasoning: { label: "Thinking it over", line: "Thinking it over…" },
   searching: { label: "Looking it up", line: "Checking what's happening out there" },
   painting: { label: "Taking a photo", line: "Capturing the moment" },
   speaking: { label: "Speaking", line: "Saying it out loud" },
@@ -271,7 +272,7 @@ export const CHAT_COPY = {
   anotherReply: "Say something else",
   pickReplacement: "Choose one to replace it",
   rerollOptions: "Reroll",
-  dismissOptions: "Keep what she said",
+  dismissOptions: (subject: string) => `Keep what ${subject} said`,
   noSuggestions: "Nothing came back. Try the reroll.",
   loadingName: "Loading the name",
   speakMessage: "Read it aloud",
@@ -283,6 +284,9 @@ export const CHAT_COPY = {
   editMessage: "Edit this message",
   saveMessage: "Save",
   messageActions: "Message actions",
+  showThinking: (subject: string) => `Show what ${subject} thought`,
+  hideThinking: (subject: string) => `Hide what ${subject} thought`,
+  thinkingTitle: (subject: string) => `Before ${subject} answered`,
 } as const;
 
 export const CONFIRM_COPY = {
@@ -480,12 +484,16 @@ export const ADMIN_COPY = {
   tile: "Admin",
   editAnyLabel: "Edit any message",
   editAnyHint:
-    "Off, only her newest reply can be rewritten. Changing an older one leaves everything she said after it answering something that is no longer there.",
+    "Off, only the newest reply can be rewritten. Changing an older one leaves every reply after it answering something that is no longer there.",
   speakAnyLabel: "Read any message aloud",
-  speakAnyHint: "Shows the speaker on every one of her replies, not just the newest.",
+  speakAnyHint: "Shows the speaker on every reply, not just the newest.",
   momentBackgroundLabel: "Let moments paint the background",
   momentBackgroundHint:
     "On by default, so a moment paints the place behind this chat. Setting a background by hand turns it off and keeps yours. Turn it back on to hand the background to moments again.",
+  showThinkingLabel: "Keep what a character thought",
+  showThinkingHint:
+    "Off, the reasoning behind a reply is read and thrown away. On, it is kept with the reply and each message offers to show it. Only replies sent with reasoning turned on have any.",
+  showThinkingFailed: "That setting did not save. The conductor may be out of reach.",
 } as const;
 
 export const CHARACTER_TASTE_COPY = {

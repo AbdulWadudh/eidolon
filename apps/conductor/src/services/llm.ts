@@ -1,8 +1,9 @@
 import { getServicesConfig } from "@eidolon/config/server";
 import { delay } from "es-toolkit";
 import { EventSourceParserStream } from "eventsource-parser/stream";
-import { TIMEOUTS_MS } from "@/config";
+import { REASONING, TIMEOUTS_MS } from "@/config";
 import { canThink, STOP_TOKENS } from "@/services/llm-profile";
+import { createReasoningFilter, stripReasoning } from "@/services/reasoning";
 import { safeJsonParse } from "@/utils/json";
 
 export interface ChatMessage {
@@ -22,6 +23,7 @@ export interface CompletionOptions {
   allowMockFallback?: boolean;
   responseSchema?: { name: string; schema: unknown };
   think?: boolean;
+  onReasoning?: (chunk: string) => void;
 }
 
 export class LlmUnavailableError extends Error {}
@@ -48,20 +50,51 @@ const MOCK_FALLBACK_TOKENS = [
   " you.",
 ];
 
+async function* withoutReasoning(
+  tokens: AsyncGenerator<string>,
+  holdChars: number,
+  onReasoning?: (chunk: string) => void,
+): AsyncGenerator<string> {
+  const filter = createReasoningFilter(holdChars);
+
+  for await (const token of tokens) {
+    const safe = filter.push(token);
+    if (safe.length > 0) yield safe;
+  }
+
+  const tail = filter.flush();
+  if (tail.length > 0) yield tail;
+
+  const thought = filter.reasoning();
+  if (thought.length > 0) onReasoning?.(thought);
+}
+
+function reasoningHold(options?: CompletionOptions): number {
+  return options?.think === true ? REASONING.leadHoldChars : 0;
+}
+
 export async function* streamChatCompletion(
   messages: ChatMessage[],
   signal?: AbortSignal,
   options?: CompletionOptions,
 ): AsyncGenerator<string> {
   let spoke = false;
-  for await (const token of streamOnce(messages, signal, options)) {
+  for await (const token of withoutReasoning(
+    streamOnce(messages, signal, options),
+    reasoningHold(options),
+    options?.onReasoning,
+  )) {
     spoke = true;
     yield token;
   }
 
   if (!spoke && options?.think === true && !signal?.aborted) {
     console.warn("[LLM] The model thought itself into silence; asking again without it.");
-    yield* streamOnce(messages, signal, { ...options, think: false });
+    yield* withoutReasoning(
+      streamOnce(messages, signal, { ...options, think: false }),
+      0,
+      options?.onReasoning,
+    );
   }
 }
 
@@ -123,10 +156,16 @@ async function* streamOnce(
       if (event.data === "[DONE]") return;
 
       const parsed = safeJsonParse<{
-        choices?: Array<{ delta?: { content?: string } }>;
+        choices?: Array<{ delta?: { content?: string; reasoning_content?: string } }>;
       } | null>(event.data, null);
 
-      const token = parsed?.choices?.[0]?.delta?.content;
+      const delta = parsed?.choices?.[0]?.delta;
+      if (delta?.reasoning_content) {
+        options?.onReasoning?.(delta.reasoning_content);
+        continue;
+      }
+
+      const token = delta?.content;
       if (token) yield token;
     }
   } catch (error) {
@@ -212,5 +251,5 @@ export async function completeText(request: CompletionRequest): Promise<string> 
   }
 
   const body = (await response.json()) as { choices?: Array<{ text?: string }> };
-  return body.choices?.[0]?.text ?? "";
+  return stripReasoning(body.choices?.[0]?.text ?? "");
 }

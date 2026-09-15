@@ -14,6 +14,7 @@ import {
   OUTPUT_TAGS,
   PERSONA_GUARD,
   PRONOUN_SETS,
+  REASONING,
   REPLY_VARIANTS,
   SEARCH,
   SERVER_DEFAULTS,
@@ -243,6 +244,17 @@ export const RUNTIME_GROUPS: ConfigGroup[] = [
     value: OUTPUT_TAGS,
     bucket: "structural",
     reason: REASONS.wireFormat,
+  },
+  {
+    name: "REASONING",
+    source: SOURCE,
+    value: REASONING,
+    bucket: "editable",
+    reason: REASONS.requestRead,
+    leaves: {
+      openTag: { bucket: "structural", reason: REASONS.wireFormat },
+      closeTag: { bucket: "structural", reason: REASONS.wireFormat },
+    },
   },
   {
     name: "PRONOUN_SETS",

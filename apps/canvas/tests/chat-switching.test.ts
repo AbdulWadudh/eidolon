@@ -10,6 +10,7 @@ interface Transcript {
     audioUrl: string | null;
     audioDuration: number | null;
     imageUrl: string | null;
+    reasoning: string | null;
     timestamp: string;
   }>;
   mind: { affinity: number; affinityDelta: number; tier: string; mood: string } | null;
@@ -60,6 +61,7 @@ function transcript(characterId: string, count: number, mood: string): Transcrip
       audioUrl: null,
       audioDuration: null,
       imageUrl: null,
+      reasoning: null,
       timestamp: "00:00",
     })),
     mind: { affinity: count, affinityDelta: 0, tier: characterId, mood },
@@ -130,6 +132,7 @@ describe("reopening the same character", () => {
           audioUrl: null,
           audioDuration: null,
           imageUrl: null,
+          reasoning: null,
           timestamp: "00:00",
         },
       ] as typeof state.messages,

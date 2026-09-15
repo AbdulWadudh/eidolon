@@ -56,6 +56,7 @@ export async function handleVoiceInput(
       allow_search: event.allow_search,
       user_timezone: event.user_timezone,
       live_voice: event.live_voice,
+      think: false,
     },
     signal,
   );

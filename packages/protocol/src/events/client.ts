@@ -7,6 +7,7 @@ export const ChatTurnSchema = z.object({
   allow_search: z.boolean().default(true),
   user_timezone: z.string().default("UTC"),
   live_voice: z.boolean().default(false),
+  think: z.boolean().default(false),
   mood: z.string().optional(),
 });
 

@@ -24,6 +24,7 @@ export interface ChatStore {
   messages: ChatMessage[];
   isStreaming: boolean;
   streamingText: string;
+  streamingReasoning: string;
   streamingIsNarration: boolean;
   activeStatus: ActiveStatus;
   statusDetail: string | null;
@@ -33,9 +34,11 @@ export interface ChatStore {
   areSuggestionsHidden: boolean;
   inputText: string;
   moodOverride: MoodOverride | null;
+  thinkNext: boolean;
   replyOptions: ReplyOptions | null;
   isRegenerating: boolean;
   pendingAssistantId: string | null;
+  pendingReasoning: string | null;
   /** Set when a character someone else owns has been copied for this user mid-conversation. */
   forkedTo: string | null;
   /** Null until the server says; false while only browsing a character someone else owns. */
@@ -54,6 +57,7 @@ export interface ChatStore {
   setSuggestionsHidden: (hidden: boolean) => void;
   setInputText: (text: string) => void;
   setMoodOverride: (override: MoodOverride | null) => void;
+  toggleThinkNext: () => void;
   sendUserMessage: (text: string, characterId: string) => void;
   requestImage: (
     characterId: string,

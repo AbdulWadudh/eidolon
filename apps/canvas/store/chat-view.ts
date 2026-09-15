@@ -18,6 +18,7 @@ export interface ChatView {
   messages: ChatMessage[];
   isStreaming: boolean;
   streamingText: string;
+  streamingReasoning: string;
   streamingIsNarration: boolean;
   activeStatus: ActiveStatus;
   statusDetail: string | null;
@@ -51,6 +52,7 @@ export function projectChat(state: ChatStore, characterId: string): ChatView {
       messages: NO_MESSAGES,
       isStreaming: false,
       streamingText: "",
+      streamingReasoning: "",
       streamingIsNarration: false,
       activeStatus: "idle",
       statusDetail: null,
@@ -81,6 +83,7 @@ export function projectChat(state: ChatStore, characterId: string): ChatView {
     messages: state.messages.filter((message) => message.characterId === characterId),
     isStreaming: state.isStreaming,
     streamingText: state.streamingText,
+    streamingReasoning: state.streamingReasoning,
     streamingIsNarration: state.streamingIsNarration,
     activeStatus: state.activeStatus,
     statusDetail: state.statusDetail,

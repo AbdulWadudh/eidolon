@@ -1,4 +1,4 @@
-import { CHAT, EASING_BEZIER, ENHANCE_COPY, MIND_COPY, UI_MS } from "@eidolon/config";
+import { CHAT, EASING_BEZIER, ENHANCE_COPY, MIND_COPY, STATUS_COPY, UI_MS } from "@eidolon/config";
 import type { IconSvgElement } from "@hugeicons/react-native";
 import { View } from "react-native";
 import Animated, { cubicBezier, FadeIn, FadeOut, useReducedMotion } from "react-native-reanimated";
@@ -7,6 +7,7 @@ import { PressableScale } from "@/components/common/pressable-scale";
 import {
   AddCircleIcon,
   BookOpen01Icon,
+  Brain02Icon,
   FlashIcon,
   Image01Icon,
   MagicWand01Icon,
@@ -17,6 +18,7 @@ import { useResolvedTheme } from "@/store/theme-store";
 
 export type ToolbarAction =
   | "mood"
+  | "think"
   | "gallery"
   | "voice"
   | "lorebook"
@@ -35,6 +37,12 @@ const LEFT_TOOLS: ToolSpec[] = [
   { action: "mood", icon: SmileIcon, label: "Set mood" },
   { action: "gallery", icon: Image01Icon, label: "Request a selfie" },
 ];
+
+const THINK_TOOL: ToolSpec = {
+  action: "think",
+  icon: Brain02Icon,
+  label: STATUS_COPY.reasoning.label,
+};
 
 const RIGHT_TOOLS: ToolSpec[] = [
   { action: "lorebook", icon: BookOpen01Icon, label: MIND_COPY.drawerTitle },
@@ -60,6 +68,8 @@ export interface InputToolbarProps {
   canEnhance?: boolean;
   isEnhancing?: boolean;
   revertSteps?: number;
+  canThink?: boolean;
+  thinkActive?: boolean;
   onAction: (action: ToolbarAction) => void;
 }
 
@@ -118,6 +128,8 @@ export function InputToolbar({
   canEnhance = false,
   isEnhancing = false,
   revertSteps = 0,
+  canThink = false,
+  thinkActive = false,
   onAction,
 }: InputToolbarProps) {
   const theme = useResolvedTheme(characterId);
@@ -126,6 +138,15 @@ export function InputToolbar({
   return (
     <View className="mt-2 flex-row items-center justify-between border-border border-t pt-2">
       <View className="flex-row items-center" style={{ gap: TOOL_GAP }}>
+        {canThink ? (
+          <ToolButton
+            spec={THINK_TOOL}
+            color={theme.textMuted}
+            active={thinkActive}
+            activeColor={theme.primary}
+            onAction={onAction}
+          />
+        ) : null}
         {LEFT_TOOLS.map((spec) => (
           <ToolButton
             key={spec.action}

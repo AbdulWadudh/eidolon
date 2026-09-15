@@ -30,6 +30,13 @@ export const TextDeltaSchema = z.object({
     .optional(),
 });
 
+export const ReasoningDeltaSchema = z.object({
+  type: z.literal("reasoning_delta"),
+  payload: z.object({
+    token: z.string(),
+  }),
+});
+
 export const AudioChunkSchema = z.object({
   type: z.literal("audio_chunk"),
   format: AudioFormatEnum,
@@ -188,6 +195,7 @@ export const MessageCommittedSchema = z.object({
   type: z.literal("message_committed"),
   payload: z.object({
     message_id: z.string(),
+    reasoning: z.string().optional(),
   }),
 });
 
@@ -248,6 +256,7 @@ export const PongSchema = z.object({
 export const ServerMessageSchema = z.discriminatedUnion("type", [
   StatusUpdateSchema,
   TextDeltaSchema,
+  ReasoningDeltaSchema,
   TextReplaceSchema,
   AudioChunkSchema,
   StageShiftSchema,

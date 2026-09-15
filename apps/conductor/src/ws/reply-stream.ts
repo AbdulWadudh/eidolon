@@ -1,8 +1,9 @@
 import { sample } from "es-toolkit";
-import { CHAT_TURN, MIND_UPDATE, PERSONA_GUARD } from "@/config";
+import { CHAT_TURN, MIND_UPDATE, PERSONA_GUARD, REASONING } from "@/config";
 import { stripMindBlock } from "@/orchestrator/mind-block";
+import { clip } from "@/orchestrator/prompt-builder";
 import { type ChatMessage, streamChatCompletion } from "@/services/llm";
-import { PROFILE, placeSystemNote, STOP_TOKENS } from "@/services/llm-profile";
+import { PROFILE, placeSystemNote, STOP_TOKENS, thinkingBudget } from "@/services/llm-profile";
 import { freshLineReminder, hardenedReminder, mustSpeakReminder } from "@/services/persona";
 import { createPersonaFilter, deflection, leaksInstruction } from "@/services/persona-guard";
 import { hasSaidEnough, repeatsHistory, spokenWords } from "@/services/reply-length";
@@ -28,26 +29,29 @@ export function emit(ws: WebSocketSender, text: string, narrating: boolean): voi
 
 interface StreamResult {
   reply: string;
+  reasoning: string;
   mindBlock: string;
   visualPrompt: string;
   tripped: boolean;
   emitted: number;
 }
 
-export interface ReplyHooks {
+export interface ReplyOptions {
   onSpeech?: (text: string) => void;
+  think?: boolean;
 }
 
 async function streamOnce(
   ws: WebSocketSender,
   messages: ChatMessage[],
   signal: AbortSignal,
-  hooks: ReplyHooks = {},
+  options: ReplyOptions = {},
 ): Promise<StreamResult> {
   const filter = createPersonaFilter();
   const mind = createMindTail();
   const tags = createOutputTags();
   const gate = createActionGate();
+  let thought = "";
 
   const stop = [...STOP_TOKENS, ...CHAT_TURN.photoNoteStops, ...CHAT_TURN.userTurnStops];
   let reply = "";
@@ -59,10 +63,20 @@ async function streamOnce(
     topP: PROFILE.sampling.topP,
     minP: PROFILE.sampling.minP,
     repeatPenalty: PROFILE.sampling.repeatPenalty,
-    maxTokens: CHAT_TURN.maxTokens + MIND_UPDATE.extraTokens,
+    maxTokens:
+      options.think === true
+        ? thinkingBudget(CHAT_TURN.maxTokens) + MIND_UPDATE.extraTokens
+        : CHAT_TURN.maxTokens + MIND_UPDATE.extraTokens,
     presencePenalty: PROFILE.sampling.presencePenalty,
     frequencyPenalty: PROFILE.sampling.frequencyPenalty,
     stop,
+    think: options.think === true,
+    onReasoning: (chunk) => {
+      thought += chunk;
+      if (REASONING.showToUser) {
+        sendServerMessage(ws, { type: "reasoning_delta", payload: { token: chunk } });
+      }
+    },
   })) {
     if (signal.aborted) break;
 
@@ -87,7 +101,7 @@ async function streamOnce(
     if (visible.length > 0) {
       reply += visible;
       emit(ws, visible, isActionChunk(visible));
-      hooks.onSpeech?.(visible);
+      options.onSpeech?.(visible);
     }
 
     if (breakAt >= 0 || hasSaidEnough(reply)) said = true;
@@ -98,11 +112,12 @@ async function streamOnce(
   if (tail.length > 0 && !said) {
     reply += tail;
     emit(ws, tail, isActionChunk(tail));
-    hooks.onSpeech?.(tail);
+    options.onSpeech?.(tail);
   }
 
   return {
     reply,
+    reasoning: clip(thought.trim(), REASONING.maxStoredChars),
     mindBlock: mind.captured(),
     visualPrompt: tags.visualPrompt(),
     tripped: filter.tripped(),
@@ -150,6 +165,7 @@ async function sayItOutLoud(
 
 export interface ReplyOutcome {
   reply: string;
+  reasoning: string;
   mindBlock: string;
   visualPrompt: string;
 }
@@ -160,9 +176,9 @@ export async function streamReply(
   signal: AbortSignal,
   said: string[] = [],
   characterName = "",
-  hooks: ReplyHooks = {},
+  options: ReplyOptions = {},
 ): Promise<ReplyOutcome> {
-  let result = await streamOnce(ws, messages, signal, hooks);
+  let result = await streamOnce(ws, messages, signal, options);
 
   for (
     let retry = 0;
@@ -172,17 +188,23 @@ export async function streamReply(
     if (signal.aborted)
       return {
         reply: result.reply,
+        reasoning: result.reasoning,
         mindBlock: result.mindBlock,
         visualPrompt: result.visualPrompt,
       };
-    result = await streamOnce(ws, placeSystemNote(messages, hardenedReminder()), signal, hooks);
+    result = await streamOnce(ws, placeSystemNote(messages, hardenedReminder()), signal, options);
   }
 
   if (result.tripped && result.emitted === 0) {
     const line = deflection();
     emit(ws, line, false);
-    hooks.onSpeech?.(line);
-    return { reply: line, mindBlock: "", visualPrompt: result.visualPrompt };
+    options.onSpeech?.(line);
+    return {
+      reply: line,
+      reasoning: result.reasoning,
+      mindBlock: "",
+      visualPrompt: result.visualPrompt,
+    };
   }
 
   if (repeatsHistory(result.reply, said) && !signal.aborted) {
@@ -201,9 +223,10 @@ export async function streamReply(
     const line = await sayItOutLoud(messages, result.reply, signal);
     const spacer = result.reply.trim().length > 0 ? " " : "";
     emit(ws, `${spacer}${line}`, false);
-    hooks.onSpeech?.(`${spacer}${line}`);
+    options.onSpeech?.(`${spacer}${line}`);
     return {
       reply: `${result.reply}${spacer}${line}`.trim(),
+      reasoning: result.reasoning,
       mindBlock: result.mindBlock,
       visualPrompt: result.visualPrompt,
     };
@@ -213,7 +236,12 @@ export async function streamReply(
     if (narratesInThirdPerson(result.reply, characterName)) {
       const spoken = await sayItOutLoud(messages, "", signal);
       sendServerMessage(ws, { type: "text_replace", payload: { text: spoken } });
-      return { reply: spoken, mindBlock: result.mindBlock, visualPrompt: result.visualPrompt };
+      return {
+        reply: spoken,
+        reasoning: result.reasoning,
+        mindBlock: result.mindBlock,
+        visualPrompt: result.visualPrompt,
+      };
     }
 
     const unlabelled = stripSpeakerLabel(result.reply, characterName);
@@ -232,11 +260,17 @@ export async function streamReply(
   if (leaksInstruction(result.reply)) {
     const line = sample(PERSONA_GUARD.spokenFallbacks);
     sendServerMessage(ws, { type: "text_replace", payload: { text: line } });
-    return { reply: line, mindBlock: result.mindBlock, visualPrompt: result.visualPrompt };
+    return {
+      reply: line,
+      reasoning: result.reasoning,
+      mindBlock: result.mindBlock,
+      visualPrompt: result.visualPrompt,
+    };
   }
 
   return {
     reply: result.reply,
+    reasoning: result.reasoning,
     mindBlock: result.mindBlock,
     visualPrompt: result.visualPrompt,
   };

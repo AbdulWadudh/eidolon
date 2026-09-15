@@ -69,6 +69,7 @@ export async function handleRegenerateReply(
       allow_search: event.allow_search,
       user_timezone: event.user_timezone,
       live_voice: false,
+      think: false,
       mood: event.mood,
     },
     signal,

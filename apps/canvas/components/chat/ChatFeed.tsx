@@ -23,6 +23,7 @@ export interface ChatFeedProps {
   serverHost: string;
   isStreaming: boolean;
   streamingText: string;
+  streamingReasoning: string;
   activeStatus: string;
   statusDetail: string | null;
   characterId: string;
@@ -51,6 +52,7 @@ export function ChatFeed({
   isStreaming,
   serverHost,
   streamingText,
+  streamingReasoning,
   activeStatus,
   statusDetail,
   characterId,
@@ -203,6 +205,7 @@ export function ChatFeed({
         status={statusDetail ?? STATUS_LINE[activeStatus] ?? null}
         characterId={characterId}
         isSynthesizingAudio={isSynthesizingAudio}
+        reasoning={streamingReasoning}
       />
     );
   }, [
@@ -211,6 +214,7 @@ export function ChatFeed({
     paintingTotal,
     isStreaming,
     streamingText,
+    streamingReasoning,
     statusDetail,
     activeStatus,
     characterId,

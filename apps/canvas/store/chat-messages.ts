@@ -15,6 +15,7 @@ export interface ChatMessage {
   audioUrl: string | null;
   audioDuration: number | null;
   imageUrl: string | null;
+  reasoning: string | null;
   timestamp: string;
 }
 
@@ -34,6 +35,7 @@ export interface NewMessage {
   audioUrl?: string | null;
   audioDuration?: number | null;
   imageUrl?: string | null;
+  reasoning?: string | null;
 }
 
 let sequence = 0;
@@ -61,6 +63,7 @@ export function createMessage(input: NewMessage): ChatMessage {
     audioUrl: input.audioUrl ?? null,
     audioDuration: input.audioDuration ?? null,
     imageUrl: input.imageUrl ?? null,
+    reasoning: input.reasoning ?? null,
     timestamp: formatClockTime(),
   };
 }
