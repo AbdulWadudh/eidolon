@@ -40,6 +40,12 @@ describe("the prompt", () => {
     expect(prompt.trimEnd().endsWith("Write the Tagline:")).toBe(true);
   });
 
+  it("hands the model the space after the colon, so it answers on the same line", () => {
+    for (const field of ["outfit", "place", "photo", "portrait", "tagline", "name"] as const) {
+      expect(buildAuthorPrompt(field, "suggest", "", "")).toMatch(/: $/);
+    }
+  });
+
   it("shows the draft only when rewriting", () => {
     expect(buildAuthorPrompt("tagline", "suggest", "a draft", "")).not.toContain("a draft");
     expect(buildAuthorPrompt("tagline", "enhance", "a draft", "")).toContain("a draft");

@@ -128,7 +128,7 @@ export function buildAuthorPrompt(
   parts.push("", `Field: ${spec.label}`, `Shape: ${spec.guidance}`);
   if (mode === "enhance") parts.push(`${AUTHORING.draftLabel} ${draft}`);
 
-  parts.push(`${AUTHORING.writeLabel} ${spec.label}:`);
+  parts.push(`${AUTHORING.writeLabel} ${spec.label}: `);
   return parts.join(NEWLINE);
 }
 
