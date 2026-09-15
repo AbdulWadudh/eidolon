@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { createCharacter, setPublic } from "@/db/characters";
+import { adopt, createCharacter, setPublic } from "@/db/characters";
 import { getLoreEntries, upsertLoreEntry } from "@/db/lorebook";
+import { characterHome } from "@/db/owner";
 import { app } from "@/index";
 import { AUTHED, BASE, remember, wipe } from "./support/characters";
 import { TEST_OWNER_ID } from "./support/session";
@@ -85,5 +86,26 @@ describe("changing a character somebody else wrote", () => {
 
     expect(removed.status).toBe(200);
     expect(getLoreEntries(mine.id)).toHaveLength(0);
+  });
+});
+
+describe("where a character's media is filed after she changes hands", () => {
+  it("stops answering with the old owner the moment she is claimed", () => {
+    const loose = remember(createCharacter({ name: "Guard Unowned" }));
+
+    expect(characterHome(loose.id)).toBe("unowned");
+    adopt(loose.id, TEST_OWNER_ID);
+
+    expect(characterHome(loose.id)).not.toBe("unowned");
+  });
+
+  it("moves her to the shared prefix the moment she is published", () => {
+    const mine = remember(createCharacter({ name: "Guard Published", ownerId: TEST_OWNER_ID }));
+
+    const before = characterHome(mine.id);
+    setPublic(mine.id, true);
+
+    expect(before).not.toBe("public");
+    expect(characterHome(mine.id)).toBe("public");
   });
 });

@@ -4,6 +4,7 @@ import { alias } from "drizzle-orm/sqlite-core";
 import { VOICE } from "@/config";
 import { countMessages, db, getCharacterMind } from "@/db";
 import { getLoreEntries, upsertLoreEntry } from "@/db/lorebook";
+import { forgetOwnerEmail } from "@/db/owner";
 import { characterState, characters, chronicles, messages, stages } from "@/db/tables";
 import { safeJsonParse } from "@/utils/json";
 
@@ -247,14 +248,21 @@ export function ownsCharacter(id: string, ownerId: string): boolean {
 export function updateCharacterOwner(id: string, ownerId: string): CharacterCard | null {
   if (!characterExists(id)) return null;
   db.update(characters).set({ ownerId }).where(eq(characters.id, id)).run();
+  forgetOwnerEmail(id);
+
   return getCharacter(id);
 }
 
+// Anything that changes who a character belongs to, or whether she is shared, changes
+// where her media is filed — so the answer is forgotten here rather than at each
+// caller, where it was already missed once.
 export function adopt(id: string, ownerId: string): void {
   db.update(characters)
     .set({ ownerId })
     .where(and(eq(characters.id, id), isNull(characters.ownerId)))
     .run();
+
+  forgetOwnerEmail(id);
 }
 
 export function setPublic(id: string, isPublic: boolean): CharacterCard | null {
@@ -263,6 +271,8 @@ export function setPublic(id: string, isPublic: boolean): CharacterCard | null {
     .set({ isPublic: isPublic ? 1 : 0 })
     .where(eq(characters.id, id))
     .run();
+  forgetOwnerEmail(id);
+
   return getCharacter(id);
 }
 

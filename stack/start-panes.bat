@@ -6,6 +6,8 @@ for %%i in ("%~dp0.") do set "HERE=%%~fi"
 
 call "%HERE%\_env.bat" || (pause & exit /b 1)
 
+for %%P in (8080 8082 8188 8880) do for /f "tokens=5" %%A in ('netstat -ano -p tcp ^| find ":%%P" ^| find "LISTENING"') do taskkill /PID %%A /F >nul 2>&1
+
 call "%HERE%\_wt.bat"
 if not exist "%WT_EXE%" (
   echo Windows Terminal ^(wt.exe^) not found. Falling back to separate windows.
