@@ -1,4 +1,4 @@
-import { STATUS_COPY } from "@eidolon/config";
+import { CHAT_COPY, STATUS_COPY } from "@eidolon/config";
 import { type ChatTurnEvent, splitInfluence } from "@eidolon/protocol";
 import { SUGGESTIONS, TTS } from "@/config";
 import { appendMessage, getCharacterCard, getRecentMessages } from "@/db";
@@ -29,6 +29,18 @@ export async function handleChatTurn(
   signal: AbortSignal,
   options: { recordUserTurn?: boolean } = {},
 ): Promise<void> {
+  // An id nobody recognises used to be taken as an instruction to invent a character,
+  // back when ids were written by hand. They are minted now, so an unknown one is a
+  // stale client or a bad actor, and inventing a character named after a uuid for it
+  // helps neither.
+  if (!getCharacter(event.character_id)) {
+    sendServerMessage(ws, {
+      type: "error",
+      payload: { code: "NO_SUCH_CHARACTER", message: CHAT_COPY.noSuchCharacter },
+    });
+    return;
+  }
+
   const owned = forkForUser(event.character_id, userId);
   if (owned) {
     sendServerMessage(ws, {

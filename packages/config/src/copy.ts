@@ -265,6 +265,7 @@ export const MOOD_COPY = {
 } as const;
 
 export const CHAT_COPY = {
+  noSuchCharacter: "That character is not here any more.",
   nothingToRegenerate: "There is no reply to write again yet.",
   regenerate: "Write it again",
   anotherReply: "Say something else",

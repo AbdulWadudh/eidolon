@@ -19,9 +19,10 @@ describe("naming a new character", () => {
   it("mints an id with nothing of the name in it", () => {
     const created = remember(createCharacter({ name: "Ada Lovelace" }));
 
-    expect(created.id).not.toInclude("ada");
-    expect(created.id).not.toInclude("lovelace");
-    expect(created.id).toMatch(/^[0-9a-f-]{36}$/);
+    // A uuid is hex, so it can spell a short word by chance — what matters is that the
+    // name was never turned into the id.
+    expect(created.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+    expect(created.id).not.toBe("ada-lovelace");
   });
 
   it("gives two characters of the same name ids of their own", () => {
@@ -38,8 +39,8 @@ describe("naming a new character", () => {
     updateCharacter(created.id, { name: "Bea Ravenna" });
 
     expect(portraitKey(created.id, "portrait.webp")).toBe(key);
-    expect(key).not.toInclude("ada");
-    expect(key).not.toInclude("bea");
+    expect(key).not.toInclude("ada-lovelace");
+    expect(key).not.toInclude("bea-ravenna");
   });
 });
 

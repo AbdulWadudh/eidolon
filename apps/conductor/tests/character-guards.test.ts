@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { adopt, createCharacter, setPublic } from "@/db/characters";
+import { adopt, createCharacter, listCharacters, setPublic } from "@/db/characters";
 import { getLoreEntries, upsertLoreEntry } from "@/db/lorebook";
 import { characterHome } from "@/db/owner";
 import { app } from "@/index";
@@ -107,5 +107,22 @@ describe("where a character's media is filed after she changes hands", () => {
 
     expect(before).not.toBe("public");
     expect(characterHome(mine.id)).toBe("public");
+  });
+});
+
+describe("an id nobody recognises", () => {
+  it("is not taken as an instruction to invent a character", async () => {
+    const before = listCharacters().length;
+
+    const res = await app.request(`${BASE}/9eb1482d-0000-0000-0000-000000000000/messages`, {
+      headers: AUTHED,
+    });
+
+    expect(res.status).toBe(404);
+    expect(listCharacters()).toHaveLength(before);
+  });
+
+  it("never leaves a character named after a uuid behind", () => {
+    expect(listCharacters().filter((c) => /^[0-9a-f-]{36}$/i.test(c.name))).toHaveLength(0);
   });
 });

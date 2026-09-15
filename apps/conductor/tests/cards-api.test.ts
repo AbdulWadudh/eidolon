@@ -35,7 +35,9 @@ describe("POST /characters/import", () => {
 
     expect(response.status).toBe(201);
     expect(body.success).toBe(true);
-    expect(body.characterId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(body.characterId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+    );
     expect(getCharacter(body.characterId ?? "")?.name).toBe(V2_CARD.data.name);
   });
 

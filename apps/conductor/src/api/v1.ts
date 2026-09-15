@@ -171,6 +171,7 @@ v1.get(`${API_ROUTES.characters}/:id/messages`, (c) => {
   const userId = c.get("user").id;
   const requested = c.req.param("id");
   const source = getCharacter(requested);
+  if (!source) return c.json({ error: "No such character." }, 404);
 
   // A character someone else owns is browsed, not joined, until the user says they want
   // to talk to her. Once they have, they have a copy of their own and belong on it.

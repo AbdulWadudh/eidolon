@@ -1,15 +1,18 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { apiPath } from "@eidolon/config";
 import { parseServerMessage, type ServerMessage } from "@eidolon/protocol";
+import { ensureCharacter } from "@/db";
 import { app } from "@/index";
 import { websocket } from "@/ws";
-import { TEST_TOKEN } from "./support/session";
+import { TEST_OWNER_ID, TEST_TOKEN } from "./support/session";
 
 describe("Conductor WebSocket Router", () => {
   let server: ReturnType<typeof Bun.serve>;
   let wsUrl: string;
 
   beforeAll(() => {
+    // The character has to exist now: an unknown id is refused rather than conjured.
+    ensureCharacter("char-123", TEST_OWNER_ID);
     server = Bun.serve({
       port: 0,
       fetch: app.fetch,

@@ -38,7 +38,8 @@ export interface AdminCharacterEditorProps {
   onChange: (patch: Partial<Draft>) => void;
   onPublish: (isPublic: boolean) => void;
   onPortrait: (url: string) => void;
-  onReload?: () => void;
+  /** Told when the owner changes, so the row does not sit on stale data. */
+  onReload: () => void;
 }
 
 export function AdminCharacterEditor({

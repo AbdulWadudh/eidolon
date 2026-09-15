@@ -94,12 +94,20 @@ describe("Persistent OS data paths", () => {
   });
 
   it("matches the platform convention", () => {
-    const dataDir = getPersistentDataDir().replaceAll("\\", "/");
+    // The suite runs against a scratch data dir, so the default has to be asked for.
+    const previous = process.env.EIDOLON_DATA_DIR;
+    setEnv("EIDOLON_DATA_DIR", undefined);
 
-    if (process.platform === "win32") {
-      expect(dataDir).toEndWith("/eidolon/data");
-    } else {
-      expect(dataDir).toEndWith("/.eidolon/data");
+    try {
+      const dataDir = getPersistentDataDir().replaceAll("\\", "/");
+
+      if (process.platform === "win32") {
+        expect(dataDir).toEndWith("/eidolon/data");
+      } else {
+        expect(dataDir).toEndWith("/.eidolon/data");
+      }
+    } finally {
+      setEnv("EIDOLON_DATA_DIR", previous);
     }
   });
 });
