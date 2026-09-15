@@ -18,13 +18,16 @@ export async function handlePhotoIdeas(
   characterId: string,
   isEditing: boolean,
   signal: AbortSignal,
+  exclude: string[] = [],
 ): Promise<void> {
   const card = getCharacterCard(characterId, userId);
   const ideas = await generatePhotoIdeas(
     card.name,
+    card.personality,
     formatPhotoScene(getRecentMessages(characterId, userId), card.name),
     signal,
     isEditing,
+    exclude,
   );
   if (signal.aborted) return;
   sendServerMessage(ws, { type: "photo_ideas", payload: { ideas } });

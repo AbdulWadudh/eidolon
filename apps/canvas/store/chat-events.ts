@@ -29,6 +29,14 @@ export function reduceServerMessage(
       break;
     }
 
+    case "text_replace": {
+      const replacement = msg.payload?.text ?? msg.text;
+      if (typeof replacement === "string") {
+        set({ streamingText: replacement });
+      }
+      break;
+    }
+
     case "reasoning_delta": {
       set((state) => ({ streamingReasoning: state.streamingReasoning + msg.payload.token }));
       break;
@@ -154,12 +162,15 @@ export function reduceServerMessage(
           paintingTotal: 0,
           messages: [
             ...state.messages,
-            createMessage({
-              characterId: state.activeCharacterId,
-              role: "assistant",
-              text: source.caption ?? "",
-              imageUrl: source.image_url,
-            }),
+            {
+              ...createMessage({
+                characterId: state.activeCharacterId,
+                role: "assistant",
+                text: source.caption ?? "",
+                imageUrl: source.image_url,
+              }),
+              ...(source.message_id ? { id: source.message_id } : {}),
+            },
           ],
         };
       });
@@ -186,23 +197,27 @@ export function reduceServerMessage(
       if (!attachment) break;
 
       const target = msg.payload?.message_id ?? msg.message_id;
-      if (target) {
-        set((state) => ({
-          messages: attachAudioToMessage(state.messages, target, attachment),
-          isSynthesizingAudio: false,
-          autoPlayMessageId: attachment.audioUrl ? target : state.autoPlayMessageId,
-        }));
-        break;
-      }
 
-      set((state) =>
-        state.isStreaming
-          ? { pendingAudio: attachment, isSynthesizingAudio: false }
-          : {
-              messages: attachAudioToLastAssistant(state.messages, attachment),
-              isSynthesizingAudio: false,
-            },
-      );
+      set((state) => {
+        const landed = target ? state.messages.some((m) => m.id === target) : false;
+
+        if (target && landed) {
+          return {
+            messages: attachAudioToMessage(state.messages, target, attachment),
+            isSynthesizingAudio: false,
+            autoPlayMessageId: attachment.audioUrl ? target : state.autoPlayMessageId,
+          };
+        }
+
+        if (state.isStreaming || (target !== undefined && !landed)) {
+          return { pendingAudio: attachment, isSynthesizingAudio: false };
+        }
+
+        return {
+          messages: attachAudioToLastAssistant(state.messages, attachment),
+          isSynthesizingAudio: false,
+        };
+      });
       break;
     }
 
@@ -229,6 +244,7 @@ export function reduceServerMessage(
       set({
         pendingAssistantId: msg.payload.message_id,
         pendingReasoning: msg.payload.reasoning ?? null,
+        pendingText: msg.payload.text ?? null,
       });
       break;
     }

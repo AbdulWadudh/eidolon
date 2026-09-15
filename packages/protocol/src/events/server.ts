@@ -137,12 +137,14 @@ export const ImageReadySchema = z.object({
   aspect_ratio: ImageAspectRatioEnum,
   prompt_used: z.string(),
   caption: z.string().optional(),
+  message_id: z.string().optional(),
   payload: z
     .object({
       image_url: z.string().url(),
       aspect_ratio: ImageAspectRatioEnum,
       prompt_used: z.string(),
       caption: z.string().optional(),
+      message_id: z.string().optional(),
     })
     .optional(),
 });
@@ -195,6 +197,7 @@ export const MessageCommittedSchema = z.object({
   type: z.literal("message_committed"),
   payload: z.object({
     message_id: z.string(),
+    text: z.string().optional(),
     reasoning: z.string().optional(),
   }),
 });

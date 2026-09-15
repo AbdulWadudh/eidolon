@@ -44,6 +44,7 @@ export const INITIAL_CHAT = {
   isRegenerating: false,
   pendingAssistantId: null as string | null,
   pendingReasoning: null as string | null,
+  pendingText: null as string | null,
   forkedTo: null as string | null,
   canReply: null as boolean | null,
   enhanceHistory: [] as string[],
@@ -195,8 +196,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   requestPhotoIdeas: (characterId, isEditing = false) => {
+    const shown = get().photoIdeas;
     set({ areIdeasLoading: true, photoIdeas: [] });
-    sendMessage({ type: "request_photo_ideas", character_id: characterId, editing: isEditing });
+    sendMessage({
+      type: "request_photo_ideas",
+      character_id: characterId,
+      editing: isEditing,
+      exclude: shown,
+    });
   },
 
   clearArrival: () => set({ arrivedAt: null }),
@@ -209,11 +216,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     const lastMessageId =
       findLastAssistantId(get().messages) ?? last(get().messages)?.id ?? NEW_CHAT_ANCHOR;
 
+    const shown = get().suggestions;
     set({ isSuggestionsLoading: true, isTrayOpen: true });
     sendMessage({
       type: "regenerate_suggestions",
       character_id: characterId,
       last_message_id: lastMessageId,
+      exclude: shown,
     });
   },
 
@@ -288,9 +297,14 @@ export function commitStreamingTurn(): void {
   const state = useChatStore.getState();
   if (!state.isStreaming && state.streamingText.length === 0) return;
 
-  const text = state.streamingText.trim();
+  const text = (state.pendingText ?? state.streamingText).trim();
   if (text.length === 0) {
-    useChatStore.setState({ isStreaming: false, streamingText: "", streamingReasoning: "" });
+    useChatStore.setState({
+      isStreaming: false,
+      streamingText: "",
+      streamingReasoning: "",
+      pendingText: null,
+    });
     return;
   }
 
@@ -315,6 +329,7 @@ export function commitStreamingTurn(): void {
     pendingAudio: null,
     pendingAssistantId: null,
     pendingReasoning: null,
+    pendingText: null,
     isSynthesizingAudio: false,
     autoPlayMessageId:
       message.audioUrl && !isCallLive(current.activeCharacterId)

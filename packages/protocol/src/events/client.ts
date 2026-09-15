@@ -28,12 +28,14 @@ export const RequestPhotoIdeasSchema = z.object({
   type: z.literal("request_photo_ideas"),
   character_id: z.string().min(1, "character_id cannot be empty"),
   editing: z.boolean().optional(),
+  exclude: z.array(z.string()).default([]),
 });
 
 export const RegenerateSuggestionsSchema = z.object({
   type: z.literal("regenerate_suggestions"),
   character_id: z.string().min(1, "character_id cannot be empty"),
   last_message_id: z.string().min(1, "last_message_id cannot be empty"),
+  exclude: z.array(z.string()).default([]),
 });
 
 export const ReplyVariantsSchema = z.object({

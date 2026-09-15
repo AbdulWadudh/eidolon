@@ -125,3 +125,44 @@ describe("thinking streams in while she is still writing", () => {
     expect(useChatStore.getState().streamingReasoning).toBe("");
   });
 });
+
+function committedWith(id: string, text: string): ServerMessage {
+  return { type: "message_committed", payload: { message_id: id, text } };
+}
+
+function replace(text: string): ServerMessage {
+  return { type: "text_replace", text, payload: { text } };
+}
+
+describe("the bubble shows what the conductor actually stored", () => {
+  it("takes the committed text over the streamed text", () => {
+    useChatStore.getState().sendUserMessage("you ok?", "emma");
+    feed(delta("Emma: No. "), delta("Long day."), committedWith("m1", "No. Long day."), IDLE);
+
+    expect(useChatStore.getState().messages.at(-1)?.text).toBe("No. Long day.");
+  });
+
+  it("applies a correction the conductor makes mid-stream", () => {
+    useChatStore.getState().sendUserMessage("you ok?", "emma");
+    feed(delta("*shrugs*"), replace("*shrugs* Fine, mostly."));
+
+    expect(useChatStore.getState().streamingText).toBe("*shrugs* Fine, mostly.");
+  });
+
+  it("falls back to the streamed text when none is committed", () => {
+    useChatStore.getState().sendUserMessage("you ok?", "emma");
+    feed(delta("Long day."), committed("m2"), IDLE);
+
+    expect(useChatStore.getState().messages.at(-1)?.text).toBe("Long day.");
+  });
+
+  it("does not carry one turn's committed text onto the next", () => {
+    useChatStore.getState().sendUserMessage("first", "emma");
+    feed(delta("One."), committedWith("m3", "Corrected one."), IDLE);
+
+    useChatStore.getState().sendUserMessage("second", "emma");
+    feed(delta("Two."), committed("m4"), IDLE);
+
+    expect(useChatStore.getState().messages.at(-1)?.text).toBe("Two.");
+  });
+});

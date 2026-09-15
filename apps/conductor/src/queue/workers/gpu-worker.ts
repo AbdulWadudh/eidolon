@@ -167,6 +167,7 @@ async function renderChatPhoto(job: Job<ChatPhotoJob>, data: ChatPhotoJob): Prom
         aspect_ratio: ASPECT_FOR[selfie.orientation],
         prompt_used: selfie.promptUsed,
         caption: selfie.message.trim(),
+        message_id: messageId,
       },
     });
     say({ type: "status_update", payload: { status: "idle" } });

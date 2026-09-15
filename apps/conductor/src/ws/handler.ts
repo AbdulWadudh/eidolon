@@ -113,6 +113,7 @@ export async function handleClientMessage(
         userId,
         clientMsg.character_id,
         sessionManager.getAbortSignal(ws),
+        clientMsg.exclude,
       );
       break;
     }
@@ -146,6 +147,7 @@ export async function handleClientMessage(
         clientMsg.character_id,
         clientMsg.editing === true,
         sessionManager.getAbortSignal(ws),
+        clientMsg.exclude,
       );
       break;
     }

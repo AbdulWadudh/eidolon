@@ -169,6 +169,14 @@ export function firstLine(raw: string): string {
   return cleanLine(line.replace(SPEAKER_PREFIX, ""));
 }
 
+function avoidNote(lines: string[]): string {
+  const offered = lines.filter((line) => line.trim().length > 0);
+  if (offered.length === 0) return "";
+  return render(getPrompt("suggestions.avoid"), {
+    lines: offered.map((line) => `- ${line}`).join("\n"),
+  });
+}
+
 async function generateOne(
   scene: string,
   intent: string,
@@ -187,6 +195,7 @@ async function generateOne(
         character: context.characterName,
         tier: context.tier,
         user: context.user ?? "",
+        avoid: avoidNote(context.exclude ?? []),
       }),
     },
   ];
@@ -214,6 +223,7 @@ export interface SuggestionContext {
   characterName: string;
   tier: string;
   user?: string;
+  exclude?: string[];
 }
 
 export async function generateReplySuggestions(

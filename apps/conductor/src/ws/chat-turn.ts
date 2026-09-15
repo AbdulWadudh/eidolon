@@ -1,4 +1,4 @@
-import { CHAT_COPY, STATUS_COPY } from "@eidolon/config";
+import { CHAT_COPY, render, STATUS_COPY } from "@eidolon/config";
 import { type ChatTurnEvent, splitInfluence } from "@eidolon/protocol";
 import { REASONING, SUGGESTIONS, TTS } from "@/config";
 import { appendMessage, getCharacterCard, getRecentMessages } from "@/db";
@@ -9,7 +9,9 @@ import { scheduleProactiveFollowUp } from "@/orchestrator/proactive";
 import { assemblePrompt } from "@/orchestrator/prompt-builder";
 import { settleMind } from "@/orchestrator/turn-mind";
 import { userVoice } from "@/orchestrator/user";
+import { getPrompt } from "@/prompts/store";
 import type { ChatMessage } from "@/services/llm";
+import { placeSystemNote } from "@/services/llm-profile";
 import { forHistory } from "@/services/photo-line";
 import { exampleLines } from "@/services/self-reference";
 import { fallbackSuggestions, formatScene, generateReplySuggestions } from "@/services/suggestions";
@@ -27,7 +29,7 @@ export async function handleChatTurn(
   userId: string,
   event: ChatTurnEvent,
   signal: AbortSignal,
-  options: { recordUserTurn?: boolean } = {},
+  options: { recordUserTurn?: boolean; avoid?: string } = {},
 ): Promise<void> {
   // An id nobody recognises used to be taken as an instruction to invent a character,
   // back when ids were written by hand. They are minted now, so an unknown one is a
@@ -87,9 +89,18 @@ export async function handleChatTurn(
   const voiceId = card?.voice ?? TTS.voice;
   const voice = event.live_voice ? createVoiceStream(ws, { characterId, voiceId, signal }) : null;
 
+  const avoidLast = (options.avoid ?? "").trim();
+  const turnMessages =
+    avoidLast.length > 0
+      ? placeSystemNote(
+          assembled.messages,
+          render(getPrompt("persona.avoidLast"), { reply: avoidLast }),
+        )
+      : assembled.messages;
+
   const outcome = await streamReply(
     ws,
-    assembled.messages,
+    turnMessages,
     signal,
     [
       ...history.map((entry) => entry.content),
@@ -112,6 +123,7 @@ export async function handleChatTurn(
       type: "message_committed",
       payload: {
         message_id: assistantId,
+        text: reply,
         ...(keptReasoning.length > 0 ? { reasoning: keptReasoning } : {}),
       },
     });
@@ -171,6 +183,7 @@ export async function handleChatTurn(
         url: note.url ?? undefined,
         duration: note.durationSeconds ?? undefined,
         sentence_index: 0,
+        ...(assistantId ? { message_id: assistantId } : {}),
       },
     });
   }
@@ -198,6 +211,7 @@ export async function handleRegenerateSuggestions(
   userId: string,
   characterId: string,
   signal: AbortSignal,
+  exclude: string[] = [],
 ): Promise<void> {
   const card = getCharacterCard(characterId, userId);
   const recent = getRecentMessages(characterId, userId, SUGGESTIONS.sceneTurns)
@@ -215,6 +229,7 @@ export async function handleRegenerateSuggestions(
             characterName: card.name,
             tier: card.tier,
             user: userVoice(characterId, userId),
+            exclude,
           },
           signal,
         )

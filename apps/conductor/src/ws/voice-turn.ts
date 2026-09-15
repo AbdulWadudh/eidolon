@@ -87,6 +87,7 @@ export function createVoiceStream(
           duration: mp3DurationSeconds(merged) ?? undefined,
           sentence_index: 0,
           live: false,
+          ...(messageId ? { message_id: messageId } : {}),
         },
       });
 

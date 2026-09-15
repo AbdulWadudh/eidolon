@@ -218,6 +218,10 @@ export interface CompletionRequest {
 
 export class CompletionUnsupportedError extends Error {}
 
+function closedThought(): string {
+  return canThink() ? `${REASONING.openTag}\n\n${REASONING.closeTag}\n\n` : "";
+}
+
 export async function completeText(request: CompletionRequest): Promise<string> {
   let response: Response;
 
@@ -227,7 +231,7 @@ export async function completeText(request: CompletionRequest): Promise<string> 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: LLM_MODEL,
-        prompt: request.prompt,
+        prompt: `${request.prompt}${closedThought()}`,
         temperature: request.temperature,
         max_tokens: request.maxTokens,
         stop: [...STOP_TOKENS, ...(request.stop ?? [])],

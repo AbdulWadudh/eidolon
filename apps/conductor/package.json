@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "bun --watch src/index.ts",
+    "dev": "bun --watch run src/index.ts",
     "lint": "biome check .",
     "test": "bun test",
     "db:generate": "drizzle-kit generate",

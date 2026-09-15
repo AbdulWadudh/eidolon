@@ -1,4 +1,7 @@
 import { render } from "@eidolon/config";
+
+const NEWLINE = String.fromCharCode(10);
+
 import { shuffle, take } from "es-toolkit";
 import { IMAGE } from "@/config";
 import { getPrompt } from "@/prompts/store";
@@ -156,16 +159,27 @@ export function fill(ideas: string[], fallbacks: string[] = FALLBACK_IDEAS): str
 
 export async function generatePhotoIdeas(
   name: string,
+  personality: string,
   scene: string,
   signal?: AbortSignal,
   isEditing = false,
+  exclude: string[] = [],
 ): Promise<string[]> {
   const fallbacks = isEditing ? FALLBACK_EDITS : FALLBACK_IDEAS;
+  const offered = exclude.filter((idea) => idea.trim().length > 0);
+  const avoid =
+    offered.length > 0
+      ? render(getPrompt("image.avoidIdeas"), {
+          ideas: offered.map((idea) => `- ${idea}`).join(NEWLINE),
+        })
+      : "";
   const messages: ChatMessage[] = [
     {
       role: "user",
       content: render(getPrompt(isEditing ? "image.editIdeas" : "image.ideas"), {
         name,
+        personality,
+        avoid,
         scene,
         count: IMAGE.ideaCount,
         maxChars: IMAGE.ideaMaxChars,

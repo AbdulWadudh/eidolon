@@ -4,11 +4,13 @@ import { getPrompt, loadPrompts } from "@/prompts/store";
 import {
   buildAuthorPrompt,
   buildContext,
+  clipToWord,
   exampleAnswers,
   isOverblown,
   isUsableAuthored,
   shapeAuthored,
   stripExampleLines,
+  templateKey,
   trimToCompleteSentence,
   withoutFieldExamples,
 } from "@/services/character-author";
@@ -147,5 +149,64 @@ describe("refusing a bad rewrite", () => {
 
   it("accepts a suggestion that matches nothing", () => {
     expect(isUsableAuthored("suggest", "", "Mira Halloway")).toBe(true);
+  });
+});
+
+describe("clipping to the last whole word", () => {
+  it("leaves text that already fits", () => {
+    expect(clipToWord("a navy wool coat", 90)).toBe("a navy wool coat");
+  });
+
+  it("never cuts a word in half", () => {
+    expect(clipToWord("the fog rolling over the Setubal docks at dawn", 30)).toBe(
+      "the fog rolling over the",
+    );
+  });
+
+  it("drops the punctuation the cut left dangling", () => {
+    expect(clipToWord("black coat, salt-stained cuffs, worn boots", 20)).toBe("black coat");
+  });
+
+  it("falls back to a hard cut when one word fills the whole budget", () => {
+    expect(clipToWord("supercalifragilistic", 8)).toBe("supercal");
+  });
+});
+
+describe("the growth guard scales with the field", () => {
+  it("still catches a runaway rewrite of a small field", () => {
+    expect(isOverblown("a woman who works on boats", "x".repeat(400), 90)).toBe(true);
+  });
+
+  it("lets a long field have the length its own shape asks for", () => {
+    const draft = "shes blunt and doesnt like small talk. good at her job";
+    const three = "She cuts small talk short and speaks in straight lines. ".repeat(6);
+    expect(isOverblown(draft, three, 0)).toBe(true);
+    expect(isOverblown(draft, three, 700)).toBe(false);
+  });
+
+  it("is unchanged when no field budget is given", () => {
+    expect(isOverblown("she hosts radio", "She hosts a radio show through the night.")).toBe(false);
+  });
+});
+
+describe("the example set matches the template that was used", () => {
+  it("reads the visual templates for a visual field", () => {
+    expect(templateKey("photo", "suggest")).toBe("authoring.suggestVisual");
+    expect(templateKey("outfit", "enhance")).toBe("authoring.enhanceVisual");
+  });
+
+  it("reads the card templates for a written field", () => {
+    expect(templateKey("tagline", "suggest")).toBe("authoring.suggest");
+    expect(templateKey("personality", "enhance")).toBe("authoring.enhance");
+  });
+
+  it("knows the answers a visual prompt offers, so a copy of one is caught", () => {
+    const answers = exampleAnswers(getPrompt(templateKey("outfit", "suggest")));
+    expect(answers.has("oversized grey knit, sleeves pushed past the elbows")).toBe(true);
+  });
+
+  it("does not mistake a card answer for a visual one", () => {
+    const visual = exampleAnswers(getPrompt(templateKey("outfit", "suggest")));
+    expect(visual.has("warm, quick to laugh, always mid-book")).toBe(false);
   });
 });

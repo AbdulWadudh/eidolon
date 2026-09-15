@@ -4,12 +4,22 @@ import { getPrompt } from "@/prompts/store";
 import { CompletionUnsupportedError, completeText } from "@/services/llm";
 
 const NEWLINE = String.fromCharCode(10);
+const BLANK_LINE = String.fromCharCode(10, 10);
 const FENCE = /^```[a-z]*\s*|\s*```$/gi;
 const WRAPPING_QUOTES = /^["'“”‘’`]+|["'“”‘’`]+$/g;
 const LABEL_PREFIX = /^\s*(?:write|current|rewrite|answer|output|result)\s*:\s*/i;
 const WRITE_CUE = /^Write the [^:]+:[ \t]*(.*)$/;
 const LINE_BREAK = /\r?\n/;
 const SECTION = /^(Field|Shape|Current):/;
+
+const STOP_SECTIONS = [
+  AUTHORING.draftLabel,
+  "Field:",
+  "Shape:",
+  AUTHORING.writeLabel,
+  AUTHORING.contextLabel,
+  AUTHORING.userContextLabel,
+];
 
 export class AuthorUnavailableError extends Error {}
 
@@ -97,6 +107,12 @@ export function buildContext(context: AuthorContext, exclude: AuthorField): stri
     : joined;
 }
 
+export function templateKey(field: AuthorField, mode: AuthorMode): string {
+  const visual = AUTHORING.fields[field].visual;
+  if (mode === "suggest") return visual ? "authoring.suggestVisual" : "authoring.suggest";
+  return visual ? "authoring.enhanceVisual" : "authoring.enhance";
+}
+
 export function buildAuthorPrompt(
   field: AuthorField,
   mode: AuthorMode,
@@ -104,16 +120,7 @@ export function buildAuthorPrompt(
   context: string,
 ): string {
   const spec = AUTHORING.fields[field];
-  const visual = spec.visual;
-  const key =
-    mode === "suggest"
-      ? visual
-        ? "authoring.suggestVisual"
-        : "authoring.suggest"
-      : visual
-        ? "authoring.enhanceVisual"
-        : "authoring.enhance";
-  const template = withoutFieldExamples(getPrompt(key), spec.label);
+  const template = withoutFieldExamples(getPrompt(templateKey(field, mode)), spec.label);
 
   const parts = [template];
 
@@ -147,7 +154,17 @@ export function shapeAuthored(field: AuthorField, raw: string): string {
 
   const unquoted = spec.singleLine ? joined.replace(WRAPPING_QUOTES, "").trim() : joined;
 
-  return unquoted.length > spec.maxChars ? unquoted.slice(0, spec.maxChars).trimEnd() : unquoted;
+  return clipToWord(unquoted, spec.maxChars);
+}
+
+export function clipToWord(text: string, limit: number): string {
+  if (text.length <= limit) return text;
+
+  const cut = text.slice(0, limit);
+  const lastBreak = Math.max(cut.lastIndexOf(" "), cut.lastIndexOf(NEWLINE));
+  const kept = lastBreak > limit / 2 ? cut.slice(0, lastBreak) : cut;
+
+  return kept.replace(/[\s,;:—-]+$/, "").trimEnd();
 }
 
 export function stripExampleLines(written: string, examples: Set<string>): string {
@@ -170,10 +187,11 @@ export function trimToCompleteSentence(text: string): string {
   return cut > 0 ? trimmed.slice(0, cut + 1) : trimmed;
 }
 
-export function isOverblown(draft: string, written: string): boolean {
+export function isOverblown(draft: string, written: string, fieldMaxChars = 0): boolean {
   const allowed = Math.max(
     draft.trim().length * AUTHORING.enhanceGrowthRatio,
     AUTHORING.enhanceGrowthFloorChars,
+    fieldMaxChars * AUTHORING.enhanceGrowthFieldShare,
   );
   return written.trim().length > allowed;
 }
@@ -183,12 +201,13 @@ export function isUsableAuthored(
   draft: string,
   written: string,
   examples: Set<string> = new Set(),
+  fieldMaxChars = 0,
 ): boolean {
   const clean = written.trim();
   if (clean.length === 0) return false;
   if (examples.has(clean.toLowerCase())) return false;
   if (mode !== "enhance") return true;
-  if (isOverblown(draft, clean)) return false;
+  if (isOverblown(draft, clean, fieldMaxChars)) return false;
   return clean.toLowerCase() !== draft.trim().toLowerCase();
 }
 
@@ -210,8 +229,7 @@ export async function authorField(request: AuthorRequest): Promise<string> {
   }
 
   const context = buildContext(request.context, field);
-  const template = getPrompt(mode === "suggest" ? "authoring.suggest" : "authoring.enhance");
-  const examples = exampleAnswers(template);
+  const examples = exampleAnswers(getPrompt(templateKey(field, mode)));
   const prompt = buildAuthorPrompt(field, mode, draft, context);
 
   async function attempt(temperature: number): Promise<string> {
@@ -220,15 +238,7 @@ export async function authorField(request: AuthorRequest): Promise<string> {
         prompt,
         temperature,
         maxTokens: spec.maxTokens,
-        stop: spec.singleLine
-          ? [NEWLINE, AUTHORING.draftLabel, "Field:"]
-          : [
-              AUTHORING.draftLabel,
-              "Field:",
-              "Shape:",
-              AUTHORING.writeLabel,
-              AUTHORING.contextLabel,
-            ],
+        stop: spec.singleLine ? [NEWLINE, ...STOP_SECTIONS] : [BLANK_LINE, ...STOP_SECTIONS],
         signal,
       });
     } catch (error) {
@@ -249,7 +259,7 @@ export async function authorField(request: AuthorRequest): Promise<string> {
   for (const temperature of temperatures) {
     const raw = shapeAuthored(field, await attempt(temperature));
     const written = trimToCompleteSentence(stripExampleLines(raw, examples));
-    if (isUsableAuthored(mode, draft, written, examples)) return written;
+    if (isUsableAuthored(mode, draft, written, examples, spec.maxChars)) return written;
   }
 
   throw new AuthorUnavailableError("The model had nothing to offer for that one.");
