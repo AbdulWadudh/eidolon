@@ -1,3 +1,5 @@
+import type { LlmProfileKey } from "./llm";
+
 export const PROMPT_CATEGORIES = ["persona", "writing", "media", "memory", "authoring"] as const;
 
 export type PromptCategory = (typeof PROMPT_CATEGORIES)[number];
@@ -31,4 +33,5 @@ export interface PromptDefinition {
   variables: string[];
   value: string;
   category?: PromptCategory;
+  byProfile?: Partial<Record<LlmProfileKey, string>>;
 }

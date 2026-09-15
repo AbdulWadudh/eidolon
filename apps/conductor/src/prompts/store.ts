@@ -4,6 +4,7 @@ import {
   type PromptCategory,
   type PromptDefinition,
 } from "@eidolon/config";
+import { getLlmProfile } from "@eidolon/config/server";
 import { eq } from "drizzle-orm";
 import { CACHE } from "@/config";
 import { db } from "@/db";
@@ -25,6 +26,10 @@ const definitions = new Map<string, PromptDefinition>(
   PROMPT_DEFAULTS.map((entry) => [entry.key, entry]),
 );
 
+function portableValue(entry: PromptDefinition): string {
+  return entry.byProfile?.[getLlmProfile()] ?? entry.value;
+}
+
 function readAllFromDb(): Record<string, string> {
   const rows = db.select({ key: prompts.key, value: prompts.value }).from(prompts).all();
   return Object.fromEntries(rows.map((row) => [row.key, row.value]));
@@ -33,7 +38,7 @@ function readAllFromDb(): Record<string, string> {
 function hydrate(source: Record<string, string>): void {
   memory.clear();
   for (const entry of PROMPT_DEFAULTS) {
-    memory.set(entry.key, source[entry.key] ?? entry.value);
+    memory.set(entry.key, source[entry.key] ?? portableValue(entry));
   }
 }
 
@@ -54,7 +59,8 @@ export async function loadPrompts(): Promise<void> {
 }
 
 export function getPrompt(key: string): string {
-  return memory.get(key) ?? defaultPrompt(key);
+  const definition = definitions.get(key);
+  return memory.get(key) ?? (definition ? portableValue(definition) : defaultPrompt(key));
 }
 
 export async function setPrompt(key: string, value: string): Promise<PromptRecord> {
@@ -79,7 +85,8 @@ export async function resetPrompt(key: string): Promise<PromptRecord> {
   if (!definitions.has(key)) throw new Error(`Unknown prompt key: ${key}`);
 
   db.delete(prompts).where(eq(prompts.key, key)).run();
-  memory.set(key, defaultPrompt(key));
+  const definition = definitions.get(key);
+  memory.set(key, definition ? portableValue(definition) : defaultPrompt(key));
   await cacheSet(CACHE.promptsKey, JSON.stringify(readAllFromDb()), CACHE.promptsTtlSeconds);
   return describePrompt(key);
 }

@@ -3,6 +3,7 @@ import {
   AUTH_COPY,
   AUTHOR_COPY,
   CHARACTER_COPY,
+  CHARACTER_TASTE_COPY,
   CHAT_COPY,
   CONFIRM_COPY,
   CONNECT_COPY,
@@ -15,7 +16,9 @@ import {
   MOMENT_COPY,
   MOOD_COPY,
   OUTFIT_COPY,
+  PERSONA_COPY,
   PHOTO_COPY,
+  QUEUE_COPY,
   STATUS_COPY,
   THEME_COPY,
 } from "../copy";
@@ -58,6 +61,9 @@ const COPY_GROUPS: ConfigGroup[] = [
   { name: "ADMIN_COPY", value: ADMIN_COPY },
   { name: "AUTH_COPY", value: AUTH_COPY },
   { name: "DASHBOARD_COPY", value: DASHBOARD_COPY },
+  { name: "CHARACTER_TASTE_COPY", value: CHARACTER_TASTE_COPY },
+  { name: "QUEUE_COPY", value: QUEUE_COPY },
+  { name: "PERSONA_COPY", value: PERSONA_COPY },
 ].map((entry) => ({
   ...entry,
   source: "copy.ts",
