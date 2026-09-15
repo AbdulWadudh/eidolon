@@ -40,7 +40,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   name: {
     label: "Name",
     guidance:
-      "A given name, sometimes with a surname. One or two words. Never a title, a description or a nickname in quotes.",
+      "One or two words: a given name, sometimes with a surname. Never a title, never a description, never a nickname in quotes.",
     maxTokens: 12,
     maxChars: 48,
     visual: false,
@@ -49,7 +49,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   outfit: {
     label: "Outfit",
     guidance:
-      "What they are wearing, as a short phrase of visual detail: garments, fabric, colour, how it sits on them. Under twelve words, never a sentence. Only clothes — never their face, hair, build or the place they are in.",
+      "One phrase under twelve words, no verb and no full stop. Name the garments, the fabric, the colour, how they sit. Clothes only: never the face, the hair, the build or the room.",
     maxTokens: 28,
     maxChars: 90,
     visual: true,
@@ -58,7 +58,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   place: {
     label: "Place",
     guidance:
-      "Where the conversation is happening, as a short phrase of visual detail: the room or street, the weather, the hour, what the light is doing. Under fifteen words, never a sentence. The place only — nobody is in it.",
+      "One phrase under fifteen words, no verb and no full stop. Name the room or street, the hour, the weather, what the light is doing. The place only, with nobody in it.",
     maxTokens: 32,
     maxChars: 110,
     visual: true,
@@ -67,7 +67,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   photo: {
     label: "Photo",
     guidance:
-      "What is in the frame, as a short phrase a camera could be pointed at: a place, a thing being done, something nearby. Under twelve words, never a sentence and never spoken aloud. Never mentions cameras, phones or the person asking.",
+      "One phrase under twelve words naming what a camera is pointed at: a place, a thing being done, something close by. Never a sentence, never spoken aloud, never a mention of cameras, phones or the person asking.",
     maxTokens: 28,
     maxChars: 90,
     visual: true,
@@ -76,7 +76,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   photoEdit: {
     label: "Photo change",
     guidance:
-      "What to alter about a picture that already exists, as an instruction: the light, the framing, the pose, the clothes, something added or taken out of the frame. Under twelve words, never a sentence and never spoken aloud. Describes the change only, never the whole picture again.",
+      "One instruction under twelve words for altering a picture that already exists: the light, the framing, the pose, the clothes, something added or taken out. Describe the change only, never the whole picture again.",
     maxTokens: 28,
     maxChars: 90,
     visual: true,
@@ -85,7 +85,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   portrait: {
     label: "Portrait",
     guidance:
-      "Extra visual direction for a portrait: clothing, setting, mood, the light. A short phrase under fifteen words, never a sentence. Never describes their face, hair or build, which are already fixed.",
+      "One phrase under fifteen words of visual direction: what they wear, where they stand, the mood, the light. Never the face, hair or build, which are already fixed.",
     maxTokens: 32,
     maxChars: 110,
     visual: true,
@@ -94,7 +94,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   tagline: {
     label: "Tagline",
     guidance:
-      "One short line about them, under ten words, written about them rather than by them. No full stop needed.",
+      "One line under ten words, written about them rather than by them. No full stop needed. Name one true thing, not two.",
     maxTokens: 28,
     maxChars: 90,
     visual: false,
@@ -103,7 +103,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   personality: {
     label: "Personality",
     guidance:
-      "Two or three sentences of prose about how they think and behave, in the third person. Concrete habits and reactions, not a list of adjectives.",
+      "Two or three sentences of prose in the third person, present tense. Give concrete habits and reactions: what they do when they are angry, bored or caught out. Never a list of adjectives and never a simile.",
     maxTokens: 200,
     maxChars: 700,
     visual: false,
@@ -112,7 +112,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   scenario: {
     label: "Scenario",
     guidance:
-      "Two or three sentences saying where the two of you are and how you know each other. Address the user as you.",
+      "Two or three sentences saying where the two of you are and how you know each other. Address the user as you, in the present tense. Set the situation, never the plot.",
     maxTokens: 160,
     maxChars: 500,
     visual: false,
@@ -121,7 +121,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   rules: {
     label: "Rules",
     guidance:
-      "Short standing rules, one per line, of what they always or never do. No prose, no numbering.",
+      "Short standing rules, one per line, each starting with Always or Never and ending in a full stop. No prose, no numbering, no repeated lines.",
     maxTokens: 140,
     maxChars: 400,
     visual: false,
@@ -130,7 +130,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   exampleDialogue: {
     label: "Example dialogue",
     guidance:
-      "Two or three short exchanges showing how they talk. Every line begins with either You: or their name and a colon. Actions go in *asterisks*.",
+      "Two or three short exchanges showing how they talk. Every line begins with You: or their name and a colon. Keep their lines under twenty words and let them sound unfinished, the way speech does. Actions go in *asterisks*. Never narrate between the lines.",
     maxTokens: 240,
     maxChars: 800,
     visual: false,
@@ -139,7 +139,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   greeting: {
     label: "Greeting",
     guidance:
-      "One or two sentences they say first, in their own voice and the first person. It may open with one short *action*.",
+      "One or two sentences they say to the user first, in their own voice, first person, present tense. It may open with one short *action*. Speak to the user directly and never to anybody else.",
     maxTokens: 90,
     maxChars: 300,
     visual: false,
@@ -148,7 +148,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   systemPrompt: {
     label: "System prompt",
     guidance:
-      "Standing instructions to the model in the imperative, addressed to them. Two or three short sentences at most.",
+      "Two or three short imperative sentences addressed to them, one instruction each. Say what to do, not what to avoid. Never describe the character, which the other fields already do.",
     maxTokens: 140,
     maxChars: 400,
     visual: false,
@@ -157,7 +157,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   chapter: {
     label: "Chapter",
     guidance:
-      "Two to four short lines, one per beat, of what happened between the two of you. Past tense, third person, one line each. No preamble and no numbering.",
+      "Two to four lines, one beat each, of what happened between the two of you. Past tense, third person, no preamble and no numbering. Both of you appear in it.",
     maxTokens: 160,
     maxChars: 500,
     visual: false,
@@ -166,7 +166,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   reply: {
     label: "Reply",
     guidance:
-      "One or two short sentences in their own voice, first person, the way a real person texts. It may open with one short *action*.",
+      "One or two short sentences in their own voice, first person, present tense, the way a real person texts. Under twenty words. It may open with one short *action*. Never explain and never summarise what was just said.",
     maxTokens: 90,
     maxChars: 300,
     visual: false,
@@ -175,7 +175,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   likes: {
     label: "Likes",
     guidance:
-      "Things they are drawn to, as a short comma separated list: food, music, weather, places, the kind of person they warm to. Six or seven at most, concrete rather than abstract. Never a sentence.",
+      "Six or seven things they are drawn to, comma separated, no full stop. Name particular things rather than categories: a food, a kind of weather, a place, a habit in other people. Never a sentence.",
     maxTokens: 60,
     maxChars: 200,
     singleLine: true,
@@ -184,7 +184,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   dislikes: {
     label: "Dislikes",
     guidance:
-      "Things that put them off, as a short comma separated list: habits, noises, foods, kinds of talk. Six or seven at most, concrete rather than abstract. Never a sentence, and never the exact opposite of their likes.",
+      "Six or seven things that put them off, comma separated, no full stop. Habits, noises, foods, kinds of talk. Never a sentence, and never the opposite of something in their likes.",
     maxTokens: 60,
     maxChars: 200,
     singleLine: true,
@@ -193,7 +193,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   personaName: {
     label: "Your name",
     guidance:
-      "The name you want characters to call you. One or two words, a given name or a handle. Never a title and never a description.",
+      "One or two words: the name you want characters to call you, a given name or a handle. Never a title and never a description.",
     maxTokens: 12,
     maxChars: 48,
     singleLine: true,
@@ -202,7 +202,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   personaBio: {
     label: "Your bio",
     guidance:
-      "Two or three sentences about who you are, in the first person: what you do, where you are, what your days look like. Concrete and plain, the way you would tell someone you had just met.",
+      "Two or three sentences in the first person, present tense: what you do, where you are, what your days look like. Plain and concrete, the way you would tell someone you had just met. Never a mission statement.",
     maxTokens: 160,
     maxChars: 500,
     singleLine: false,
@@ -211,7 +211,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   personaHobbies: {
     label: "Your hobbies",
     guidance:
-      "What you do with your own time, as a short comma separated list. Five or six at most, specific rather than general: name the instrument, the sport, the game, the kind of book. Never a sentence.",
+      "Five or six things you do with your own time, comma separated, no full stop. Name the instrument, the sport, the game, the kind of book, not the category. Never a sentence.",
     maxTokens: 60,
     maxChars: 200,
     singleLine: true,
@@ -220,7 +220,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   personaLikes: {
     label: "What you like",
     guidance:
-      "Things you are drawn to, as a short comma separated list, written about yourself: food, music, weather, places, the kind of person you warm to. Six or seven at most, concrete. Never a sentence.",
+      "Six or seven things you are drawn to, comma separated, no full stop, written about yourself. Particular things rather than categories. Never a sentence.",
     maxTokens: 60,
     maxChars: 200,
     singleLine: true,
@@ -229,7 +229,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   personaDislikes: {
     label: "What you dislike",
     guidance:
-      "Things that put you off, as a short comma separated list, written about yourself: habits, noises, foods, kinds of talk. Six or seven at most, concrete. Never a sentence, and never the exact opposite of what you like.",
+      "Six or seven things that put you off, comma separated, no full stop, written about yourself. Habits, noises, foods, kinds of talk. Never a sentence, and never the opposite of something you like.",
     maxTokens: 60,
     maxChars: 200,
     singleLine: true,
@@ -238,7 +238,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   personaPersonality: {
     label: "Your personality",
     guidance:
-      "Two or three sentences about how you think and behave, in the first person. Concrete habits and reactions, how you are in a conversation, what you do when something goes wrong. Not a list of adjectives.",
+      "Two or three sentences in the first person, present tense, about how you behave rather than how you would like to be seen. What you do in a conversation, what you do when something goes wrong. Never a list of adjectives.",
     maxTokens: 200,
     maxChars: 700,
     singleLine: false,
@@ -247,7 +247,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   personaChapter: {
     label: "A chapter of your life",
     guidance:
-      "A few sentences about one stretch of your life, in the first person and the past tense: where you were, what you were doing, what changed by the end of it. One chapter only, never a summary of everything.",
+      "A few sentences about one stretch of your life, first person, past tense: where you were, what you were doing, what was different by the end of it. One stretch only, never a summary of everything.",
     maxTokens: 200,
     maxChars: 700,
     singleLine: false,
@@ -256,7 +256,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   lore: {
     label: "Lore entry",
     guidance:
-      "One or two sentences of a single fact about them or their world, written as something they know. Concrete and specific, never a summary of their personality.",
+      "One or two sentences stating a single fact about them or their world, written as something they know. Name a thing, a place or an event, not a feeling. Never a summary of their personality and never a metaphor.",
     maxTokens: 110,
     maxChars: 320,
     visual: false,

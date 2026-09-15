@@ -6,7 +6,14 @@ export const AUTHORING_PROMPTS: PromptDefinition[] = [
     description:
       "Writes one field of a character card from what has been written so far. Sent to the raw completion endpoint so the model produces the field rather than talking about it.",
     variables: [],
-    value: `You are helping write a character card. Produce only the one field asked for, in the shape described, derived from the character described above it. Write nothing else: no preamble, no explanation, no label, no quotation marks around the whole thing. Never reuse a name or a line from the examples below.
+    value: `You are helping write a character card. Write the one field asked for.
+
+Follow the shape described under Shape exactly: its length, its person, its tense.
+Build it from the character described above. Never contradict what is already written there.
+Be specific. One concrete detail beats three general ones.
+
+Produce only the field itself. No preamble, no explanation, no label, no quotation marks around the whole thing.
+Never reuse a name or a line from the examples below.
 
 The character so far:
 Personality: A retired Cairo taxi driver who now repairs radios in a shop he refuses to modernise, and argues with everyone who comes in.
@@ -46,9 +53,15 @@ Write the Greeting: *sets down her pen without looking up* You have got about fo
     description:
       "Writes one visual field — an outfit, a place, a photo, a portrait — as something a camera could see. Kept apart from the character-card writer so the model describes a picture instead of speaking in the character's voice.",
     variables: [],
-    value: `You are describing what a picture shows. Produce only the one field asked for, in the shape described. Write nothing else: no preamble, no explanation, no label, no quotation marks around the whole thing. Never reuse a line from the examples below.
+    value: `You are describing what a picture shows. Write the one field asked for.
 
-This is not dialogue and nobody says it out loud. Never write it in a character's voice, never address anyone, and never use *asterisks* for actions. Name only what a camera would see: the thing, the place, the light, the clothes.
+Name only what a camera would see: the thing, the place, the light, the clothes.
+Follow the shape described under Shape exactly, including its length.
+Write a phrase, not a sentence. No verb, no full stop.
+
+Nobody says this out loud. Never write it in a character voice, never address anyone, never use *asterisks*.
+Produce only the field itself. No preamble, no explanation, no label, no quotation marks around the whole thing.
+Never reuse a line from the examples below.
 
 Field: Outfit
 Shape: What they are wearing, as a short phrase of visual detail.
@@ -71,9 +84,16 @@ Write the Portrait: leaning on a balcony rail, low sun, warm side light`,
     description:
       "Sharpens one visual field, keeping every element the author named. Kept apart from the character-card rewriter so the model stays in the language of pictures.",
     variables: [],
-    value: `You are sharpening a description of what a picture shows. Rewrite the current text of the one field asked for so it is more concrete and easier to picture, in the shape described. Keep every element the author named and add no new ones. Produce only the rewritten field: no preamble, no explanation, no label. Never reuse a line from the examples below.
+    value: `You are sharpening a description of what a picture shows. Rewrite the current text of the one field asked for.
 
-This is not dialogue and nobody says it out loud. Never write it in a character's voice, never address anyone, and never use *asterisks* for actions. Name only what a camera would see.
+Keep every element the author named. Carry all of them into the rewrite.
+Never add an element that is not already there.
+Make each one concrete enough to picture: what kind, what colour, what hour.
+Write a phrase, not a sentence. No verb, no full stop.
+
+Nobody says this out loud. Never write it in a character voice, never address anyone, never use *asterisks*.
+Produce only the rewritten field. No preamble, no explanation, no label.
+Never reuse a line from the examples below.
 
 Field: Place
 Shape: Where this happens, as a short phrase of visual detail.
@@ -95,7 +115,16 @@ Write the Photo change: warmer light, and turn them toward the window`,
     description:
       "Rewrites one field of a character card, keeping every fact the author wrote. Sent to the raw completion endpoint.",
     variables: [],
-    value: `You are helping write a character card. Rewrite the current text of the one field asked for so it is sharper and better written, in the shape described. Keep the author's meaning, their language and every fact they wrote. Never add a fact that is not already in the current text. Produce only the rewritten field: no preamble, no explanation, no label. Never reuse a line from the examples below.
+    value: `You are helping write a character card. Rewrite the current text of the one field asked for.
+
+Keep every fact the author wrote. Carry all of them into the rewrite.
+Never add a fact that is not already in the current text.
+Write it in the shape described under Shape, even when the current text is not in that shape.
+Say it better, not differently: sharper words, the same meaning, the same language.
+Never repeat a line you have already written.
+
+Produce only the rewritten field. No preamble, no explanation, no label, no quotation marks around the whole thing.
+Never reuse a line from the examples below.
 
 Field: Tagline
 Shape: One short line about her, under ten words, written about her rather than by her.
