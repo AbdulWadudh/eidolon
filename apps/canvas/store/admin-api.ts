@@ -42,10 +42,19 @@ async function request<T>(
   host: string,
   token: string,
   route: AdminApiRoute,
-  options: { id?: string; method?: string; body?: unknown; query?: Record<string, string> } = {},
+  options: {
+    id?: string;
+    method?: string;
+    body?: unknown;
+    query?: Record<string, string>;
+    path?: string;
+  } = {},
 ): Promise<T> {
   const search = options.query ? `?${new URLSearchParams(options.query).toString()}` : "";
-  const response = await fetch(`${httpBase(host)}${adminApiPath(route, options.id)}${search}`, {
+  let url = `${httpBase(host)}${adminApiPath(route, options.id)}`;
+  if (options.path) url = `${url}${options.path}`;
+
+  const response = await fetch(`${url}${search}`, {
     method: options.method ?? "GET",
     headers: {
       "Content-Type": "application/json",
@@ -131,6 +140,20 @@ export function createCharacter(
 
 export function removeCharacter(host: string, token: string, id: string): Promise<{ ok: true }> {
   return request(host, token, "characters", { id, method: "DELETE" });
+}
+
+export function updateCharacterOwner(
+  host: string,
+  token: string,
+  id: string,
+  ownerId: string,
+): Promise<{ character: AdminCharacter }> {
+  return request(host, token, "characters", {
+    path: "/owner",
+    id,
+    method: "PATCH",
+    body: { ownerId },
+  });
 }
 
 export function fetchAccounts(host: string, token: string): Promise<{ accounts: AdminAccount[] }> {

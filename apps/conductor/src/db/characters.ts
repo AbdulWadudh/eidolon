@@ -246,6 +246,15 @@ export function ownsCharacter(id: string, ownerId: string): boolean {
   return row?.ownerId === ownerId;
 }
 
+export function updateCharacterOwner(
+  id: string,
+  ownerId: string,
+): CharacterCard | null {
+  if (!characterExists(id)) return null;
+  db.update(characters).set({ ownerId }).where(eq(characters.id, id)).run();
+  return getCharacter(id);
+}
+
 export function adopt(id: string, ownerId: string): void {
   db.update(characters)
     .set({ ownerId })

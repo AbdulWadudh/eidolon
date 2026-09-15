@@ -3,6 +3,7 @@ import * as React from "react";
 import { Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut, useReducedMotion } from "react-native-reanimated";
 import { CharacterOperations } from "@/components/admin/CharacterOperations";
+import { OwnerPicker } from "@/components/admin/OwnerPicker";
 import { CharacterFields } from "@/components/characters/CharacterFields";
 import { PortraitStudio } from "@/components/characters/PortraitStudio";
 import { PronounPicker } from "@/components/characters/PronounPicker";
@@ -37,6 +38,7 @@ export interface AdminCharacterEditorProps {
   onChange: (patch: Partial<Draft>) => void;
   onPublish: (isPublic: boolean) => void;
   onPortrait: (url: string) => void;
+  onReload?: () => void;
 }
 
 export function AdminCharacterEditor({
@@ -48,6 +50,7 @@ export function AdminCharacterEditor({
   onChange,
   onPublish,
   onPortrait,
+  onReload,
 }: AdminCharacterEditorProps) {
   const reduced = useReducedMotion();
   const author = useFieldAuthor(serverHost, draft, onChange);
@@ -86,7 +89,7 @@ export function AdminCharacterEditor({
       <Segmented
         options={SECTION_OPTIONS}
         value={section}
-        onChange={setSection}
+        onChange={(next) => setSection(next as SectionKey)}
         characterId={character.id}
         accessibilityLabel={CHARACTER_COPY.editTitle}
       />
@@ -157,6 +160,18 @@ export function AdminCharacterEditor({
 
         {section === "misc" ? (
           <View className="gap-3">
+            <View className="gap-1">
+              <Text className="font-ui-bold text-[11px] text-text-muted uppercase tracking-wider">
+                Character Owner
+              </Text>
+              <OwnerPicker
+                characterId={character.id}
+                currentOwnerId={character.ownerId}
+                serverHost={serverHost}
+                token={token}
+                onChanged={onReload}
+              />
+            </View>
             <SwitchRow
               characterId={character.id}
               label={CHARACTER_COPY.publishLabel}

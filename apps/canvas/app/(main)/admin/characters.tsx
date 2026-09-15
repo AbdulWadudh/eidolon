@@ -209,6 +209,7 @@ export default function AdminCharactersScreen() {
                   onChange={change}
                   onPublish={(next) => publish(character, next)}
                   onPortrait={() => void reload()}
+                  onReload={() => void reload()}
                 />
               ) : null}
             </EditableRow>

@@ -1,6 +1,7 @@
 import { AdminCharacterDraftSchema } from "@eidolon/protocol";
 import { Hono } from "hono";
 import type { OwnerEnv } from "@/auth/guard";
+import { listAccounts } from "@/auth/roles";
 import { countMessages } from "@/db";
 import {
   createCharacter,
@@ -8,6 +9,7 @@ import {
   getCharacter,
   listCharacters,
   updateCharacter,
+  updateCharacterOwner,
 } from "@/db/characters";
 import { countChronicles } from "@/db/chronicles";
 import { summarizeChronicleNow } from "@/orchestrator/chronicle";
@@ -82,6 +84,23 @@ adminCharacters.post("/:id/summarize", async (c) => {
 
   c.set("auditDetail", `queued a chapter for ${id}`);
   return c.json({ queued: true, jobId });
+});
+
+adminCharacters.patch("/:id/owner", async (c) => {
+  const id = c.req.param("id");
+  const body = await c.req.json().catch(() => null);
+  if (!body || typeof body.ownerId !== "string") {
+    return c.json({ error: "A valid ownerId is required." }, 400);
+  }
+
+  const updated = updateCharacterOwner(id, body.ownerId);
+  if (!updated) return c.json({ error: NO_SUCH }, 404);
+
+  return c.json({ character: updated });
+});
+
+adminCharacters.get("/users", (c) => {
+  return c.json({ users: listAccounts() });
 });
 
 adminCharacters.delete("/:id/proactive", async (c) => {
