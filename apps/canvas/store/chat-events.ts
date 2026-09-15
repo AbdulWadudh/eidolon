@@ -135,20 +135,29 @@ export function reduceServerMessage(
     case "image_ready": {
       useToastStore.getState().release(QUEUE_TOAST);
       const source = msg.payload ?? msg;
-      set((state) => ({
-        isPainting: false,
-        paintingStep: 0,
-        paintingTotal: 0,
-        messages: [
-          ...state.messages,
-          createMessage({
-            characterId: state.activeCharacterId,
-            role: "assistant",
-            text: source.caption ?? "",
-            imageUrl: source.image_url,
-          }),
-        ],
-      }));
+      set((state) => {
+        if (state.messages.some((m) => m.imageUrl === source.image_url)) {
+          return {
+            isPainting: false,
+            paintingStep: 0,
+            paintingTotal: 0,
+          };
+        }
+        return {
+          isPainting: false,
+          paintingStep: 0,
+          paintingTotal: 0,
+          messages: [
+            ...state.messages,
+            createMessage({
+              characterId: state.activeCharacterId,
+              role: "assistant",
+              text: source.caption ?? "",
+              imageUrl: source.image_url,
+            }),
+          ],
+        };
+      });
       break;
     }
 

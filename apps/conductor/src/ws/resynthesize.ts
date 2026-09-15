@@ -20,7 +20,13 @@ export async function handleResynthesizeAudio(
   signal: AbortSignal,
 ): Promise<void> {
   const message = getMessage(event.message_id);
-  if (!message || message.content.trim().length === 0) {
+  if (!message) {
+    failed(ws, CHAT_COPY.nothingToSpeak);
+    return;
+  }
+
+  const content = message.content.trim();
+  if (content.length === 0) {
     failed(ws, CHAT_COPY.nothingToSpeak);
     return;
   }
@@ -33,7 +39,7 @@ export async function handleResynthesizeAudio(
   clearMessageAudio(event.message_id);
 
   const voiceId = getCharacter(event.character_id)?.voice ?? TTS.voice;
-  const audio = await synthesizeSpeech(message.content, voiceId, signal);
+  const audio = await synthesizeSpeech(content, voiceId, signal);
   if (signal.aborted) return;
 
   if (!audio) {
