@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { getCharacterCard } from "@/db";
-import { characterIdFor, createCharacter, getCharacter, listCharacters } from "@/db/characters";
+import { createCharacter, getCharacter, listCharacters, updateCharacter } from "@/db/characters";
 import { app } from "@/index";
 import { loadPrompts } from "@/prompts/store";
 import { buildSystemPrompt } from "@/services/persona";
+import { portraitKey } from "@/services/storage";
 import { AUTHED, BASE, remember, wipe } from "./support/characters";
 
 const TEST_USER = "user:characters";
@@ -15,17 +16,30 @@ beforeEach(async () => {
 afterEach(wipe);
 
 describe("naming a new character", () => {
-  it("slugs the name into an id", () => {
-    expect(characterIdFor("Ada Lovelace", () => false)).toBe("ada-lovelace");
+  it("mints an id with nothing of the name in it", () => {
+    const created = remember(createCharacter({ name: "Ada Lovelace" }));
+
+    expect(created.id).not.toInclude("ada");
+    expect(created.id).not.toInclude("lovelace");
+    expect(created.id).toMatch(/^[0-9a-f-]{36}$/);
   });
 
-  it("steps aside when the id is taken", () => {
-    const taken = new Set(["ada-lovelace", "ada-lovelace-2"]);
-    expect(characterIdFor("Ada Lovelace", (id) => taken.has(id))).toBe("ada-lovelace-3");
+  it("gives two characters of the same name ids of their own", () => {
+    const first = remember(createCharacter({ name: "Ada Lovelace" }));
+    const second = remember(createCharacter({ name: "Ada Lovelace" }));
+
+    expect(first.id).not.toBe(second.id);
   });
 
-  it("falls back rather than producing an empty id", () => {
-    expect(characterIdFor("   ", () => false)).toBe("character");
+  it("keeps media under one folder no matter what the character is renamed to", () => {
+    const created = remember(createCharacter({ name: "Ada Lovelace" }));
+    const key = portraitKey(created.id, "portrait.webp");
+
+    updateCharacter(created.id, { name: "Bea Ravenna" });
+
+    expect(portraitKey(created.id, "portrait.webp")).toBe(key);
+    expect(key).not.toInclude("ada");
+    expect(key).not.toInclude("bea");
   });
 });
 

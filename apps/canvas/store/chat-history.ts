@@ -21,7 +21,20 @@ export async function loadHistory(host: string, characterId: string): Promise<vo
   });
 
   try {
-    const { messages, mind, look } = await fetchTranscript(host, characterId);
+    const {
+      characterId: mine,
+      canReply,
+      messages,
+      mind,
+      look,
+    } = await fetchTranscript(host, characterId);
+
+    // She turned out to belong to someone else, so this user has a copy of their own and
+    // the conversation carries on there. Told here, before a word of it is on screen.
+    if (mine !== characterId) {
+      useChatStore.setState({ forkedTo: mine });
+      return;
+    }
 
     useChatStore.setState((state) => {
       if (state.activeCharacterId !== characterId) return {};
@@ -30,6 +43,7 @@ export async function loadHistory(host: string, characterId: string): Promise<vo
         messages: state.messages.length > messages.length ? state.messages : messages,
         mind: mind ?? state.mind,
         characterLook: look,
+        canReply,
         isLoadingHistory: false,
         lastError: null,
       };
@@ -39,6 +53,7 @@ export async function loadHistory(host: string, characterId: string): Promise<vo
       if (state.activeCharacterId !== characterId) return {};
 
       return {
+        canReply: state.canReply ?? true,
         isLoadingHistory: false,
         lastError: err instanceof Error ? err.message : "Could not load the conversation.",
       };

@@ -11,7 +11,7 @@ const SHIFT = {
   },
 };
 
-describe("a moment reaches the reader whether or not it may repaint the background", () => {
+describe("a moment reaches the user whether or not it may repaint the background", () => {
   it("is accepted when the scene may replace the background", () => {
     const parsed = parseServerMessage({
       ...SHIFT,
@@ -21,7 +21,7 @@ describe("a moment reaches the reader whether or not it may repaint the backgrou
     expect(parsed.type).toBe("stage_shift");
   });
 
-  it("is still accepted when the reader keeps their own background", () => {
+  it("is still accepted when the user keeps their own background", () => {
     const parsed = parseServerMessage({
       ...SHIFT,
       payload: { ...SHIFT.payload, replaces_background: false },

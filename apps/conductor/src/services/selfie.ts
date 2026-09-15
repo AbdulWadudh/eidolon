@@ -20,7 +20,7 @@ import {
   oneLine,
 } from "@/services/photo-look";
 import { ask } from "@/services/prompt-writer";
-import { uploadImage } from "@/services/storage";
+import { uploadImage, uploadPortrait } from "@/services/storage";
 import { safeJsonParse } from "@/utils/json";
 
 const SCENE_BREAK = String.fromCharCode(10);
@@ -34,6 +34,7 @@ export function formatPhotoScene(turns: { role: string; content: string }[], nam
 
 export interface SelfieRequest {
   characterId: string;
+  userId: string;
   name: string;
   personality: string;
   pronouns?: string;
@@ -116,7 +117,7 @@ async function ensureFaceReference(request: SelfieRequest, appearance: string): 
       .bytes;
 
   if (!existing) {
-    const url = await uploadImage(request.characterId, "face.png", bytes);
+    const url = await uploadPortrait(request.characterId, "face.png", bytes);
     setCharacterAvatar(request.characterId, url);
   }
 
@@ -217,6 +218,7 @@ export async function paintSelfie(
     captionLine(request, subject, signal),
   ]);
   const imageUrl = await uploadImage(
+    request.userId,
     request.characterId,
     `${crypto.randomUUID()}.png`,
     image.bytes,

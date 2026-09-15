@@ -12,11 +12,11 @@ const TEST_USER = "user:gallery";
 
 afterEach(wipe);
 
-function withPhotos(name: string, count: number, reader: string = TEST_USER): string {
+function withPhotos(name: string, count: number, user: string = TEST_USER): string {
   const character = remember(createCharacter({ name }));
 
   for (let index = 0; index < count; index += 1) {
-    const messageId = appendMessage(character.id, "assistant", `line ${index}`, reader);
+    const messageId = appendMessage(character.id, "assistant", `line ${index}`, user);
     setMessageImage(
       messageId,
       `https://media.test/${character.id}-${index}.png`,
@@ -28,7 +28,7 @@ function withPhotos(name: string, count: number, reader: string = TEST_USER): st
 }
 
 describe("what the gallery collects", () => {
-  it("keeps one reader's photos out of another reader's gallery", () => {
+  it("keeps one user's photos out of another user's gallery", () => {
     const character = remember(createCharacter({ name: "Shared Character", isPublic: true }));
 
     const mine = appendMessage(character.id, "assistant", "for me", TEST_USER);
@@ -122,9 +122,7 @@ describe("what the gallery collects", () => {
 
     expect(countGallery(mine, TEST_USER)).toBe(2);
     expect(countGallery(theirs, TEST_USER)).toBe(5);
-    expect(
-      listGallery(mine, TEST_USER, 10).every((image) => image.url.includes("gallery-mine")),
-    ).toBe(true);
+    expect(listGallery(mine, TEST_USER, 10).every((image) => image.url.includes(mine))).toBe(true);
   });
 
   it("pages without repeating or skipping", () => {

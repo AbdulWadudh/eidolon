@@ -312,3 +312,15 @@ export function characterSummarizeUrl(
 ): string {
   return `${scheme}://${stripAuthority(host)}${characterSummarizePath(characterId)}`;
 }
+
+export function characterStartPath(characterId: string): string {
+  return `${apiPath("characters")}/${encodeURIComponent(characterId)}/start`;
+}
+
+export function characterStartUrl(
+  host: string,
+  characterId: string,
+  scheme = httpScheme(host),
+): string {
+  return `${scheme}://${stripAuthority(host)}${characterStartPath(characterId)}`;
+}

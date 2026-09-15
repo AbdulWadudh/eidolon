@@ -22,7 +22,7 @@ export function contextForCharacter(characterId: string): AuthorContext {
   };
 }
 
-export function contextForReader(userId: string, personaId?: string): AuthorContext {
+export function contextForUser(userId: string, personaId?: string): AuthorContext {
   const persona = personaId ? getPersona(personaId, userId) : defaultPersona(userId);
   if (!persona) return {};
 
@@ -39,7 +39,7 @@ export function contextForReader(userId: string, personaId?: string): AuthorCont
   };
 }
 
-export function isReaderField(field: string): boolean {
+export function isUserField(field: string): boolean {
   return field.startsWith("persona");
 }
 
@@ -49,8 +49,8 @@ export function surroundingContext(
   characterId?: string,
   personaId?: string,
 ): AuthorContext {
-  const held = isReaderField(field)
-    ? contextForReader(userId, personaId)
+  const held = isUserField(field)
+    ? contextForUser(userId, personaId)
     : characterId
       ? contextForCharacter(characterId)
       : {};

@@ -1,4 +1,9 @@
-import { characterMemoryUrl, characterMessagesUrl, TIMEOUTS_MS } from "@eidolon/config";
+import {
+  characterMemoryUrl,
+  characterMessagesUrl,
+  characterStartUrl,
+  TIMEOUTS_MS,
+} from "@eidolon/config";
 import { formatClockTime } from "@/lib/format";
 import { authedFetch } from "@/store/connection";
 import type { ChatMessage, MindState } from "./chat-messages";
@@ -16,6 +21,8 @@ interface TranscriptRow {
 
 interface TranscriptResponse {
   character?: {
+    id?: string;
+    canReply?: boolean;
     name?: string;
     score?: number;
     tier?: string;
@@ -29,6 +36,10 @@ interface TranscriptResponse {
 }
 
 export interface Transcript {
+  /** The character this user actually talks to — their own copy, when the one asked for is someone else's. */
+  characterId: string;
+  /** False while only browsing a character someone else owns. */
+  canReply: boolean;
   messages: ChatMessage[];
   mind: MindState | null;
   look: CharacterLook;
@@ -68,8 +79,14 @@ function toMind(character: TranscriptResponse["character"]): MindState | null {
 
 export async function fetchTranscript(host: string, characterId: string): Promise<Transcript> {
   const body = await requestJson(characterMessagesUrl(host, characterId), "GET");
+
+  // The server hands back the character this user actually talks to, which is a copy
+  // of their own when the one they asked for belongs to somebody else.
+  const mine = typeof body.character?.id === "string" ? body.character.id : characterId;
   return {
-    messages: (body.messages ?? []).map((row) => toMessage(row, characterId)),
+    characterId: mine,
+    canReply: body.character?.canReply !== false,
+    messages: (body.messages ?? []).map((row) => toMessage(row, mine)),
     mind: toMind(body.character),
     look: {
       avatarUrl: body.character?.avatarUrl ?? null,
@@ -84,6 +101,8 @@ export async function fetchTranscript(host: string, characterId: string): Promis
 export async function forgetCharacter(host: string, characterId: string): Promise<Transcript> {
   const body = await requestJson(characterMemoryUrl(host, characterId), "DELETE");
   return {
+    characterId,
+    canReply: true,
     messages: (body.messages ?? []).map((row) => toMessage(row, characterId)),
     mind: toMind(body.character),
     look: {
@@ -105,4 +124,16 @@ async function requestJson(url: string, method: "GET" | "DELETE"): Promise<Trans
 
   if (!response.ok) throw new Error(`Conductor returned HTTP ${response.status}.`);
   return (await response.json()) as TranscriptResponse;
+}
+
+export async function startConversation(host: string, characterId: string): Promise<string> {
+  const res = await authedFetch(characterStartUrl(host, characterId), {
+    method: "POST",
+    signal: AbortSignal.timeout(TIMEOUTS_MS.clientRequest),
+  });
+
+  if (!res.ok) return characterId;
+
+  const body = (await res.json()) as { characterId?: string };
+  return typeof body.characterId === "string" ? body.characterId : characterId;
 }

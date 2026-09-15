@@ -120,7 +120,7 @@ export function buildAuthorPrompt(
   if (context.length > 0) {
     parts.push(
       "",
-      field.startsWith("persona") ? AUTHORING.readerContextLabel : AUTHORING.contextLabel,
+      field.startsWith("persona") ? AUTHORING.userContextLabel : AUTHORING.contextLabel,
       context,
     );
   }

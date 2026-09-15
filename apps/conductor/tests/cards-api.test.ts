@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "bun:test";
 import { CARD_UPLOAD, characterExportPath, characterImportPath } from "@eidolon/config";
 import { sqlite } from "@/db";
+import { getCharacter } from "@/db/characters";
 import { app } from "@/index";
 import { readCardData, readCardJson } from "@/services/tavern-card";
 import { AUTHED, remember, wipeNamed } from "./support/characters";
@@ -34,7 +35,8 @@ describe("POST /characters/import", () => {
 
     expect(response.status).toBe(201);
     expect(body.success).toBe(true);
-    expect(body.characterId).toBe("marisol-vega");
+    expect(body.characterId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(getCharacter(body.characterId ?? "")?.name).toBe(V2_CARD.data.name);
   });
 
   it("accepts any of the field names the client might use", async () => {

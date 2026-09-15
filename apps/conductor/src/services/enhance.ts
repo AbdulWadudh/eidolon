@@ -65,10 +65,10 @@ export function isUsableRewrite(draft: string, rewrite: string): boolean {
   return rewrite.trim().toLowerCase() !== draft.trim().toLowerCase();
 }
 
-export function buildEnhancePrompt(draft: string, withAction = false, reader = ""): string {
+export function buildEnhancePrompt(draft: string, withAction = false, user = ""): string {
   return [
     getPrompt(withAction ? "enhance.instructionWithAction" : "enhance.instruction"),
-    ...(reader.trim().length > 0 ? ["", reader.trim()] : []),
+    ...(user.trim().length > 0 ? ["", user.trim()] : []),
     "",
     `${ENHANCE.draftLabel} ${draft}`,
     ENHANCE.rewriteLabel,
@@ -82,7 +82,7 @@ export function restoreInfluences(rewrite: string, influences: string[]): string
 
 export interface EnhanceOptions {
   withAction?: boolean;
-  reader?: string;
+  user?: string;
   signal?: AbortSignal;
 }
 
@@ -98,7 +98,7 @@ export async function enhanceMessage(draft: string, options: EnhanceOptions = {}
   }
 
   const withAction = options.withAction ?? shouldAddAction(spoken);
-  const prompt = buildEnhancePrompt(spoken, withAction, options.reader);
+  const prompt = buildEnhancePrompt(spoken, withAction, options.user);
 
   async function attempt(temperature: number): Promise<string> {
     try {

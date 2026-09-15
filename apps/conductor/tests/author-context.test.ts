@@ -2,22 +2,18 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { createCharacter } from "@/db/characters";
 import { createPersona, deletePersona, listPersonas } from "@/db/personas";
 import { loadPrompts } from "@/prompts/store";
-import {
-  contextForCharacter,
-  contextForReader,
-  surroundingContext,
-} from "@/services/author-context";
+import { contextForCharacter, contextForUser, surroundingContext } from "@/services/author-context";
 import { buildAuthorPrompt } from "@/services/character-author";
 import { remember, wipe } from "./support/characters";
 
-const READER = "user:author-context";
+const USER = "user:author-context";
 
 beforeEach(async () => {
   await loadPrompts();
 });
 
 afterEach(() => {
-  for (const persona of listPersonas(READER)) deletePersona(persona.id, READER);
+  for (const persona of listPersonas(USER)) deletePersona(persona.id, USER);
   wipe();
 });
 
@@ -47,7 +43,7 @@ describe("what the writer is told about the character", () => {
       createCharacter({ name: "Outfit Probe", personality: "A dockworker who sings badly." }),
     );
 
-    const context = surroundingContext("outfit", READER, made.id);
+    const context = surroundingContext("outfit", USER, made.id);
     const prompt = buildAuthorPrompt("outfit", "suggest", "", buildContextString(context));
 
     expect(prompt).toContain("dockworker");
@@ -55,22 +51,22 @@ describe("what the writer is told about the character", () => {
   });
 
   it("tells the writer nothing about a character it was given none of", () => {
-    expect(surroundingContext("outfit", READER)).toEqual({});
+    expect(surroundingContext("outfit", USER)).toEqual({});
   });
 });
 
-describe("what the writer is told about the reader", () => {
-  it("carries the persona when the field is one of the reader's own", () => {
-    const persona = createPersona(READER, { name: "Wren" });
-    const context = surroundingContext("personaChapter", READER, undefined, persona.id);
+describe("what the writer is told about the user", () => {
+  it("carries the persona when the field is one of the user's own", () => {
+    const persona = createPersona(USER, { name: "Wren" });
+    const context = surroundingContext("personaChapter", USER, undefined, persona.id);
 
     expect(context.personaName).toBe("Wren");
     expect(context.personality).toBeUndefined();
   });
 
   it("leaves out the parts of a persona that were never written", () => {
-    const persona = createPersona(READER, { name: "Bare" });
-    const context = contextForReader(READER, persona.id);
+    const persona = createPersona(USER, { name: "Bare" });
+    const context = contextForUser(USER, persona.id);
 
     expect(context.personaName).toBe("Bare");
     expect(context.personaBio ?? "").toBe("");

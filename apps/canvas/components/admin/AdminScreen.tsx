@@ -18,6 +18,8 @@ export interface AdminScreenProps {
   isLoading?: boolean;
   error?: string | null;
   trailing?: React.ReactNode;
+  /** Overrides leaving the screen — used when the screen has somewhere of its own to go back to. */
+  onBack?: () => void;
   children: React.ReactNode;
 }
 
@@ -29,6 +31,7 @@ export function AdminScreen({
   isLoading = false,
   error = null,
   trailing,
+  onBack,
   children,
 }: AdminScreenProps) {
   const barTop = useBarTopInset();
@@ -49,7 +52,7 @@ export function AdminScreen({
           accessibilityRole="button"
           accessibilityLabel={DASHBOARD_COPY.back}
           hitSlop={12}
-          onPress={() => router.back()}
+          onPress={() => (onBack ? onBack() : router.back())}
           className="h-9 w-9 items-center justify-center rounded-button border border-border"
         >
           <AppIcon icon={ArrowLeft01Icon} size={16} color={theme.textPrimary} />

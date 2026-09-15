@@ -9,13 +9,13 @@ function line(label: string, value: string | null): string {
   return trimmed.length > 0 ? `${label}: ${trimmed}` : "";
 }
 
-export function readerProfile(characterId: string, userId: string): string {
+export function userProfile(characterId: string, userId: string): string {
   const persona = personaForCharacter(characterId, userId);
   if (!persona) return "";
 
   const taste =
     (persona.likes?.trim().length ?? 0) > 0 || (persona.dislikes?.trim().length ?? 0) > 0
-      ? render(getPrompt("persona.readerLikes"), {
+      ? render(getPrompt("persona.userLikes"), {
           likes: persona.likes?.trim() || "nothing they have said",
           dislikes: persona.dislikes?.trim() || "nothing they have said",
         })
@@ -30,7 +30,7 @@ export function readerProfile(characterId: string, userId: string): string {
     })
     .filter((entry) => entry.length > 0);
 
-  const reader = [
+  const user = [
     line("Name", persona.name),
     line("Refer to them as", pronounsFor(persona.pronouns).label.toLowerCase()),
     line("About them", persona.bio),
@@ -42,19 +42,19 @@ export function readerProfile(characterId: string, userId: string): string {
     .filter((part) => part.length > 0)
     .join(NEWLINE);
 
-  return reader.trim();
+  return user.trim();
 }
 
-export function readerContext(characterId: string, userId: string): string {
-  const reader = readerProfile(characterId, userId);
-  if (reader.length === 0) return "";
+export function userContext(characterId: string, userId: string): string {
+  const user = userProfile(characterId, userId);
+  if (user.length === 0) return "";
 
-  return render(getPrompt("persona.reader"), { reader });
+  return render(getPrompt("persona.user"), { user });
 }
 
-export function readerVoice(characterId: string, userId: string): string {
-  const reader = readerProfile(characterId, userId);
-  if (reader.length === 0) return "";
+export function userVoice(characterId: string, userId: string): string {
+  const user = userProfile(characterId, userId);
+  if (user.length === 0) return "";
 
-  return render(getPrompt("persona.readerVoice"), { reader });
+  return render(getPrompt("persona.userVoice"), { user });
 }

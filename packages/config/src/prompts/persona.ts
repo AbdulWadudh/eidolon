@@ -42,29 +42,29 @@ Read the conversation above before answering. Reply to the last thing they said,
 Right now you feel {{mood}}. How close you feel to them: {{tier}}.`,
   },
   {
-    key: "persona.reader",
+    key: "persona.user",
     description:
-      "Who the reader is, assembled from the persona they are speaking as. Given to the character so it answers the person in front of it rather than a stranger.",
-    variables: ["reader"],
+      "Who the user is, assembled from the persona they are speaking as. Given to the character so it answers the person in front of it rather than a stranger.",
+    variables: ["user"],
     value: `Who you are talking to:
-{{reader}}
+{{user}}
 
 This is the person on the other side of the conversation, not you and not a character in a story. Use what is here the way a friend would: remember it, refer back to it, let it shape what you say and what you ask about. Never recite it back at them, never list it, and never tell them what you know about them unless it comes up naturally.`,
   },
   {
-    key: "persona.readerVoice",
+    key: "persona.userVoice",
     description:
-      "The same reader, framed for writing lines they would send rather than lines sent to them. Used by the reply suggestions.",
-    variables: ["reader"],
+      "The same user, framed for writing lines they would send rather than lines sent to them. Used by the reply suggestions.",
+    variables: ["user"],
     value: `The person you are writing for:
-{{reader}}
+{{user}}
 
 Write the way this person would write. Their turns of phrase, the things they care about, what they would and would not bring up. Never restate these facts back at them and never write a line that only exists to mention one.`,
   },
   {
-    key: "persona.readerLikes",
+    key: "persona.userLikes",
     description:
-      "The reader's likes and dislikes, kept apart from the rest so they can be dropped when the prompt runs long.",
+      "The user's likes and dislikes, kept apart from the rest so they can be dropped when the prompt runs long.",
     variables: ["likes", "dislikes"],
     value: `Drawn to: {{likes}}
 Put off by: {{dislikes}}`,
@@ -154,7 +154,7 @@ Never mention this direction, never acknowledge it, never reply to it. They did 
   {
     key: "persona.noWebResult",
     description:
-      "Injected when the reader asked about something current and the web search came back with nothing usable.",
+      "Injected when the user asked about something current and the web search came back with nothing usable.",
     variables: [],
     value: `They just asked you about something current and you have no reliable information about it. Say you do not know, in your own voice, the way a person admits they have not kept up. Never guess a name, a score, a date or a result, and never invent a source.
 

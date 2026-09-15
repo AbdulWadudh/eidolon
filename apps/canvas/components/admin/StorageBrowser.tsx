@@ -9,6 +9,7 @@ import type { IconSvgElement } from "@hugeicons/react-native";
 import * as React from "react";
 import {
   ActivityIndicator,
+  BackHandler,
   ScrollView,
   Text,
   TextInput,
@@ -39,6 +40,7 @@ import {
   Search01Icon,
   VolumeHighIcon,
 } from "@/lib/icons";
+import { parentOf, readable } from "@/lib/storage-paths";
 import { select } from "@/services/haptics";
 import {
   AdminRequestError,
@@ -55,6 +57,8 @@ export interface StorageBrowserProps {
   serverHost: string;
   token: string;
   onError: (message: string) => void;
+  /** Reports a way back up to the parent folder, or null at the top of the bucket. */
+  onUpChange?: (goUp: (() => void) | null) => void;
 }
 
 function megabytes(bytes: number): string {
@@ -71,17 +75,21 @@ function tally(view: BrowseView, shown: number): string {
   return `${DASHBOARD_COPY.storageFolders(folders)} · ${DASHBOARD_COPY.storageShowing(shown, view.matched)} · ${size}`;
 }
 
-function crumbsFor(prefix: string): { name: string; prefix: string }[] {
+function crumbsFor(
+  prefix: string,
+  names: Record<string, string>,
+  showIds: boolean,
+): { name: string; prefix: string }[] {
   const parts = prefix.split("/").filter(Boolean);
   let walked = "";
 
   return parts.map((part) => {
     walked += `${part}/`;
-    return { name: part, prefix: walked };
+    return { name: readable(part, names, showIds), prefix: walked };
   });
 }
 
-export function StorageBrowser({ serverHost, token, onError }: StorageBrowserProps) {
+export function StorageBrowser({ serverHost, token, onError, onUpChange }: StorageBrowserProps) {
   const theme = useResolvedTheme();
   const reduced = useReducedMotion();
   const confirmation = useConfirm();
@@ -90,6 +98,7 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
   const [view, setView] = React.useState<BrowseView | null>(null);
   const [objects, setObjects] = React.useState<BrowsedObject[]>([]);
   const [search, setSearch] = React.useState("");
+  const [showIds, setShowIds] = React.useState(false);
   const [onlyOrphans, setOnlyOrphans] = React.useState(false);
   const [kind, setKind] = React.useState<StoredMediaKind | null>(null);
   const [prefix, setPrefix] = React.useState("");
@@ -147,6 +156,31 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
     change();
   }, []);
 
+  // Walking into a folder is navigation, so leaving one should step back out of it rather
+  // than off the screen entirely.
+  const goUp = React.useMemo(() => {
+    const here = view?.prefix ?? prefix;
+    if (here.length === 0) return null;
+
+    return () => narrow(() => setPrefix(parentOf(here)));
+  }, [view?.prefix, prefix, narrow]);
+
+  React.useEffect(() => {
+    onUpChange?.(goUp);
+    return () => onUpChange?.(null);
+  }, [goUp, onUpChange]);
+
+  React.useEffect(() => {
+    if (!goUp) return;
+
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      goUp();
+      return true;
+    });
+
+    return () => subscription.remove();
+  }, [goUp]);
+
   const drop = React.useCallback(
     (object: BrowsedObject) => {
       confirmation.ask({
@@ -165,7 +199,8 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
     [confirmation.ask, load, page, report, serverHost, token],
   );
 
-  const crumbs = crumbsFor(view?.prefix ?? prefix);
+  const names = view?.names ?? {};
+  const crumbs = crumbsFor(view?.prefix ?? prefix, names, showIds);
   const walking = view?.folderMode ?? folderMode;
   const pages = view === null ? 1 : Math.max(1, Math.ceil(view.matched / STORAGE_BROWSER.pageSize));
 
@@ -301,6 +336,13 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
           colour={theme.danger}
           onPress={() => narrow(() => setOnlyOrphans(!onlyOrphans))}
         />
+        <Chip
+          label={DASHBOARD_COPY.storageShowIds}
+          icon={File01Icon}
+          active={showIds}
+          colour={theme.textMuted}
+          onPress={() => setShowIds(!showIds)}
+        />
       </ScrollView>
 
       {walking ? (
@@ -339,7 +381,11 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
 
       {(view?.folders ?? []).map((folder, index) => (
         <Animated.View entering={revealAt(index, reduced)} key={folder.prefix}>
-          <FolderRow folder={folder} onOpen={() => narrow(() => setPrefix(folder.prefix))} />
+          <FolderRow
+            folder={folder}
+            label={readable(folder.name, names, showIds)}
+            onOpen={() => narrow(() => setPrefix(folder.prefix))}
+          />
         </Animated.View>
       ))}
 
@@ -367,7 +413,11 @@ export function StorageBrowser({ serverHost, token, onError }: StorageBrowserPro
                   style={{ backgroundColor: object.referenced ? theme.success : theme.danger }}
                 />
                 <Text className="flex-1 font-ui text-[11px] text-text-muted" numberOfLines={1}>
-                  {object.key.slice((view?.prefix ?? "").length) || object.key}
+                  {readable(
+                    object.key.slice((view?.prefix ?? "").length) || object.key,
+                    names,
+                    showIds,
+                  )}
                 </Text>
                 <Text className="font-ui-medium text-[10px] text-text-muted">
                   {`${megabytes(object.bytes)} MB`}
@@ -467,11 +517,19 @@ function ModeChip({
   );
 }
 
-function FolderRow({ folder, onOpen }: { folder: BrowsedFolder; onOpen: () => void }) {
+function FolderRow({
+  folder,
+  label,
+  onOpen,
+}: {
+  folder: BrowsedFolder;
+  label: string;
+  onOpen: () => void;
+}) {
   const theme = useResolvedTheme();
 
   return (
-    <PressableScale accessibilityRole="button" accessibilityLabel={folder.name} onPress={onOpen}>
+    <PressableScale accessibilityRole="button" accessibilityLabel={label} onPress={onOpen}>
       <GlassSurface
         tint="card"
         className="flex-row items-center gap-3 overflow-hidden rounded-card border border-border px-4 py-3"
@@ -480,7 +538,7 @@ function FolderRow({ folder, onOpen }: { folder: BrowsedFolder; onOpen: () => vo
 
         <View className="flex-1">
           <Text className="font-ui-medium text-xs text-text-primary" numberOfLines={1}>
-            {folder.name}
+            {label}
           </Text>
           <Text className="mt-0.5 font-ui text-[10px] text-text-muted">
             {`${folder.objects} · ${megabytes(folder.bytes)} MB${folder.orphans > 0 ? ` · ${folder.orphans} unreferenced` : ""}`}

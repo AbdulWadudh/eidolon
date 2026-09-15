@@ -174,6 +174,16 @@ export const ReplySuggestionsSchema = z.object({
     .optional(),
 });
 
+// Sent the first time a user speaks to a character someone else owns: the conversation
+// continues on a copy of their own, so the client has to follow it to a new id.
+export const ConversationForkedSchema = z.object({
+  type: z.literal("conversation_forked"),
+  payload: z.object({
+    from_character_id: z.string(),
+    character_id: z.string(),
+  }),
+});
+
 export const MessageCommittedSchema = z.object({
   type: z.literal("message_committed"),
   payload: z.object({
@@ -251,6 +261,7 @@ export const ServerMessageSchema = z.discriminatedUnion("type", [
   ReplySuggestionsSchema,
   MessageEnhancedSchema,
   ReplyOptionsSchema,
+  ConversationForkedSchema,
   MessageCommittedSchema,
   TranscriptSchema,
   ErrorSchema,

@@ -6,7 +6,7 @@ const place = (position: number, total: number, kind = "portrait") =>
     payload?: { position?: number; total?: number; kind?: string };
   };
 
-describe("telling a reader where their work sits in the queue", () => {
+describe("telling a user where their work sits in the queue", () => {
   it("carries the place and the length of the queue", () => {
     const parsed = place(2, 5);
 

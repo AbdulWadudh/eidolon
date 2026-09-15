@@ -63,7 +63,7 @@ describe("writeCardChunk", () => {
     expect(meta.width).toBe(CARD_PX);
   });
 
-  it("writes under a keyword the reader looks for", () => {
+  it("writes under a keyword the user looks for", () => {
     expect(CARD_UPLOAD.chunkKeywords).toContain(CARD_UPLOAD.writeKeyword);
   });
 });

@@ -33,6 +33,7 @@ export {
   characterLookUrl,
   characterLoreUrl,
   characterMemoryUrl,
+  characterStartUrl,
   characterMessagesUrl,
   characterMessageUrl,
   characterMindUrl,

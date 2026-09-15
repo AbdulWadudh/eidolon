@@ -1,4 +1,4 @@
-import { readerVoice } from "@/orchestrator/reader";
+import { userVoice } from "@/orchestrator/user";
 import { EnhanceUnavailableError, enhanceMessage } from "@/services/enhance";
 import { sendServerMessage, type WebSocketSender } from "@/ws/protocol";
 
@@ -9,7 +9,7 @@ export async function handleEnhanceMessage(
   userId: string,
 ): Promise<void> {
   try {
-    const text = await enhanceMessage(draft, { reader: readerVoice(characterId, userId) });
+    const text = await enhanceMessage(draft, { user: userVoice(characterId, userId) });
     sendServerMessage(ws, {
       type: "message_enhanced",
       payload: { text, original: draft },

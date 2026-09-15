@@ -18,6 +18,7 @@ import {
   createCharacter,
   deleteCharacter,
   forkCharacter,
+  forkForUser,
   getCharacter,
   listCharacters,
   ownsCharacter,
@@ -29,6 +30,7 @@ import { requestStageBackdrop } from "@/orchestrator/stage-manager";
 import { jobKey } from "@/queue/job-id";
 import { announceQueuePlaces } from "@/queue/queue-place";
 import { enqueueGpuJob } from "@/queue/queues";
+import { publishCharacterMedia } from "@/services/owner-move";
 
 export const characters = new Hono();
 
@@ -204,7 +206,17 @@ characters.post("/:id/publish", async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as { isPublic?: unknown };
   adopt(id, owner.id);
 
-  return c.json({ character: setPublic(id, body.isPublic !== false) });
+  const character = setPublic(id, body.isPublic !== false);
+
+  // Her art leaves the owner's folder the moment she is shared, so nothing has to move
+  // again later. A failure here leaves it where it was and still serving.
+  if (character?.isPublic) {
+    void publishCharacterMedia(id).catch((error: unknown) => {
+      console.error(`[publish] ${id} art stays under its owner: ${String(error)}`);
+    });
+  }
+
+  return c.json({ character });
 });
 
 characters.delete("/:id", async (c) => {
@@ -260,6 +272,21 @@ characters.post("/:id/lore", async (c) => {
 characters.delete("/:id/lore/:entryId", (c) => {
   deleteLoreEntry(c.req.param("entryId"));
   return c.json({ ok: true });
+});
+
+/**
+ * Says this user means to talk to her, not just look. A character someone else owns is
+ * copied here and nowhere else, so browsing a roster leaves nothing behind.
+ */
+characters.post("/:id/start", async (c) => {
+  const id = c.req.param("id");
+  if (!getCharacter(id)) return c.json({ error: "No such character." }, 404);
+
+  const owner = await requireOwner(c);
+  if (!owner) return c.json({ error: "Sign in to start a conversation." }, 401);
+
+  const mine = forkForUser(id, owner.id);
+  return c.json({ characterId: mine?.id ?? id, forked: mine !== null });
 });
 
 characters.post("/:id/portrait", async (c) => {

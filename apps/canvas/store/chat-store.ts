@@ -41,6 +41,8 @@ export const INITIAL_CHAT = {
   replyOptions: null as ReplyOptions | null,
   isRegenerating: false,
   pendingAssistantId: null as string | null,
+  forkedTo: null as string | null,
+  canReply: null as boolean | null,
   enhanceHistory: [] as string[],
   isEnhancing: false,
   mind: null as MindState | null,

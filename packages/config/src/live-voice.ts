@@ -112,6 +112,7 @@ export const TRANSCRIBE = {
 export const CALL_COPY = {
   titleSuffix: "Voice Call",
   speaking: "is speaking…",
+  unnamedSpeaker: "Speaking",
   listening: "Listening to you…",
   thinking: "Thinking…",
   connecting: "Reaching her…",
@@ -170,7 +171,8 @@ export function callTitle(characterName: string): string {
 }
 
 export function callSpeakingLine(characterName: string): string {
-  return `${characterName} ${CALL_COPY.speaking}`;
+  const name = characterName.trim();
+  return name.length > 0 ? `${name} ${CALL_COPY.speaking}` : CALL_COPY.unnamedSpeaker;
 }
 
 export function callDurationLabel(seconds: number): string {

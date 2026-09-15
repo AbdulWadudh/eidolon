@@ -2,13 +2,13 @@ import { STATUS_COPY } from "@eidolon/config";
 import { type ChatTurnEvent, splitInfluence } from "@eidolon/protocol";
 import { SUGGESTIONS, TTS } from "@/config";
 import { appendMessage, getCharacterCard, getRecentMessages } from "@/db";
-import { getCharacter } from "@/db/characters";
+import { forkForUser, getCharacter } from "@/db/characters";
 import { maybeSummarizeChronicle } from "@/orchestrator/chronicle";
 import { rememberExchange } from "@/orchestrator/memory-manager";
 import { scheduleProactiveFollowUp } from "@/orchestrator/proactive";
 import { assemblePrompt } from "@/orchestrator/prompt-builder";
-import { readerVoice } from "@/orchestrator/reader";
 import { settleMind } from "@/orchestrator/turn-mind";
+import { userVoice } from "@/orchestrator/user";
 import type { ChatMessage } from "@/services/llm";
 import { forHistory } from "@/services/photo-line";
 import { exampleLines } from "@/services/self-reference";
@@ -29,7 +29,17 @@ export async function handleChatTurn(
   signal: AbortSignal,
   options: { recordUserTurn?: boolean } = {},
 ): Promise<void> {
-  const characterId = event.character_id;
+  const owned = forkForUser(event.character_id, userId);
+  if (owned) {
+    sendServerMessage(ws, {
+      type: "conversation_forked",
+      payload: { from_character_id: event.character_id, character_id: owned.id },
+    });
+  }
+
+  // Everything after this point — the prompt, the messages, the art — belongs to the
+  // copy this user owns, never to the character someone else published.
+  const characterId = owned?.id ?? event.character_id;
   const userText = event.text;
   const { spoken, influences } = splitInfluence(userText);
   if (signal.aborted) return;
@@ -121,7 +131,7 @@ export async function handleChatTurn(
           {
             characterName: assembled.characterName,
             tier: assembled.tier,
-            reader: readerVoice(characterId, userId),
+            user: userVoice(characterId, userId),
           },
           signal,
         )
@@ -185,7 +195,7 @@ export async function handleRegenerateSuggestions(
           {
             characterName: card.name,
             tier: card.tier,
-            reader: readerVoice(characterId, userId),
+            user: userVoice(characterId, userId),
           },
           signal,
         )

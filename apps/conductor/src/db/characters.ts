@@ -1,9 +1,10 @@
 import { DEFAULT_PRONOUNS, isPronounKey } from "@eidolon/config";
-import { and, count, desc, eq, isNull, or } from "drizzle-orm";
-import { kebabCase } from "es-toolkit";
+import { and, count, desc, eq, isNull, notExists, or, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/sqlite-core";
 import { VOICE } from "@/config";
 import { countMessages, db, getCharacterMind } from "@/db";
-import { characters, messages } from "@/db/tables";
+import { getLoreEntries, upsertLoreEntry } from "@/db/lorebook";
+import { characterState, characters, chronicles, messages, stages } from "@/db/tables";
 import { safeJsonParse } from "@/utils/json";
 
 export interface CharacterCard {
@@ -36,6 +37,8 @@ export interface CharacterSummary extends CharacterCard {
 }
 
 type CharacterRow = typeof characters.$inferSelect;
+
+const forks = alias(characters, "forks");
 
 const COLUMNS = {
   id: characters.id,
@@ -103,18 +106,6 @@ function toCard(row: CardRow): CharacterCard {
   };
 }
 
-export function characterIdFor(name: string, taken: (id: string) => boolean): string {
-  const base = kebabCase(name.trim()) || "character";
-  if (!taken(base)) return base;
-
-  for (let suffix = 2; suffix < 1000; suffix += 1) {
-    const candidate = `${base}-${suffix}`;
-    if (!taken(candidate)) return candidate;
-  }
-
-  return `${base}-${crypto.randomUUID().slice(0, 8)}`;
-}
-
 export function characterExists(id: string): boolean {
   return (
     db.select({ id: characters.id }).from(characters).where(eq(characters.id, id)).get() !==
@@ -135,10 +126,20 @@ function countEveryMessage(characterId: string): number {
 }
 
 export function listCharacters(ownerId?: string): CharacterSummary[] {
-  const visible = ownerId
-    ? or(eq(characters.ownerId, ownerId), eq(characters.isPublic, 1))
+  // Someone who has already forked a character should see their own copy and not the
+  // original beside it, which would read as the same character listed twice.
+  const superseded = ownerId
+    ? notExists(
+        db
+          .select({ one: sql`1` })
+          .from(forks)
+          .where(and(eq(forks.forkedFrom, characters.id), eq(forks.ownerId, ownerId))),
+      )
     : undefined;
 
+  const visible = ownerId
+    ? and(or(eq(characters.ownerId, ownerId), eq(characters.isPublic, 1)), superseded)
+    : undefined;
   const rows = db
     .select(COLUMNS)
     .from(characters)
@@ -165,11 +166,9 @@ export function listCharacters(ownerId?: string): CharacterSummary[] {
 export type CharacterDraft = Partial<Omit<CharacterCard, "id">> & { name: string };
 
 export function createCharacter(draft: CharacterDraft): CharacterCard {
-  const id = characterIdFor(draft.name, characterExists);
-
-  db.insert(characters)
+  const row = db
+    .insert(characters)
     .values({
-      id,
       name: draft.name.trim(),
       tagline: draft.tagline ?? "",
       personality: draft.personality ?? "",
@@ -189,11 +188,10 @@ export function createCharacter(draft: CharacterDraft): CharacterCard {
       forkedFrom: draft.forkedFrom ?? null,
       createdAt: Date.now(),
     })
-    .run();
+    .returning(COLUMNS)
+    .get();
 
-  const created = getCharacter(id);
-  if (!created) throw new Error(`Character "${id}" vanished immediately after being written.`);
-  return created;
+  return toCard(row);
 }
 
 type EditableField = keyof Omit<CharacterCard, "id" | "ownerId" | "forkedFrom">;
@@ -246,10 +244,7 @@ export function ownsCharacter(id: string, ownerId: string): boolean {
   return row?.ownerId === ownerId;
 }
 
-export function updateCharacterOwner(
-  id: string,
-  ownerId: string,
-): CharacterCard | null {
+export function updateCharacterOwner(id: string, ownerId: string): CharacterCard | null {
   if (!characterExists(id)) return null;
   db.update(characters).set({ ownerId }).where(eq(characters.id, id)).run();
   return getCharacter(id);
@@ -306,6 +301,58 @@ export function forkCharacter(
 
   db.update(characters).set(authored).where(eq(characters.id, created.id)).run();
   return created;
+}
+
+/**
+ * The copy of a character a user talks to. A character someone else owns is forked the
+ * first time it is spoken to, so from then on the conversation, the art and every later
+ * edit belong to that user alone and the owner's own changes never reach them.
+ *
+ * Returns null when the character is already theirs and nothing needs to happen.
+ */
+/** The copy of a character this user already talks to, if they have one. Creates nothing. */
+export function existingForkFor(characterId: string, userId: string): CharacterCard | null {
+  const row = db
+    .select(COLUMNS)
+    .from(characters)
+    .where(and(eq(characters.forkedFrom, characterId), eq(characters.ownerId, userId)))
+    .get();
+
+  return row ? toCard(row) : null;
+}
+
+export function forkForUser(characterId: string, userId: string): CharacterCard | null {
+  const source = getCharacter(characterId);
+  if (!source || source.ownerId === userId) return null;
+
+  if (source.ownerId === null) {
+    adopt(characterId, userId);
+    return null;
+  }
+
+  const existing = existingForkFor(characterId, userId);
+  if (existing) return existing;
+  const fork = forkCharacter(source, userId, {});
+  for (const entry of getLoreEntries(characterId)) {
+    upsertLoreEntry(fork.id, {
+      keys: entry.keys,
+      content: entry.content,
+      requiredAffinity: entry.requiredAffinity,
+      isActive: entry.isActive,
+    });
+  }
+
+  // Whatever this user had already seen of her comes with them — her greeting, anything
+  // said before now, how she felt about them. Only their own rows move, so no one else's
+  // conversation is touched and nothing is left stranded on a character they will not see
+  // in their roster again.
+  for (const table of [messages, characterState, stages, chronicles]) {
+    db.update(table)
+      .set({ characterId: fork.id })
+      .where(and(eq(table.characterId, characterId), eq(table.userId, userId)))
+      .run();
+  }
+  return fork;
 }
 
 export function deleteCharacter(id: string): boolean {

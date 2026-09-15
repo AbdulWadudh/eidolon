@@ -36,6 +36,10 @@ export interface ChatStore {
   replyOptions: ReplyOptions | null;
   isRegenerating: boolean;
   pendingAssistantId: string | null;
+  /** Set when a character someone else owns has been copied for this user mid-conversation. */
+  forkedTo: string | null;
+  /** Null until the server says; false while only browsing a character someone else owns. */
+  canReply: boolean | null;
   enhanceHistory: string[];
   isEnhancing: boolean;
   mind: MindState | null;

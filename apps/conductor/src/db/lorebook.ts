@@ -64,7 +64,6 @@ export interface NewLoreEntry {
 export function upsertLoreEntry(characterId: string, entry: NewLoreEntry, id?: string): string {
   ensureCharacter(characterId, null);
 
-  const entryId = id ?? crypto.randomUUID();
   const written = {
     keys: JSON.stringify(entry.keys),
     content: entry.content,
@@ -72,12 +71,12 @@ export function upsertLoreEntry(characterId: string, entry: NewLoreEntry, id?: s
     isActive: entry.isActive === false ? 0 : 1,
   };
 
-  db.insert(lorebookEntries)
-    .values({ id: entryId, characterId, ...written })
+  return db
+    .insert(lorebookEntries)
+    .values({ ...(id ? { id } : {}), characterId, ...written })
     .onConflictDoUpdate({ target: lorebookEntries.id, set: written })
-    .run();
-
-  return entryId;
+    .returning({ id: lorebookEntries.id })
+    .get().id;
 }
 
 export function deleteLoreEntry(entryId: string): void {

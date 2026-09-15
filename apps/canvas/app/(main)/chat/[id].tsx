@@ -1,4 +1,10 @@
-import { CONFIRM_COPY, CONNECTION_COPY, MIND_COPY, STATUS_COPY } from "@eidolon/config";
+import {
+  CONFIRM_COPY,
+  CONNECTION_COPY,
+  GALLERY_COPY,
+  MIND_COPY,
+  STATUS_COPY,
+} from "@eidolon/config";
 import { isString } from "es-toolkit";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import * as React from "react";
@@ -17,7 +23,9 @@ import { MoodSheet } from "@/components/chat/MoodSheet";
 import { OutfitSheet } from "@/components/chat/OutfitSheet";
 import { PhotoRequestSheet } from "@/components/chat/PhotoRequestSheet";
 import { type PhotoAction, PhotoViewer } from "@/components/chat/PhotoViewer";
+import { StartConversation } from "@/components/chat/StartConversation";
 import { SuggestionTray } from "@/components/chat/SuggestionTray";
+import { LoadingState } from "@/components/common/loading-state";
 import { AlertSheet } from "@/components/ui/alert-sheet";
 import { useChatSocket } from "@/hooks/use-chat-socket";
 import { useChatView } from "@/hooks/use-chat-view";
@@ -27,6 +35,7 @@ import { useSuggestions } from "@/hooks/use-suggestions";
 import { VoiceNotesProvider } from "@/hooks/use-voice-notes";
 import { useAffinityStore } from "@/store/affinity-store";
 import { type CharacterCard, fetchCharacter, requestMoment } from "@/store/character-api";
+import { startConversation } from "@/store/chat-api";
 import { forgetCharacter, loadHistory } from "@/store/chat-history";
 import { saveLook } from "@/store/chat-photos";
 import { useChatStore } from "@/store/chat-store";
@@ -86,6 +95,33 @@ export default function ChatScreen() {
       setActiveCharacter(null);
     };
   }, [characterId, setActiveCharacter]);
+
+  // She was someone else's to begin with. The server has handed over a copy of its own,
+  // so the conversation carries on there rather than on the character it started from.
+
+  // Browsing her leaves nothing behind; this is the moment a copy is made.
+
+  // The conversation arrives in one piece or not at all. Letting the feed, the name and
+  // the dock each appear as they land reads as the screen rearranging itself under you.
+  const isReady = card !== null && chat.canReply !== null && !view.isLoadingHistory;
+
+  const [isStarting, setStarting] = React.useState(false);
+  const beginConversation = React.useCallback(() => {
+    setStarting(true);
+    startConversation(serverHost, characterId)
+      .then((mine) => {
+        if (mine !== characterId) router.replace(`/chat/${mine}`);
+        else useChatStore.setState({ canReply: true });
+      })
+      .finally(() => setStarting(false));
+  }, [characterId, router, serverHost]);
+
+  const forkedTo = useChatStore((state) => state.forkedTo);
+  React.useEffect(() => {
+    if (!forkedTo || forkedTo === characterId) return;
+    useChatStore.setState({ forkedTo: null });
+    router.replace(`/chat/${forkedTo}`);
+  }, [forkedTo, characterId, router]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -169,7 +205,7 @@ export default function ChatScreen() {
       className="flex-1 bg-canvas"
     >
       <ChatTopBar
-        characterName={characterName}
+        characterName={isReady ? characterName : ""}
         avatarUrl={view.characterLook.avatarUrl}
         avatarCrop={view.characterLook.avatarCrop}
         onAvatarPress={() => photos.viewAvatar(view.characterLook.avatarUrl)}
@@ -196,59 +232,74 @@ export default function ChatScreen() {
         />
 
         <VoiceNotesProvider autoPlay={autoPlay} onAutoPlayed={chat.clearAutoPlay}>
-          <ChatFeed
-            messages={view.messages}
-            serverHost={serverHost}
-            isStreaming={view.isStreaming}
-            streamingText={view.streamingText}
-            activeStatus={view.activeStatus}
-            statusDetail={view.statusDetail}
-            characterId={characterId}
-            characterName={characterName}
-            isSynthesizingAudio={view.isSynthesizingAudio}
-            isPainting={view.isPainting}
-            isLoadingHistory={view.isLoadingHistory}
-            loadError={view.loadError}
-            onRetryLoad={() => loadHistory(serverHost, characterId)}
-            paintingStep={view.paintingStep}
-            paintingTotal={view.paintingTotal}
-            onOpenPhoto={photos.view}
-          />
+          {isReady ? (
+            <>
+              <ChatFeed
+                messages={view.messages}
+                serverHost={serverHost}
+                isStreaming={view.isStreaming}
+                streamingText={view.streamingText}
+                activeStatus={view.activeStatus}
+                statusDetail={view.statusDetail}
+                characterId={characterId}
+                characterName={isReady ? characterName : ""}
+                isSynthesizingAudio={view.isSynthesizingAudio}
+                isPainting={view.isPainting}
+                isLoadingHistory={view.isLoadingHistory}
+                loadError={view.loadError}
+                onRetryLoad={() => loadHistory(serverHost, characterId)}
+                paintingStep={view.paintingStep}
+                paintingTotal={view.paintingTotal}
+                onOpenPhoto={photos.view}
+              />
 
-          {replies.isTrayVisible ? (
-            <SuggestionTray
-              suggestions={view.suggestions}
-              isLoading={view.isSuggestionsLoading}
-              characterId={characterId}
-              onSend={replies.send}
-              onEdit={replies.edit}
-              onReroll={replies.reroll}
-              onHide={replies.hide}
-            />
-          ) : null}
+              {replies.isTrayVisible ? (
+                <SuggestionTray
+                  suggestions={view.suggestions}
+                  isLoading={view.isSuggestionsLoading}
+                  characterId={characterId}
+                  onSend={replies.send}
+                  onEdit={replies.edit}
+                  onReroll={replies.reroll}
+                  onHide={replies.hide}
+                />
+              ) : null}
 
-          <InputDock
-            value={view.inputText}
-            isStreaming={view.isStreaming}
-            isEnhancing={view.isEnhancing}
-            revertSteps={view.revertSteps}
-            characterId={characterId}
-            inputRef={inputRef}
-            onChangeText={chat.setInputText}
-            onSend={handleSend}
-            onInterrupt={() => chat.interrupt(characterId)}
-            suggestionsOpen={replies.isTrayVisible}
-            moodActive={chat.moodOverride !== null}
-            onAction={(action) => {
-              if (action === "more") setActionsOpen(true);
-              if (action === "lorebook") setMindOpen(true);
-              if (action === "enhance") chat.enhanceInput(characterId);
-              if (action === "revert") chat.revertEnhance();
-              if (action === "suggestions") replies.toggle();
-              if (action === "gallery") photos.openSheet();
-              if (action === "mood") setMoodOpen(true);
-            }}
-          />
+              {chat.canReply ? (
+                <InputDock
+                  value={view.inputText}
+                  isStreaming={view.isStreaming}
+                  isEnhancing={view.isEnhancing}
+                  revertSteps={view.revertSteps}
+                  characterId={characterId}
+                  inputRef={inputRef}
+                  onChangeText={chat.setInputText}
+                  onSend={handleSend}
+                  onInterrupt={() => chat.interrupt(characterId)}
+                  suggestionsOpen={replies.isTrayVisible}
+                  moodActive={chat.moodOverride !== null}
+                  onAction={(action) => {
+                    if (action === "more") setActionsOpen(true);
+                    if (action === "lorebook") setMindOpen(true);
+                    if (action === "enhance") chat.enhanceInput(characterId);
+                    if (action === "revert") chat.revertEnhance();
+                    if (action === "suggestions") replies.toggle();
+                    if (action === "gallery") photos.openSheet();
+                    if (action === "mood") setMoodOpen(true);
+                  }}
+                />
+              ) : (
+                <StartConversation
+                  characterId={characterId}
+                  characterName={characterName}
+                  isStarting={isStarting}
+                  onStart={beginConversation}
+                />
+              )}
+            </>
+          ) : (
+            <LoadingState fill characterId={characterId} label={GALLERY_COPY.loadingChat} />
+          )}
         </VoiceNotesProvider>
       </KeyboardAvoidingView>
 
@@ -304,7 +355,7 @@ export default function ChatScreen() {
         isOpen={photos.isSheetOpen}
         characterId={characterId}
         serverHost={serverHost}
-        characterName={characterName}
+        characterName={isReady ? characterName : ""}
         ideas={view.photoIdeas}
         areIdeasLoading={view.areIdeasLoading}
         onRequestIdeas={() => chat.requestPhotoIdeas(characterId, Boolean(photos.editing))}
@@ -332,7 +383,7 @@ export default function ChatScreen() {
 
       <ChatSheets
         characterId={characterId}
-        characterName={characterName}
+        characterName={isReady ? characterName : ""}
         avatarUrl={view.characterLook.avatarUrl}
         avatarCrop={view.characterLook.avatarCrop}
         serverHost={serverHost}

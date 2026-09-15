@@ -85,15 +85,14 @@ export function getPersona(personaId: string, userId: string): Persona | null {
 
 export function createPersona(userId: string, draft: PersonaDraft): Persona {
   const now = Date.now();
-  const id = crypto.randomUUID();
 
   const isFirst =
     db.select({ id: personas.id }).from(personas).where(eq(personas.userId, userId)).all()
       .length === 0;
 
-  db.insert(personas)
+  const { id } = db
+    .insert(personas)
     .values({
-      id,
       userId,
       name: draft.name?.trim() || "You",
       photoUrl: draft.photoUrl ?? null,
@@ -107,7 +106,8 @@ export function createPersona(userId: string, draft: PersonaDraft): Persona {
       createdAt: now,
       updatedAt: now,
     })
-    .run();
+    .returning({ id: personas.id })
+    .get();
 
   return getPersona(id, userId) as Persona;
 }
@@ -208,7 +208,6 @@ export function addChapter(
 
   db.insert(personaChapters)
     .values({
-      id: crypto.randomUUID(),
       personaId,
       chapterIndex: (highest?.top ?? 0) + 1,
       title,

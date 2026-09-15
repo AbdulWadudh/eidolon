@@ -1,7 +1,10 @@
 import { afterAll, beforeEach, describe, expect, it } from "bun:test";
 import { ensureCharacter, sqlite } from "@/db";
+import { createCharacter } from "@/db/characters";
+import { createPersona, deletePersona } from "@/db/personas";
 import { addPortrait } from "@/db/portraits";
-import { referencedKeys, storedKey } from "@/services/storage-sweep";
+import { namesForKeys } from "@/services/storage-browse";
+import { referencedKeys, storedKey, sweepStorage } from "@/services/storage-sweep";
 
 const TEST_USER = "user:storage-sweep";
 
@@ -104,4 +107,50 @@ afterAll(() => {
   sqlite.query("DELETE FROM character_portraits WHERE character_id = ?").run(CHARACTER_ID);
   sqlite.query("DELETE FROM messages WHERE character_id = ?").run(CHARACTER_ID);
   sqlite.query("DELETE FROM characters WHERE id = ?").run(CHARACTER_ID);
+});
+
+describe("reading a bucket laid out by uuid", () => {
+  it("names the characters whose folders are in the keys", () => {
+    const made = createCharacter({ name: "Storage Named" });
+
+    const names = namesForKeys([
+      `someone@example.com/characters/${made.id}/portraits/a.webp`,
+      `someone@example.com/characters/${made.id}/audio/b.mp3`,
+      "public/characters/not-a-character/c.webp",
+      "someone@example.com/personas/persona-1/d.webp",
+    ]);
+
+    expect(names[made.id]).toBe("Storage Named");
+    expect(names["not-a-character"]).toBeUndefined();
+    expect(Object.keys(names)).toHaveLength(1);
+
+    sqlite.query("DELETE FROM characters WHERE id = ?").run(made.id);
+  });
+
+  it("says nothing when no key names a character", () => {
+    expect(namesForKeys(["someone@example.com/personas/p/a.webp"])).toEqual({});
+  });
+});
+
+describe("naming a persona's folder", () => {
+  it("shows the persona by name, the way a character's folder is", () => {
+    const persona = createPersona(TEST_USER, { name: "Storage Persona" });
+
+    const names = namesForKeys([`someone@example.com/personas/${persona.id}/photo.webp`]);
+
+    expect(names[persona.id]).toBe("Storage Persona");
+
+    deletePersona(persona.id, TEST_USER);
+  });
+});
+
+describe("what the scan reports", () => {
+  it("counts everything unreferenced, and separately what is old enough to take", async () => {
+    const report = await sweepStorage({ dryRun: true });
+
+    expect(report.orphans.length).toBeLessThanOrEqual(report.unreferenced.length);
+    for (const object of report.orphans) {
+      expect(report.unreferenced.some((one) => one.key === object.key)).toBe(true);
+    }
+  });
 });

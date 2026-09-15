@@ -1,1 +1,0 @@
-ALTER TABLE `characters` ADD `background_chosen` integer DEFAULT 0;

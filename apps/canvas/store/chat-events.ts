@@ -215,6 +215,11 @@ export function reduceServerMessage(
       break;
     }
 
+    case "conversation_forked": {
+      set({ forkedTo: msg.payload.character_id });
+      break;
+    }
+
     case "message_committed": {
       set({ pendingAssistantId: msg.payload.message_id });
       break;

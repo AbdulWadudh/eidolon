@@ -35,18 +35,17 @@ export function appendChronicle(
   summaryText: string,
 ): string {
   ensureCharacter(characterId, userId);
-  const id = crypto.randomUUID();
   const createdAt = Date.now();
 
-  db.insert(chronicles)
-    .values({ id, characterId, userId, chapterIndex, summaryText, createdAt })
+  return db
+    .insert(chronicles)
+    .values({ characterId, userId, chapterIndex, summaryText, createdAt })
     .onConflictDoUpdate({
       target: [chronicles.characterId, chronicles.userId, chronicles.chapterIndex],
       set: { summaryText, createdAt },
     })
-    .run();
-
-  return id;
+    .returning({ id: chronicles.id })
+    .get().id;
 }
 
 export function getChronicles(

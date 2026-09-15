@@ -26,13 +26,14 @@ export interface AuditWrite {
 const NEWEST_FIRST = [desc(adminAudit.createdAt), desc(sql`rowid`)] as const;
 
 export function recordAudit(entry: AuditWrite): AuditEntry {
-  const id = crypto.randomUUID();
   const createdAt = Date.now();
   const detail = entry.detail ? entry.detail.slice(0, AUDIT.maxDetailChars) : null;
 
-  db.insert(adminAudit)
-    .values({ id, ...entry, detail, createdAt })
-    .run();
+  const { id } = db
+    .insert(adminAudit)
+    .values({ ...entry, detail, createdAt })
+    .returning({ id: adminAudit.id })
+    .get();
 
   pruneAudit();
   return { id, ...entry, detail, createdAt };

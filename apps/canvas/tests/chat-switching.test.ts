@@ -17,14 +17,26 @@ interface Transcript {
 }
 
 const transcripts = new Map<string, Transcript>();
+const forks = new Map<string, string>();
+let failNext = false;
 
 mock.module("@/store/chat-api", () => ({
-  fetchTranscript: async (_host: string, characterId: string) =>
-    transcripts.get(characterId) ?? {
-      messages: [],
-      mind: null,
-      look: { avatarUrl: null, avatarCrop: null, backgroundUrl: null, faceUrl: null },
-    },
+  fetchTranscript: async (_host: string, characterId: string) => {
+    if (failNext) {
+      failNext = false;
+      throw new Error("offline");
+    }
+
+    return {
+      characterId: forks.get(characterId) ?? characterId,
+      canReply: true,
+      ...(transcripts.get(characterId) ?? {
+        messages: [],
+        mind: null,
+        look: { avatarUrl: null, avatarCrop: null, backgroundUrl: null, faceUrl: null },
+      }),
+    };
+  },
   forgetCharacter: async () => ({ mind: null }),
 }));
 
@@ -178,5 +190,52 @@ describe("arriving from a character with a longer history", () => {
     useChatStore.getState().setActiveCharacter("ines-vaz");
 
     expect(useChatStore.getState().messages).toHaveLength(12);
+  });
+});
+
+describe("opening a character that belongs to someone else", () => {
+  it("is told to carry on with a copy of its own, before anything is on screen", async () => {
+    forks.set("public-mara", "my-mara");
+    useChatStore.setState({ forkedTo: null, messages: [] });
+
+    await loadHistory("http://host", "public-mara");
+
+    expect(useChatStore.getState().forkedTo).toBe("my-mara");
+    expect(useChatStore.getState().messages).toHaveLength(0);
+    forks.clear();
+  });
+
+  it("says nothing about forks for a character that is already yours", async () => {
+    useChatStore.setState({ forkedTo: null, messages: [] });
+
+    await loadHistory("http://host", "mine-already");
+
+    expect(useChatStore.getState().forkedTo).toBeNull();
+  });
+});
+
+describe("the footer while the conversation is still loading", () => {
+  it("knows nothing until the server answers, so neither control is guessed", () => {
+    useChatStore.setState({ canReply: null });
+
+    expect(useChatStore.getState().canReply).toBeNull();
+  });
+
+  it("offers the input once the character turns out to be this user's", async () => {
+    useChatStore.setState({ canReply: null, messages: [], activeCharacterId: undefined });
+
+    await loadHistory("http://host", "mine-already");
+
+    expect(useChatStore.getState().canReply).toBe(true);
+  });
+
+  it("falls back to the input rather than a dead footer when loading fails", async () => {
+    useChatStore.setState({ canReply: null, messages: [], activeCharacterId: undefined });
+    failNext = true;
+
+    await loadHistory("http://host", "unreachable");
+
+    expect(useChatStore.getState().canReply).toBe(true);
+    expect(useChatStore.getState().lastError).not.toBeNull();
   });
 });

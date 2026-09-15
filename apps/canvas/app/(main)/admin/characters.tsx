@@ -189,7 +189,7 @@ export default function AdminCharactersScreen() {
             <EditableRow
               leading={<Portrait character={character} />}
               title={character.name}
-              subtitle={character.tagline || character.id}
+              subtitle={character.tagline}
               badge={character.isPublic ? "Public" : null}
               expanded={openId === character.id}
               onToggle={() => open(character)}

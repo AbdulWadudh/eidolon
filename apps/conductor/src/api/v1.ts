@@ -19,7 +19,7 @@ import {
   getTranscript,
   updateMessageContent,
 } from "@/db";
-import { getCharacter } from "@/db/characters";
+import { existingForkFor, getCharacter } from "@/db/characters";
 import {
   appendChronicle,
   deleteChronicle,
@@ -141,7 +141,14 @@ v1.delete(`${API_ROUTES.prompts}/:key`, async (c) => {
   }
 });
 
-function openingTranscript(characterId: string, userId: string) {
+/**
+ * What the conversation looks like when it is opened. Someone browsing a character
+ * another user owns is shown her greeting without it being written down — nothing is
+ * kept until they choose to start talking to her.
+ */
+const GREETING_PREVIEW_ID = "greeting-preview";
+
+function openingTranscript(characterId: string, userId: string, keep: boolean) {
   const transcript = getTranscript(characterId, userId, TRANSCRIPT.pageSize);
   if (transcript.length > 0) return transcript;
 
@@ -150,7 +157,7 @@ function openingTranscript(characterId: string, userId: string) {
 
   return [
     {
-      id: appendMessage(characterId, "assistant", greeting, userId),
+      id: keep ? appendMessage(characterId, "assistant", greeting, userId) : GREETING_PREVIEW_ID,
       role: "assistant",
       content: greeting,
       audioUrl: null,
@@ -160,13 +167,19 @@ function openingTranscript(characterId: string, userId: string) {
     },
   ];
 }
-
 v1.get(`${API_ROUTES.characters}/:id/messages`, (c) => {
-  const characterId = c.req.param("id");
   const userId = c.get("user").id;
-  const card = getCharacterCard(characterId, userId);
-  const mind = getCharacterMind(characterId, userId);
+  const requested = c.req.param("id");
+  const source = getCharacter(requested);
 
+  // A character someone else owns is browsed, not joined, until the user says they want
+  // to talk to her. Once they have, they have a copy of their own and belong on it.
+  const mine = existingForkFor(requested, userId);
+  const characterId = mine?.id ?? requested;
+  const canReply = mine !== null || source?.ownerId === null || source?.ownerId === userId;
+
+  const mind = getCharacterMind(characterId, userId);
+  const card = getCharacterCard(characterId, userId);
   const look = getCharacterLook(characterId);
   const scene = currentStage(characterId, userId);
 
@@ -174,13 +187,14 @@ v1.get(`${API_ROUTES.characters}/:id/messages`, (c) => {
     character: {
       id: characterId,
       name: card.name,
+      canReply,
       ...mind,
       ...look,
       backgroundUrl: hasChosenBackground(characterId)
         ? (look.backgroundUrl ?? scene?.backdropUrl)
         : (scene?.backdropUrl ?? look.backgroundUrl),
     },
-    messages: openingTranscript(characterId, userId),
+    messages: openingTranscript(characterId, userId, canReply),
   });
 });
 

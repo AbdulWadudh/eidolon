@@ -112,7 +112,7 @@ export const AUTHOR_FIELDS: Record<AuthorField, AuthorFieldSpec> = {
   scenario: {
     label: "Scenario",
     guidance:
-      "Two or three sentences saying where the two of you are and how you know each other. Address the reader as you.",
+      "Two or three sentences saying where the two of you are and how you know each other. Address the user as you.",
     maxTokens: 160,
     maxChars: 500,
     visual: false,
@@ -272,7 +272,7 @@ export const AUTHORING = {
   enhanceGrowthRatio: 3,
   enhanceGrowthFloorChars: 220,
   contextLabel: "The character so far:",
-  readerContextLabel: "What they have written about themselves so far:",
+  userContextLabel: "What they have written about themselves so far:",
   draftLabel: "Current:",
   writeLabel: "Write the",
   fields: AUTHOR_FIELDS,

@@ -186,7 +186,7 @@ async function generateOne(
         player: PLAYER_LABEL,
         character: context.characterName,
         tier: context.tier,
-        reader: context.reader ?? "",
+        user: context.user ?? "",
       }),
     },
   ];
@@ -213,7 +213,7 @@ async function generateOne(
 export interface SuggestionContext {
   characterName: string;
   tier: string;
-  reader?: string;
+  user?: string;
 }
 
 export async function generateReplySuggestions(

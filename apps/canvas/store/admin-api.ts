@@ -314,6 +314,8 @@ export interface StorageView {
   skipped: "not-connected" | "no-references" | null;
   freedBytes: number;
   removed: string[];
+  unreferenced: StoredObjectView[];
+  unreferencedBytes: number;
   orphans: StoredObjectView[];
   orphanBytes: number;
 }
@@ -534,6 +536,7 @@ export interface BrowseView {
   limit: number;
   offset: number;
   objects: BrowsedObject[];
+  names: Record<string, string>;
 }
 
 export function browseStorage(

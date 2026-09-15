@@ -9,8 +9,12 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
+function newId(): string {
+  return crypto.randomUUID();
+}
+
 export const characters = sqliteTable("characters", {
-  id: text().primaryKey(),
+  id: text().primaryKey().$defaultFn(newId),
   name: text().notNull(),
   tagline: text(),
   personality: text(),
@@ -47,7 +51,7 @@ export const characters = sqliteTable("characters", {
 export const messages = sqliteTable(
   "messages",
   {
-    id: text().primaryKey(),
+    id: text().primaryKey().$defaultFn(newId),
     characterId: text("character_id")
       .notNull()
       .references(() => characters.id, { onDelete: "cascade" }),
@@ -62,14 +66,14 @@ export const messages = sqliteTable(
     userId: text("user_id"),
   },
   (table) => [
-    index("idx_messages_reader").on(table.characterId, table.userId, desc(table.createdAt)),
+    index("idx_messages_user").on(table.characterId, table.userId, desc(table.createdAt)),
   ],
 );
 
 export const stages = sqliteTable(
   "stages",
   {
-    id: text().primaryKey(),
+    id: text().primaryKey().$defaultFn(newId),
     characterId: text("character_id")
       .notNull()
       .references(() => characters.id, { onDelete: "cascade" }),
@@ -80,9 +84,7 @@ export const stages = sqliteTable(
     updatedAt: integer("updated_at"),
     userId: text("user_id"),
   },
-  (table) => [
-    uniqueIndex("idx_stages_reader_name").on(table.characterId, table.userId, table.name),
-  ],
+  (table) => [uniqueIndex("idx_stages_user_name").on(table.characterId, table.userId, table.name)],
 );
 
 export const prompts = sqliteTable("prompts", {
@@ -94,7 +96,7 @@ export const prompts = sqliteTable("prompts", {
 export const chronicles = sqliteTable(
   "chronicles",
   {
-    id: text().primaryKey(),
+    id: text().primaryKey().$defaultFn(newId),
     characterId: text("character_id")
       .notNull()
       .references(() => characters.id, { onDelete: "cascade" }),
@@ -104,12 +106,12 @@ export const chronicles = sqliteTable(
     userId: text("user_id"),
   },
   (table) => [
-    uniqueIndex("idx_chronicles_reader_chapter").on(
+    uniqueIndex("idx_chronicles_user_chapter").on(
       table.characterId,
       table.userId,
       table.chapterIndex,
     ),
-    index("idx_chronicles_reader").on(table.characterId, table.userId, table.chapterIndex),
+    index("idx_chronicles_user").on(table.characterId, table.userId, table.chapterIndex),
     index("idx_chronicles_character").on(table.characterId, desc(table.chapterIndex)),
   ],
 );
@@ -117,7 +119,7 @@ export const chronicles = sqliteTable(
 export const lorebookEntries = sqliteTable(
   "lorebook_entries",
   {
-    id: text().primaryKey(),
+    id: text().primaryKey().$defaultFn(newId),
     characterId: text("character_id")
       .notNull()
       .references(() => characters.id, { onDelete: "cascade" }),
@@ -132,7 +134,9 @@ export const lorebookEntries = sqliteTable(
 export const characterPortraits = sqliteTable(
   "character_portraits",
   {
-    id: text().primaryKey(),
+    id: text()
+      .primaryKey()
+      .$defaultFn(() => `portrait:${newId()}`),
     characterId: text("character_id")
       .notNull()
       .references(() => characters.id, { onDelete: "cascade" }),
@@ -155,7 +159,7 @@ export const configOverrides = sqliteTable("config_overrides", {
 export const adminAudit = sqliteTable(
   "admin_audit",
   {
-    id: text().primaryKey(),
+    id: text().primaryKey().$defaultFn(newId),
     actorId: text("actor_id"),
     actorEmail: text("actor_email"),
     method: text().notNull(),
@@ -191,7 +195,7 @@ export const characterState = sqliteTable(
 export const personas = sqliteTable(
   "personas",
   {
-    id: text().primaryKey(),
+    id: text().primaryKey().$defaultFn(newId),
     userId: text("user_id").notNull(),
     name: text().notNull(),
     photoUrl: text("photo_url"),
@@ -206,13 +210,13 @@ export const personas = sqliteTable(
     createdAt: integer("created_at").notNull(),
     updatedAt: integer("updated_at").notNull(),
   },
-  (table) => [index("idx_personas_reader").on(table.userId, desc(table.updatedAt))],
+  (table) => [index("idx_personas_user").on(table.userId, desc(table.updatedAt))],
 );
 
 export const personaChapters = sqliteTable(
   "persona_chapters",
   {
-    id: text().primaryKey(),
+    id: text().primaryKey().$defaultFn(newId),
     personaId: text("persona_id")
       .notNull()
       .references(() => personas.id, { onDelete: "cascade" }),

@@ -87,7 +87,7 @@ export function CallSubtitles({
 
         {hers.length > 0 ? (
           <SpokenLine
-            label={characterName}
+            label={characterName || CALL_COPY.unnamedSpeaker}
             labelColor={theme.primary}
             text={hers}
             reduced={reduced}

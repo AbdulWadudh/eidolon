@@ -8,13 +8,13 @@ import { deletePortrait } from "@/db/portraits";
 
 export const gallery = new Hono();
 
-async function reader(c: Context) {
+async function user(c: Context) {
   return ownerFor(c.req.header("Authorization") ?? c.req.query("token"));
 }
 
 gallery.get("/:id/gallery", async (c) => {
   const id = c.req.param("id");
-  const who = await reader(c);
+  const who = await user(c);
   if (!who) return c.json({ error: "Sign in to see this." }, 401);
   const asked = Number.parseInt(c.req.query("limit") ?? "", 10);
   const offset = Math.max(0, Number.parseInt(c.req.query("offset") ?? "", 10) || 0);
@@ -33,7 +33,7 @@ gallery.delete("/:id/gallery/:imageId", async (c) => {
   const id = c.req.param("id");
   const imageId = c.req.param("imageId");
 
-  const who = await reader(c);
+  const who = await user(c);
   if (!who) return c.json({ error: "Sign in to change this." }, 401);
   if (!ownsCharacter(id, who.id)) {
     return c.json({ error: "That character belongs to somebody else." }, 403);

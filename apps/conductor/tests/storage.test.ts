@@ -10,7 +10,9 @@ import {
   imageKey,
   missingStorageConfig,
   personaKey,
+  portraitKey,
   publicUrl,
+  stageKey,
 } from "@/services/storage";
 
 const TEST_CONFIG = {
@@ -103,35 +105,44 @@ describe("Persistent OS data paths", () => {
 });
 
 describe("Object storage keys and URLs", () => {
-  it("namespaces images by owner and character", () => {
-    expect(imageKey("char-42", "portrait.webp")).toBe(
+  it("files a user's chat photos under that user, not the character's owner", () => {
+    expect(imageKey("user:ana", "char-42", "portrait.webp")).toBe(
       "unowned/characters/char-42/images/portrait.webp",
     );
   });
 
-  it("namespaces audio by owner and character", () => {
-    expect(audioKey("char-42", "line-001.mp3")).toBe(
+  it("files a user's voice notes the same way", () => {
+    expect(audioKey("user:ana", "char-42", "line-001.mp3")).toBe(
       "unowned/characters/char-42/audio/line-001.mp3",
     );
   });
 
-  it("files a character nobody owns under a name of its own, never at the root", () => {
-    expect(imageKey("char-42", "portrait.webp").startsWith("characters/")).toBe(false);
-    expect(imageKey("char-42", "portrait.webp").split("/")[0]).toBe("unowned");
+  it("keeps backdrops apart from chat photos", () => {
+    expect(stageKey("user:ana", "char-42", "stage-kitchen.webp")).toBe(
+      "unowned/characters/char-42/stages/stage-kitchen.webp",
+    );
   });
 
-  it("keeps a reader's own pictures apart from any character's", () => {
-    expect(personaKey("reader@example.com", "persona-7", "photo.webp")).toBe(
-      "reader@example.com/personas/persona-7/photo.webp",
+  it("files a private character's own art under its owner, in a folder of its own", () => {
+    expect(portraitKey("char-42", "portrait.webp")).toBe(
+      "unowned/characters/char-42/portraits/portrait.webp",
+    );
+  });
+
+  it("never files a character at the bucket root", () => {
+    expect(portraitKey("char-42", "portrait.webp").startsWith("characters/")).toBe(false);
+    expect(imageKey("user:ana", "char-42", "p.webp").split("/")[0]).toBe("unowned");
+  });
+
+  it("keeps a user's own pictures apart from any character's", () => {
+    expect(personaKey("user@example.com", "persona-7", "photo.webp")).toBe(
+      "user@example.com/personas/persona-7/photo.webp",
     );
   });
 
   it("derives the public base from the endpoint and bucket when S3_PUBLIC_URL is unset", () => {
-    expect(publicUrl(imageKey("char-42", "portrait.webp"))).toBe(
+    expect(publicUrl(imageKey("user:ana", "char-42", "portrait.webp"))).toBe(
       `${TEST_CONFIG.S3_ENDPOINT}/${TEST_CONFIG.S3_BUCKET}/unowned/characters/char-42/images/portrait.webp`,
-    );
-    expect(publicUrl(audioKey("char-42", "line-001.mp3"))).toBe(
-      `${TEST_CONFIG.S3_ENDPOINT}/${TEST_CONFIG.S3_BUCKET}/unowned/characters/char-42/audio/line-001.mp3`,
     );
   });
 
@@ -139,7 +150,7 @@ describe("Object storage keys and URLs", () => {
     process.env.S3_PUBLIC_URL = "https://cdn.example.com/media";
 
     try {
-      expect(publicUrl(audioKey("char-42", "line-001.mp3"))).toBe(
+      expect(publicUrl(audioKey("user:ana", "char-42", "line-001.mp3"))).toBe(
         "https://cdn.example.com/media/unowned/characters/char-42/audio/line-001.mp3",
       );
     } finally {

@@ -42,7 +42,7 @@ describe("separating what she says from what gets rendered", () => {
     expect(tags.visualPrompt()).toBe("a balcony");
   });
 
-  it("keeps the reader's half when only the speech tag is used", () => {
+  it("keeps the user's half when only the speech tag is used", () => {
     const { shown, visual } = streamed(["<speech>", "Just this.", "</speech>"]);
     expect(shown).toBe("Just this.");
     expect(visual).toBe("");
@@ -55,7 +55,7 @@ describe("separating what she says from what gets rendered", () => {
   });
 });
 
-describe("chat template tokens never reach the reader", () => {
+describe("chat template tokens never reach the user", () => {
   it("drops a stop token the sampler let through", () => {
     const { shown } = streamed(["All done.", "<|im_end|>"]);
     expect(shown).toBe("All done.");

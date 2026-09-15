@@ -21,6 +21,7 @@ export const QUEUE_JOBS = {
   uploadImage: "upload-image",
   uploadAudio: "upload-audio",
   proactiveMessage: "proactive-message",
+  relocateCharacterMedia: "relocate-character-media",
 } as const;
 
 export const QUEUE_ANNOUNCE = {

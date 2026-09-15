@@ -1,4 +1,4 @@
-import { setMessageAudio } from "@/db";
+import { messageOwner, setMessageAudio } from "@/db";
 import { mp3DurationSeconds } from "@/services/audio-duration";
 import { isStorageConnected, uploadAudio } from "@/services/storage";
 
@@ -17,9 +17,14 @@ export async function storeVoiceNote(
 
   if (!isStorageConnected()) return { url: null, durationSeconds };
 
-  try {
-    const stored = await uploadAudio(characterId, `${messageId}.mp3`, bytes);
+  const userId = messageOwner(messageId);
+  if (!userId) {
+    console.error(`[voice-notes] message ${messageId} has no user, so the note cannot be filed`);
+    return { url: null, durationSeconds };
+  }
 
+  try {
+    const stored = await uploadAudio(userId, characterId, `${messageId}.mp3`, bytes);
     const url = `${stored}${stored.includes("?") ? "&" : "?"}v=${Date.now().toString(36)}`;
 
     setMessageAudio(messageId, url, durationSeconds);

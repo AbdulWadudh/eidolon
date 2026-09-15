@@ -13,6 +13,9 @@ export interface StoredObject {
 export interface SweepReport {
   scanned: number;
   referenced: number;
+  /** Everything the library does not name. */
+  unreferenced: StoredObject[];
+  /** Those of them settled long enough to be safe to remove. */
   orphans: StoredObject[];
   removed: string[];
   freedBytes: number;
@@ -92,6 +95,7 @@ export async function sweepStorage(options: { dryRun?: boolean } = {}): Promise<
   const empty: SweepReport = {
     scanned: 0,
     referenced: 0,
+    unreferenced: [],
     orphans: [],
     removed: [],
     freedBytes: 0,
@@ -109,14 +113,18 @@ export async function sweepStorage(options: { dryRun?: boolean } = {}): Promise<
     return { ...empty, scanned: stored.length, skipped: "no-references" };
   }
 
+  // Something uploaded a moment ago may simply not have had its url written down yet, so
+  // only the ones that have sat unclaimed for a while are safe to take.
   const settled = Date.now() - STORAGE_SWEEP.graceMs;
-  const orphans = stored.filter(
-    (object) => !keys.has(object.key) && object.modifiedAt > 0 && object.modifiedAt < settled,
+  const unreferenced = stored.filter((object) => !keys.has(object.key));
+  const orphans = unreferenced.filter(
+    (object) => object.modifiedAt > 0 && object.modifiedAt < settled,
   );
 
   const report: SweepReport = {
     scanned: stored.length,
     referenced: keys.size,
+    unreferenced,
     orphans,
     removed: [],
     freedBytes: 0,

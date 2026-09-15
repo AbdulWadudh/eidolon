@@ -201,13 +201,20 @@ export function appendMessage(
   userId: string,
 ): string {
   ensureCharacter(characterId, userId);
-  const id = crypto.randomUUID();
 
-  db.insert(messages)
-    .values({ id, characterId, role, content, createdAt: Date.now(), userId })
-    .run();
+  return db
+    .insert(messages)
+    .values({ characterId, role, content, createdAt: Date.now(), userId })
+    .returning({ id: messages.id })
+    .get().id;
+}
 
-  return id;
+// Media made in a conversation belongs to whoever was in it, and the message already knows.
+export function messageOwner(messageId: string): string | null {
+  return (
+    db.select({ userId: messages.userId }).from(messages).where(eq(messages.id, messageId)).get()
+      ?.userId ?? null
+  );
 }
 
 export function deleteMessage(messageId: string, userId: string): boolean {

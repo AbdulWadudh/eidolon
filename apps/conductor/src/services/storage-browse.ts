@@ -1,5 +1,7 @@
-import { MEDIA_TYPES, type MediaKind } from "@eidolon/config";
+import { MEDIA_TYPES, type MediaKind, STORAGE } from "@eidolon/config";
 import { STORAGE_BROWSER } from "@/config";
+import { db } from "@/db";
+import { characters, personas } from "@/db/tables";
 import { getStorageConfig, isStorageConnected } from "@/services/storage";
 import { listStoredObjects, referencedKeys, type StoredObject } from "@/services/storage-sweep";
 
@@ -90,11 +92,52 @@ export interface BrowseResult {
   limit: number;
   offset: number;
   objects: BrowsedObject[];
+  /** Character id -> name, so the browser can show who a uuid folder belongs to. */
+  names: Record<string, string>;
 }
 
 function bounded(value: number | undefined, fallback: number, most: number): number {
   if (value === undefined || !Number.isFinite(value) || value < 0) return fallback;
   return Math.min(Math.floor(value), most);
+}
+
+/**
+ * Names for the ids that appear in these keys. The bucket is laid out by uuid, which is
+ * right for storage and unreadable for a person, so the browser can show whose folder is
+ * whose without the keys themselves meaning anything different.
+ */
+export function namesForKeys(keys: string[]): Record<string, string> {
+  const wanted = {
+    [STORAGE.characterPrefix]: new Set<string>(),
+    [STORAGE.personaPrefix]: new Set<string>(),
+  };
+
+  for (const key of keys) {
+    const parts = key.split("/");
+    for (const prefix of [STORAGE.characterPrefix, STORAGE.personaPrefix]) {
+      const at = parts.indexOf(prefix);
+      if (at >= 0 && parts[at + 1]) wanted[prefix].add(parts[at + 1]);
+    }
+  }
+
+  const named: Record<string, string> = {};
+
+  if (wanted[STORAGE.characterPrefix].size > 0) {
+    for (const row of db
+      .select({ id: characters.id, name: characters.name })
+      .from(characters)
+      .all()) {
+      if (wanted[STORAGE.characterPrefix].has(row.id)) named[row.id] = row.name;
+    }
+  }
+
+  if (wanted[STORAGE.personaPrefix].size > 0) {
+    for (const row of db.select({ id: personas.id, name: personas.name }).from(personas).all()) {
+      if (wanted[STORAGE.personaPrefix].has(row.id)) named[row.id] = row.name;
+    }
+  }
+
+  return named;
 }
 
 export async function browseStorage(query: BrowseQuery = {}): Promise<BrowseResult> {
@@ -117,6 +160,7 @@ export async function browseStorage(query: BrowseQuery = {}): Promise<BrowseResu
     limit: STORAGE_BROWSER.pageSize,
     offset: 0,
     objects: [],
+    names: {},
   };
 
   if (!isStorageConnected()) return empty;
@@ -170,5 +214,6 @@ export async function browseStorage(query: BrowseQuery = {}): Promise<BrowseResu
     limit,
     offset,
     objects: matched.slice(offset, offset + limit),
+    names: namesForKeys(stored.map((object) => object.key)),
   };
 }

@@ -49,7 +49,7 @@ async function streamOnce(
   const tags = createOutputTags();
   const gate = createActionGate();
 
-  const stop = [...STOP_TOKENS, ...CHAT_TURN.photoNoteStops, ...CHAT_TURN.readerTurnStops];
+  const stop = [...STOP_TOKENS, ...CHAT_TURN.photoNoteStops, ...CHAT_TURN.userTurnStops];
   let reply = "";
   let said = false;
   let drained = 0;
@@ -130,7 +130,7 @@ async function sayItOutLoud(
         maxTokens: CHAT_TURN.maxTokens,
         presencePenalty: PROFILE.sampling.presencePenalty,
         frequencyPenalty: PROFILE.sampling.frequencyPenalty,
-        stop: [...STOP_TOKENS, ...CHAT_TURN.photoNoteStops, ...CHAT_TURN.readerTurnStops],
+        stop: [...STOP_TOKENS, ...CHAT_TURN.photoNoteStops, ...CHAT_TURN.userTurnStops],
       },
     )) {
       raw += token;

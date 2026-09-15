@@ -60,7 +60,12 @@ CREATE TABLE `characters` (
 	`theme_pigment` text,
 	`pronouns` text,
 	`default_affinity` integer,
-	`default_mood` text
+	`default_mood` text,
+	`outfit` text,
+	`likes` text,
+	`dislikes` text,
+	`persona_id` text,
+	`background_chosen` integer DEFAULT 0
 );
 --> statement-breakpoint
 CREATE TABLE `chronicles` (
@@ -73,8 +78,8 @@ CREATE TABLE `chronicles` (
 	FOREIGN KEY (`character_id`) REFERENCES `characters`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `idx_chronicles_reader_chapter` ON `chronicles` (`character_id`,`user_id`,`chapter_index`);--> statement-breakpoint
-CREATE INDEX `idx_chronicles_reader` ON `chronicles` (`character_id`,`user_id`,`chapter_index`);--> statement-breakpoint
+CREATE UNIQUE INDEX `idx_chronicles_user_chapter` ON `chronicles` (`character_id`,`user_id`,`chapter_index`);--> statement-breakpoint
+CREATE INDEX `idx_chronicles_user` ON `chronicles` (`character_id`,`user_id`,`chapter_index`);--> statement-breakpoint
 CREATE INDEX `idx_chronicles_character` ON `chronicles` (`character_id`,"chapter_index" desc);--> statement-breakpoint
 CREATE TABLE `config_overrides` (
 	`path` text PRIMARY KEY NOT NULL,
@@ -108,7 +113,36 @@ CREATE TABLE `messages` (
 	FOREIGN KEY (`character_id`) REFERENCES `characters`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE INDEX `idx_messages_reader` ON `messages` (`character_id`,`user_id`,"created_at" desc);--> statement-breakpoint
+CREATE INDEX `idx_messages_user` ON `messages` (`character_id`,`user_id`,"created_at" desc);--> statement-breakpoint
+CREATE TABLE `persona_chapters` (
+	`id` text PRIMARY KEY NOT NULL,
+	`persona_id` text NOT NULL,
+	`chapter_index` integer NOT NULL,
+	`title` text,
+	`body` text NOT NULL,
+	`created_at` integer NOT NULL,
+	FOREIGN KEY (`persona_id`) REFERENCES `personas`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
+CREATE INDEX `idx_persona_chapters_persona` ON `persona_chapters` (`persona_id`,`chapter_index`);--> statement-breakpoint
+CREATE TABLE `personas` (
+	`id` text PRIMARY KEY NOT NULL,
+	`user_id` text NOT NULL,
+	`name` text NOT NULL,
+	`photo_url` text,
+	`photo_crop` text,
+	`bio` text,
+	`hobbies` text,
+	`likes` text,
+	`dislikes` text,
+	`personality` text,
+	`pronouns` text,
+	`is_default` integer DEFAULT 0,
+	`created_at` integer NOT NULL,
+	`updated_at` integer NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `idx_personas_user` ON `personas` (`user_id`,"updated_at" desc);--> statement-breakpoint
 CREATE TABLE `prompts` (
 	`key` text PRIMARY KEY NOT NULL,
 	`value` text NOT NULL,
@@ -123,7 +157,61 @@ CREATE TABLE `stages` (
 	`lighting_tint` text,
 	`soundscape_stems` text,
 	`updated_at` integer,
+	`user_id` text,
 	FOREIGN KEY (`character_id`) REFERENCES `characters`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `idx_stages_character_name` ON `stages` (`character_id`,`name`);
+CREATE UNIQUE INDEX `idx_stages_user_name` ON `stages` (`character_id`,`user_id`,`name`);--> statement-breakpoint
+CREATE TABLE `account` (
+	`id` text PRIMARY KEY NOT NULL,
+	`accountId` text NOT NULL,
+	`providerId` text NOT NULL,
+	`userId` text NOT NULL,
+	`accessToken` text,
+	`refreshToken` text,
+	`idToken` text,
+	`accessTokenExpiresAt` numeric,
+	`refreshTokenExpiresAt` numeric,
+	`scope` text,
+	`password` text,
+	`createdAt` numeric NOT NULL,
+	`updatedAt` numeric NOT NULL,
+	FOREIGN KEY (`userId`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
+CREATE INDEX `account_userId_idx` ON `account` (`userId`);--> statement-breakpoint
+CREATE TABLE `session` (
+	`id` text PRIMARY KEY NOT NULL,
+	`expiresAt` numeric NOT NULL,
+	`token` text NOT NULL,
+	`createdAt` numeric NOT NULL,
+	`updatedAt` numeric NOT NULL,
+	`ipAddress` text,
+	`userAgent` text,
+	`userId` text NOT NULL,
+	FOREIGN KEY (`userId`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
+CREATE INDEX `session_userId_idx` ON `session` (`userId`);--> statement-breakpoint
+CREATE TABLE `user` (
+	`id` text PRIMARY KEY NOT NULL,
+	`name` text NOT NULL,
+	`email` text NOT NULL,
+	`emailVerified` integer NOT NULL,
+	`image` text,
+	`createdAt` numeric NOT NULL,
+	`updatedAt` numeric NOT NULL,
+	`displayName` text,
+	`role` text DEFAULT 'member'
+);
+--> statement-breakpoint
+CREATE TABLE `verification` (
+	`id` text PRIMARY KEY NOT NULL,
+	`identifier` text NOT NULL,
+	`value` text NOT NULL,
+	`expiresAt` numeric NOT NULL,
+	`createdAt` numeric NOT NULL,
+	`updatedAt` numeric NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `verification_identifier_idx` ON `verification` (`identifier`);

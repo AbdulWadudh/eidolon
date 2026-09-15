@@ -1,7 +1,9 @@
 import {
+  CopyObjectCommand,
   CreateBucketCommand,
   DeleteObjectCommand,
   HeadBucketCommand,
+  ListObjectsV2Command,
   PutBucketPolicyCommand,
   PutObjectCommand,
   S3Client,
@@ -10,26 +12,41 @@ import { STORAGE } from "@eidolon/config";
 import { getStorageConfig, missingStorageConfig, type StorageConfig } from "@eidolon/config/server";
 import sharp from "sharp";
 import { IMAGE_ENCODE } from "@/config";
-import { ownerEmail } from "@/db/owner";
+import { characterHome, userEmail } from "@/db/owner";
 
 export { getStorageConfig, missingStorageConfig, type StorageConfig };
 
-export function characterKey(characterId: string, folder: string, filename: string): string {
-  return `${ownerEmail(characterId)}/${STORAGE.characterPrefix}/${characterId}/${folder}/${filename}`;
+function folderIn(home: string, characterId: string, folder: string): string {
+  return `${home}/${STORAGE.characterPrefix}/${characterId}/${folder}/`;
+}
+
+// A character's own art: hers, not any one user's. Published art sits under a shared
+// prefix so handing the character over moves nothing and a fork's url never breaks.
+export function portraitKey(characterId: string, filename: string): string {
+  const home = characterHome(characterId);
+
+  return home === STORAGE.publicPrefix
+    ? `${home}/${STORAGE.characterPrefix}/${characterId}/${filename}`
+    : `${folderIn(home, characterId, STORAGE.portraitFolder)}${filename}`;
+}
+
+// Everything made inside a conversation belongs to the user who was in it, whoever
+// happens to own the character.
+export function imageKey(userId: string, characterId: string, filename: string): string {
+  return `${folderIn(userEmail(userId), characterId, STORAGE.imageFolder)}${filename}`;
+}
+
+export function audioKey(userId: string, characterId: string, filename: string): string {
+  return `${folderIn(userEmail(userId), characterId, STORAGE.audioFolder)}${filename}`;
+}
+
+export function stageKey(userId: string, characterId: string, filename: string): string {
+  return `${folderIn(userEmail(userId), characterId, STORAGE.stageFolder)}${filename}`;
 }
 
 export function personaKey(email: string, personaId: string, filename: string): string {
   return `${email}/${STORAGE.personaPrefix}/${personaId}/${filename}`;
 }
-
-export function imageKey(characterId: string, filename: string): string {
-  return characterKey(characterId, STORAGE.imageFolder, filename);
-}
-
-export function audioKey(characterId: string, filename: string): string {
-  return characterKey(characterId, STORAGE.audioFolder, filename);
-}
-
 export function publicUrl(key: string): string {
   return `${getStorageConfig().publicUrl}/${key}`;
 }
@@ -200,15 +217,46 @@ export function asWebpName(filename: string): string {
   return `${base || "image"}${IMAGE_ENCODE.extension}`;
 }
 
-export async function uploadImage(
+export async function uploadPortrait(
   characterId: string,
   filename: string,
   buffer: Buffer | Uint8Array,
 ): Promise<string> {
   const encoded = await toStoredImage(buffer);
-  return uploadFile(imageKey(characterId, asWebpName(filename)), encoded, STORAGE.imageContentType);
+  return uploadFile(
+    portraitKey(characterId, asWebpName(filename)),
+    encoded,
+    STORAGE.imageContentType,
+  );
 }
 
+export async function uploadImage(
+  userId: string,
+  characterId: string,
+  filename: string,
+  buffer: Buffer | Uint8Array,
+): Promise<string> {
+  const encoded = await toStoredImage(buffer);
+  return uploadFile(
+    imageKey(userId, characterId, asWebpName(filename)),
+    encoded,
+    STORAGE.imageContentType,
+  );
+}
+
+export async function uploadStageBackdrop(
+  userId: string,
+  characterId: string,
+  filename: string,
+  buffer: Buffer | Uint8Array,
+): Promise<string> {
+  const encoded = await toStoredImage(buffer);
+  return uploadFile(
+    stageKey(userId, characterId, asWebpName(filename)),
+    encoded,
+    STORAGE.imageContentType,
+  );
+}
 export async function uploadPersonaPhoto(
   email: string,
   personaId: string,
@@ -224,15 +272,51 @@ export async function uploadPersonaPhoto(
 }
 
 export async function uploadAudio(
+  userId: string,
   characterId: string,
   filename: string,
   buffer: Buffer | Uint8Array,
 ): Promise<string> {
-  return uploadFile(audioKey(characterId, filename), buffer, STORAGE.audioContentType);
+  return uploadFile(audioKey(userId, characterId, filename), buffer, STORAGE.audioContentType);
 }
 
 export async function deleteFile(key: string): Promise<void> {
   await getS3Client().send(
     new DeleteObjectCommand({ Bucket: getStorageConfig().bucket, Key: key }),
+  );
+}
+
+export async function listKeys(prefix: string): Promise<string[]> {
+  const bucket = getStorageConfig().bucket;
+  const s3 = getS3Client();
+  const keys: string[] = [];
+  let token: string | undefined;
+
+  do {
+    const page = await s3.send(
+      new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, ContinuationToken: token }),
+    );
+
+    for (const object of page.Contents ?? []) {
+      if (object.Key) keys.push(object.Key);
+    }
+
+    token = page.NextContinuationToken;
+  } while (token);
+
+  return keys;
+}
+
+export async function copyFile(fromKey: string, toKey: string): Promise<void> {
+  const bucket = getStorageConfig().bucket;
+
+  await getS3Client().send(
+    new CopyObjectCommand({
+      Bucket: bucket,
+      // A copy source is a path, so each segment is escaped on its own — an owner
+      // email carrying "+" would otherwise arrive at the bucket as a space.
+      CopySource: `${bucket}/${fromKey}`.split("/").map(encodeURIComponent).join("/"),
+      Key: toKey,
+    }),
   );
 }

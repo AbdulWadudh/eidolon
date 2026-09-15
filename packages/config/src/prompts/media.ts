@@ -15,7 +15,7 @@ Each field is a short phrase, two or three words, never a sentence. Never write 
   {
     key: "image.personaPortrait",
     description:
-      "Turns what a reader wrote about themselves into a description of their face and build, so a portrait of them can be drawn. Read from a persona rather than a character card.",
+      "Turns what a user wrote about themselves into a description of their face and build, so a portrait of them can be drawn. Read from a persona rather than a character card.",
     variables: ["name", "about", "extra", "figure"],
     value: `Read what this person wrote about themselves and fill in what they most likely look like, for an image model. They are {{figure}}.
 
@@ -73,7 +73,7 @@ At most twelve words — one line, the length of a real text. At most twelve wor
   {
     key: "image.editIdeas",
     description:
-      "Changes offered when the reader asks for an existing photo to be redone, rather than subjects for a new one.",
+      "Changes offered when the user asks for an existing photo to be redone, rather than subjects for a new one.",
     variables: ["name", "scene", "count", "maxChars"],
     value: `{{name}} sent someone a photo and has been asked to take it again, differently. Suggest {{count}} things they could change about it.
 
@@ -91,7 +91,7 @@ Make the {{count}} pull in different directions rather than being the same note 
   {
     key: "image.ideas",
     description:
-      "Photo ideas offered when the reader asks for a picture, drawn from the character and where the conversation has got to.",
+      "Photo ideas offered when the user asks for a picture, drawn from the character and where the conversation has got to.",
     variables: ["name", "scene", "count", "maxChars"],
     value: `{{name}} is texting someone and is about to send them a photo. Suggest {{count}} photos they could take right now.
 

@@ -31,6 +31,7 @@ export default function AdminStorageScreen() {
   const confirmation = useConfirm();
   const theme = useResolvedTheme();
   const [isSweepOpen, setSweepOpen] = React.useState(false);
+  const [goUp, setGoUp] = React.useState<(() => void) | null>(null);
 
   const [view, setView] = React.useState<StorageView | null>(null);
   const [isLoading, setLoading] = React.useState(true);
@@ -59,7 +60,7 @@ export default function AdminStorageScreen() {
   const sweep = React.useCallback(() => {
     confirmation.ask({
       title: DASHBOARD_COPY.storageSweep,
-      body: DASHBOARD_COPY.storageOrphans(view?.orphans.length ?? 0),
+      body: DASHBOARD_COPY.storageReadyToSweep(view?.orphans.length ?? 0),
       confirmLabel: DASHBOARD_COPY.storageSweep,
       onConfirm: () => {
         setError(null);
@@ -72,13 +73,16 @@ export default function AdminStorageScreen() {
     });
   }, [confirmation.ask, sessionToken, report, serverHost, view]);
 
-  const orphans = view?.orphans ?? [];
+  const unreferenced = view?.unreferenced ?? [];
+  const collectable = view?.orphans ?? [];
+  const waiting = unreferenced.length - collectable.length;
 
   return (
     <AdminScreen
       title={DASHBOARD_COPY.storageTitle}
       blurb={DASHBOARD_COPY.storageBlurb}
       isLoading={isLoading}
+      onBack={goUp ?? undefined}
       error={error}
     >
       <CollapsibleSection
@@ -87,8 +91,8 @@ export default function AdminStorageScreen() {
         iconColor={view?.connected ? theme.primary : theme.danger}
         title={view?.connected ? view.bucket : DASHBOARD_COPY.storageOffline}
         badge={
-          orphans.length > 0 ? (
-            <Text className="font-ui-bold text-[11px] text-danger">{orphans.length}</Text>
+          unreferenced.length > 0 ? (
+            <Text className="font-ui-bold text-[11px] text-danger">{unreferenced.length}</Text>
           ) : null
         }
         expanded={isSweepOpen}
@@ -137,12 +141,12 @@ export default function AdminStorageScreen() {
             <PressableScale
               accessibilityRole="button"
               accessibilityLabel={DASHBOARD_COPY.storageSweep}
-              disabled={isWorking || orphans.length === 0 || view?.skipped !== null}
+              disabled={isWorking || collectable.length === 0 || view?.skipped !== null}
               onPress={sweep}
               className="h-8 flex-row items-center gap-1.5 rounded-button px-3"
               style={{
                 backgroundColor: theme.danger,
-                opacity: isWorking || orphans.length === 0 || view?.skipped !== null ? 0.4 : 1,
+                opacity: isWorking || collectable.length === 0 || view?.skipped !== null ? 0.4 : 1,
               }}
             >
               <AppIcon icon={Delete02Icon} size={13} color={theme.textPrimary} />
@@ -152,16 +156,21 @@ export default function AdminStorageScreen() {
             </PressableScale>
           </View>
 
-          {orphans.length === 0 ? (
+          {unreferenced.length === 0 ? (
             <Text className="font-ui text-[11px] text-text-muted">
               {DASHBOARD_COPY.storageClean}
             </Text>
           ) : (
             <>
               <Text className="font-ui text-xs text-text-muted">
-                {`${DASHBOARD_COPY.storageOrphans(orphans.length)} · ${megabytes(view?.orphanBytes ?? 0)} MB`}
+                {`${DASHBOARD_COPY.storageOrphans(unreferenced.length)} · ${megabytes(view?.unreferencedBytes ?? 0)} MB · ${DASHBOARD_COPY.storageReadyToSweep(collectable.length)}`}
               </Text>
-              {orphans.map((object, index) => (
+              {waiting > 0 ? (
+                <Text className="font-ui text-[11px] text-text-muted">
+                  {DASHBOARD_COPY.storageWaiting(waiting)}
+                </Text>
+              ) : null}
+              {unreferenced.map((object, index) => (
                 <Animated.View entering={revealAt(index, reduced)} key={object.key}>
                   <GlassSurface
                     tint="card"
@@ -192,7 +201,12 @@ export default function AdminStorageScreen() {
 
       {view?.connected ? (
         <View className="border-border border-t pt-3 pb-6">
-          <StorageBrowser serverHost={serverHost} token={sessionToken} onError={setError} />
+          <StorageBrowser
+            serverHost={serverHost}
+            token={sessionToken}
+            onError={setError}
+            onUpChange={(up) => setGoUp(() => up)}
+          />
         </View>
       ) : null}
 

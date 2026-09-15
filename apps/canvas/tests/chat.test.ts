@@ -175,7 +175,7 @@ describe("chat-store actions", () => {
     expect(useChatStore.getState().suggestions).toHaveLength(3);
   });
 
-  it("keeps the tray open through a reroll the reader asked for", () => {
+  it("keeps the tray open through a reroll the user asked for", () => {
     feed({ type: "reply_suggestions", suggestions: ["*a* One.", "*b* Two.", "*c* Three."] });
     useChatStore.getState().revealSuggestions();
     useChatStore.getState().rerollSuggestions("emma");
@@ -202,7 +202,7 @@ describe("chat-store actions", () => {
     expect(committed?.id).toBeTruthy();
   });
 
-  it("stays open when a fresh batch lands that the reader did not ask for", () => {
+  it("stays open when a fresh batch lands that the user did not ask for", () => {
     feed({ type: "reply_suggestions", suggestions: ["*a* One.", "*b* Two.", "*c* Three."] });
     useChatStore.getState().revealSuggestions();
     expect(isSuggestionTrayVisible(useChatStore.getState())).toBe(true);

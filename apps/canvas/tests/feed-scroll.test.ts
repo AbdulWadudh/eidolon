@@ -19,7 +19,7 @@ describe("live edge", () => {
     expect(nextLiveEdge(frame(900), false, true)).toBe(true);
   });
 
-  it("stops following when the reader drags away", () => {
+  it("stops following when the user drags away", () => {
     expect(nextLiveEdge(frame(900), true, true)).toBe(false);
   });
 
@@ -27,7 +27,7 @@ describe("live edge", () => {
     expect(nextLiveEdge(frame(10), false, false)).toBe(true);
   });
 
-  it("leaves a reader who scrolled up alone while the reply streams", () => {
+  it("leaves a user who scrolled up alone while the reply streams", () => {
     expect(nextLiveEdge(frame(2000), false, false)).toBe(false);
   });
 });
@@ -48,7 +48,7 @@ describe("following new content while a jump is in flight", () => {
     );
   });
 
-  it("does not strand a reader who was following before a jump started", () => {
+  it("does not strand a user who was following before a jump started", () => {
     expect(trackLiveEdge(wayUp, { isDragging: false, isFocusing: true, current: true })).toBe(true);
   });
 
@@ -61,7 +61,7 @@ describe("following new content while a jump is in flight", () => {
     );
   });
 
-  it("still lets a drag take the reader off the live edge", () => {
+  it("still lets a drag take the user off the live edge", () => {
     expect(trackLiveEdge(wayUp, { isDragging: true, isFocusing: false, current: true })).toBe(
       false,
     );

@@ -1,7 +1,7 @@
 import { QUEUE_JOBS } from "@eidolon/config";
 import { QUEUE_ANNOUNCE } from "@/config";
 import { gpuQueue } from "@/queue/queues";
-import { broadcastToReader } from "@/ws/registry";
+import { broadcastToUser } from "@/ws/registry";
 
 type Kind = "portrait" | "photo";
 
@@ -15,7 +15,7 @@ function announces(kind: Kind): boolean {
   return kind === "portrait" ? QUEUE_ANNOUNCE.portraits : QUEUE_ANNOUNCE.chatPhotos;
 }
 
-function readerOf(data: unknown): string | null {
+function userOf(data: unknown): string | null {
   const held = data as { userId?: unknown };
   return typeof held.userId === "string" && held.userId.length > 0 ? held.userId : null;
 }
@@ -32,27 +32,27 @@ export async function announceQueuePlaces(): Promise<void> {
 
     for (const [index, job] of ordered.entries()) {
       const kind = KINDS[job.name];
-      const reader = readerOf(job.data);
+      const user = userOf(job.data);
 
-      if (!kind || !reader || !announces(kind) || waitingNow.has(reader)) continue;
+      if (!kind || !user || !announces(kind) || waitingNow.has(user)) continue;
 
-      waitingNow.add(reader);
-      broadcastToReader(reader, {
+      waitingNow.add(user);
+      broadcastToUser(user, {
         type: "queue_place",
         payload: { kind, position: index + 1, total },
       });
     }
 
-    for (const reader of told) {
-      if (waitingNow.has(reader)) continue;
-      broadcastToReader(reader, {
+    for (const user of told) {
+      if (waitingNow.has(user)) continue;
+      broadcastToUser(user, {
         type: "queue_place",
         payload: { kind: "portrait", position: 0, total: 0 },
       });
     }
 
     told.clear();
-    for (const reader of waitingNow) told.add(reader);
+    for (const user of waitingNow) told.add(user);
   } catch (error) {
     console.error("[queue] could not work out who is where in the queue", error);
   }

@@ -1,4 +1,3 @@
-import { STORAGE } from "@eidolon/config";
 import type { TavernV2Card } from "@eidolon/protocol";
 import { COLORS } from "@eidolon/tokens";
 import sharp from "sharp";
@@ -15,7 +14,7 @@ import {
 import { getLoreEntries, upsertLoreEntry } from "@/db/lorebook";
 import { listStages, registerStage } from "@/db/stages";
 import { forgetFace } from "@/services/selfie";
-import { characterKey, isStorageConnected, uploadFile } from "@/services/storage";
+import { isStorageConnected, portraitKey, uploadFile } from "@/services/storage";
 import { parseCardBuffer, type TavernCardData, writeCardChunk } from "@/services/tavern-card";
 
 export interface ImportedCard {
@@ -40,7 +39,7 @@ function joinSections(...sections: string[]): string {
 }
 
 export function anchorKey(characterId: string): string {
-  return characterKey(characterId, STORAGE.imageFolder, CARD_UPLOAD.anchorFilename);
+  return portraitKey(characterId, CARD_UPLOAD.anchorFilename);
 }
 
 async function toWebp(pngBuffer: Buffer): Promise<Buffer> {

@@ -9,15 +9,11 @@ export interface Portrait {
   createdAt: number;
 }
 
-export function addPortrait(characterId: string, url: string, prompt: string | null): string {
-  const id = `portrait:${crypto.randomUUID()}`;
-
+export function addPortrait(characterId: string, url: string, prompt: string | null): void {
   db.insert(characterPortraits)
-    .values({ id, characterId, url, prompt, createdAt: Date.now() })
+    .values({ characterId, url, prompt, createdAt: Date.now() })
     .onConflictDoNothing()
     .run();
-
-  return id;
 }
 
 export function listPortraits(characterId: string): Portrait[] {

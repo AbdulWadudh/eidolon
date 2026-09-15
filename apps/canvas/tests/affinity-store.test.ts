@@ -37,7 +37,7 @@ describe("insight mode", () => {
     expect(useAffinityStore.getState().isInsightModeEnabled).toBe(true);
   });
 
-  it("clears a visible toast when the reader turns the HUD off", () => {
+  it("clears a visible toast when the user turns the HUD off", () => {
     useAffinityStore.getState().setInsightMode(true);
     useAffinityStore.getState().applyMindUpdate(2, 76, "Close", "Warm");
     expect(useAffinityStore.getState().toast).not.toBeNull();

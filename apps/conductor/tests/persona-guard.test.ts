@@ -143,7 +143,7 @@ describe("stage directions written in square brackets", () => {
   });
 });
 
-describe("the label the transcript uses for the reader", () => {
+describe("the label the transcript uses for the user", () => {
   it("drops PLAYER from the front of her reply", () => {
     expect(stripSpeakerLabel("PLAYER: That's great! I heard RCB won.", "Ines Vaz")).toBe(
       "That's great! I heard RCB won.",
@@ -175,7 +175,7 @@ describe("the label the transcript uses for the reader", () => {
   });
 });
 
-describe("a reply already recorded with the reader's label", () => {
+describe("a reply already recorded with the user's label", () => {
   it("is cleaned when read back, with no character name to go on", () => {
     expect(stripSpeakerLabel("PLAYER: *smiles* Absolutely.", "")).toBe("*smiles* Absolutely.");
   });

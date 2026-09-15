@@ -1,1 +1,0 @@
-ALTER TABLE `characters` ADD `outfit` text;

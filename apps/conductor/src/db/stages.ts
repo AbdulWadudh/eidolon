@@ -74,7 +74,6 @@ function stageValues(
   backdropUrl: string | null,
 ) {
   return {
-    id: crypto.randomUUID(),
     characterId,
     userId,
     name: stageName,

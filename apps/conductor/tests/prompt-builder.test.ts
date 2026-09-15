@@ -276,7 +276,7 @@ describe("web search triggering", () => {
     expect(hasTemporalMarker("tell me about your mother")).toBe(false);
   });
 
-  it("never searches when the reader turned it off", () => {
+  it("never searches when the user turned it off", () => {
     expect(shouldSearchWeb("what is the weather in Tokyo right now?", false)).toBe(false);
     expect(shouldSearchWeb("what is the weather in Tokyo right now?", true)).toBe(true);
   });

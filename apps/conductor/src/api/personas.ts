@@ -126,9 +126,9 @@ export function mountPersonas(app: Hono<UserEnv>): void {
 
   app.post(`${base}/:id/photo`, async (c) => {
     const personaId = c.req.param("id");
-    const reader = c.get("user");
+    const user = c.get("user");
 
-    if (!getPersona(personaId, reader.id)) return c.json({ error: "No such persona." }, 404);
+    if (!getPersona(personaId, user.id)) return c.json({ error: "No such persona." }, 404);
     if (!isStorageConnected()) {
       return c.json(
         { error: "Object storage is offline, so the picture has nowhere to live." },
@@ -140,19 +140,19 @@ export function mountPersonas(app: Hono<UserEnv>): void {
     if ("error" in picture) return c.json({ error: picture.error }, picture.status);
 
     const photoUrl = await uploadPersonaPhoto(
-      reader.email,
+      user.email,
       personaId,
       picture.filename,
       picture.bytes,
     );
 
-    return c.json({ persona: updatePersona(personaId, reader.id, { photoUrl }) });
+    return c.json({ persona: updatePersona(personaId, user.id, { photoUrl }) });
   });
 
   app.post(`${base}/:id/portrait`, async (c) => {
     const personaId = c.req.param("id");
-    const reader = c.get("user");
-    const persona = getPersona(personaId, reader.id);
+    const user = c.get("user");
+    const persona = getPersona(personaId, user.id);
 
     if (!persona) return c.json({ error: "No such persona." }, 404);
 
@@ -169,7 +169,7 @@ export function mountPersonas(app: Hono<UserEnv>): void {
       QUEUE_JOBS.generatePersonaPortrait,
       {
         personaId,
-        userId: reader.id,
+        userId: user.id,
         extra: typeof body.extra === "string" ? body.extra.trim() : "",
       },
       { jobId: jobKey("persona-portrait", personaId, Date.now()) },

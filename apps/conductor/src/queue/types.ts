@@ -42,6 +42,12 @@ export interface MediaUploadJob {
   messageId?: string;
 }
 
+export interface MediaRelocationJob {
+  characterId: string;
+  fromEmail: string;
+  toEmail: string;
+}
+
 export interface ProactiveMessageJob {
   characterId: string;
   userId: string;
@@ -59,6 +65,7 @@ export interface GpuJobMap {
 export interface S3UploadJobMap {
   [QUEUE_JOBS.uploadImage]: MediaUploadJob;
   [QUEUE_JOBS.uploadAudio]: MediaUploadJob;
+  [QUEUE_JOBS.relocateCharacterMedia]: MediaRelocationJob;
 }
 
 export interface ProactiveJobMap {
@@ -105,4 +112,16 @@ export function isChronicleSummaryJob(
   job: GpuJob,
 ): job is Job<ChronicleSummaryJob, void, typeof QUEUE_JOBS.summarizeChronicle> {
   return job.name === QUEUE_JOBS.summarizeChronicle;
+}
+
+export function isMediaUploadJob(
+  job: S3UploadJob,
+): job is Job<MediaUploadJob, string | null, typeof QUEUE_JOBS.uploadImage> {
+  return job.name === QUEUE_JOBS.uploadImage || job.name === QUEUE_JOBS.uploadAudio;
+}
+
+export function isMediaRelocationJob(
+  job: S3UploadJob,
+): job is Job<MediaRelocationJob, string | null, typeof QUEUE_JOBS.relocateCharacterMedia> {
+  return job.name === QUEUE_JOBS.relocateCharacterMedia;
 }

@@ -20,6 +20,8 @@ function view(report: SweepReport) {
     skipped: report.skipped,
     freedBytes: report.freedBytes,
     removed: report.removed,
+    unreferenced: report.unreferenced,
+    unreferencedBytes: report.unreferenced.reduce((total, object) => total + object.bytes, 0),
     orphans: report.orphans,
     orphanBytes: report.orphans.reduce((total, object) => total + object.bytes, 0),
   };

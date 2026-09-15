@@ -1,9 +1,10 @@
-import { AUTHOR_COPY, GALLERY_COPY, UI_MS } from "@eidolon/config";
+import { AUTHOR_COPY, CHAT_COPY, GALLERY_COPY, UI_MS } from "@eidolon/config";
 import { Image } from "expo-image";
 import { Text, useWindowDimensions, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { AppIcon } from "@/components/common/icon";
 import { PressableScale } from "@/components/common/pressable-scale";
+import { SkeletonLine } from "@/components/common/skeleton-line";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft01Icon, CropIcon, Image01Icon, SparklesIcon } from "@/lib/icons";
 import type { AvatarCropRect } from "@/store/chat-photos";
@@ -141,14 +142,23 @@ export function ProfileHero({
           entering={reduced ? undefined : FadeInDown.duration(UI_MS.reveal)}
           className="absolute right-0 bottom-0 left-0 px-4 pb-4"
         >
-          <Text
-            className="font-main-bold text-2xl"
-            style={{ color: "#fff" }}
-            numberOfLines={1}
-            accessibilityRole="header"
-          >
-            {name}
-          </Text>
+          {name.length > 0 ? (
+            <Text
+              className="font-main-bold text-2xl"
+              style={{ color: "#fff" }}
+              numberOfLines={1}
+              accessibilityRole="header"
+            >
+              {name}
+            </Text>
+          ) : (
+            <SkeletonLine
+              characterId={characterId}
+              width={180}
+              height={24}
+              label={CHAT_COPY.loadingName}
+            />
+          )}
           {subtitle ? (
             <Text
               className="mt-0.5 font-ui text-[12px]"

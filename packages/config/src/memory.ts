@@ -93,7 +93,7 @@ export const MIND_UPDATE = {
 export const PROMPT_BUDGET = {
   worstCharsPerToken: 1.33,
   charsPerToken: 4,
-  sectionOrder: ["persona", "reader", "state", "chronicle", "recall", "lore", "web", "directive"],
+  sectionOrder: ["persona", "user", "state", "chronicle", "recall", "lore", "web", "directive"],
 } as const;
 
 export type PromptSection = (typeof PROMPT_BUDGET.sectionOrder)[number];

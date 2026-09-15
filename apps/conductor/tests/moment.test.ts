@@ -11,7 +11,7 @@ const OTHER = "user:somebody-else";
 afterEach(wipe);
 
 describe("a moment", () => {
-  it("keeps one reader's scene out of another's", () => {
+  it("keeps one user's scene out of another's", () => {
     const character = remember(createCharacter({ name: "Shared Stage", isPublic: true }));
 
     saveStageBackdrop(character.id, TEST_OWNER_ID, "the bar", "https://media.test/bar.webp");

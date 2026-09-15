@@ -1,7 +1,7 @@
 const LABEL_SEPARATOR = String.raw`\s*[:\-–—]\s*`;
 const SPLIT_LINES = /\r?\n/;
 const PLAYER_LABEL = /^(?:player|you)\s*[:\-–—]\s*/i;
-const READER_LABEL = /^(?:player|user|you)\s*:\s*/i;
+const USER_LABEL = /^(?:player|user|you)\s*:\s*/i;
 const ESCAPABLE = /[.*+?^${}()|[\]\\]/g;
 const ACTION = /\*[^*]*\*/g;
 
@@ -39,7 +39,7 @@ export function stripSpeakerLabel(reply: string, name: string): string {
     }
   }
 
-  return text.replace(READER_LABEL, "").trimStart();
+  return text.replace(USER_LABEL, "").trimStart();
 }
 
 export function narratesInThirdPerson(reply: string, name: string): boolean {

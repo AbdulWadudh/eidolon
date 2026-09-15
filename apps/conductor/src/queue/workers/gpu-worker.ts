@@ -12,7 +12,7 @@ import { PORTRAIT, STAGE } from "@/config";
 import { appendMessage, getCharacterCard, getRecentMessages, setMessageImage } from "@/db";
 import { appendChronicle, nextChapterIndex } from "@/db/chronicles";
 import { hasChosenBackground, setCharacterAvatar, setCharacterFace } from "@/db/look";
-import { readerEmail } from "@/db/owner";
+import { userEmail } from "@/db/owner";
 import { getPersona, updatePersona } from "@/db/personas";
 import { addPortrait } from "@/db/portraits";
 import { saveStageBackdrop } from "@/db/stages";
@@ -37,8 +37,13 @@ import { summarizeMessages } from "@/services/chronicle-writer";
 import { ComfyUnavailableError, generateImage } from "@/services/comfyui";
 import { composeAppearance, describeAppearance, describePersonaLook } from "@/services/photo-look";
 import { ASPECT_FOR, formatPhotoScene, paintSelfie } from "@/services/selfie";
-import { isStorageConnected, uploadImage, uploadPersonaPhoto } from "@/services/storage";
-import { broadcastToCharacter, broadcastToReader } from "@/ws/registry";
+import {
+  isStorageConnected,
+  uploadPersonaPhoto,
+  uploadPortrait,
+  uploadStageBackdrop,
+} from "@/services/storage";
+import { broadcastToCharacter, broadcastToUser } from "@/ws/registry";
 
 const NEWLINE = String.fromCharCode(10);
 
@@ -56,7 +61,8 @@ async function renderStageBackdrop(data: StageBackdropJob): Promise<void> {
   }
 
   const image = await generateImage(data.prompt, null, { orientation: STAGE.orientation });
-  const backdropUrl = await uploadImage(
+  const backdropUrl = await uploadStageBackdrop(
+    data.userId,
     data.characterId,
     backdropFilename(data.stageName),
     image.bytes,
@@ -109,7 +115,7 @@ async function renderPortrait(data: PortraitJob): Promise<void> {
     .join(", ");
 
   const image = await generateImage(prompt, null, { orientation: PORTRAIT.orientation });
-  const url = await uploadImage(
+  const url = await uploadPortrait(
     data.characterId,
     `portrait-${Date.now()}.${STAGE.backdropFileExtension}`,
     image.bytes,
@@ -131,6 +137,7 @@ async function renderChatPhoto(job: Job<ChatPhotoJob>, data: ChatPhotoJob): Prom
     const selfie = await paintSelfie(
       {
         characterId,
+        userId,
         name: card.name,
         personality: card.personality,
         pronouns: card.pronouns,
@@ -210,7 +217,7 @@ async function renderPersonaPortrait(data: PersonaPortraitJob): Promise<void> {
   const persona = getPersona(data.personaId, data.userId);
   if (!persona) throw new Error(`Persona "${data.personaId}" is gone.`);
 
-  const reader = readerEmail(data.userId);
+  const email = userEmail(data.userId);
   const look = await describePersonaLook(
     {
       name: persona.name,
@@ -231,7 +238,7 @@ async function renderPersonaPortrait(data: PersonaPortraitJob): Promise<void> {
 
   const image = await generateImage(prompt, null, { orientation: PORTRAIT.orientation });
   const photoUrl = await uploadPersonaPhoto(
-    reader,
+    email,
     data.personaId,
     `portrait-${Date.now()}.${STAGE.backdropFileExtension}`,
     image.bytes,
@@ -239,7 +246,7 @@ async function renderPersonaPortrait(data: PersonaPortraitJob): Promise<void> {
 
   updatePersona(data.personaId, data.userId, { photoUrl });
 
-  broadcastToReader(data.userId, {
+  broadcastToUser(data.userId, {
     type: "persona_updated",
     payload: { persona_id: data.personaId, photo_url: photoUrl },
   });

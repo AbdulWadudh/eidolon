@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { speakableText } from "@/services/tts";
 import { speakableSentence, stripEmoji } from "@/utils/sentence-buffer";
 
-describe("emoji reach the reader but never the voice", () => {
+describe("emoji reach the user but never the voice", () => {
   it("takes a plain emoji out of the line", () => {
     expect(stripEmoji("Hey! 😊").trim()).toBe("Hey!");
   });

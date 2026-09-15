@@ -17,7 +17,7 @@ function fresh(name: string): string {
   return remember(createCharacter({ name })).id;
 }
 
-describe("a background the reader chose", () => {
+describe("a background the user chose", () => {
   it("is remembered as theirs, not as something a scene set", () => {
     const id = fresh("bg chosen probe");
 
@@ -56,13 +56,13 @@ describe("a background the reader chose", () => {
 });
 
 describe("who paints the background for a chat", () => {
-  it("leaves it to moments until the reader sets one by hand", () => {
+  it("leaves it to moments until the user sets one by hand", () => {
     const id = fresh("bg default probe");
 
     expect(getCharacterLook(id).backgroundChosen).toBe(false);
   });
 
-  it("hands it to the reader the moment they set one", () => {
+  it("hands it to the user the moment they set one", () => {
     const id = fresh("bg takeover probe");
 
     setCharacterBackground(id, "https://example.com/mine.webp");
@@ -70,7 +70,7 @@ describe("who paints the background for a chat", () => {
     expect(getCharacterLook(id).backgroundChosen).toBe(true);
   });
 
-  it("gives it back to moments when the reader says so, keeping their picture up", () => {
+  it("gives it back to moments when the user says so, keeping their picture up", () => {
     const id = fresh("bg handback probe");
 
     setCharacterBackground(id, "https://example.com/mine.webp");
@@ -80,7 +80,7 @@ describe("who paints the background for a chat", () => {
     expect(getCharacterLook(id).backgroundUrl).toBe("https://example.com/mine.webp");
   });
 
-  it("takes it back again when the reader asks", () => {
+  it("takes it back again when the user asks", () => {
     const id = fresh("bg retake probe");
 
     setBackgroundChosen(id, true);

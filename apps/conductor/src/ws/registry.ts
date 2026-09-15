@@ -32,7 +32,7 @@ export function socketsForCharacter(characterId: string, userId: string): WebSoc
   return matches;
 }
 
-export function broadcastToReader(userId: string, message: unknown): number {
+export function broadcastToUser(userId: string, message: unknown): number {
   let delivered = 0;
 
   for (const [ws, owner] of users) {

@@ -12,8 +12,10 @@ import {
   updateCharacterOwner,
 } from "@/db/characters";
 import { countChronicles } from "@/db/chronicles";
+import { ownerEmail } from "@/db/owner";
 import { summarizeChronicleNow } from "@/orchestrator/chronicle";
 import { cancelProactive, pendingProactive } from "@/orchestrator/proactive";
+import { queueOwnerRelocation } from "@/services/owner-move";
 
 export const adminCharacters = new Hono<OwnerEnv>();
 
@@ -93,8 +95,11 @@ adminCharacters.patch("/:id/owner", async (c) => {
     return c.json({ error: "A valid ownerId is required." }, 400);
   }
 
+  const from = ownerEmail(id);
   const updated = updateCharacterOwner(id, body.ownerId);
   if (!updated) return c.json({ error: NO_SUCH }, 404);
+
+  queueOwnerRelocation(id, from);
 
   return c.json({ character: updated });
 });
