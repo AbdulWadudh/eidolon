@@ -278,7 +278,7 @@ Nothing yet.
 - **Voice note tabs.** A `▶ 4"` chip riding above any message that carries
   audio, merged into the bubble, swapping the play arrow for a moving waveform
   while it plays.
-- **Scroll that follows the reader.** A new turn settles near the top with the
+- **Scroll that follows the user.** A new turn settles near the top with the
   previous message still peeking above it, streaming only follows the live edge
   while you are already there, and a "Jump to latest" pill brings you back.
 - **Input dock.** Stage-direction placeholder, amber caret, a send button that

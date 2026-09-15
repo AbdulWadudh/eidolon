@@ -53,7 +53,7 @@ avoid. `boot-bound` says the true thing: right value, nothing re-reads it.
 - **`IMAGE_ENCODE.format` is structural**, though `quality` and `effort` are
   editable — the format has to keep agreeing with `STORAGE.imageContentType` for
   objects already written.
-- **`CHAT_TURN.readerTurnStops` is editable but `LLM_PROFILES.stopTokens` is
+- **`CHAT_TURN.userTurnStops` is editable but `LLM_PROFILES.stopTokens` is
   not.** Both are stop strings. The first is our own prompt's labels; the second
   is ChatML versus Llama-3 control tokens, fixed by the GGUF.
 - **`SEARCH` and `MEMORY.searchLimit` were captured into module-level consts**

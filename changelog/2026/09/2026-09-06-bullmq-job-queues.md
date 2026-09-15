@@ -30,8 +30,8 @@ are watching that character; `src/orchestrator/` holding the dispatch decisions.
 ## Why
 
 The chat turn was doing GPU renders and S3 uploads inline. A backdrop render is
-tens of seconds, and the reader spent all of it watching a socket do nothing.
-Work that a reader is not waiting on belongs off the turn.
+tens of seconds, and the user spent all of it watching a socket do nothing.
+Work that a user is not waiting on belongs off the turn.
 
 **Dragonfly needed two server-flag changes before BullMQ would run at all**, both
 found by probing rather than by reading:

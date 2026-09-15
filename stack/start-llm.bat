@@ -42,7 +42,7 @@ rem That leaves ~8.3 GB for ComfyUI, which wants ~4.2 GB, so both stay resident
 rem and a render never waits for the chat model to get out of the way.
 rem
 rem --reasoning off matters for any model whose template opens inside <think>:
-rem left on, it spends the whole reply budget reasoning and the reader gets
+rem left on, it spends the whole reply budget reasoning and the user gets
 rem nothing. Harmless on a model that does not think.
 rem
 rem A 27B does not fit this card. Fully offloaded it needs ~18.3 GB against

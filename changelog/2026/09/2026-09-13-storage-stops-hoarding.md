@@ -18,7 +18,7 @@
   translucency is a theme token that ships at `0`, only `GlassSurface` may honour
   it, controls stay solid, and nothing hardcodes a blur to fake it. §11's depth
   floor lost its glassmorphism clause for the same reason and gained the
-  opposite point — translucency is the reader's setting and carries no depth of
+  opposite point — translucency is the user's setting and carries no depth of
   its own at zero.
 
 ## Why

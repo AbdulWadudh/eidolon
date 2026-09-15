@@ -30,7 +30,7 @@ with the presets, the full card form and the voice picker.
 **The presets are the point, not a convenience.** Both characters on this machine
 had empty personalities, so every reply came from the generic fallback. A
 creation form fixes that only if someone fills it in. Six written characters mean
-the first thing a new reader meets is authored.
+the first thing a new user meets is authored.
 
 **Testing the presets found three defects in them.** Written and shipped blind,
 these would all have been live:
@@ -52,7 +52,7 @@ examples are worth keeping, the copying is caught instead:
   existed for history, so reciting them counts as repeating herself.
 
 **A fourth defect surfaced while fixing those.** `[mind_update: {...}]` reached
-the reader as prose, because `sayItOutLoud` runs its own stream and never went
+the user as prose, because `sayItOutLoud` runs its own stream and never went
 through the mind tail filter. Every other path did. It is stripped there now.
 
 **Voices are graded because most of them are poor.** Kokoro publishes a grade per
@@ -81,7 +81,7 @@ typechecked, linted and bundled only.
 - A portrait job queued against a conductor that has not restarted since the job
   type was added fails with "Unknown GPU job". It is a stale process rather than
   a bug, but the failure gives no hint of that.
-- Asked "what happened to your wrist", a character answered about the reader's
+- Asked "what happened to your wrist", a character answered about the user's
   wrist. The same subject inversion still affects photo messages.
 - There is no edit screen. The roster's edit button opens the chat.
 - `greeting` is stored and still reaches nothing: no code opens an empty chat

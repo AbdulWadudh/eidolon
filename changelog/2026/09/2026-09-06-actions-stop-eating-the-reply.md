@@ -16,7 +16,7 @@ exposes a streaming gate and the same rule for finished text.
   in `streamOnce`. Everything between asterisks is buffered until the closing
   asterisk arrives; only then is it emitted, and only if it is still short and
   the first of the turn. A paragraph of prose in asterisks is dropped as it
-  arrives, so the reader never watches narration start. If nothing is left to
+  arrives, so the user never watches narration start. If nothing is left to
   say out loud — a bare `*smiles*`, or a whole reply the gate threw away — the
   existing `sayItOutLoud` continuation runs and the turn ends on words.
 - **Reply options.** `shapeSuggestion` strips markdown bold, runs the same
@@ -41,7 +41,7 @@ three options in the reported screenshot were entirely inside asterisks — "*My
 heart skips a beat as you lean in closer, your warm breath tickling my skin…*" —
 and the third opened with a twenty-word action, carried five spoken words, and
 opened a second action. Every one of them hit the 140-character clip, so the
-reader was offered three truncated paragraphs of narration and nothing to send.
+user was offered three truncated paragraphs of narration and nothing to send.
 
 The prompt already asked for "at most one action, two to five words". A 12B
 local model at temperature 0.9 does not honour that on its own, and nothing in

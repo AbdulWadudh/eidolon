@@ -34,7 +34,7 @@ Three other things came out of the same hunt:
   placeholder up for good. `loadHistory` now binds the character before the
   fetch rather than after it, so a screen owns its own loading and its own
   failure.
-- **A slow fetch could lose to a fast one.** Two are in flight whenever a reader
+- **A slow fetch could lose to a fast one.** Two are in flight whenever a user
   moves quickly, and the slower one used to overwrite whatever was on screen.
   A response for a character the store is no longer holding is now dropped.
 - **The transcript read had a six second timeout**, the same as a status check.

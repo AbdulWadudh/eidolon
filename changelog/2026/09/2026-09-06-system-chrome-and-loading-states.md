@@ -22,9 +22,9 @@ gitignored and regenerated on every build.
 
 The same white is what flashed before the first frame, so that is gone too.
 
-**Two screens told the reader something untrue while they loaded.** The roster
+**Two screens told the user something untrue while they loaded.** The roster
 showed "Nobody here yet" until the fetch returned and then replaced it with a
-full list; the chat showed the empty stage, inviting the reader to start a
+full list; the chat showed the empty stage, inviting the user to start a
 conversation they had already had, until the transcript arrived. Both now show a
 placeholder shaped like what they are about to become.
 

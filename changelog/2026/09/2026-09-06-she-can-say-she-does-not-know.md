@@ -12,7 +12,7 @@ who won the IPL.
 `persona.mustSpeak`: *"That was only a stage direction. Say something out loud
 this time..."* That is a system turn the conductor sends when a reply came back
 as nothing but an action. The model answered it instead of obeying it, and the
-reader saw the machinery. `leaksInstruction` now compares a reply against the
+user saw the machinery. `leaksInstruction` now compares a reply against the
 opening words of every reminder the conductor sends, and both paths that can
 produce one — the main turn and the `sayItOutLoud` continuation — replace a match
 with a spoken fallback.

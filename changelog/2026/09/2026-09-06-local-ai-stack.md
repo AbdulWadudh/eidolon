@@ -129,7 +129,7 @@ the plumbing — the same scene through a larger model would grade it properly.
 
 ### SSE parsing moved to a library
 
-`streamChatCompletion` hand-rolled its own event-stream reader: a manual buffer,
+`streamChatCompletion` hand-rolled its own event-stream user: a manual buffer,
 a newline split, and a `startsWith("data:")` check. That misses several things the
 spec allows — CRLF line endings, an event carrying multiple `data:` lines,
 comment lines — and it is exactly the kind of standard algorithm RULES §1 says
@@ -259,7 +259,7 @@ shows a shimmering audio tab so the wait is visible rather than a silent gap.
 
 They pushed the transcript up on every turn. Now a new turn's options arrive
 collapsed behind a "Show 3 replies" chip; the tray opens on demand. A reroll the
-reader explicitly asked for keeps the tray open under them — the first cut
+user explicitly asked for keeps the tray open under them — the first cut
 collapsed it mid-use, because the arriving suggestions could not tell a fresh
 turn from a requested one. `isSuggestionsLoading` distinguishes them.
 
@@ -298,7 +298,7 @@ instance**, which needs engines that do not rate-limit a shared public host.
 Asking for brevity in a prompt is a hope. `reply-length.ts` makes it true: the
 stream stops once the reply reaches `maxReplySentences` or `maxReplyChars`,
 and only ever at a sentence boundary that is not inside an action, so the cut
-lands where a reader would have paused and the asterisks always close. A full
+lands where a user would have paused and the asterisks always close. A full
 stop inside `*an action.*` does not count toward the budget, or a reply would be
 cut before a word was spoken.
 

@@ -1,4 +1,4 @@
-# Portraits stop being destroyed, pictures zoom, and the feed stops fighting the reader
+# Portraits stop being destroyed, pictures zoom, and the feed stops fighting the user
 
 **Date:** 2026-09-06
 **Scope:** apps/canvas, apps/conductor, packages/config
@@ -30,7 +30,7 @@ swiping to another picture puts the last one back the way it was found.
 
 - Scrolling up quickly snapped back to the bottom. A fast flick renders more
   rows, which raises `onContentSizeChange` before the throttled scroll event has
-  arrived, so the follow still read the edge as live and yanked the reader back
+  arrived, so the follow still read the edge as live and yanked the user back
   mid-gesture. The live edge is now dropped the moment a drag begins, and
   restored on the next frame if the drag ends up near the bottom anyway.
 - Rows came up blank during a fast scroll. `drawDistancePx` was 480, which a
@@ -45,7 +45,7 @@ so the message being looked for was not in the list yet and the code cleared the
 request rather than waiting for it. Then it still failed, because FlashList
 cannot scroll to an index it has not measured and a screen that has just mounted
 has measured almost nothing. It now asks repeatedly for a short while, and drops
-the live edge first — otherwise the next content change pulls the reader
+the live edge first — otherwise the next content change pulls the user
 straight back to the bottom it just left.
 
 Zoom failed twice as well. Gesture handlers do not cross a `Modal` boundary, so
@@ -59,11 +59,11 @@ once per gesture end rather than per frame.
 Ordering also turned out to be luck. Photos written in the same millisecond fell
 back to comparing UUIDs, which is not an order; the union now carries `rowid`
 through as a tiebreaker, the same way the message queries already did. A test
-caught this rather than a reader.
+caught this rather than a user.
 
 The jump then worked and immediately undid itself. It starts at the bottom, so
 the opening frames of its own animation are inside the live edge; reading those
-re-armed the follow, and the next layout carried the reader back down a moment
+re-armed the follow, and the next layout carried the user back down a moment
 after arriving. A scroll driven by code is now ignored entirely rather than
 merely discounted, which is a decision that belongs in `feed-scroll.ts` with the
 rest of the live-edge logic, where it can be tested.
@@ -83,9 +83,9 @@ DELETE a chat photo through the portrait route  400, with a reason
 Two new conductor tests cover the point of the change: a portrait no longer in
 use is still listed, and the gallery marks which one is her profile picture.
 Five new canvas tests cover `trackLiveEdge`: the opening frames of a jump are
-ignored, so are the frames where it arrives, a reader who was following before
+ignored, so are the frames where it arrives, a user who was following before
 the jump is not stranded, control is handed back once it is over, and a real
-drag still takes the reader off the live edge.
+drag still takes the user off the live edge.
 
 Suites: conductor 391, canvas 151, config 38, protocol 25 — 605 pass, 0 fail.
 Lint, typecheck and `check:size` green; the gallery routes moved to

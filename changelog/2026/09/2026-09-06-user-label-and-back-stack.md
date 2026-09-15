@@ -6,14 +6,14 @@
 ## What changed
 
 **Every reply came back prefixed "PLAYER:".** The example dialogue on a
-character card is written as a transcript, with the reader's turns labelled
+character card is written as a transcript, with the user's turns labelled
 PLAYER, and a small model copies whichever label it saw last as readily as its
 own. `stripSpeakerLabel` already removed her name from the front of a reply; it
-removes the reader's label too now.
+removes the user's label too now.
 
 The same cause had a second effect: nothing stopped her carrying on past her own
-turn and writing the reader's reply as well, because a transcript keeps going.
-`CHAT_TURN.readerTurnStops` ends the turn at a reader label on a new line.
+turn and writing the user's reply as well, because a transcript keeps going.
+`CHAT_TURN.userTurnStops` ends the turn at a user label on a new line.
 
 Five replies were already recorded with the label, and history is read back on
 every turn, so those rows were still teaching the pattern. The label is stripped
@@ -36,7 +36,7 @@ The stop sequences all require a newline. A bare `PLAYER:` stop would fire on
 the very first token whenever she opened a reply with the label — which is
 exactly the case being fixed — and leave nothing to say.
 
-`READER_LABEL` matches a colon only, unlike the older `PLAYER_LABEL` used for
+`USER_LABEL` matches a colon only, unlike the older `PLAYER_LABEL` used for
 filtering example lines. A dash is punctuation in a real line: "You — honestly,
 I have no idea" is something she might write, and stripping it would eat the
 sentence.

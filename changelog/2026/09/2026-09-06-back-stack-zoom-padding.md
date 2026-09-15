@@ -6,7 +6,7 @@
 ## What changed
 
 **Back from a chat now reaches the roster**, not the profile or gallery the
-reader passed through to get there. A profile is a detail of a conversation, not
+user passed through to get there. A profile is a detail of a conversation, not
 a step on the way to one, so opening a chat from it either returns to the chat
 already below or takes the profile's place. Going the other way — a chat to a
 profile — is still a plain push, because back from a profile should return to the

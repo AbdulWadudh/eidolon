@@ -70,7 +70,7 @@ pacing" actually freeze it.
 
 **`Date.now()` was the wrong toast id.** Two updates in the same millisecond
 produced the same React key, so the pill never remounted: no exit, no
-re-entrance, and no fresh screen-reader announcement. A monotonic counter fixes
+re-entrance, and no fresh screen-user announcement. A monotonic counter fixes
 it. Caught by a test, not by looking.
 
 **Haptics had to become lazy.** Importing `expo-haptics` from the affinity store

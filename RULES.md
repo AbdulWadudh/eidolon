@@ -256,7 +256,7 @@ The floor for anything user-visible:
   the failure path.
 - Depth built from the design language — layered surfaces, hairline borders,
   accent framing, a considered background. Never from bubbly radii, which §5
-  forbids, and never from translucency, which is the reader's setting to make
+  forbids, and never from translucency, which is the user's setting to make
   and carries no depth of its own at `0`.
 - Typography with contrast: the serif face for display, the sans for interface,
   the mono for values a user copies.
@@ -363,7 +363,7 @@ you are certain of, is still the right tool.
 **The graph goes stale.** It is a snapshot of the tree at build time, so a change
 set that adds, moves, or deletes files leaves it describing a repo that no longer
 exists. Run `/graphify . --update` when that happens — it re-extracts only what
-changed — and say you did in the changelog entry, so the next reader knows how
+changed — and say you did in the changelog entry, so whoever reads it next knows how
 current the graph they are trusting actually is.
 
 **When the graph and the source disagree, the source is right.** The graph is

@@ -34,7 +34,7 @@ rebuilding it themselves.
 
 The staleness clause exists because the failure mode is silent. A graph that is
 three change sets old answers confidently and wrongly, and nothing about the
-answer says so — hence the changelog note when it is rebuilt, so the next reader
+answer says so — hence the changelog note when it is rebuilt, so the next user
 can see how current the thing they are trusting is.
 
 ## Evidence

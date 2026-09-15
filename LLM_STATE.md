@@ -35,7 +35,7 @@ Everything is Bun + TypeScript. Biome is the only linter and formatter.
   whole app, owned by `apps/canvas/services/websocket.ts`; `store/connection.ts`
   only configures it and mirrors its status.
 - Outfit and Moment: a chosen outfit is worn until changed, a moment paints the
-  place behind the conversation. Both are per reader.
+  place behind the conversation. Both are per user.
 - Android release build at ~43 MB.
 - `bun run doctor`, `bun run release`.
 

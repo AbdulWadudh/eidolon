@@ -59,7 +59,7 @@ actually reporting. Loading it at the point of use fixed the boot.
 Then the button itself failed with `undefined is not a function`. The dynamic
 import does not reject on such a client: Expo logs the missing native module and
 leaves the exports undefined. A `try`/`catch` never fires. The functions are
-checked before they are called now, and the reader gets "Saving photos needs a
+checked before they are called now, and the user gets "Saving photos needs a
 new build of the app" rather than a crash.
 
 ## Evidence

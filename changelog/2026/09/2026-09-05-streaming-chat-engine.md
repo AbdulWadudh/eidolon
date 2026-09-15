@@ -59,12 +59,12 @@ removed the prop — sizing is automatic — so the request has no target. What
 replaces it is better suited to chat anyway: `maintainVisibleContentPosition`
 with `autoscrollToBottomThreshold` and `startRenderingFromBottom`.
 
-**Scroll follows the reader, not the stream.** The first cut scrolled to the end
+**Scroll follows the user, not the stream.** The first cut scrolled to the end
 on every new message. shadcn's `message-scroller` notes name that as the central
-mistake: auto-scroll must never be the default, or a reader looking at earlier
+mistake: auto-scroll must never be the default, or a user looking at earlier
 context gets yanked to the bottom every time a token lands. The feed now anchors
 a *new user turn* near the top with `scrollPreviousItemPeekPx` of the previous
-message still visible, follows the live edge only while the reader is already at
+message still visible, follows the live edge only while the user is already at
 it, and offers a "Jump to latest" pill otherwise.
 
 **Motion is one node per effect.** Streaming text arrives ~20 tokens/second, and
@@ -232,7 +232,7 @@ gained a `suggestionsOpen` prop and its `ToolButton` an `active` state — a
 `primary` tint at `22` alpha behind the glyph, the primary colour on the stroke,
 and `strokeWidth` 2.4 against 1.8 — so the filled/off reading comes from the
 theme rather than a second icon. `accessibilityState.selected` carries the same
-fact to a screen reader.
+fact to a screen user.
 
 **Nothing is generated until it is asked for.** `SUGGESTIONS.autoGenerate` is
 `false`, and `ws/chat-turn.ts` only emits `reply_suggestions` when it is on:
@@ -251,14 +251,14 @@ completions, and most turns are answered by typing — so the old behaviour paid
 for three model calls on every reply that nobody read. Measured against the
 local llama.cpp server, a turn now completes in **1143ms**; the suggestion set,
 when requested, takes a further **1120ms** of its own. Roughly half the
-end-to-end latency of a turn was being spent on options the reader never opened.
+end-to-end latency of a turn was being spent on options the user never opened.
 
 **`isTrayDismissed` became `isTrayOpen`.** The old flag was negative and the
 default was "not dismissed", which made "closed by default" impossible to
 express without a second flag. Reading positively, `revealSuggestions` sets
 `isTrayOpen: true` and clears `areSuggestionsHidden`, `dismissSuggestions` sets
 it false, and the reroll branch in `handleServerMessage` keeps the tray open
-only when the reader is the one who asked:
+only when the user is the one who asked:
 
 ```ts
 isTrayOpen: state.isSuggestionsLoading ? state.isTrayOpen : false,
@@ -400,7 +400,7 @@ the package root but is not exported, and Metro honours `exports`. So
 `localStorage` branch — which does not exist in React Native. The fallback was
 pure memory, exactly what the fix was meant to end.
 
-And `File.text()` returns a **promise** on SDK 57. The synchronous reader is
+And `File.text()` returns a **promise** on SDK 57. The synchronous user is
 `textSync()`. Had the import resolved, `JSON.parse(Promise)` would have thrown
 into the same swallow-everything catch and hydration would still have started
 empty. `write()` also needs the file to exist, so `flush()` calls `create()` when
@@ -420,14 +420,14 @@ and invisible in CI.
 Two independent causes, which is why it kept coming back.
 
 **`autoscrollToBottomThreshold: 0`.** FlashList v2 documents `0.2` for chat.
-The threshold is how close to the bottom the reader must be for the list to keep
+The threshold is how close to the bottom the user must be for the list to keep
 itself pinned as content grows; `0` means *exactly* at the bottom, so the built-in
 follow was off in every practical case.
 
 **Growth was being read as scrolling up.** `handleScroll` derived the live edge
 from the distance to the bottom alone. While a reply streams, content grows
 faster than a scroll can land, so that distance spikes — and the feed concluded
-the reader had scrolled away and stopped following for the rest of the turn. That
+the user had scrolled away and stopped following for the rest of the turn. That
 is the behaviour being reported: it follows for a moment, then gives up and the
 tail runs under the dock.
 
@@ -455,7 +455,7 @@ every token.
 
 - `bun run test` — 268 pass / 0 fail. `tests/feed-scroll.test.ts` pins all four
   cases: growth alone keeps the follow, a drag ends it, catching up rejoins it,
-  and a reader who scrolled up is left alone while the reply streams.
+  and a user who scrolled up is left alone while the reply streams.
 - `tests/storage.test.ts` passes against a fake that mirrors the real
   `expo-file-system` contract, including a `write()` that rejects an uncreated
   file.

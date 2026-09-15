@@ -8,8 +8,8 @@
 - A queued portrait says **on the GPU now**, **next**, or **third of three**, and
   the number moves as the queue drains.
 - Pushed over the socket, not polled: the conductor recomputes places whenever a
-  job is queued and whenever one finishes, and broadcasts to that reader's own
-  sockets via `broadcastToReader`.
+  job is queued and whenever one finishes, and broadcasts to that user's own
+  sockets via `broadcastToUser`.
 - Portraits always announce. **Chat photos do not**, unless the switch in the
   admin sheet says otherwise (`QUEUE_ANNOUNCE.chatPhotos`).
 - A photo asked for in a chat is a **queue job**, so it survives a dropped socket.
@@ -24,7 +24,7 @@ had stopped answering.
 
 **Clearing the message needed a rule, not a list.** It first cleared on
 `image_ready` and `image_failed` — both chat-photo events — so a portrait, which
-finishes silently, left it on screen for ever. A reader who drops out of the
+finishes silently, left it on screen for ever. A user who drops out of the
 queue is now told so, which covers every kind of work with one rule instead of an
 enumeration that will always miss one.
 
